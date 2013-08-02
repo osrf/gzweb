@@ -34,11 +34,15 @@ endif (NOT CMAKE_BUILD_TYPE)
 
 # find gazebo
 include (FindPkgConfig)
-# if (PKG_CONFIG_FOUND)
-#  pkg_check_modules(GAZEBO gazebo>=1.3.0 REQUIRED)
-# else()
-#  message(FATAL_ERROR "pkg-config is required; please install it")
-# endif()
+if (PKG_CONFIG_FOUND)
+  pkg_check_modules(GAZEBO gazebo>=1.3.0 REQUIRED)
+else()
+  message(FATAL_ERROR "pkg-config is required; please install it")
+endif()
+
+include(FindBoost)
+find_package(Boost ${MIN_BOOST_VERSION} REQUIRED system filesystem regex thread)
+find_package(Protobuf REQUIRED)
 
 include_directories(${GAZEBO_INCLUDE_DIRS})
 link_directories(${GAZEBO_LIBRARY_DIRS})
