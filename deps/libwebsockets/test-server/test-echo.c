@@ -52,38 +52,6 @@ struct per_session_data__echo {
 	unsigned int index;
 };
 
-
-int reply(struct libwebsocket *wsi, void* user, void *in, size_t len, char* topic)
-{
-
-    char dd[256];
-    static double posX = 1.5;
-    double posY = 5.5;
-    double posZ = 2.0;
-    struct per_session_data__echo *pss = (struct per_session_data__echo *)user;
-    int n;
-
-    posX += 0.01;
-		sprintf(dd, "{\"op\":\"publish\",\"topic\":\"/%s\", \"msg\":{\"posX\":%f, \"posY\":%f, \"posZ\":%f}}", topic, posX, posY, posZ);
-
-   	memcpy(&pss->buf[LWS_SEND_BUFFER_PRE_PADDING], dd, strlen(dd));
-
-    pss->len = strlen(dd);
-
-		n = libwebsocket_write(wsi, &pss->buf[LWS_SEND_BUFFER_PRE_PADDING], strlen(dd), LWS_WRITE_TEXT);
-		if (n < 0) {
-			lwsl_err("ERROR %d writing to socket, hanging up\n", n);
-			return 1;
-		}
-		if (n < (int)pss->len) {
-			lwsl_err("Partial write\n");
-			return -1;
-		}
-
-
-		return 0;
-}
-
 static int
 callback_echo(struct libwebsocket_context *context,
 		struct libwebsocket *wsi,
@@ -91,39 +59,15 @@ callback_echo(struct libwebsocket_context *context,
 							   void *in, size_t len)
 {
 	struct per_session_data__echo *pss = (struct per_session_data__echo *)user;
-//	int n;
-
-	//printf("easdf\n");
+	int n;
 
 	switch (reason) {
 
-
+#ifndef LWS_NO_SERVER
 	/* when the callback is used for server operations --> */
 
 	case LWS_CALLBACK_SERVER_WRITEABLE:
-	{
-		//printf("writable\n");
-
-		while(1)
-		{
-		  reply(wsi, user, in, len, "topic");
-		  reply(wsi, user, in, len, "topic2");
-//    reply(wsi, user, in, len, "topic");
-      libwebsocket_service(context, 10);
-		  // Sleep(0.5);
-		}
-/*
-    char dd[256];
-    double posX = 1.5;
-    double posY = 5.5;
-    double posZ = 2.0;
-		sprintf(dd, "{\"op\":\"publish\",\"topic\":\"/topic\", \"msg\":{\"posX\":%f, \"posY\":%f, \"posZ\":%f}}", posX, posY, posZ);
-
-   	memcpy(&pss->buf[LWS_SEND_BUFFER_PRE_PADDING], dd, strlen(dd));
-
-    pss->len = strlen(dd);
-
-		n = libwebsocket_write(wsi, &pss->buf[LWS_SEND_BUFFER_PRE_PADDING], strlen(dd), LWS_WRITE_TEXT);
+		n = libwebsocket_write(wsi, &pss->buf[LWS_SEND_BUFFER_PRE_PADDING], pss->len, LWS_WRITE_TEXT);
 		if (n < 0) {
 			lwsl_err("ERROR %d writing to socket, hanging up\n", n);
 			return 1;
@@ -132,10 +76,8 @@ callback_echo(struct libwebsocket_context *context,
 			lwsl_err("Partial write\n");
 			return -1;
 		}
-
 		break;
-		*/
-  }
+
 	case LWS_CALLBACK_RECEIVE:
 		if (len > MAX_ECHO_PAYLOAD) {
 			lwsl_err("Server received packet bigger than %u, hanging up\n", MAX_ECHO_PAYLOAD);
@@ -143,32 +85,38 @@ callback_echo(struct libwebsocket_context *context,
 		}
 		memcpy(&pss->buf[LWS_SEND_BUFFER_PRE_PADDING], in, len);
 		pss->len = (unsigned int)len;
-
-
-    char string[256];
-    int i;
-    for (i = 0; i < len; ++i)
-    {
-      string[i] = ((char *)in)[i];
-    }
-    string[len] = '\0';
-
 		libwebsocket_callback_on_writable(context, wsi);
+		break;
+#endif
 
+#ifndef LWS_NO_CLIENT
+	/* when the callback is used for client operations --> */
 
-		printf("text ! %s\n", string);
-
-
-//		printf("text ! %s\n", (char*)in);
-
-
-
-
+	case LWS_CALLBACK_CLIENT_ESTABLISHED:
+		lwsl_notice("Client has connected\n");
+		pss->index = 0;
 		break;
 
+	case LWS_CALLBACK_CLIENT_RECEIVE:
+		lwsl_notice("Client RX: %s", (char *)in);
+		break;
 
+	case LWS_CALLBACK_CLIENT_WRITEABLE:
+		/* we will send our packet... */
+		pss->len = sprintf((char *)&pss->buf[LWS_SEND_BUFFER_PRE_PADDING], "hello from libwebsockets-test-echo client pid %d index %d\n", getpid(), pss->index++);
+		lwsl_notice("Client TX: %s", &pss->buf[LWS_SEND_BUFFER_PRE_PADDING]);
+		n = libwebsocket_write(wsi, &pss->buf[LWS_SEND_BUFFER_PRE_PADDING], pss->len, LWS_WRITE_TEXT);
+		if (n < 0) {
+			lwsl_err("ERROR %d writing to socket, hanging up\n", n);
+			return -1;
+		}
+		if (n < (int)pss->len) {
+			lwsl_err("Partial write\n");
+			return -1;
+		}
+		break;
+#endif
 	default:
-		//printf("default\n");
 		break;
 	}
 
@@ -181,7 +129,7 @@ static struct libwebsocket_protocols protocols[] = {
 	/* first protocol must always be HTTP handler */
 
 	{
-		"",		/* name */
+		"default",		/* name */
 		callback_echo,		/* callback */
 		sizeof(struct per_session_data__echo)	/* per_session_data_size */
 	},
@@ -199,6 +147,10 @@ static struct option options[] = {
 	{ "help",	no_argument,		NULL, 'h' },
 	{ "debug",	required_argument,	NULL, 'd' },
 	{ "port",	required_argument,	NULL, 'p' },
+#ifndef LWS_NO_CLIENT
+	{ "client",	required_argument,	NULL, 'c' },
+	{ "ratems",	required_argument,	NULL, 'r' },
+#endif
 	{ "ssl",	no_argument,		NULL, 's' },
 	{ "interface",  required_argument,	NULL, 'i' },
 #ifndef LWS_NO_DAEMONIZE
@@ -222,7 +174,12 @@ int main(int argc, char **argv)
 	int client = 0;
 	int listen_port;
 	struct lws_context_creation_info info;
-
+#ifndef LWS_NO_CLIENT
+	char address[256];
+	int rate_us = 250000;
+	unsigned int oldus = 0;
+	struct libwebsocket *wsi;
+#endif
 
 	int debug_level = 7;
 #ifndef LWS_NO_DAEMONIZE
@@ -231,10 +188,18 @@ int main(int argc, char **argv)
 
 	memset(&info, 0, sizeof info);
 
+#ifndef LWS_NO_CLIENT
+	lwsl_notice("Built to support client operations\n");
+#endif
+#ifndef LWS_NO_SERVER
 	lwsl_notice("Built to support server operations\n");
+#endif
 
 	while (n >= 0) {
 		n = getopt_long(argc, argv, "i:hsp:d:D"
+#ifndef LWS_NO_CLIENT
+			"c:r:"
+#endif
 				, options, NULL);
 		if (n < 0)
 			continue;
@@ -245,6 +210,16 @@ int main(int argc, char **argv)
 #ifndef WIN32
 			syslog_options &= ~LOG_PERROR;
 #endif
+			break;
+#endif
+#ifndef LWS_NO_CLIENT
+		case 'c':
+			client = 1;
+			strcpy(address, optarg);
+			port = 80;
+			break;
+		case 'r':
+			rate_us = atoi(optarg) * 1000;
 			break;
 #endif
 		case 'd':
@@ -265,6 +240,10 @@ int main(int argc, char **argv)
 		case 'h':
 			fprintf(stderr, "Usage: libwebsockets-test-echo "
 					"[--ssl] "
+#ifndef LWS_NO_CLIENT
+					"[--client <remote ads>] "
+					"[--ratems <ms>] "
+#endif
 					"[--port=<p>] "
 					"[-d <log bitfield>]\n");
 			exit(1);
@@ -295,11 +274,21 @@ int main(int argc, char **argv)
 	lwsl_notice("libwebsockets echo test - "
 			"(C) Copyright 2010-2013 Andy Green <andy@warmcat.com> - "
 						    "licensed under LGPL2.1\n");
-
-	lwsl_notice("Running in server mode\n");
-	listen_port = port;
-
-
+#ifndef LWS_NO_CLIENT
+	if (client) {
+		lwsl_notice("Running in client mode\n");
+		listen_port = CONTEXT_PORT_NO_LISTEN;
+		if (use_ssl)
+			use_ssl = 2;
+	} else {
+#endif
+#ifndef LWS_NO_SERVER
+		lwsl_notice("Running in server mode\n");
+		listen_port = port;
+#endif
+#ifndef LWS_NO_CLIENT
+	}
+#endif
 
 	info.port = listen_port;
 	info.iface = interface;
@@ -322,12 +311,41 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
+#ifndef LWS_NO_CLIENT
+	if (client) {
+		lwsl_notice("Client connecting to %s:%u....\n", address, port);
+		/* we are in client mode */
+		wsi = libwebsocket_client_connect(context, address,
+				port, use_ssl, "/", address,
+				 "origin", NULL, -1);
+		if (!wsi) {
+			lwsl_err("Client failed to connect to %s:%u\n", address, port);
+			goto bail;
+		}
+		lwsl_notice("Client connected to %s:%u\n", address, port);
+	}
+#endif
 	signal(SIGINT, sighandler);
 
 	n = 0;
 	while (n >= 0 && !force_exit) {
+#ifndef LWS_NO_CLIENT
+		struct timeval tv;
+
+		if (client) {
+			gettimeofday(&tv, NULL);
+
+			if (((unsigned int)tv.tv_usec - oldus) > (unsigned int)rate_us) {
+				libwebsocket_callback_on_writable_all_protocol(&protocols[0]);
+				oldus = tv.tv_usec;
+			}
+		}
+#endif
 		n = libwebsocket_service(context, 10);
 	}
+#ifndef LWS_NO_CLIENT
+bail:
+#endif
 	libwebsocket_context_destroy(context);
 
 	lwsl_notice("libwebsockets-test-echo exited cleanly\n");
