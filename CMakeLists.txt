@@ -11,6 +11,7 @@ set (GZWEB_VERSION ${GZWEB_MAJOR_VERSION}.${GZWEB_MINOR_VERSION})
 set (GZWEB_VERSION_FULL ${GZWEB_MAJOR_VERSION}.${GZWEB_MINOR_VERSION}.${GZWEB_PATCH_VERSION})
 message (STATUS "${PROJECT_NAME} version ${GZWEB_VERSION_FULL}")
 
+set (gzweb_cmake_dir ${PROJECT_SOURCE_DIR}/cmake CACHE PATH "Location of CMake scripts")
 
 # Packaging configuration
 set (CPACK_PACKAGE_VERSION "${GZWEB_VERSION_FULL}")
@@ -43,6 +44,7 @@ include_directories(${GAZEBO_INCLUDE_DIRS})
 link_directories(${GAZEBO_LIBRARY_DIRS})
 
 add_subdirectory(deps)
+add_subdirectory(gzbridge)
 
 ########### Add uninstall target ###############
 configure_file(

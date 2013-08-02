@@ -732,7 +732,7 @@ install(FILES ${HDR_PUBLIC}
 set(CPACK_COMPONENT_HEADERS_DISPLAY_NAME "Header files")
 
 # Install libs.
-install(TARGETS websockets websockets_shared
+  install(TARGETS websockets websockets_shared
 		LIBRARY DESTINATION lib${LIB_SUFFIX}
 		ARCHIVE DESTINATION lib${LIB_SUFFIX}
 		COMPONENT libraries)

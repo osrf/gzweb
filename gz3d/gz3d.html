@@ -43,7 +43,7 @@
     <script src="js/libs/stats.min.js"></script>
     <script src="js/eventemitter2.js"></script>
 <!--    <script src="js/gzwebsocket.js"></script> -->
-    <script src="js/roslib.min.js"></script>
+    <script src="js/roslib.js"></script>
     <script>
 
       if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
@@ -54,9 +54,10 @@
       var visuals = {};
       var webSocket;
 
+      connectToWebServer();
       init();
       animate();
-      connectToWebServer();
+
 
       function init()
       {
@@ -125,7 +126,63 @@
 
         window.addEventListener( 'resize', onWindowResize, false );
 
-        setInterval(onReceiveMessage,0.1);
+
+
+        var updateTopic = new ROSLIB.Topic({
+          ros : webSocket,
+          name : '/topic',
+          messageType : '/msg',
+        });
+          //console.log("new topic");
+
+        processUpdate = function(message)
+        {
+          console.log("process update " + message.posX);
+
+          visuals['ian'].position.x = message.posX;
+          visuals['ian'].updateMatrix();
+//          setInterval(onReceiveMessage,0.1);
+
+        }
+        updateTopic.subscribe(processUpdate.bind());
+
+
+        var updateTopic2 = new ROSLIB.Topic({
+          ros : webSocket,
+          name : '/topic2',
+          messageType : '/msg',
+        });
+          //console.log("new topic");
+
+        processUpdate2 = function(message)
+        {
+          console.log("process update2 " + message.posY);
+
+          visuals['ian'].position.y = message.posY;
+          visuals['ian'].updateMatrix();
+//          setInterval(onReceiveMessage,0.1);
+
+        }
+  //      updateTopic2.subscribe(processUpdate2.bind());
+
+        var updateTopic3 = new ROSLIB.Topic({
+          ros : webSocket,
+          name : '/topic3',
+          messageType : '/msg',
+        });
+          //console.log("new topic");
+
+        processUpdate3 = function(message)
+        {
+          console.log("process update3 " + message.posZ);
+
+          visuals['ian'].position.z = message.posZ;
+          visuals['ian'].updateMatrix();
+//          setInterval(onReceiveMessage,0.1);
+
+        }
+     //   updateTopic3.subscribe(processUpdate3.bind());
+
       }
 
       function onWindowResize()
@@ -136,25 +193,6 @@
         renderer.setSize( window.innerWidth, window.innerHeight );
         controls.handleResize();
         render();
-      }
-
-      function onReceiveMessage()
-      {
-          visuals['ian'].position.x += 0.001;
-          visuals['ian'].updateMatrix();
-
-          updateTopic = new ROSLIB.Topic({
-            ros : webSocket,
-            name : '/topic',
-            messageType : '/msg',
-          });
-
-          processUpdate = function(message)
-          {
-            console.log("process update");
-          }
-
-          updateTopic.subscribe(processUpdate.bind());
       }
 
       function animate()
