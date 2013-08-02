@@ -38,11 +38,20 @@ namespace gzweb
     /// \brief Destructor.
     public: virtual ~GazeboInterface();
 
+    /// \brief Initialize gazebo interface.
+    public: void Init();
+
     /// \brief Run the gazebo interface in a thread.
     public: void RunThread();
 
+    /// \brief Stop the gazebo interace.
+    public: void Fini();
+
     /// \brief Run the gazebo interace.
     private: void Run();
+
+    /// \brief Process the messages.
+    private: void ProcessMessages();
 
     /// \brief Model message callback.
     /// \param[in] _msg The message data.
@@ -76,6 +85,10 @@ namespace gzweb
     /// ~/scene topic
     /// \param[in] _msg The message.
     private: void OnScene(ConstScenePtr &_msg);
+
+    /// \brief Response callback
+    /// \param[in] _msg The message data.
+    private: void OnResponse(ConstResponsePtr &_msg);
 
     /// \brief Process a model message.
     /// \param[in] _msg The message data.
@@ -138,6 +151,15 @@ namespace gzweb
 
     /// \brief Subscribe to joint updates.
     private: gazebo::transport::SubscriberPtr jointSub;
+
+    /// \brief Publish requests
+    private: gazebo::transport::PublisherPtr requestPub;
+
+    /// \brief Subscribe to reponses.
+    private: gazebo::transport::SubscriberPtr responseSub;
+
+    /// \brief Request message for getting initial scene info.
+    private: gazebo::msgs::Request *requestMsg;
 
     /// \brief Mutex to lock the various message buffers.
     private: boost::mutex *receiveMutex;
@@ -211,6 +233,9 @@ namespace gzweb
 
     /// \brief List of link message to process.
     private: LinkMsgs_L linkMsgs;
+
+    /// \brief True to stop the interface.
+    private: bool stop;
   };
 }
 

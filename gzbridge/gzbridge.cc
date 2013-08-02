@@ -35,12 +35,15 @@ bool run(int _argc, char **_argv)
   server.RunThread();
 
   gzweb::GazeboInterface gzIface;
+  gzIface.Init();
   gzIface.RunThread();
 
 
   // Busy wait loop...replace with your own code as needed.
   while (true)
     gazebo::common::Time::MSleep(10);
+
+  gzIface.Fini();
 
   // Make sure to shut everything down.
   gazebo::transport::fini();

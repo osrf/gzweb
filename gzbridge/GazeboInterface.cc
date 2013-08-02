@@ -35,6 +35,7 @@ struct VisualMessageLess {
 GazeboInterface::GazeboInterface()
 {
   this->receiveMutex = new boost::mutex();
+  this->stop = false;
 
   // Create our node for communication
   this->node.reset(new gazebo::transport::Node());
@@ -71,6 +72,12 @@ GazeboInterface::GazeboInterface()
 
   this->sceneSub = this->node->Subscribe("~/scene",
       &GazeboInterface::OnScene, this);
+
+  // For getting scene info on connect
+  this->requestPub = this->node->Advertise<gazebo::msgs::Request>("~/request");
+
+  this->responseSub = this->node->Subscribe("~/response",
+      &GazeboInterface::OnResponse, this);
 }
 
 /////////////////////////////////////////////////
@@ -89,6 +96,15 @@ GazeboInterface::~GazeboInterface()
   this->sensorMsgs.clear();
 
   delete this->receiveMutex;
+  delete this->requestMsg;
+}
+
+/////////////////////////////////////////////////
+void GazeboInterface::Init()
+{
+  this->requestPub->WaitForConnection();
+  this->requestMsg = gazebo::msgs::CreateRequest("scene_info");
+  this->requestPub->Publish(*this->requestMsg);
 }
 
 /////////////////////////////////////////////////
@@ -99,6 +115,21 @@ void GazeboInterface::RunThread()
 
 /////////////////////////////////////////////////
 void GazeboInterface::Run()
+{
+  while (!this->stop)
+  {
+    this->ProcessMessages();
+  }
+}
+
+/////////////////////////////////////////////////
+void GazeboInterface::Fini()
+{
+  this->stop = true;
+}
+
+/////////////////////////////////////////////////
+void GazeboInterface::ProcessMessages()
 {
   static RequestMsgs_L::iterator rIter;
   static SceneMsgs_L::iterator sIter;
@@ -152,7 +183,6 @@ void GazeboInterface::Run()
               std::back_inserter(linkMsgsCopy));
     this->linkMsgs.clear();
   }
-
   // Process the scene messages. DO THIS FIRST
   for (sIter = sceneMsgsCopy.begin(); sIter != sceneMsgsCopy.end();)
   {
@@ -390,6 +420,19 @@ void GazeboInterface::OnRequest(ConstRequestPtr &_msg)
 {
   boost::mutex::scoped_lock lock(*this->receiveMutex);
   this->requestMsgs.push_back(_msg);
+}
+
+/////////////////////////////////////////////////
+void GazeboInterface::OnResponse(ConstResponsePtr &_msg)
+{
+  if (!this->requestMsg || _msg->id() != this->requestMsg->id())
+    return;
+
+  gazebo::msgs::Scene sceneMsg;
+  sceneMsg.ParseFromString(_msg->serialized_data());
+  boost::shared_ptr<gazebo::msgs::Scene> sm(new gazebo::msgs::Scene(sceneMsg));
+  this->sceneMsgs.push_back(sm);
+  this->requestMsg = NULL;
 }
 
 /////////////////////////////////////////////////
