@@ -1,18 +1,22 @@
 include (${gzweb_cmake_dir}/Utils.cmake)
 
-
 include_directories(
+  include_directories(${GAZEBO_INCLUDE_DIRS})
   ${PROJECT_SOURCE_DIR}/deps/libwebsockets/lib
 )
+
+link_directories(${GAZEBO_LIBRARY_DIRS})
 
 set (sources
   gzbridge.cc
 #  listener.cc
+  GazeboInterface.cc
   WebSocketServer.cc
 )
 
 set (headers
-  WebSocketServer.cc
+  GazeboInterface.hh
+  WebSocketServer.hh
 )
 
 
@@ -21,7 +25,7 @@ set (headers
 
 add_executable(gzbridge ${sources})
 
-target_link_libraries(gzbridge websockets_shared ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES} ${PROTOBUF_LIBRARIES})
+target_link_libraries(gzbridge websockets_shared ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES} ${PROTOBUF_LIBRARIES} ${JSONCPP_LIBRARIES})
 #add_dependencies(${TEST_NAME} websockets_shared)
 
 # Set test app specific defines.

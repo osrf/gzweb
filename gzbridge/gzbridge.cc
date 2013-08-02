@@ -15,10 +15,10 @@
  *
 */
 
-#include <gazebo/transport/transport.hh>
-#include <gazebo/msgs/msgs.hh>
+
 #include <gazebo/gazebo.hh>
 
+#include "GazeboInterface.hh"
 #include "WebSocketServer.hh"
 
 #include <iostream>
@@ -34,12 +34,9 @@ bool run(int _argc, char **_argv)
   gzweb::WebSocketServer server;
   server.RunThread();
 
-  // Create our node for communication
-  gazebo::transport::NodePtr node(new gazebo::transport::Node());
-  node->Init();
+  gzweb::GazeboInterface gzIface;
+  gzIface.RunThread();
 
-  // Listen to Gazebo world_stats topic
-//  gazebo::transport::SubscriberPtr sub = node->Subscribe("~/world_stats", cb);
 
   // Busy wait loop...replace with your own code as needed.
   while (true)
