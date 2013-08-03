@@ -44,6 +44,10 @@ namespace gzweb
     /// \brief Run websocket server in a thread.
     public: void RunThread();
 
+    /// \brief Write message to socket.
+    /// \param[in] _msg Message to write.
+    public: void Write(const std::string &_msg);
+
     /// \brief Run websocket server.
     private: void Run();
 

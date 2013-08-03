@@ -17,6 +17,8 @@
 
 #include <boost/thread.hpp>
 
+#include "pb2json.hh"
+#include "WebSocketServer.hh"
 #include "GazeboInterface.hh"
 
 using namespace gzweb;
@@ -32,8 +34,9 @@ struct VisualMessageLess {
 
 
 /////////////////////////////////////////////////
-GazeboInterface::GazeboInterface()
+GazeboInterface::GazeboInterface(WebSocketServer *_server)
 {
+  this->socketServer = _server;
   this->receiveMutex = new boost::mutex();
   this->stop = false;
 
@@ -41,43 +44,58 @@ GazeboInterface::GazeboInterface()
   this->node.reset(new gazebo::transport::Node());
   this->node->Init();
 
-  // Listen to Gazebo topics
+  // Gazebo topics
+  this->sensorTopic = "~/sensor";
+  this->visualTopic = "~/visual";
+  this->jointTopic = "~/joint";
+  this->modelTopic = "~/model/info";
+  this->poseTopic = "~/pose/info";
+  this->requestTopic = "~/request";
+  this->lightTopic = "~/light";
+  this->sceneTopic = "~/scene";
 
-  this->sensorSub = this->node->Subscribe("~/sensor",
+  this->sensorSub = this->node->Subscribe(this->sensorTopic,
       &GazeboInterface::OnSensorMsg, this, true);
 
-  this->visSub = this->node->Subscribe("~/visual",
+  this->visSub = this->node->Subscribe(this->visualTopic,
       &GazeboInterface::OnVisualMsg, this);
 
   // this->lightPub = this->node->Advertise<gazebo::msgs::Light>("~/light");
 
-  this->jointSub = this->node->Subscribe("~/joint",
+  this->jointSub = this->node->Subscribe(this->jointTopic,
       &GazeboInterface::OnJointMsg, this);
 
   // For entity creation
-  this->modelInfoSub = node->Subscribe("~/model/info",
+  this->modelInfoSub = node->Subscribe(this->modelTopic,
       &GazeboInterface::OnModelMsg, this);
 
   // For entity update
-  this->poseSub = this->node->Subscribe("~/pose/info",
+  this->poseSub = this->node->Subscribe(this->poseTopic,
       &GazeboInterface::OnPoseMsg, this);
 
   // For entity delete
-  this->requestSub = this->node->Subscribe("~/request",
+  this->requestSub = this->node->Subscribe(this->requestTopic,
       &GazeboInterface::OnRequest, this);
 
   // For lights
-  this->lightSub = this->node->Subscribe("~/light",
+  this->lightSub = this->node->Subscribe(this->lightTopic,
       &GazeboInterface::OnLightMsg, this);
 
-  this->sceneSub = this->node->Subscribe("~/scene",
+  this->sceneSub = this->node->Subscribe(this->sceneTopic,
       &GazeboInterface::OnScene, this);
 
   // For getting scene info on connect
-  this->requestPub = this->node->Advertise<gazebo::msgs::Request>("~/request");
+  this->requestPub =
+      this->node->Advertise<gazebo::msgs::Request>(this->requestTopic);
 
   this->responseSub = this->node->Subscribe("~/response",
       &GazeboInterface::OnResponse, this);
+}
+
+/////////////////////////////////////////////////
+GazeboInterface::GazeboInterface()
+{
+  GazeboInterface(NULL);
 }
 
 /////////////////////////////////////////////////
@@ -92,7 +110,6 @@ GazeboInterface::~GazeboInterface()
   this->visualMsgs.clear();
   this->sceneMsgs.clear();
   this->jointMsgs.clear();
-  this->linkMsgs.clear();
   this->sensorMsgs.clear();
 
   delete this->receiveMutex;
@@ -105,6 +122,12 @@ void GazeboInterface::Init()
   this->requestPub->WaitForConnection();
   this->requestMsg = gazebo::msgs::CreateRequest("scene_info");
   this->requestPub->Publish(*this->requestMsg);
+}
+
+/////////////////////////////////////////////////
+void GazeboInterface::SetWebSocketServer(WebSocketServer *_server)
+{
+  this->socketServer = _server;
 }
 
 /////////////////////////////////////////////////
@@ -140,147 +163,84 @@ void GazeboInterface::ProcessMessages()
   // static SkeletonPoseMsgs_L::iterator spIter;
   static JointMsgs_L::iterator jointIter;
   static SensorMsgs_L::iterator sensorIter;
-  static LinkMsgs_L::iterator linkIter;
-
-  SceneMsgs_L sceneMsgsCopy;
-  ModelMsgs_L modelMsgsCopy;
-  SensorMsgs_L sensorMsgsCopy;
-  LightMsgs_L lightMsgsCopy;
-  VisualMsgs_L visualMsgsCopy;
-  JointMsgs_L jointMsgsCopy;
-  LinkMsgs_L linkMsgsCopy;
-  RequestMsgs_L requestMsgsCopy;
 
   {
     boost::mutex::scoped_lock lock(*this->receiveMutex);
 
-    std::copy(this->sceneMsgs.begin(), this->sceneMsgs.end(),
-              std::back_inserter(sceneMsgsCopy));
+    std::string msg = "";
+    // Process the scene messages. DO THIS FIRST
+    for (sIter = this->sceneMsgs.begin(); sIter != this->sceneMsgs.end();
+        ++sIter)
+    {
+      msg = this->PackOutgoingMsg(this->sceneTopic, pb2json(*(*sIter).get()));
+      this->Send(msg);
+    }
     this->sceneMsgs.clear();
 
-    std::copy(this->modelMsgs.begin(), this->modelMsgs.end(),
-              std::back_inserter(modelMsgsCopy));
+    // Process the model messages.
+    for (modelIter = this->modelMsgs.begin(); modelIter != this->modelMsgs.end();
+        ++modelIter)
+    {
+      msg = this->PackOutgoingMsg(this->modelTopic,
+          pb2json(*(*modelIter).get()));
+      this->Send(msg);
+    }
     this->modelMsgs.clear();
 
-    std::copy(this->sensorMsgs.begin(), this->sensorMsgs.end(),
-              std::back_inserter(sensorMsgsCopy));
+    // Process the sensor messages.
+    for (sensorIter = this->sensorMsgs.begin();
+        sensorIter != this->sensorMsgs.end(); ++sensorIter)
+    {
+      msg = this->PackOutgoingMsg(this->sensorTopic,
+          pb2json(*(*sensorIter).get()));
+      this->Send(msg);
+    }
     this->sensorMsgs.clear();
 
-    std::copy(this->lightMsgs.begin(), this->lightMsgs.end(),
-              std::back_inserter(lightMsgsCopy));
+    // Process the light messages.
+    for (lightIter = this->lightMsgs.begin();
+        lightIter != this->lightMsgs.end(); ++lightIter)
+    {
+      msg = this->PackOutgoingMsg(this->lightTopic,
+          pb2json(*(*lightIter).get()));
+      this->Send(msg);
+    }
     this->lightMsgs.clear();
 
-    this->visualMsgs.sort(VisualMessageLessOp);
-    std::copy(this->visualMsgs.begin(), this->visualMsgs.end(),
-              std::back_inserter(visualMsgsCopy));
+    // Process the visual messages.
+    for (visualIter = this->visualMsgs.begin();
+        visualIter != this->visualMsgs.end(); ++visualIter)
+    {
+      msg = this->PackOutgoingMsg(this->visualTopic,
+          pb2json(*(*visualIter).get()));
+      this->Send(msg);
+    }
     this->visualMsgs.clear();
 
-    std::copy(this->jointMsgs.begin(), this->jointMsgs.end(),
-              std::back_inserter(jointMsgsCopy));
+    // Process the joint messages.
+    for (jointIter = this->jointMsgs.begin();
+        jointIter != this->jointMsgs.end(); ++jointIter)
+    {
+      msg = this->PackOutgoingMsg(this->jointTopic,
+          pb2json(*(*jointIter).get()));
+      this->Send(msg);
+    }
     this->jointMsgs.clear();
 
-    std::copy(this->linkMsgs.begin(), this->linkMsgs.end(),
-              std::back_inserter(linkMsgsCopy));
-    this->linkMsgs.clear();
-  }
-  // Process the scene messages. DO THIS FIRST
-  for (sIter = sceneMsgsCopy.begin(); sIter != sceneMsgsCopy.end();)
-  {
-    if (this->ProcessSceneMsg(*sIter))
-      sceneMsgsCopy.erase(sIter++);
-    else
-      ++sIter;
-  }
-
-  // Process the model messages.
-  for (modelIter = modelMsgsCopy.begin(); modelIter != modelMsgsCopy.end();)
-  {
-    if (this->ProcessModelMsg(**modelIter))
-      modelMsgsCopy.erase(modelIter++);
-    else
-      ++modelIter;
-  }
-
-  // Process the sensor messages.
-  for (sensorIter = sensorMsgsCopy.begin(); sensorIter != sensorMsgsCopy.end();)
-  {
-    if (this->ProcessSensorMsg(*sensorIter))
-      sensorMsgsCopy.erase(sensorIter++);
-    else
-      ++sensorIter;
-  }
-
-  // Process the light messages.
-  for (lightIter = lightMsgsCopy.begin(); lightIter != lightMsgsCopy.end();)
-  {
-    if (this->ProcessLightMsg(*lightIter))
-      lightMsgsCopy.erase(lightIter++);
-    else
-      ++lightIter;
-  }
-
-  // Process the visual messages.
-  for (visualIter = visualMsgsCopy.begin(); visualIter != visualMsgsCopy.end();)
-  {
-    if (this->ProcessVisualMsg(*visualIter))
-      visualMsgsCopy.erase(visualIter++);
-    else
-      ++visualIter;
-  }
-
-  // Process the joint messages.
-  for (jointIter = jointMsgsCopy.begin(); jointIter != jointMsgsCopy.end();)
-  {
-    if (this->ProcessJointMsg(*jointIter))
-      jointMsgsCopy.erase(jointIter++);
-    else
-      ++jointIter;
-  }
-
-  // Process the link messages.
-  for (linkIter = linkMsgsCopy.begin(); linkIter != linkMsgsCopy.end();)
-  {
-    if (this->ProcessLinkMsg(*linkIter))
-      linkMsgsCopy.erase(linkIter++);
-    else
-      ++linkIter;
-  }
-
-  // Process the request messages
-  for (rIter =  this->requestMsgs.begin();
-       rIter != this->requestMsgs.end(); ++rIter)
-  {
-    this->ProcessRequestMsg(*rIter);
-  }
-  this->requestMsgs.clear();
-
-  {
-    boost::mutex::scoped_lock lock(*this->receiveMutex);
-
-    std::copy(sceneMsgsCopy.begin(), sceneMsgsCopy.end(),
-        std::front_inserter(this->sceneMsgs));
-
-    std::copy(modelMsgsCopy.begin(), modelMsgsCopy.end(),
-        std::front_inserter(this->modelMsgs));
-
-    std::copy(sensorMsgsCopy.begin(), sensorMsgsCopy.end(),
-        std::front_inserter(this->sensorMsgs));
-
-    std::copy(lightMsgsCopy.begin(), lightMsgsCopy.end(),
-        std::front_inserter(this->lightMsgs));
-
-    std::copy(visualMsgsCopy.begin(), visualMsgsCopy.end(),
-        std::front_inserter(this->visualMsgs));
-
-    std::copy(jointMsgsCopy.begin(), jointMsgsCopy.end(),
-        std::front_inserter(this->jointMsgs));
-
-    std::copy(linkMsgsCopy.begin(), linkMsgsCopy.end(),
-        std::front_inserter(this->linkMsgs));
-  }
-
-  {
-    boost::mutex::scoped_lock lock(*this->receiveMutex);
+    // Process the request messages
+    for (rIter =  this->requestMsgs.begin(); rIter != this->requestMsgs.end();
+        ++rIter)
+    {
+      msg = this->PackOutgoingMsg(this->requestTopic,
+          pb2json(*(*rIter).get()));
+      this->Send(msg);
+      /*this->ProcessRequestMsg(*rIter);
+      if (_msg->request() == "entity_delete")
+      {
+        // _msg->data() has the name;
+      }*/
+    }
+    this->requestMsgs.clear();
 
     // Process all the model messages last. Remove pose message from the list
     // only when a corresponding visual exits. We may receive pose updates
@@ -288,6 +248,10 @@ void GazeboInterface::ProcessMessages()
     pIter = this->poseMsgs.begin();
     while (pIter != this->poseMsgs.end())
     {
+      msg = this->PackOutgoingMsg(this->poseTopic,
+          pb2json(*pIter));
+      this->Send(msg);
+      ++pIter;
       /*Visual_M::iterator iter = this->visuals.find((*pIter).name());
       if (iter != this->visuals.end() && iter->second)
       {
@@ -307,6 +271,7 @@ void GazeboInterface::ProcessMessages()
       else
         ++pIter;*/
     }
+    this->poseMsgs.clear();
   }
 }
 
@@ -316,82 +281,6 @@ void GazeboInterface::OnModelMsg(ConstModelPtr &_msg)
   boost::mutex::scoped_lock lock(*this->receiveMutex);
   this->modelMsgs.push_back(_msg);
 }
-
-//////////////////////////////////////////////////
-bool GazeboInterface::ProcessModelMsg(const gazebo::msgs::Model &_msg)
-{
-  std::string modelName, linkName;
-
-  modelName = _msg.name() + "::";
-  for (int j = 0; j < _msg.visual_size(); j++)
-  {
-    boost::shared_ptr<gazebo::msgs::Visual> vm(new gazebo::msgs::Visual(
-          _msg.visual(j)));
-    if (_msg.has_scale())
-    {
-//      gazebo::msgs::Set(vm->mutable_scale(), _msg.scale());
-      vm->mutable_scale()->set_x(_msg.scale().x());
-      vm->mutable_scale()->set_y(_msg.scale().y());
-      vm->mutable_scale()->set_z(_msg.scale().z());
-    }
-    this->visualMsgs.push_back(vm);
-  }
-
-  for (int j = 0; j < _msg.joint_size(); j++)
-  {
-    boost::shared_ptr<gazebo::msgs::Joint> jm(new gazebo::msgs::Joint(
-          _msg.joint(j)));
-    this->jointMsgs.push_back(jm);
-
-    for (int k = 0; k < _msg.joint(j).sensor_size(); k++)
-    {
-      boost::shared_ptr<gazebo::msgs::Sensor> sm(new gazebo::msgs::Sensor(
-            _msg.joint(j).sensor(k)));
-      this->sensorMsgs.push_back(sm);
-    }
-  }
-
-  for (int j = 0; j < _msg.link_size(); j++)
-  {
-    linkName = modelName + _msg.link(j).name();
-    this->poseMsgs.push_front(_msg.link(j).pose());
-    this->poseMsgs.front().set_name(linkName);
-
-    if (_msg.link(j).has_inertial())
-    {
-      boost::shared_ptr<gazebo::msgs::Link> lm(new gazebo::msgs::Link(_msg.link(j)));
-      this->linkMsgs.push_back(lm);
-    }
-
-    for (int k = 0; k < _msg.link(j).visual_size(); k++)
-    {
-      boost::shared_ptr<gazebo::msgs::Visual> vm(new gazebo::msgs::Visual(
-            _msg.link(j).visual(k)));
-      this->visualMsgs.push_back(vm);
-    }
-
-    for (int k = 0; k < _msg.link(j).collision_size(); k++)
-    {
-      for (int l = 0;
-          l < _msg.link(j).collision(k).visual_size(); l++)
-      {
-        boost::shared_ptr<gazebo::msgs::Visual> vm(new gazebo::msgs::Visual(
-              _msg.link(j).collision(k).visual(l)));
-        this->visualMsgs.push_back(vm);
-      }
-    }
-
-    for (int k = 0; k < _msg.link(j).sensor_size(); k++)
-    {
-      boost::shared_ptr<gazebo::msgs::Sensor> sm(new gazebo::msgs::Sensor(
-            _msg.link(j).sensor(k)));
-      this->sensorMsgs.push_back(sm);
-    }
-  }
-
-  return true;
-}
-
 
 /////////////////////////////////////////////////
 void GazeboInterface::OnPoseMsg(ConstPosesStampedPtr &_msg)
@@ -410,7 +299,6 @@ void GazeboInterface::OnPoseMsg(ConstPosesStampedPtr &_msg)
         break;
       }
     }
-
     this->poseMsgs.push_back(_msg->pose(i));
   }
 }
@@ -471,131 +359,22 @@ void GazeboInterface::OnVisualMsg(ConstVisualPtr &_msg)
 }
 
 /////////////////////////////////////////////////
-void GazeboInterface::ProcessRequestMsg(ConstRequestPtr &_msg)
+std::string GazeboInterface::PackOutgoingMsg(const std::string &_topic,
+    const std::string &_msg)
 {
-  if (_msg->request() == "entity_delete")
-  {
-    // _msg->data() has the name;
-  }
+  // Use roslibjs format for now.
+  std::string out;
+  out += "{\"op\":\"publish\",\"topic\":\"" + _topic + "\", \"msg\":";
+  out += _msg;
+  out += "}";
+  return out;
 }
 
 /////////////////////////////////////////////////
-bool GazeboInterface::ProcessLightMsg(ConstLightPtr &_msg)
+void GazeboInterface::Send(const std::string &_msg)
 {
-  // _msg->name()
-
-  return true;
-}
+  if (this->socketServer)
+    this->socketServer->Write(_msg);
 
 
-/////////////////////////////////////////////////
-bool GazeboInterface::ProcessLinkMsg(ConstLinkPtr &_msg)
-{
-
-  // _msg->name()
-
-  return true;
-}
-
-
-/////////////////////////////////////////////////
-bool GazeboInterface::ProcessSceneMsg(ConstScenePtr &_msg)
-{
-  for (int i = 0; i < _msg->model_size(); i++)
-  {
-    this->poseMsgs.push_front(_msg->model(i).pose());
-    this->poseMsgs.front().set_name(_msg->model(i).name());
-
-    this->ProcessModelMsg(_msg->model(i));
-  }
-
-  for (int i = 0; i < _msg->light_size(); i++)
-  {
-    boost::shared_ptr<gazebo::msgs::Light> lm(
-        new gazebo::msgs::Light(_msg->light(i)));
-    this->lightMsgs.push_back(lm);
-  }
-
-  for (int i = 0; i < _msg->joint_size(); i++)
-  {
-    boost::shared_ptr<gazebo::msgs::Joint> jm(
-        new gazebo::msgs::Joint(_msg->joint(i)));
-    this->jointMsgs.push_back(jm);
-  }
-
-/*  if (_msg->has_ambient())
-    this->SetAmbientColor(msgs::Convert(_msg->ambient()));
-
-  if (_msg->has_background())
-    this->SetBackgroundColor(msgs::Convert(_msg->background()));
-
-  if (_msg->has_shadows())
-    this->SetShadowsEnabled(_msg->shadows());
-
-  if (_msg->has_grid())
-    this->SetGrid(_msg->grid());
-
-  if (_msg->has_fog())
-  {
-    sdf::ElementPtr elem = this->sdf->GetElement("fog");
-
-    if (_msg->fog().has_color())
-      elem->GetElement("color")->Set(
-          msgs::Convert(_msg->fog().color()));
-
-    if (_msg->fog().has_density())
-      elem->GetElement("density")->Set(_msg->fog().density());
-
-    if (_msg->fog().has_start())
-      elem->GetElement("start")->Set(_msg->fog().start());
-
-    if (_msg->fog().has_end())
-      elem->GetElement("end")->Set(_msg->fog().end());
-
-    if (_msg->fog().has_type())
-    {
-      std::string type;
-      if (_msg->fog().type() == msgs::Fog::LINEAR)
-        type = "linear";
-      else if (_msg->fog().type() == msgs::Fog::EXPONENTIAL)
-        type = "exp";
-      else if (_msg->fog().type() == msgs::Fog::EXPONENTIAL2)
-        type = "exp2";
-      else
-        type = "none";
-
-      elem->GetElement("type")->Set(type);
-    }
-
-    this->SetFog(elem->Get<std::string>("type"),
-                 elem->Get<common::Color>("color"),
-                 elem->Get<double>("density"),
-                 elem->Get<double>("start"),
-                 elem->Get<double>("end"));
-  }*/
-
-  return true;
-}
-
-/////////////////////////////////////////////////
-bool GazeboInterface::ProcessVisualMsg(ConstVisualPtr &_msg)
-{
-  //_msg->name()
-
-  return true;
-}
-
-/////////////////////////////////////////////////
-bool GazeboInterface::ProcessJointMsg(ConstJointPtr &_msg)
-{
-  //_msg->name()
-
-  return true;
-}
-
-/////////////////////////////////////////////////
-bool GazeboInterface::ProcessSensorMsg(ConstSensorPtr &_msg)
-{
-  // _msg->type(), _msg->visualize(), msg->topic()
-  return true;
 }

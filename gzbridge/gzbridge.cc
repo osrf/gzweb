@@ -34,7 +34,7 @@ bool run(int _argc, char **_argv)
   gzweb::WebSocketServer server;
   server.RunThread();
 
-  gzweb::GazeboInterface gzIface;
+  gzweb::GazeboInterface gzIface(&server);
   gzIface.Init();
   gzIface.RunThread();
 

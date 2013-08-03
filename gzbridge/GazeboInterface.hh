@@ -30,8 +30,14 @@ namespace boost
 
 namespace gzweb
 {
+  class WebSocketServer;
+
   class GazeboInterface
   {
+    /// \brief Constructor.
+    /// \param[in] _server Websocket server.
+    public: GazeboInterface(WebSocketServer *_server);
+
     /// \brief Constructor.
     public: GazeboInterface();
 
@@ -41,11 +47,21 @@ namespace gzweb
     /// \brief Initialize gazebo interface.
     public: void Init();
 
+    /// \brief Set the websocket server to use when forwarding data from gazebo.
+    private: void SetWebSocketServer(WebSocketServer *_server);
+
     /// \brief Run the gazebo interface in a thread.
     public: void RunThread();
 
     /// \brief Stop the gazebo interace.
     public: void Fini();
+
+    /// \brief Pack message in a format that conforms to the client.
+    private: std::string PackOutgoingMsg(const std::string &_topic,
+        const std::string &_msg);
+
+    /// \brief Send message through websocket server.
+    private: void Send(const std::string &_msg);
 
     /// \brief Run the gazebo interace.
     private: void Run();
@@ -89,38 +105,6 @@ namespace gzweb
     /// \brief Response callback
     /// \param[in] _msg The message data.
     private: void OnResponse(ConstResponsePtr &_msg);
-
-    /// \brief Process a model message.
-    /// \param[in] _msg The message data.
-    private: bool ProcessModelMsg(const gazebo::msgs::Model &_msg);
-
-    /// \brief Process a request message.
-    /// \param[in] _msg The message data.
-    private: void ProcessRequestMsg(ConstRequestPtr &_msg);
-
-    /// \brief Process a light message.
-    /// \param[in] _msg The message data.
-    private: bool ProcessLightMsg(ConstLightPtr &_msg);
-
-    /// \brief Process a joint message.
-    /// \param[in] _msg The message data.
-    private: bool ProcessJointMsg(ConstJointPtr &_msg);
-
-    /// \brief Sensor message callback.
-    /// \param[in] _msg The message data.
-    private: bool ProcessSensorMsg(ConstSensorPtr &_msg);
-
-    /// \brief Process a visual message.
-    /// \param[in] _msg The message data.
-    private: bool ProcessVisualMsg(ConstVisualPtr &_msg);
-
-    /// \brief Process a link message.
-    /// \param[in] _msg The message data.
-    private: bool ProcessLinkMsg(ConstLinkPtr &_msg);
-
-    /// \brief Proces a scene message.
-    /// \param[in] _msg The message data.
-    private: bool ProcessSceneMsg(ConstScenePtr &_msg);
 
     /// \brief Thread to run the main loop.
     private: boost::thread *runThread;
@@ -226,16 +210,35 @@ namespace gzweb
     /// \brief List of scene message to process.
     private: SceneMsgs_L sceneMsgs;
 
-    /// \def LinkMsgs_L
-    /// \brief List of link messages.
-    typedef std::list<boost::shared_ptr<gazebo::msgs::Link const> >
-        LinkMsgs_L;
-
-    /// \brief List of link message to process.
-    private: LinkMsgs_L linkMsgs;
-
     /// \brief True to stop the interface.
     private: bool stop;
+
+    /// \brief Websocket server.
+    private: WebSocketServer *socketServer;
+
+    /// \brief Name of sensor topic.
+    private: std::string sensorTopic;
+
+    /// \brief Name of visual topic.
+    private: std::string visualTopic;
+
+    /// \brief Name of joint topic.
+    private: std::string jointTopic;
+
+    /// \brief Name of model topic.
+    private: std::string modelTopic;
+
+    /// \brief Name of pose topic.
+    private: std::string poseTopic;
+
+    /// \brief Name of request topic.
+    private: std::string requestTopic;
+
+    /// \brief Name of light topic.
+    private: std::string lightTopic;
+
+    /// \brief Name of scene topic.
+    private: std::string sceneTopic;
   };
 }
 

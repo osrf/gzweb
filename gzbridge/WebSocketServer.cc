@@ -16,7 +16,6 @@
 */
 
 #include <iostream>
-#include <assert.h>
 #ifdef WIN32
 #else
 #include <syslog.h>
@@ -53,25 +52,21 @@ int WebSocketServer::ServerCallback(struct libwebsocket_context *context,
 
   switch (reason) {
 
-  /* when the callback is used for server operations --> */
+  // when the callback is used for server operations
   case LWS_CALLBACK_SERVER_WRITEABLE:
   {
-
     std::string out = "";
     {
-      // test outgoing message. TODO Remove me later.
+      boost::recursive_mutex::scoped_lock lock(outgoingMutex);
+
+      /*// test outgoing message. TODO Remove me later.
       std::stringstream dd;
       double posX = 1.5;
       double posY = 5.5;
       double posZ = 2.0;
       dd << "{\"op\":\"publish\",\"topic\":\"/topic\", \"msg\":{\"posX\":";
       dd << posX << ", \"posY\":" << posY << ", \"posZ\":" << posZ <<"}}";
-
-
-      boost::recursive_mutex::scoped_lock lock(outgoingMutex);
-
-      // add test message. TODO Remove me later.
-      outgoing.push_back(dd.str());
+      outgoing.push_back(dd.str());*/
 
       if (!outgoing.empty())
       {
@@ -87,6 +82,8 @@ int WebSocketServer::ServerCallback(struct libwebsocket_context *context,
 
       int n = libwebsocket_write(wsi, &pss->buf[LWS_SEND_BUFFER_PRE_PADDING],
           out.size(), LWS_WRITE_TEXT);
+
+      //std::cerr << out.c_str() << std::endl;
       if (n < 0)
       {
         lwsl_err("ERROR %d writing to socket, hanging up\n", n);
@@ -117,7 +114,7 @@ int WebSocketServer::ServerCallback(struct libwebsocket_context *context,
       // test print incoming data.
       std::cerr << incoming[incoming.size()-1] << std::endl;
     }
-    libwebsocket_callback_on_writable(context, wsi);
+    // libwebsocket_callback_on_writable(context, wsi);
     break;
 
   default:
@@ -151,6 +148,14 @@ void WebSocketServer::RunThread()
 }
 
 /////////////////////////////////////////////////
+void WebSocketServer::Write(const std::string &_msg)
+{
+  boost::recursive_mutex::scoped_lock lock(outgoingMutex);
+  if (outgoing.size() < MAX_NUM_MSG_SIZE)
+    outgoing.push_back(_msg);
+}
+
+/////////////////////////////////////////////////
 void WebSocketServer::Run()
 {
   struct libwebsocket_context *context;
@@ -158,7 +163,6 @@ void WebSocketServer::Run()
   memset(&info, 0, sizeof info);
 
   struct libwebsocket_protocols protocols[] = {
-    // first protocol must always be HTTP handler
     {
       // name
       "",
@@ -173,11 +177,9 @@ void WebSocketServer::Run()
     }
   };
 
-  /*
-   * normally lock path would be /var/lock/lwsts or similar, to
-   * simplify getting started without having to take care about
-   * permissions or running as root, set to /tmp/.lwsts-lock
-   */
+  // normally lock path would be /var/lock/lwsts or similar, to
+  // simplify getting started without having to take care about
+  // permissions or running as root, set to /tmp/.lwsts-lock
   if (this->daemonize && lws_daemonize("/tmp/.lwstecho-lock"))
   {
     lwsl_notice("Failed to daemonize\n");
@@ -225,6 +227,8 @@ void WebSocketServer::Run()
   while (n >= 0)
   {
     n = libwebsocket_service(context, 10);
+    libwebsocket_callback_on_writable_all_protocol(
+        &protocols[0]);
   }
   libwebsocket_context_destroy(context);
 
