@@ -1,5 +1,3 @@
-include (${gzweb_cmake_dir}/Utils.cmake)
-
 include_directories(
   include_directories(${GAZEBO_INCLUDE_DIRS})
   ${PROJECT_SOURCE_DIR}/deps/libwebsockets/lib
