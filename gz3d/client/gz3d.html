@@ -34,57 +34,36 @@
   <body>
     <div id="container"></div>
     <script src="js/include/three.min.js"></script>
-    <script src="js/include/controls/TrackballControls.js"></script>
+    <script src="js/include/TrackballControls.js"></script>
     <script src="js/include/Detector.js"></script>
     <script src="js/include/stats.min.js"></script>
     <script src="js/include/eventemitter2.js"></script>
 <!--    <script src="js/gzwebsocket.js"></script> -->
     <script src="js/include/roslib.js"></script>
-    <script src="../build/gzweb.js"></script>
+    <script src="../build/gz3d.js"></script>
     <script>
 
       if (!Detector.webgl)
         Detector.addGetWebGLMessage();
 
       var container, stats;
-      var camera, controls, scene, renderer;
+      var scene;
       var cross;
       var visuals = {};
       var webSocket;
 
-      connectToWebServer();
-      init();
-      animate();
+      ConnectToWebServer();
+      Init();
+      Animate();
 
 
-      function init()
+      function Init()
       {
-        var scene = new GZ3D.Scene();
+        scene = new GZ3D.Scene();
 
-        camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 1000 );
-        camera.position.z = 5;
-        camera.position.y = 5;
-        camera.lookAt(0, 0, 0);
-
-        controls = new THREE.TrackballControls( camera );
-
-        controls.rotateSpeed = 1.0;
-        controls.zoomSpeed = 1.2;
-        controls.panSpeed = 0.8;
-        controls.noZoom = false;
-        controls.noPan = false;
-        controls.staticMoving = true;
-        controls.dynamicDampingFactor = 0.3;
-        controls.keys = [ 65, 83, 68 ];
-        controls.addEventListener( 'change', render );
-
-        // renderer
-        renderer = new THREE.WebGLRenderer( { antialias: false } );
-        renderer.setClearColor( 0xcccccc, 1 );
-        renderer.setSize( window.innerWidth, window.innerHeight );
 
         container = document.getElementById( 'container' );
-        container.appendChild( renderer.domElement );
+        container.appendChild(scene.GetDomElement());
 
         stats = new Stats();
         stats.domElement.style.position = 'absolute';
@@ -92,7 +71,7 @@
         stats.domElement.style.zIndex = 100;
         container.appendChild( stats.domElement );
 
-        window.addEventListener( 'resize', onWindowResize, false );
+        window.addEventListener( 'resize', OnWindowResize, false);
 
 
 
@@ -153,30 +132,25 @@
 
       }
 
-      function onWindowResize()
+      function OnWindowResize()
       {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-
-        renderer.setSize( window.innerWidth, window.innerHeight );
-        controls.handleResize();
-        render();
+        scene.SetWindowSize(window.innerWidth, window.innerHeight);
       }
 
-      function animate()
+
+      function Animate()
       {
-        requestAnimationFrame( animate );
-        render();
-        controls.update();
+        requestAnimationFrame(Animate);
+        Render();
       }
 
-      function render()
+      function Render()
       {
-        renderer.render( scene, camera );
+        scene.Render();
         stats.update();
       }
 
-      function connectToWebServer()
+      function ConnectToWebServer()
       {
         webSocket = new ROSLIB.Ros({
           url : 'ws://localhost:7681'
