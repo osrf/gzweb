@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>three.js webgl - trackball controls</title>
+    <title>gz3d</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <style>
@@ -33,10 +33,6 @@
 
   <body>
     <div id="container"></div>
-    <div id="info">
-      <a href="http://threejs.org" target="_blank">three.js</a> - trackball controls example</br>
-      MOVE mouse &amp; press LEFT/A: rotate, MIDDLE/S: zoom, RIGHT/D: pan
-    </div>
     <script src="js/three.min.js"></script>
     <script src="js/controls/TrackballControls.js"></script>
     <script src="js/Detector.js"></script>
@@ -46,7 +42,8 @@
     <script src="js/roslib.js"></script>
     <script>
 
-      if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
+      if (!Detector.webgl)
+        Detector.addGetWebGLMessage();
 
       var container, stats;
       var camera, controls, scene, renderer;
@@ -200,7 +197,6 @@
         requestAnimationFrame( animate );
         render();
         controls.update();
-
       }
 
       function render()
