@@ -48,6 +48,13 @@ namespace gzweb
     /// \param[in] _msg Message to write.
     public: void Write(const std::string &_msg);
 
+    /// \brief Get incoming messages.
+    /// \return Incoming messages.
+    public: std::vector<std::string> GetIncomingMessages();
+
+    /// \brief Clear incoming messages
+    public: void ClearIncomingMessages();
+
     /// \brief Run websocket server.
     private: void Run();
 

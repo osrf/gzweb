@@ -59,15 +59,6 @@ int WebSocketServer::ServerCallback(struct libwebsocket_context *context,
     {
       boost::recursive_mutex::scoped_lock lock(outgoingMutex);
 
-      /*// test outgoing message. TODO Remove me later.
-      std::stringstream dd;
-      double posX = 1.5;
-      double posY = 5.5;
-      double posZ = 2.0;
-      dd << "{\"op\":\"publish\",\"topic\":\"/topic\", \"msg\":{\"posX\":";
-      dd << posX << ", \"posY\":" << posY << ", \"posZ\":" << posZ <<"}}";
-      outgoing.push_back(dd.str());*/
-
       if (!outgoing.empty())
       {
         out = outgoing.back();
@@ -83,7 +74,7 @@ int WebSocketServer::ServerCallback(struct libwebsocket_context *context,
       int n = libwebsocket_write(wsi, &pss->buf[LWS_SEND_BUFFER_PRE_PADDING],
           out.size(), LWS_WRITE_TEXT);
 
-      //std::cerr << out.c_str() << std::endl;
+      std::cerr << out.c_str() << std::endl;
       if (n < 0)
       {
         lwsl_err("ERROR %d writing to socket, hanging up\n", n);
@@ -153,6 +144,20 @@ void WebSocketServer::Write(const std::string &_msg)
   boost::recursive_mutex::scoped_lock lock(outgoingMutex);
   if (outgoing.size() < MAX_NUM_MSG_SIZE)
     outgoing.push_back(_msg);
+}
+
+/////////////////////////////////////////////////
+std::vector<std::string> WebSocketServer::GetIncomingMessages()
+{
+  boost::recursive_mutex::scoped_lock lock(incomingMutex);
+  return std::vector<std::string>(incoming);
+}
+
+/////////////////////////////////////////////////
+void WebSocketServer::ClearIncomingMessages()
+{
+  boost::recursive_mutex::scoped_lock lock(incomingMutex);
+  incoming.clear();
 }
 
 /////////////////////////////////////////////////

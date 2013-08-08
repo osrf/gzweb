@@ -50,9 +50,9 @@
       var scene;
       var cross;
       var visuals = {};
-      var webSocket;
+//      var webSocket;
 
-      ConnectToWebServer();
+//      ConnectToWebServer();
       Init();
       Animate();
 
@@ -148,15 +148,6 @@
       {
         scene.Render();
         stats.update();
-      }
-
-      function ConnectToWebServer()
-      {
-        webSocket = new ROSLIB.Ros({
-          url : 'ws://localhost:7681'
-        });
-
-
       }
     </script>
 

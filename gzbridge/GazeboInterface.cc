@@ -74,8 +74,8 @@ GazeboInterface::GazeboInterface(WebSocketServer *_server)
       &GazeboInterface::OnPoseMsg, this);
 
   // For entity delete
-  this->requestSub = this->node->Subscribe(this->requestTopic,
-      &GazeboInterface::OnRequest, this);
+//  this->requestSub = this->node->Subscribe(this->requestTopic,
+//      &GazeboInterface::OnRequest, this);
 
   // For lights
   this->lightSub = this->node->Subscribe(this->lightTopic,
@@ -166,6 +166,24 @@ void GazeboInterface::ProcessMessages()
 
   {
     boost::mutex::scoped_lock lock(*this->receiveMutex);
+
+    //
+    if (this->socketServer)
+    {
+      std::vector<std::string> msgs =
+          this->socketServer->GetIncomingMessages();
+      if (msgs.size() > 0)
+      {
+//        this->sceneSub.reset();
+//        this->sceneSub = this->node->Subscribe(this->sceneTopic,
+//            &GazeboInterface::OnScene, this);
+//        this->requestPub->WaitForConnection();
+        delete this->requestMsg;
+        this->requestMsg = gazebo::msgs::CreateRequest("scene_info");
+        this->requestPub->Publish(*this->requestMsg);
+        this->socketServer->ClearIncomingMessages();
+      }
+    }
 
     std::string msg = "";
     // Process the scene messages. DO THIS FIRST
