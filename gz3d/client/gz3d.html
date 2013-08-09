@@ -38,7 +38,6 @@
     <script src="js/include/Detector.js"></script>
     <script src="js/include/stats.min.js"></script>
     <script src="js/include/eventemitter2.js"></script>
-<!--    <script src="js/gzwebsocket.js"></script> -->
     <script src="js/include/roslib.js"></script>
     <script src="../build/gz3d.js"></script>
     <script>
@@ -61,7 +60,6 @@
       {
         scene = new GZ3D.Scene();
 
-
         container = document.getElementById( 'container' );
         container.appendChild(scene.GetDomElement());
 
@@ -72,64 +70,6 @@
         container.appendChild( stats.domElement );
 
         window.addEventListener( 'resize', OnWindowResize, false);
-
-
-
-        /*var updateTopic = new ROSLIB.Topic({
-          ros : webSocket,
-          name : '/topic',
-          messageType : '/msg',
-        });
-          //console.log("new topic");
-
-        processUpdate = function(message)
-        {
-          console.log("process update " + message.posX);
-
-          visuals['ian'].position.x = message.posX;
-          visuals['ian'].updateMatrix();
-//          setInterval(onReceiveMessage,0.1);
-
-        }
-        updateTopic.subscribe(processUpdate.bind());
-
-
-        var updateTopic2 = new ROSLIB.Topic({
-          ros : webSocket,
-          name : '/topic2',
-          messageType : '/msg',
-        });
-          //console.log("new topic");
-
-        processUpdate2 = function(message)
-        {
-          console.log("process update2 " + message.posY);
-
-          visuals['ian'].position.y = message.posY;
-          visuals['ian'].updateMatrix();
-//          setInterval(onReceiveMessage,0.1);
-
-        }
-  //      updateTopic2.subscribe(processUpdate2.bind());
-
-        var updateTopic3 = new ROSLIB.Topic({
-          ros : webSocket,
-          name : '/topic3',
-          messageType : '/msg',
-        });
-          //console.log("new topic");
-
-        processUpdate3 = function(message)
-        {
-          console.log("process update3 " + message.posZ);
-
-          visuals['ian'].position.z = message.posZ;
-          visuals['ian'].updateMatrix();
-//          setInterval(onReceiveMessage,0.1);
-
-        }
-     //   updateTopic3.subscribe(processUpdate3.bind());*/
-
       }
 
       function OnWindowResize()

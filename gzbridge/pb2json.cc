@@ -16,6 +16,7 @@
 */
 
 #include <string>
+#include <iostream>
 
 #include "pb2json.hh"
 
@@ -42,17 +43,17 @@ namespace gzweb {
   char *pb2json(const Message &msg)
   {
     json_t *root = parse_msg(&msg);
-    char *json = json_dumps(root,0);
+    char *json = json_dumps(root, 0);
     json_decref(root);
     return json; // should be freed by caller
   }
 
   char *pb2json(Message *msg, const char *buf, int len)
   {
-    std::string s (buf,len);
+    std::string s (buf, len);
     msg->ParseFromString(s);
     json_t *root = parse_msg(msg);
-    char *json = json_dumps(root,0);
+    char *json = json_dumps(root, 0);
     json_decref(root);
     return json; // should be freed by caller
   }
@@ -69,72 +70,72 @@ namespace gzweb {
       case FieldDescriptor::CPPTYPE_DOUBLE:
         for(size_t i = 0 ; i != count ; ++i)
         {
-          double  value1 = ref->GetRepeatedDouble(*msg,field,i);
-          json_array_append_new(arr,json_real(value1));
+          double  value1 = ref->GetRepeatedDouble(*msg, field, i);
+          json_array_append_new(arr, json_real(value1));
         }
         break;
       case FieldDescriptor::CPPTYPE_FLOAT:
         for(size_t i = 0 ; i != count ; ++i)
         {
-          float value2 = ref->GetRepeatedFloat(*msg,field,i);
-          json_array_append_new(arr,json_real(value2));
+          float value2 = ref->GetRepeatedFloat(*msg, field, i);
+          json_array_append_new(arr, json_real(value2));
         }
         break;
       case FieldDescriptor::CPPTYPE_INT64:
         for(size_t i = 0 ; i != count ; ++i)
         {
-          int64_t value3 = ref->GetRepeatedInt64(*msg,field,i);
+          int64_t value3 = ref->GetRepeatedInt64(*msg, field, i);
           json_array_append_new(arr,json_integer(value3)) ;
         }
         break;
       case FieldDescriptor::CPPTYPE_UINT64:
         for(size_t i = 0 ; i != count ; ++i)
         {
-          uint64_t value4 = ref->GetRepeatedUInt64(*msg,field,i);
-          json_array_append_new(arr,json_integer(value4));
+          uint64_t value4 = ref->GetRepeatedUInt64(*msg, field, i);
+          json_array_append_new(arr, json_integer(value4));
         }
         break;
       case FieldDescriptor::CPPTYPE_INT32:
         for(size_t i = 0 ; i != count ; ++i)
         {
-          int32_t value5 = ref->GetRepeatedInt32(*msg,field,i);
-          json_array_append_new(arr,json_integer(value5));
+          int32_t value5 = ref->GetRepeatedInt32(*msg, field, i);
+          json_array_append_new(arr, json_integer(value5));
         }
         break;
       case FieldDescriptor::CPPTYPE_UINT32:
         for(size_t i = 0 ; i != count ; ++i)
         {
-          uint32_t value6 = ref->GetRepeatedUInt32(*msg,field,i);
-          json_array_append_new(arr,json_integer(value6));
+          uint32_t value6 = ref->GetRepeatedUInt32(*msg, field, i);
+          json_array_append_new(arr, json_integer(value6));
         }
         break;
       case FieldDescriptor::CPPTYPE_BOOL:
         for(size_t i = 0 ; i != count ; ++i)
         {
           bool value7 = ref->GetRepeatedBool(*msg,field,i);
-          json_array_append_new(arr,value7?json_true():json_false())  ;
+          json_array_append_new(arr, value7 ? json_true() : json_false())  ;
         }
         break;
       case FieldDescriptor::CPPTYPE_STRING:
         for(size_t i = 0 ; i != count ; ++i)
         {
-          std::string value8 = ref->GetRepeatedString(*msg,field,i);
-          json_array_append_new(arr,json_string(value8.c_str()));
+          std::string value8 = ref->GetRepeatedString(*msg, field, i);
+          json_array_append_new(arr, json_string(value8.c_str()));
         }
         break;
       case FieldDescriptor::CPPTYPE_MESSAGE:
         for(size_t i = 0 ; i != count ; ++i)
         {
-          const Message *value9 = &(ref->GetRepeatedMessage(*msg,field,i));
-          json_array_append_new(arr,parse_msg(value9));
+          const Message *value9 = &(ref->GetRepeatedMessage(*msg, field, i));
+          json_array_append_new(arr, parse_msg(value9));
         }
         break;
       case FieldDescriptor::CPPTYPE_ENUM:
         for(size_t i = 0 ; i != count ; ++i)
         {
           const EnumValueDescriptor* value10
-              = ref->GetRepeatedEnum(*msg,field,i);
-          json_array_append_new(arr,json_integer(value10->number()));
+              = ref->GetRepeatedEnum(*msg, field, i);
+          json_array_append_new(arr, json_integer(value10->number()));
         }
         break;
       default:
@@ -159,10 +160,9 @@ namespace gzweb {
       if(!ref)return NULL;
       const char *name = field->name().c_str();
       if(field->is_repeated())
-        json_object_set_new(root,name,parse_repeated_field(msg,ref,field));
-      if(!field->is_repeated() && ref->HasField(*msg,field))
+        json_object_set_new(root, name, parse_repeated_field(msg, ref, field));
+      if(!field->is_repeated() && ref->HasField(*msg, field))
       {
-
         double value1;
         float value2;
         int64_t value3;
@@ -205,11 +205,10 @@ namespace gzweb {
             json_object_set_new(root,name,value7?json_true():json_false())  ;
             break;
           case FieldDescriptor::CPPTYPE_STRING:
-            if (field->type() == FieldDescriptor::TYPE_BYTES) {
+            if (field->type() == FieldDescriptor::TYPE_BYTES)
               value8 = hex_encode(ref->GetString(*msg,field));
-            } else {
+            else
               value8 = ref->GetString(*msg,field);
-            }
             json_object_set_new(root,name,json_string(value8.c_str()));
             break;
           case FieldDescriptor::CPPTYPE_MESSAGE:
@@ -226,5 +225,42 @@ namespace gzweb {
       }
     }
     return root;
+  }
+
+  std::string get(json_t *obj, const char *key)
+  {
+    if(json_is_array(obj))
+    {
+      for(int i = 0; i < json_array_size(obj); ++i)
+      {
+        json_t *data = json_array_get(obj, i);
+        std::string result = get(data, key);
+        if (!result.empty())
+          return result;
+      }
+      return "";
+    }
+    else
+    {
+      json_t *data = json_object_get(obj, key);
+      if(json_is_string(data))
+      {
+        const char *result = json_string_value(data);
+        return std::string(result);
+      }
+      else
+        return "";
+    }
+    return "";
+  }
+
+  std::string get_value(const char *msg, const char *key)
+  {
+    json_t *root;
+    json_error_t error;
+    root = json_loads(msg, 0, &error);
+    std::string result = get(root, key);
+    json_decref(root);
+    return result;
   }
 }

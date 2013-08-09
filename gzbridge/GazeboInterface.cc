@@ -167,20 +167,29 @@ void GazeboInterface::ProcessMessages()
   {
     boost::mutex::scoped_lock lock(*this->receiveMutex);
 
-    //
+    // Process incoming messages.
     if (this->socketServer)
     {
       std::vector<std::string> msgs =
           this->socketServer->GetIncomingMessages();
-      if (msgs.size() > 0)
+
+      for (unsigned int i = 0; i < msgs.size(); ++i)
       {
-//        this->sceneSub.reset();
-//        this->sceneSub = this->node->Subscribe(this->sceneTopic,
-//            &GazeboInterface::OnScene, this);
-//        this->requestPub->WaitForConnection();
-        delete this->requestMsg;
-        this->requestMsg = gazebo::msgs::CreateRequest("scene_info");
-        this->requestPub->Publish(*this->requestMsg);
+        std::string msg = msgs[i];
+        std::string topic = get_value(msg.c_str(), "topic");
+        if (!topic.empty())
+        {
+          if (topic == this->sceneTopic)
+          {
+            delete this->requestMsg;
+            this->requestMsg = gazebo::msgs::CreateRequest("scene_info");
+            this->requestPub->Publish(*this->requestMsg);
+          }
+          else if (topic == this->poseTopic)
+          {
+
+          }
+        }
         this->socketServer->ClearIncomingMessages();
       }
     }
@@ -260,7 +269,7 @@ void GazeboInterface::ProcessMessages()
     }
     this->requestMsgs.clear();
 
-    // Process all the model messages last. Remove pose message from the list
+    // Process all the pose messages last. Remove pose message from the list
     // only when a corresponding visual exits. We may receive pose updates
     // over the wire before  we recieve the visual
     pIter = this->poseMsgs.begin();

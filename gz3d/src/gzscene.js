@@ -76,7 +76,6 @@ GZ3D.Scene.prototype.Render = function()
 
 GZ3D.Scene.prototype.SetWindowSize = function(width, height)
 {
-//  this.camera.aspect = window.innerWidth / window.innerHeight;
   this.camera.aspect = width / height;
   this.camera.updateProjectionMatrix();
 
@@ -90,6 +89,16 @@ GZ3D.Scene.prototype.Add = function(model)
   this.scene.add(model);
 };
 
+GZ3D.Scene.prototype.SetEntityPose = function(name, position,
+    orientation)
+{
+  var entity = this.scene.getObjectByName(name);
+  if (entity)
+  {
+    entity.position = position;
+    entity.quaternion = orientation;
+  }
+};
 
 GZ3D.Scene.prototype.CreateGeom  = function(geom, material, parent)
 {
@@ -113,7 +122,6 @@ GZ3D.Scene.prototype.CreateGeom  = function(geom, material, parent)
     parent.add(mesh);
   }
 };
-
 
 GZ3D.Scene.prototype.CreateSphere = function(radius)
 {

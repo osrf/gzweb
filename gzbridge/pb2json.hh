@@ -28,6 +28,8 @@ namespace gzweb
 
   char *pb2json(google::protobuf::Message *msg,const char *buf,int len);
 
+  std::string get_value(const char *msg, const char *key);
+
   static json_t *parse_msg(const google::protobuf::Message *msg);
 
   static json_t *parse_repeated_field(const google::protobuf::Message *msg,

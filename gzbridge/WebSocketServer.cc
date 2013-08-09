@@ -74,7 +74,7 @@ int WebSocketServer::ServerCallback(struct libwebsocket_context *context,
       int n = libwebsocket_write(wsi, &pss->buf[LWS_SEND_BUFFER_PRE_PADDING],
           out.size(), LWS_WRITE_TEXT);
 
-      std::cerr << out.c_str() << std::endl;
+      //std::cerr << out.c_str() << std::endl;
       if (n < 0)
       {
         lwsl_err("ERROR %d writing to socket, hanging up\n", n);
@@ -103,7 +103,7 @@ int WebSocketServer::ServerCallback(struct libwebsocket_context *context,
         incoming.push_back(reinterpret_cast<const char *>(in));
 
       // test print incoming data.
-      std::cerr << incoming[incoming.size()-1] << std::endl;
+      //std::cerr << incoming[incoming.size()-1] << std::endl;
     }
     // libwebsocket_callback_on_writable(context, wsi);
     break;
