@@ -195,7 +195,7 @@ void GazeboInterface::ProcessMessages()
     }
 
     std::string msg = "";
-    // Process the scene messages. DO THIS FIRST
+    // Forward the scene messages.
     for (sIter = this->sceneMsgs.begin(); sIter != this->sceneMsgs.end();
         ++sIter)
     {
@@ -204,7 +204,7 @@ void GazeboInterface::ProcessMessages()
     }
     this->sceneMsgs.clear();
 
-    // Process the model messages.
+    // Forward the model messages.
     for (modelIter = this->modelMsgs.begin(); modelIter != this->modelMsgs.end();
         ++modelIter)
     {
@@ -214,7 +214,7 @@ void GazeboInterface::ProcessMessages()
     }
     this->modelMsgs.clear();
 
-    // Process the sensor messages.
+    // Forward the sensor messages.
     for (sensorIter = this->sensorMsgs.begin();
         sensorIter != this->sensorMsgs.end(); ++sensorIter)
     {
@@ -224,7 +224,7 @@ void GazeboInterface::ProcessMessages()
     }
     this->sensorMsgs.clear();
 
-    // Process the light messages.
+    // Forward the light messages.
     for (lightIter = this->lightMsgs.begin();
         lightIter != this->lightMsgs.end(); ++lightIter)
     {
@@ -234,7 +234,7 @@ void GazeboInterface::ProcessMessages()
     }
     this->lightMsgs.clear();
 
-    // Process the visual messages.
+    // Forward the visual messages.
     for (visualIter = this->visualMsgs.begin();
         visualIter != this->visualMsgs.end(); ++visualIter)
     {
@@ -244,7 +244,7 @@ void GazeboInterface::ProcessMessages()
     }
     this->visualMsgs.clear();
 
-    // Process the joint messages.
+    // Forward the joint messages.
     for (jointIter = this->jointMsgs.begin();
         jointIter != this->jointMsgs.end(); ++jointIter)
     {
@@ -254,25 +254,17 @@ void GazeboInterface::ProcessMessages()
     }
     this->jointMsgs.clear();
 
-    // Process the request messages
+    // Forward the request messages
     for (rIter =  this->requestMsgs.begin(); rIter != this->requestMsgs.end();
         ++rIter)
     {
       msg = this->PackOutgoingMsg(this->requestTopic,
           pb2json(*(*rIter).get()));
       this->Send(msg);
-      //this->ProcessRequestMsg(*rIter);
-      if ((*rIter)->request() == "entity_delete")
-      {
-        std::cerr << " delete ======== " << std::endl;
-        // _msg->data() has the name;
-      }
     }
     this->requestMsgs.clear();
 
-    // Process all the pose messages last. Remove pose message from the list
-    // only when a corresponding visual exits. We may receive pose updates
-    // over the wire before  we recieve the visual
+    // Forward all the pose messages.
     pIter = this->poseMsgs.begin();
     while (pIter != this->poseMsgs.end())
     {
@@ -280,24 +272,6 @@ void GazeboInterface::ProcessMessages()
           pb2json(*pIter));
       this->Send(msg);
       ++pIter;
-      /*Visual_M::iterator iter = this->visuals.find((*pIter).name());
-      if (iter != this->visuals.end() && iter->second)
-      {
-        // If an object is selected, don't let the physics engine move it.
-        if (!this->selectedVis || this->selectionMode != "move" ||
-            iter->first.find(this->selectedVis->GetName()) == std::string::npos)
-        {
-          math::Pose pose = gazebo::msgs::Convert(*pIter);
-          GZ_ASSERT(iter->second, "Visual pointer is NULL");
-          iter->second->SetPose(pose);
-          PoseMsgs_L::iterator prev = pIter++;
-          this->poseMsgs.erase(prev);
-        }
-        else
-          ++pIter;
-      }
-      else
-        ++pIter;*/
     }
     this->poseMsgs.clear();
   }

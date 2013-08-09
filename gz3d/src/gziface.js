@@ -22,44 +22,7 @@ GZ3D.GZIface.prototype.Init = function(scene)
     for (var i = 0; i < message.model.length; ++i)
     {
       var model = message.model[i];
-
-      var modelObj = new THREE.Object3D();
-      modelObj.name = model.name;
-      if (model.pose)
-      {
-        modelObj.position = model.pose.position;
-        modelObj.quaternion = model.pose.orientation;
-      }
-      for (var j = 0; j < model.link.length; ++j)
-      {
-        var link = model.link[j];
-        var linkObj = new THREE.Object3D();
-        linkObj.name = link.name;
-        if (link.pose)
-        {
-          linkObj.position = link.pose.position;
-          linkObj.quaternion = link.pose.orientation;
-        }
-        modelObj.add(linkObj);
-        for (var k = 0; k < link.visual.length; ++k)
-        {
-          var visual = link.visual[k];
-          if (visual.geometry)
-          {
-            var geom = visual.geometry;
-            var visualObj = new THREE.Object3D();
-            visualObj.name = visual.name;
-            if (visual.pose)
-            {
-              visualObj.position = visual.pose.position;
-              visualObj.quaternion = visual.pose.orientation;
-            }
-            // TODO  mat = FindMaterial(material);
-            this.scene.CreateGeom(geom, visual.material, visualObj);
-            linkObj.add(visualObj);
-          }
-        }
-      }
+      var modelObj = this.CreateModelFromMsg(model);
       this.scene.Add(modelObj);
     }
   };
@@ -85,6 +48,7 @@ GZ3D.GZIface.prototype.Init = function(scene)
 
   poseTopic.subscribe(PoseUpdate.bind(this));
 
+  // Requests - for deleting models
   var requestTopic = new ROSLIB.Topic({
     ros : this.webSocket,
     name : '~/request',
@@ -105,41 +69,61 @@ GZ3D.GZIface.prototype.Init = function(scene)
 
   requestTopic.subscribe(RequestUpdate.bind(this));
 
-/*
-  var updateTopic2 = new ROSLIB.Topic({
-    ros : webSocket,
-    name : '/topic2',
-    messageType : '/msg',
+  // Model info messages - currently used for spawning new models
+  var modelInfoTopic = new ROSLIB.Topic({
+    ros : this.webSocket,
+    name : '~/model/info',
+    messageType : 'model',
   });
-    //console.log("new topic");
 
-  processUpdate2 = function(message)
+  var ModelUpdate = function(message)
   {
-    console.log("process update2 " + message.posY);
+    var modelObj = this.CreateModelFromMsg(message);
+    this.scene.Add(modelObj);
+  };
 
-    visuals['ian'].position.y = message.posY;
-    visuals['ian'].updateMatrix();
-  //          setInterval(onReceiveMessage,0.1);
+  modelInfoTopic.subscribe(ModelUpdate.bind(this));
 
-  }
-  //      updateTopic2.subscribe(processUpdate2.bind());
+};
 
-  var updateTopic3 = new ROSLIB.Topic({
-    ros : webSocket,
-    name : '/topic3',
-    messageType : '/msg',
-  });
-    //console.log("new topic");
-
-  processUpdate3 = function(message)
+GZ3D.GZIface.prototype.CreateModelFromMsg = function(model)
+{
+  var modelObj = new THREE.Object3D();
+  modelObj.name = model.name;
+  if (model.pose)
   {
-    console.log("process update3 " + message.posZ);
-
-    visuals['ian'].position.z = message.posZ;
-    visuals['ian'].updateMatrix();
-  //          setInterval(onReceiveMessage,0.1);
-
+    modelObj.position = model.pose.position;
+    modelObj.quaternion = model.pose.orientation;
   }
-  //   updateTopic3.subscribe(processUpdate3.bind());*/
-
+  for (var j = 0; j < model.link.length; ++j)
+  {
+    var link = model.link[j];
+    var linkObj = new THREE.Object3D();
+    linkObj.name = link.name;
+    if (link.pose)
+    {
+      linkObj.position = link.pose.position;
+      linkObj.quaternion = link.pose.orientation;
+    }
+    modelObj.add(linkObj);
+    for (var k = 0; k < link.visual.length; ++k)
+    {
+      var visual = link.visual[k];
+      if (visual.geometry)
+      {
+        var geom = visual.geometry;
+        var visualObj = new THREE.Object3D();
+        visualObj.name = visual.name;
+        if (visual.pose)
+        {
+          visualObj.position = visual.pose.position;
+          visualObj.quaternion = visual.pose.orientation;
+        }
+        // TODO  mat = FindMaterial(material);
+        this.scene.CreateGeom(geom, visual.material, visualObj);
+        linkObj.add(visualObj);
+      }
+    }
+  }
+  return modelObj;
 };
