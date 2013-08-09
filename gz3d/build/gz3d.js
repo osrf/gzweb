@@ -24,9 +24,21 @@ GZ3D.GZIface.prototype.Init = function(scene)
 
   var SceneUpdate = function(message)
   {
-    for (var i = 0; i < message.model.length; ++i)
+    if (message.grid === true)
     {
-      var model = message.model[i];
+      this.scene.CreateGrid();
+    }
+
+    for (var i = 0; i < message.light.length; ++i)
+    {
+      var light = message.light[i];
+      var lightObj = this.CreateLightFromMsg(light);
+      this.scene.Add(lightObj);
+    }
+
+    for (var j = 0; j < message.model.length; ++j)
+    {
+      var model = message.model[j];
       var modelObj = this.CreateModelFromMsg(model);
       this.scene.Add(modelObj);
     }
@@ -74,7 +86,7 @@ GZ3D.GZIface.prototype.Init = function(scene)
 
   requestTopic.subscribe(RequestUpdate.bind(this));
 
-  // model info messages - currently used for spawning new models
+  // Model info messages - currently used for spawning new models
   var modelInfoTopic = new ROSLIB.Topic({
     ros : this.webSocket,
     name : '~/model/info',
@@ -90,44 +102,20 @@ GZ3D.GZIface.prototype.Init = function(scene)
   modelInfoTopic.subscribe(ModelUpdate.bind(this));
 
 
-
-/*
-  var updateTopic2 = new ROSLIB.Topic({
-    ros : webSocket,
-    name : '/topic2',
-    messageType : '/msg',
+  // Lights
+  var lightTopic = new ROSLIB.Topic({
+    ros : this.webSocket,
+    name : '~/light',
+    messageType : 'light',
   });
-    //console.log("new topic");
 
-  processUpdate2 = function(message)
+  var LigthtUpdate = function(message)
   {
-    console.log("process update2 " + message.posY);
+    var lightObj = this.CreateLightFromMsg(message);
+    this.scene.Add(lightObj);
+  };
 
-    visuals['ian'].position.y = message.posY;
-    visuals['ian'].updateMatrix();
-  //          setInterval(onReceiveMessage,0.1);
-
-  }
-  //      updateTopic2.subscribe(processUpdate2.bind());
-
-  var updateTopic3 = new ROSLIB.Topic({
-    ros : webSocket,
-    name : '/topic3',
-    messageType : '/msg',
-  });
-    //console.log("new topic");
-
-  processUpdate3 = function(message)
-  {
-    console.log("process update3 " + message.posZ);
-
-    visuals['ian'].position.z = message.posZ;
-    visuals['ian'].updateMatrix();
-  //          setInterval(onReceiveMessage,0.1);
-
-  }
-  //   updateTopic3.subscribe(processUpdate3.bind());*/
-
+  lightTopic.subscribe(LigthtUpdate.bind(this));
 };
 
 GZ3D.GZIface.prototype.CreateModelFromMsg = function(model)
@@ -172,6 +160,60 @@ GZ3D.GZIface.prototype.CreateModelFromMsg = function(model)
   return modelObj;
 };
 
+
+
+
+GZ3D.GZIface.prototype.CreateLightFromMsg = function(light)
+{
+  var rgbToHex = function(R,G,B)
+  {
+    var toHex = function(n)
+    {
+      n = parseInt(n,10);
+      if (isNaN(n))
+      {
+        return '00';
+      }
+      n = Math.max(0,Math.min(n,255));
+      return '0123456789ABCDEF'.charAt((n-n%16)/16)
+          + '0123456789ABCDEF'.charAt(n%16);
+    };
+    return toHex(R) + toHex(G) + toHex(B);
+  };
+
+  var lightObj;
+//  var color = rgbToHex(light.diffuse.r*255, light.diffuse.g*255,
+//      light.diffuse.b*255);
+  var color = 'rgb(' + light.diffuse.r*255 + ',' + light.diffuse.g*255 + ',' +
+      light.diffuse.b*255 + ')';
+  if (light.type === 1)
+  {
+    lightObj = new THREE.PointLight(color);
+    lightObj.distance = light.range;
+  }
+  if (light.type === 2)
+  {
+    lightObj = new THREE.SpotLight(color);
+    lightObj.distance = light.range;
+  }
+  else if (light.type === 3)
+  {
+    lightObj = new THREE.DirectionalLight(color);
+  }
+
+  lightObj.intensity = light.attenuation_constant;
+  lightObj.castShadow = light.cast_shadows;
+
+  if (light.pose)
+  {
+    lightObj.position = light.pose.position;
+    lightObj.quaternion = light.pose.orientation;
+  }
+  lightObj.name = light.name;
+
+  return lightObj;
+};
+
 GZ3D.Scene = function()
 {
   this.Init();
@@ -198,17 +240,8 @@ GZ3D.Scene.prototype.Init = function()
   this.renderer.setSize( window.innerWidth, window.innerHeight);
 
   // lights
-  var light = new THREE.DirectionalLight( 0xffffff );
-  light.position.set( 1, 1, 1 );
+  var light = new THREE.AmbientLight( 0x222222 );
   this.scene.add(light);
-
-  light = new THREE.AmbientLight( 0x222222 );
-  this.scene.add(light);
-
-  // grid
-  var grid = new THREE.GridHelper(10, 1);
-  grid.rotation.x = Math.PI * 0.5;
-  this.scene.add(grid);
 
   this.camera = new THREE.PerspectiveCamera(
       60, window.innerWidth / window.innerHeight, 1, 1000 );
@@ -294,6 +327,13 @@ GZ3D.Scene.prototype.CreateGeom  = function(geom, material, parent)
     mesh.updateMatrix();
     parent.add(mesh);
   }
+};
+
+GZ3D.Scene.prototype.CreateGrid = function()
+{
+  var grid = new THREE.GridHelper(10, 1);
+  grid.rotation.x = Math.PI * 0.5;
+  this.scene.add(grid);
 };
 
 GZ3D.Scene.prototype.CreateSphere = function(radius)

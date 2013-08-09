@@ -24,17 +24,8 @@ GZ3D.Scene.prototype.Init = function()
   this.renderer.setSize( window.innerWidth, window.innerHeight);
 
   // lights
-  var light = new THREE.DirectionalLight( 0xffffff );
-  light.position.set( 1, 1, 1 );
+  var light = new THREE.AmbientLight( 0x222222 );
   this.scene.add(light);
-
-  light = new THREE.AmbientLight( 0x222222 );
-  this.scene.add(light);
-
-  // grid
-  var grid = new THREE.GridHelper(10, 1);
-  grid.rotation.x = Math.PI * 0.5;
-  this.scene.add(grid);
 
   this.camera = new THREE.PerspectiveCamera(
       60, window.innerWidth / window.innerHeight, 1, 1000 );
@@ -120,6 +111,13 @@ GZ3D.Scene.prototype.CreateGeom  = function(geom, material, parent)
     mesh.updateMatrix();
     parent.add(mesh);
   }
+};
+
+GZ3D.Scene.prototype.CreateGrid = function()
+{
+  var grid = new THREE.GridHelper(10, 1);
+  grid.rotation.x = Math.PI * 0.5;
+  this.scene.add(grid);
 };
 
 GZ3D.Scene.prototype.CreateSphere = function(radius)

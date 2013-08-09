@@ -19,9 +19,21 @@ GZ3D.GZIface.prototype.Init = function(scene)
 
   var SceneUpdate = function(message)
   {
-    for (var i = 0; i < message.model.length; ++i)
+    if (message.grid === true)
     {
-      var model = message.model[i];
+      this.scene.CreateGrid();
+    }
+
+    for (var i = 0; i < message.light.length; ++i)
+    {
+      var light = message.light[i];
+      var lightObj = this.CreateLightFromMsg(light);
+      this.scene.Add(lightObj);
+    }
+
+    for (var j = 0; j < message.model.length; ++j)
+    {
+      var model = message.model[j];
       var modelObj = this.CreateModelFromMsg(model);
       this.scene.Add(modelObj);
     }
@@ -84,6 +96,21 @@ GZ3D.GZIface.prototype.Init = function(scene)
 
   modelInfoTopic.subscribe(ModelUpdate.bind(this));
 
+
+  // Lights
+  var lightTopic = new ROSLIB.Topic({
+    ros : this.webSocket,
+    name : '~/light',
+    messageType : 'light',
+  });
+
+  var LigthtUpdate = function(message)
+  {
+    var lightObj = this.CreateLightFromMsg(message);
+    this.scene.Add(lightObj);
+  };
+
+  lightTopic.subscribe(LigthtUpdate.bind(this));
 };
 
 GZ3D.GZIface.prototype.CreateModelFromMsg = function(model)
@@ -126,4 +153,40 @@ GZ3D.GZIface.prototype.CreateModelFromMsg = function(model)
     }
   }
   return modelObj;
+};
+
+
+
+
+GZ3D.GZIface.prototype.CreateLightFromMsg = function(light)
+{
+  var lightObj;
+  var color = 'rgb(' + light.diffuse.r*255 + ',' + light.diffuse.g*255 + ',' +
+      light.diffuse.b*255 + ')';
+  if (light.type === 1)
+  {
+    lightObj = new THREE.PointLight(color);
+    lightObj.distance = light.range;
+  }
+  if (light.type === 2)
+  {
+    lightObj = new THREE.SpotLight(color);
+    lightObj.distance = light.range;
+  }
+  else if (light.type === 3)
+  {
+    lightObj = new THREE.DirectionalLight(color);
+  }
+
+  lightObj.intensity = light.attenuation_constant;
+  lightObj.castShadow = light.cast_shadows;
+
+  if (light.pose)
+  {
+    lightObj.position = light.pose.position;
+    lightObj.quaternion = light.pose.orientation;
+  }
+  lightObj.name = light.name;
+
+  return lightObj;
 };
