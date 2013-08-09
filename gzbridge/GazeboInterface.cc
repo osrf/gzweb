@@ -74,8 +74,8 @@ GazeboInterface::GazeboInterface(WebSocketServer *_server)
       &GazeboInterface::OnPoseMsg, this);
 
   // For entity delete
-//  this->requestSub = this->node->Subscribe(this->requestTopic,
-//      &GazeboInterface::OnRequest, this);
+  this->requestSub = this->node->Subscribe(this->requestTopic,
+      &GazeboInterface::OnRequest, this);
 
   // For lights
   this->lightSub = this->node->Subscribe(this->lightTopic,
@@ -261,11 +261,12 @@ void GazeboInterface::ProcessMessages()
       msg = this->PackOutgoingMsg(this->requestTopic,
           pb2json(*(*rIter).get()));
       this->Send(msg);
-      /*this->ProcessRequestMsg(*rIter);
-      if (_msg->request() == "entity_delete")
+      //this->ProcessRequestMsg(*rIter);
+      if ((*rIter)->request() == "entity_delete")
       {
+        std::cerr << " delete ======== " << std::endl;
         // _msg->data() has the name;
-      }*/
+      }
     }
     this->requestMsgs.clear();
 

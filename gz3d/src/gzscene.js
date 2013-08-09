@@ -89,15 +89,14 @@ GZ3D.Scene.prototype.Add = function(model)
   this.scene.add(model);
 };
 
-GZ3D.Scene.prototype.SetEntityPose = function(name, position,
-    orientation)
+GZ3D.Scene.prototype.Remove = function(model)
 {
-  var entity = this.scene.getObjectByName(name);
-  if (entity)
-  {
-    entity.position = position;
-    entity.quaternion = orientation;
-  }
+  this.scene.remove(model);
+};
+
+GZ3D.Scene.prototype.GetByName = function(name)
+{
+  return this.scene.getObjectByName(name);
 };
 
 GZ3D.Scene.prototype.CreateGeom  = function(geom, material, parent)

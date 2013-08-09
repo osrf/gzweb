@@ -11,6 +11,7 @@ GZ3D.GZIface = function(scene)
 
 GZ3D.GZIface.prototype.Init = function(scene)
 {
+  // Set up initial scene
   this.webSocket = new ROSLIB.Ros({
     url : 'ws://localhost:7681'
   });
@@ -58,8 +59,7 @@ GZ3D.GZIface.prototype.Init = function(scene)
               visualObj.position = visual.pose.position;
               visualObj.quaternion = visual.pose.orientation;
             }
-//            mat = findMaterial(material);
-            // console.log (visual.name);
+            // TODO  mat = FindMaterial(material);
             this.scene.CreateGeom(geom, visual.material, visualObj);
             linkObj.add(visualObj);
           }
@@ -70,6 +70,8 @@ GZ3D.GZIface.prototype.Init = function(scene)
   };
   sceneTopic.subscribe(SceneUpdate.bind(this));
 
+
+  // Update model pose
   var poseTopic = new ROSLIB.Topic({
     ros : this.webSocket,
     name : '~/pose/info',
@@ -78,12 +80,33 @@ GZ3D.GZIface.prototype.Init = function(scene)
 
   var PoseUpdate = function(message)
   {
-    console.log('got pose msgs ' + message.name);
-    this.scene.SetEntityPose(message.name, message.position,
-        message.orientation);
+    var entity = this.scene.GetByName(message.name);
+    if (entity)
+    {
+      entity.position = message.position;
+      entity.quaternion = message.orientation;
+    }
   };
 
   poseTopic.subscribe(PoseUpdate.bind(this));
+
+  var requestTopic = new ROSLIB.Topic({
+    ros : this.webSocket,
+    name : '~/request',
+    messageType : 'request',
+  });
+
+  var RequestUpdate = function(message)
+  {
+    if (message.request === 'entity_delete')
+    {
+      var entity = this.scene.GetByName(message.data);
+      console.log('remove ' + entity.name );
+      this.scene.Remove(entity);
+    }
+  };
+
+  requestTopic.subscribe(RequestUpdate.bind(this));
 
 /*
   var updateTopic2 = new ROSLIB.Topic({
@@ -215,15 +238,15 @@ GZ3D.Scene.prototype.Add = function(model)
   this.scene.add(model);
 };
 
-GZ3D.Scene.prototype.SetEntityPose = function(name, position,
-    orientation)
+GZ3D.Scene.prototype.Remove = function(model)
 {
-  var entity = this.scene.getObjectByName(name);
-  if (entity)
-  {
-    entity.position = position;
-    entity.quaternion = orientation;
-  }
+  this.scene.remove(model);
+};
+
+GZ3D.Scene.prototype.GetByName = function(name)
+{
+  console.log('get ' + name);
+  return this.scene.getObjectByName(name);
 };
 
 GZ3D.Scene.prototype.CreateGeom  = function(geom, material, parent)

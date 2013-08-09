@@ -75,11 +75,35 @@ GZ3D.GZIface.prototype.Init = function(scene)
 
   var PoseUpdate = function(message)
   {
-    this.scene.SetEntityPose(message.name, message.position,
-        message.orientation);
+    var entity = this.scene.GetByName(message.name);
+    if (entity)
+    {
+      entity.position = message.position;
+      entity.quaternion = message.orientation;
+    }
   };
 
   poseTopic.subscribe(PoseUpdate.bind(this));
+
+  var requestTopic = new ROSLIB.Topic({
+    ros : this.webSocket,
+    name : '~/request',
+    messageType : 'request',
+  });
+
+  var RequestUpdate = function(message)
+  {
+    if (message.request === 'entity_delete')
+    {
+      var entity = this.scene.GetByName(message.data);
+      if (entity)
+      {
+        this.scene.Remove(entity);
+      }
+    }
+  };
+
+  requestTopic.subscribe(RequestUpdate.bind(this));
 
 /*
   var updateTopic2 = new ROSLIB.Topic({
