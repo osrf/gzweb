@@ -1,10 +1,10 @@
 GZ3D.GZIface = function(scene)
 {
   this.scene = scene;
-  this.Init();
+  this.init();
 };
 
-GZ3D.GZIface.prototype.Init = function(scene)
+GZ3D.GZIface.prototype.init = function(scene)
 {
   // Set up initial scene
   this.webSocket = new ROSLIB.Ros({
@@ -17,28 +17,28 @@ GZ3D.GZIface.prototype.Init = function(scene)
     messageType : 'scene',
   });
 
-  var SceneUpdate = function(message)
+  var sceneUpdate = function(message)
   {
     if (message.grid === true)
     {
-      this.scene.CreateGrid();
+      this.scene.createGrid();
     }
 
     for (var i = 0; i < message.light.length; ++i)
     {
       var light = message.light[i];
-      var lightObj = this.CreateLightFromMsg(light);
-      this.scene.Add(lightObj);
+      var lightObj = this.createLightFromMsg(light);
+      this.scene.add(lightObj);
     }
 
     for (var j = 0; j < message.model.length; ++j)
     {
       var model = message.model[j];
-      var modelObj = this.CreateModelFromMsg(model);
-      this.scene.Add(modelObj);
+      var modelObj = this.createModelFromMsg(model);
+      this.scene.add(modelObj);
     }
   };
-  sceneTopic.subscribe(SceneUpdate.bind(this));
+  sceneTopic.subscribe(sceneUpdate.bind(this));
 
 
   // Update model pose
@@ -48,9 +48,9 @@ GZ3D.GZIface.prototype.Init = function(scene)
     messageType : 'pose',
   });
 
-  var PoseUpdate = function(message)
+  var poseUpdate = function(message)
   {
-    var entity = this.scene.GetByName(message.name);
+    var entity = this.scene.getByName(message.name);
     if (entity)
     {
       entity.position = message.position;
@@ -58,7 +58,7 @@ GZ3D.GZIface.prototype.Init = function(scene)
     }
   };
 
-  poseTopic.subscribe(PoseUpdate.bind(this));
+  poseTopic.subscribe(poseUpdate.bind(this));
 
   // Requests - for deleting models
   var requestTopic = new ROSLIB.Topic({
@@ -67,19 +67,19 @@ GZ3D.GZIface.prototype.Init = function(scene)
     messageType : 'request',
   });
 
-  var RequestUpdate = function(message)
+  var requestUpdate = function(message)
   {
     if (message.request === 'entity_delete')
     {
-      var entity = this.scene.GetByName(message.data);
+      var entity = this.scene.getByName(message.data);
       if (entity)
       {
-        this.scene.Remove(entity);
+        this.scene.remove(entity);
       }
     }
   };
 
-  requestTopic.subscribe(RequestUpdate.bind(this));
+  requestTopic.subscribe(requestUpdate.bind(this));
 
   // Model info messages - currently used for spawning new models
   var modelInfoTopic = new ROSLIB.Topic({
@@ -88,13 +88,13 @@ GZ3D.GZIface.prototype.Init = function(scene)
     messageType : 'model',
   });
 
-  var ModelUpdate = function(message)
+  var modelUpdate = function(message)
   {
-    var modelObj = this.CreateModelFromMsg(message);
-    this.scene.Add(modelObj);
+    var modelObj = this.createModelFromMsg(message);
+    this.scene.add(modelObj);
   };
 
-  modelInfoTopic.subscribe(ModelUpdate.bind(this));
+  modelInfoTopic.subscribe(modelUpdate.bind(this));
 
 
   // Lights
@@ -104,16 +104,16 @@ GZ3D.GZIface.prototype.Init = function(scene)
     messageType : 'light',
   });
 
-  var LigthtUpdate = function(message)
+  var ligthtUpdate = function(message)
   {
     var lightObj = this.CreateLightFromMsg(message);
-    this.scene.Add(lightObj);
+    this.scene.add(lightObj);
   };
 
-  lightTopic.subscribe(LigthtUpdate.bind(this));
+  lightTopic.subscribe(ligthtUpdate.bind(this));
 };
 
-GZ3D.GZIface.prototype.CreateModelFromMsg = function(model)
+GZ3D.GZIface.prototype.createModelFromMsg = function(model)
 {
   var modelObj = new THREE.Object3D();
   modelObj.name = model.name;
@@ -147,7 +147,7 @@ GZ3D.GZIface.prototype.CreateModelFromMsg = function(model)
           visualObj.quaternion = visual.pose.orientation;
         }
         // TODO  mat = FindMaterial(material);
-        this.scene.CreateGeom(geom, visual.material, visualObj);
+        this.scene.createGeom(geom, visual.material, visualObj);
         linkObj.add(visualObj);
       }
     }
@@ -155,10 +155,7 @@ GZ3D.GZIface.prototype.CreateModelFromMsg = function(model)
   return modelObj;
 };
 
-
-
-
-GZ3D.GZIface.prototype.CreateLightFromMsg = function(light)
+GZ3D.GZIface.prototype.createLightFromMsg = function(light)
 {
   var lightObj;
   var color = 'rgb(' + light.diffuse.r*255 + ',' + light.diffuse.g*255 + ',' +

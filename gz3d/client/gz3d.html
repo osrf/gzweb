@@ -61,7 +61,7 @@
         scene = new GZ3D.Scene();
 
         container = document.getElementById( 'container' );
-        container.appendChild(scene.GetDomElement());
+        container.appendChild(scene.getDomElement());
 
         stats = new Stats();
         stats.domElement.style.position = 'absolute';
@@ -69,24 +69,24 @@
         stats.domElement.style.zIndex = 100;
         container.appendChild( stats.domElement );
 
-        window.addEventListener( 'resize', OnWindowResize, false);
+        window.addEventListener( 'resize', onWindowResize, false);
       }
 
-      function OnWindowResize()
+      function onWindowResize()
       {
         scene.SetWindowSize(window.innerWidth, window.innerHeight);
       }
 
 
-      function Animate()
+      function animate()
       {
-        requestAnimationFrame(Animate);
-        Render();
+        requestAnimationFrame(animate);
+        render();
       }
 
-      function Render()
+      function render()
       {
-        scene.Render();
+        scene.render();
         stats.update();
       }
     </script>

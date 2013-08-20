@@ -6,10 +6,10 @@ var GZ3D = GZ3D || {
 GZ3D.GZIface = function(scene)
 {
   this.scene = scene;
-  this.Init();
+  this.init();
 };
 
-GZ3D.GZIface.prototype.Init = function(scene)
+GZ3D.GZIface.prototype.init = function(scene)
 {
   // Set up initial scene
   this.webSocket = new ROSLIB.Ros({
@@ -22,28 +22,28 @@ GZ3D.GZIface.prototype.Init = function(scene)
     messageType : 'scene',
   });
 
-  var SceneUpdate = function(message)
+  var sceneUpdate = function(message)
   {
     if (message.grid === true)
     {
-      this.scene.CreateGrid();
+      this.scene.createGrid();
     }
 
     for (var i = 0; i < message.light.length; ++i)
     {
       var light = message.light[i];
-      var lightObj = this.CreateLightFromMsg(light);
-      this.scene.Add(lightObj);
+      var lightObj = this.createLightFromMsg(light);
+      this.scene.add(lightObj);
     }
 
     for (var j = 0; j < message.model.length; ++j)
     {
       var model = message.model[j];
-      var modelObj = this.CreateModelFromMsg(model);
-      this.scene.Add(modelObj);
+      var modelObj = this.createModelFromMsg(model);
+      this.scene.add(modelObj);
     }
   };
-  sceneTopic.subscribe(SceneUpdate.bind(this));
+  sceneTopic.subscribe(sceneUpdate.bind(this));
 
 
   // Update model pose
@@ -53,9 +53,9 @@ GZ3D.GZIface.prototype.Init = function(scene)
     messageType : 'pose',
   });
 
-  var PoseUpdate = function(message)
+  var poseUpdate = function(message)
   {
-    var entity = this.scene.GetByName(message.name);
+    var entity = this.scene.getByName(message.name);
     if (entity)
     {
       entity.position = message.position;
@@ -63,7 +63,7 @@ GZ3D.GZIface.prototype.Init = function(scene)
     }
   };
 
-  poseTopic.subscribe(PoseUpdate.bind(this));
+  poseTopic.subscribe(poseUpdate.bind(this));
 
   // Requests - for deleting models
   var requestTopic = new ROSLIB.Topic({
@@ -72,19 +72,19 @@ GZ3D.GZIface.prototype.Init = function(scene)
     messageType : 'request',
   });
 
-  var RequestUpdate = function(message)
+  var requestUpdate = function(message)
   {
     if (message.request === 'entity_delete')
     {
-      var entity = this.scene.GetByName(message.data);
+      var entity = this.scene.getByName(message.data);
       if (entity)
       {
-        this.scene.Remove(entity);
+        this.scene.remove(entity);
       }
     }
   };
 
-  requestTopic.subscribe(RequestUpdate.bind(this));
+  requestTopic.subscribe(requestUpdate.bind(this));
 
   // Model info messages - currently used for spawning new models
   var modelInfoTopic = new ROSLIB.Topic({
@@ -93,13 +93,13 @@ GZ3D.GZIface.prototype.Init = function(scene)
     messageType : 'model',
   });
 
-  var ModelUpdate = function(message)
+  var modelUpdate = function(message)
   {
-    var modelObj = this.CreateModelFromMsg(message);
-    this.scene.Add(modelObj);
+    var modelObj = this.createModelFromMsg(message);
+    this.scene.add(modelObj);
   };
 
-  modelInfoTopic.subscribe(ModelUpdate.bind(this));
+  modelInfoTopic.subscribe(modelUpdate.bind(this));
 
 
   // Lights
@@ -109,16 +109,16 @@ GZ3D.GZIface.prototype.Init = function(scene)
     messageType : 'light',
   });
 
-  var LigthtUpdate = function(message)
+  var ligthtUpdate = function(message)
   {
     var lightObj = this.CreateLightFromMsg(message);
-    this.scene.Add(lightObj);
+    this.scene.add(lightObj);
   };
 
-  lightTopic.subscribe(LigthtUpdate.bind(this));
+  lightTopic.subscribe(ligthtUpdate.bind(this));
 };
 
-GZ3D.GZIface.prototype.CreateModelFromMsg = function(model)
+GZ3D.GZIface.prototype.createModelFromMsg = function(model)
 {
   var modelObj = new THREE.Object3D();
   modelObj.name = model.name;
@@ -152,7 +152,7 @@ GZ3D.GZIface.prototype.CreateModelFromMsg = function(model)
           visualObj.quaternion = visual.pose.orientation;
         }
         // TODO  mat = FindMaterial(material);
-        this.scene.CreateGeom(geom, visual.material, visualObj);
+        this.scene.createGeom(geom, visual.material, visualObj);
         linkObj.add(visualObj);
       }
     }
@@ -160,30 +160,9 @@ GZ3D.GZIface.prototype.CreateModelFromMsg = function(model)
   return modelObj;
 };
 
-
-
-
-GZ3D.GZIface.prototype.CreateLightFromMsg = function(light)
+GZ3D.GZIface.prototype.createLightFromMsg = function(light)
 {
-  var rgbToHex = function(R,G,B)
-  {
-    var toHex = function(n)
-    {
-      n = parseInt(n,10);
-      if (isNaN(n))
-      {
-        return '00';
-      }
-      n = Math.max(0,Math.min(n,255));
-      return '0123456789ABCDEF'.charAt((n-n%16)/16)
-          + '0123456789ABCDEF'.charAt(n%16);
-    };
-    return toHex(R) + toHex(G) + toHex(B);
-  };
-
   var lightObj;
-//  var color = rgbToHex(light.diffuse.r*255, light.diffuse.g*255,
-//      light.diffuse.b*255);
   var color = 'rgb(' + light.diffuse.r*255 + ',' + light.diffuse.g*255 + ',' +
       light.diffuse.b*255 + ')';
   if (light.type === 1)
@@ -216,11 +195,10 @@ GZ3D.GZIface.prototype.CreateLightFromMsg = function(light)
 
 GZ3D.Scene = function()
 {
-  this.Init();
+  this.init();
 };
 
-
-GZ3D.Scene.prototype.Init = function()
+GZ3D.Scene.prototype.init = function()
 {
   this.scene = new THREE.Scene();
   // scene.fog = new THREE.FogExp2( 0xcccccc, 0.002 );
@@ -268,20 +246,20 @@ GZ3D.Scene.prototype.Init = function()
 
 };
 
-GZ3D.Scene.prototype.GetDomElement = function()
+GZ3D.Scene.prototype.getDomElement = function()
 {
   return this.renderer.domElement;
 };
 
 
-GZ3D.Scene.prototype.Render = function()
+GZ3D.Scene.prototype.render = function()
 {
   this.renderer.render(this.scene, this.camera);
   this.controls.update();
 };
 
 
-GZ3D.Scene.prototype.SetWindowSize = function(width, height)
+GZ3D.Scene.prototype.setWindowSize = function(width, height)
 {
   this.camera.aspect = width / height;
   this.camera.updateProjectionMatrix();
@@ -291,35 +269,35 @@ GZ3D.Scene.prototype.SetWindowSize = function(width, height)
   this.Render();
 };
 
-GZ3D.Scene.prototype.Add = function(model)
+GZ3D.Scene.prototype.add = function(model)
 {
   this.scene.add(model);
 };
 
-GZ3D.Scene.prototype.Remove = function(model)
+GZ3D.Scene.prototype.remove = function(model)
 {
   this.scene.remove(model);
 };
 
-GZ3D.Scene.prototype.GetByName = function(name)
+GZ3D.Scene.prototype.getByName = function(name)
 {
   return this.scene.getObjectByName(name);
 };
 
-GZ3D.Scene.prototype.CreateGeom  = function(geom, material, parent)
+GZ3D.Scene.prototype.createGeom  = function(geom, material, parent)
 {
   var mesh;
   if (geom.box)
   {
-    mesh = this.CreateBox(geom.box.size.x, geom.box.size.y, geom.box.size.z);
+    mesh = this.createBox(geom.box.size.x, geom.box.size.y, geom.box.size.z);
   }
   if (geom.cylinder)
   {
-    mesh = this.CreateCylinder(geom.cylinder.radius, geom.cylinder.length);
+    mesh = this.createCylinder(geom.cylinder.radius, geom.cylinder.length);
   }
   if (geom.sphere)
   {
-    mesh = this.CreateSphere(geom.sphere.radius);
+    mesh = this.createSphere(geom.sphere.radius);
   }
 
   if (mesh)
@@ -329,14 +307,14 @@ GZ3D.Scene.prototype.CreateGeom  = function(geom, material, parent)
   }
 };
 
-GZ3D.Scene.prototype.CreateGrid = function()
+GZ3D.Scene.prototype.createGrid = function()
 {
   var grid = new THREE.GridHelper(10, 1);
   grid.rotation.x = Math.PI * 0.5;
   this.scene.add(grid);
 };
 
-GZ3D.Scene.prototype.CreateSphere = function(radius)
+GZ3D.Scene.prototype.createSphere = function(radius)
 {
   var geometry = new THREE.SphereGeometry(radius, 32, 32);
   var material =  new THREE.MeshPhongMaterial(
@@ -346,7 +324,7 @@ GZ3D.Scene.prototype.CreateSphere = function(radius)
 };
 
 
-GZ3D.Scene.prototype.CreateCylinder = function(radius, length)
+GZ3D.Scene.prototype.createCylinder = function(radius, length)
 {
   var geometry = new THREE.CylinderGeometry(radius, radius, length, 32, 1,
       false);
@@ -357,7 +335,7 @@ GZ3D.Scene.prototype.CreateCylinder = function(radius, length)
   return mesh;
 };
 
-GZ3D.Scene.prototype.CreateBox = function(width, height, depth)
+GZ3D.Scene.prototype.createBox = function(width, height, depth)
 {
   var geometry = new THREE.CubeGeometry(width, height, depth, 1, 1, 1);
   var material =  new THREE.MeshPhongMaterial(

@@ -1,10 +1,9 @@
 GZ3D.Scene = function()
 {
-  this.Init();
+  this.init();
 };
 
-
-GZ3D.Scene.prototype.Init = function()
+GZ3D.Scene.prototype.init = function()
 {
   this.scene = new THREE.Scene();
   // scene.fog = new THREE.FogExp2( 0xcccccc, 0.002 );
@@ -52,20 +51,20 @@ GZ3D.Scene.prototype.Init = function()
 
 };
 
-GZ3D.Scene.prototype.GetDomElement = function()
+GZ3D.Scene.prototype.getDomElement = function()
 {
   return this.renderer.domElement;
 };
 
 
-GZ3D.Scene.prototype.Render = function()
+GZ3D.Scene.prototype.render = function()
 {
   this.renderer.render(this.scene, this.camera);
   this.controls.update();
 };
 
 
-GZ3D.Scene.prototype.SetWindowSize = function(width, height)
+GZ3D.Scene.prototype.setWindowSize = function(width, height)
 {
   this.camera.aspect = width / height;
   this.camera.updateProjectionMatrix();
@@ -75,35 +74,35 @@ GZ3D.Scene.prototype.SetWindowSize = function(width, height)
   this.Render();
 };
 
-GZ3D.Scene.prototype.Add = function(model)
+GZ3D.Scene.prototype.add = function(model)
 {
   this.scene.add(model);
 };
 
-GZ3D.Scene.prototype.Remove = function(model)
+GZ3D.Scene.prototype.remove = function(model)
 {
   this.scene.remove(model);
 };
 
-GZ3D.Scene.prototype.GetByName = function(name)
+GZ3D.Scene.prototype.getByName = function(name)
 {
   return this.scene.getObjectByName(name);
 };
 
-GZ3D.Scene.prototype.CreateGeom  = function(geom, material, parent)
+GZ3D.Scene.prototype.createGeom  = function(geom, material, parent)
 {
   var mesh;
   if (geom.box)
   {
-    mesh = this.CreateBox(geom.box.size.x, geom.box.size.y, geom.box.size.z);
+    mesh = this.createBox(geom.box.size.x, geom.box.size.y, geom.box.size.z);
   }
   if (geom.cylinder)
   {
-    mesh = this.CreateCylinder(geom.cylinder.radius, geom.cylinder.length);
+    mesh = this.createCylinder(geom.cylinder.radius, geom.cylinder.length);
   }
   if (geom.sphere)
   {
-    mesh = this.CreateSphere(geom.sphere.radius);
+    mesh = this.createSphere(geom.sphere.radius);
   }
 
   if (mesh)
@@ -113,14 +112,14 @@ GZ3D.Scene.prototype.CreateGeom  = function(geom, material, parent)
   }
 };
 
-GZ3D.Scene.prototype.CreateGrid = function()
+GZ3D.Scene.prototype.createGrid = function()
 {
   var grid = new THREE.GridHelper(10, 1);
   grid.rotation.x = Math.PI * 0.5;
   this.scene.add(grid);
 };
 
-GZ3D.Scene.prototype.CreateSphere = function(radius)
+GZ3D.Scene.prototype.createSphere = function(radius)
 {
   var geometry = new THREE.SphereGeometry(radius, 32, 32);
   var material =  new THREE.MeshPhongMaterial(
@@ -130,7 +129,7 @@ GZ3D.Scene.prototype.CreateSphere = function(radius)
 };
 
 
-GZ3D.Scene.prototype.CreateCylinder = function(radius, length)
+GZ3D.Scene.prototype.createCylinder = function(radius, length)
 {
   var geometry = new THREE.CylinderGeometry(radius, radius, length, 32, 1,
       false);
@@ -141,7 +140,7 @@ GZ3D.Scene.prototype.CreateCylinder = function(radius, length)
   return mesh;
 };
 
-GZ3D.Scene.prototype.CreateBox = function(width, height, depth)
+GZ3D.Scene.prototype.createBox = function(width, height, depth)
 {
   var geometry = new THREE.CubeGeometry(width, height, depth, 1, 1, 1);
   var material =  new THREE.MeshPhongMaterial(
