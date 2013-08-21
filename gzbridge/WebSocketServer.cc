@@ -43,6 +43,148 @@ std::vector<std::string> WebSocketServer::outgoing;
 boost::recursive_mutex incomingMutex;
 boost::recursive_mutex outgoingMutex;
 
+struct serveable {
+  const char *urlpath;
+  const char *mimetype;
+};
+
+static const struct serveable whitelist[] = {
+  // last one is the default served if no match
+  { "/gz3d.html", "text/html" },
+};
+
+/////////////////////////////////////////////////
+int WebSocketServer::HttpCallback(struct libwebsocket_context *context,
+    struct libwebsocket *wsi, enum libwebsocket_callback_reasons reason,
+    void *user, void *in, size_t len)
+{
+#if 0
+  char client_name[128];
+  char client_ip[128];
+#endif
+//  char buf[256];
+  std::string  buf;
+  char leaf_path[1024];
+  int n, m;
+  unsigned char *p;
+  static unsigned char buffer[4096];
+  struct HttpSessionData *pss = (struct HttpSessionData *)user;
+#ifdef EXTERNAL_POLL
+  int fd = (int)(long)in;
+#endif
+
+  switch (reason)
+  {
+  case LWS_CALLBACK_HTTP:
+
+
+    for (n = 0; n < (sizeof(whitelist) / sizeof(whitelist[0]) - 1); n++)
+      if (in && strcmp((const char *)in, whitelist[n].urlpath) == 0)
+        break;
+
+    buf = std::string("../../gz3d/client") + whitelist[n].urlpath;
+
+    if (libwebsockets_serve_http_file(context, wsi, buf.c_str(),
+        whitelist[n].mimetype))
+      return -1;
+    break;
+
+  case LWS_CALLBACK_HTTP_FILE_COMPLETION:
+	  // kill the connection after we sent one file
+	  return -1;
+
+  case LWS_CALLBACK_HTTP_WRITEABLE:
+
+    do {
+      n = read(pss->fd, buffer, sizeof buffer);
+      // problem reading, close conn
+      if (n < 0)
+        goto bail;
+      // sent it all, close conn
+      if (n == 0)
+        goto bail;
+      // because it's HTTP and not websocket, don't need to take
+      // care about pre and postamble
+      m = libwebsocket_write(wsi, buffer, n, LWS_WRITE_HTTP);
+      if (m < 0)
+        // write failed, close conn
+        goto bail;
+      if (m != n)
+        // partial write, adjust
+        lseek(pss->fd, m - n, SEEK_CUR);
+
+    } while (!lws_send_pipe_choked(wsi));
+    libwebsocket_callback_on_writable(context, wsi);
+    break;
+
+  bail:
+    close(pss->fd);
+    return -1;
+
+  /*
+   * callback for confirming to continue with client IP appear in
+   * protocol 0 callback since no websocket protocol has been agreed
+   * yet.  You can just ignore this if you won't filter on client IP
+   * since the default uhandled callback return is 0 meaning let the
+   * connection continue.
+   */
+
+  case LWS_CALLBACK_FILTER_NETWORK_CONNECTION:
+  #if 0
+	  libwebsockets_get_peer_addresses(context, wsi, (int)(long)in, client_name,
+		       sizeof(client_name), client_ip, sizeof(client_ip));
+
+	  fprintf(stderr, "Received network connect from %s (%s)\n",
+						  client_name, client_ip);
+  #endif
+	  /* if we returned non-zero from here, we kill the connection */
+	  break;
+
+#ifdef EXTERNAL_POLL
+
+  // callbacks for managing the external poll() array appear in
+  // protocol 0 callback_echo
+
+  case LWS_CALLBACK_ADD_POLL_FD:
+
+    if (count_pollfds >= max_poll_elements)
+    {
+      lwsl_err("LWS_CALLBACK_ADD_POLL_FD: too many sockets to track\n");
+      return 1;
+    }
+
+    fd_lookup[fd] = count_pollfds;
+    pollfds[count_pollfds].fd = fd;
+    pollfds[count_pollfds].events = (int)(long)len;
+    pollfds[count_pollfds++].revents = 0;
+    break;
+
+  case LWS_CALLBACK_DEL_POLL_FD:
+    if (!--count_pollfds)
+	    break;
+    m = fd_lookup[fd];
+    /* have the last guy take up the vacant slot */
+    pollfds[m] = pollfds[count_pollfds];
+    fd_lookup[pollfds[count_pollfds].fd] = m;
+    break;
+
+  case LWS_CALLBACK_SET_MODE_POLL_FD:
+    pollfds[fd_lookup[fd]].events |= (int)(long)len;
+    break;
+
+  case LWS_CALLBACK_CLEAR_MODE_POLL_FD:
+    pollfds[fd_lookup[fd]].events &= ~(int)(long)len;
+    break;
+#endif
+
+  default:
+	  break;
+  }
+
+  return 0;
+}
+
+
 /////////////////////////////////////////////////
 int WebSocketServer::ServerCallback(struct libwebsocket_context *context,
     struct libwebsocket *wsi, enum libwebsocket_callback_reasons reason,
@@ -50,7 +192,8 @@ int WebSocketServer::ServerCallback(struct libwebsocket_context *context,
 {
   struct SessionData *pss = (struct SessionData *)user;
 
-  switch (reason) {
+  switch (reason)
+  {
 
   // when the callback is used for server operations
   case LWS_CALLBACK_SERVER_WRITEABLE:
@@ -168,6 +311,14 @@ void WebSocketServer::Run()
   memset(&info, 0, sizeof info);
 
   struct libwebsocket_protocols protocols[] = {
+     {
+      // name
+      "http",
+      // callback
+      WebSocketServer::HttpCallback,
+      // session data size
+      sizeof(struct SessionData)
+    },
     {
       // name
       "",
@@ -233,7 +384,7 @@ void WebSocketServer::Run()
   {
     n = libwebsocket_service(context, 10);
     libwebsocket_callback_on_writable_all_protocol(
-        &protocols[0]);
+        &protocols[1]);
   }
   libwebsocket_context_destroy(context);
 
