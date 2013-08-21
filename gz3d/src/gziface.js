@@ -1,3 +1,7 @@
+var GAZEBO_MODEL_DATABASE_URI='http://gazebosim.org/models';
+// we shouldn't really load anything from local filesystem
+//var GAZEBO_MODEL_PATH = '~/.gazebo/models'
+
 GZ3D.GZIface = function(scene)
 {
   this.scene = scene;
@@ -106,7 +110,7 @@ GZ3D.GZIface.prototype.init = function(scene)
 
   var ligthtUpdate = function(message)
   {
-    var lightObj = this.CreateLightFromMsg(message);
+    var lightObj = this.createLightFromMsg(message);
     this.scene.add(lightObj);
   };
 
@@ -147,7 +151,7 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
           visualObj.quaternion = visual.pose.orientation;
         }
         // TODO  mat = FindMaterial(material);
-        this.scene.createGeom(geom, visual.material, visualObj);
+        this.createGeom(geom, visual.material, visualObj);
         linkObj.add(visualObj);
       }
     }
@@ -186,4 +190,79 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
   lightObj.name = light.name;
 
   return lightObj;
+};
+
+GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
+{
+  var obj;
+  if (geom.box)
+  {
+    obj = this.scene.createBox(geom.box.size.x, geom.box.size.y,
+        geom.box.size.z);
+  }
+  else if (geom.cylinder)
+  {
+    obj = this.scene.createCylinder(geom.cylinder.radius,
+        geom.cylinder.length);
+  }
+  else if (geom.sphere)
+  {
+    obj = this.scene.createSphere(geom.sphere.radius);
+  }
+  else if (geom.mesh)
+  {
+    // get model name which the mesh is in
+    var rootModel = parent;
+    while (rootModel.parent)
+    {
+      rootModel = rootModel.parent;
+    }
+
+    // find model from database, download the mesh if it exists
+    var manifestXML;
+    var manifestURI = GAZEBO_MODEL_DATABASE_URI + '/manifest.xml';
+    var request = new XMLHttpRequest();
+    request.open('GET', manifestURI, false);
+    request.onreadystatechange = function(){
+      if (request.readyState === 4)
+      {
+        if (request.status === 200 || request.status === 0)
+        {
+            manifestXML = request.responseXML;
+        }
+      }
+    };
+    request.send();
+
+    var uriPath;
+    var modelAvailable = false;
+    var modelsElem = manifestXML.getElementsByTagName('models')[0];
+    var i;
+    for (i = 0; i < modelsElem.getElementsByTagName('uri').length; ++i)
+    {
+      var uri = modelsElem.getElementsByTagName('uri')[i];
+      var model = uri.substring(uri.indexOf('://') + 3);
+      if (model === rootModel)
+      {
+        modelAvailable = true;
+      }
+    }
+
+    if (modelAvailable)
+    {
+      var meshUri = geom.mesh.uri;
+      var uriType = meshUri.substring(0, meshUri.indexOf('://'));
+      if (uriType === 'file' || uriType === 'model')
+      {
+        obj = this.scene.loadURI(uriPath + '/' +
+            meshUri.substring(meshUri.indexOf('://') + 3));
+      }
+    }
+  }
+
+  if (obj)
+  {
+    obj.updateMatrix();
+    parent.add(obj);
+  }
 };

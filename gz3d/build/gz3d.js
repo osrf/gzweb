@@ -3,6 +3,10 @@ var GZ3D = GZ3D || {
 };
 
 
+var GAZEBO_MODEL_DATABASE_URI='http://gazebosim.org/models';
+// we shouldn't really load anything from local filesystem
+//var GAZEBO_MODEL_PATH = '~/.gazebo/models'
+
 GZ3D.GZIface = function(scene)
 {
   this.scene = scene;
@@ -111,7 +115,7 @@ GZ3D.GZIface.prototype.init = function(scene)
 
   var ligthtUpdate = function(message)
   {
-    var lightObj = this.CreateLightFromMsg(message);
+    var lightObj = this.createLightFromMsg(message);
     this.scene.add(lightObj);
   };
 
@@ -152,7 +156,7 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
           visualObj.quaternion = visual.pose.orientation;
         }
         // TODO  mat = FindMaterial(material);
-        this.scene.createGeom(geom, visual.material, visualObj);
+        this.createGeom(geom, visual.material, visualObj);
         linkObj.add(visualObj);
       }
     }
@@ -192,6 +196,102 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
 
   return lightObj;
 };
+
+GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
+{
+  var obj;
+  if (geom.box)
+  {
+    obj = this.scene.createBox(geom.box.size.x, geom.box.size.y,
+        geom.box.size.z);
+  }
+  else if (geom.cylinder)
+  {
+    obj = this.scene.createCylinder(geom.cylinder.radius,
+        geom.cylinder.length);
+  }
+  else if (geom.sphere)
+  {
+    obj = this.scene.createSphere(geom.sphere.radius);
+  }
+  else if (geom.mesh)
+  {
+    // get model name which the mesh is in
+    var rootModel = parent;
+    while (rootModel.parent)
+    {
+      rootModel = rootModel.parent;
+    }
+
+    // find model from database, download the mesh if it exists
+    var manifestXML;
+    var manifestURI = GAZEBO_MODEL_DATABASE_URI + '/manifest.xml';
+    var request = new XMLHttpRequest();
+    request.open('GET', manifestURI, false);
+    request.onreadystatechange = function(){
+      if (request.readyState === 4)
+      {
+        if (request.status === 200 || request.status === 0)
+        {
+            manifestXML = request.responseXML;
+        }
+      }
+    };
+    request.send();
+
+    var uriPath;
+    var modelAvailable = false;
+    var modelsElem = manifestXML.getElementsByTagName('models')[0];
+    var i;
+    for (i = 0; i < modelsElem.getElementsByTagName('uri').length; ++i)
+    {
+      var uri = modelsElem.getElementsByTagName('uri')[i];
+      var model = uri.substring(uri.indexOf('://') + 3);
+      if (model === rootModel)
+      {
+        modelAvailable = true;
+      }
+    }
+
+    if (modelAvailable)
+    {
+      var meshUri = geom.mesh.uri;
+      var uriType = meshUri.substring(0, meshUri.indexOf('://'));
+      if (uriType === 'file' || uriType === 'model')
+      {
+        obj = this.scene.loadURI(uriPath + '/' +
+            meshUri.substring(meshUri.indexOf('://') + 3));
+      }
+    }
+  }
+
+  if (obj)
+  {
+    obj.updateMatrix();
+    parent.add(obj);
+  }
+};
+
+/*(function(global) {
+  "use strict";
+  var GZ3D.GZModelDatabase = function() {
+
+    if ( GZ3D.GZModelDatabase.prototype._singletonInstance ) {
+      return GZ3D.GZModelDatabase.prototype._singletonInstance;
+    }
+    GZ3D.GZModelDatabase.prototype._singletonInstance = this;
+
+    this.hasModel = function()
+    {
+
+    };
+  };
+
+var a = new MySingletonClass();
+var b = MySingletonClass();
+global.result = a === b;
+
+}(window))*/
 
 GZ3D.Scene = function()
 {
@@ -240,7 +340,7 @@ GZ3D.Scene.prototype.init = function()
   this.controls.dynamicDampingFactor = 0.3;
   this.controls.keys = [ 65, 83, 68 ];
 
-  this.controls.addEventListener('change', this.Render.call(this));
+  this.controls.addEventListener('change', this.render.call(this));
 
   this.iface = new GZ3D.GZIface(this);
 
@@ -284,29 +384,6 @@ GZ3D.Scene.prototype.getByName = function(name)
   return this.scene.getObjectByName(name);
 };
 
-GZ3D.Scene.prototype.createGeom  = function(geom, material, parent)
-{
-  var mesh;
-  if (geom.box)
-  {
-    mesh = this.createBox(geom.box.size.x, geom.box.size.y, geom.box.size.z);
-  }
-  if (geom.cylinder)
-  {
-    mesh = this.createCylinder(geom.cylinder.radius, geom.cylinder.length);
-  }
-  if (geom.sphere)
-  {
-    mesh = this.createSphere(geom.sphere.radius);
-  }
-
-  if (mesh)
-  {
-    mesh.updateMatrix();
-    parent.add(mesh);
-  }
-};
-
 GZ3D.Scene.prototype.createGrid = function()
 {
   var grid = new THREE.GridHelper(10, 1);
@@ -342,4 +419,66 @@ GZ3D.Scene.prototype.createBox = function(width, height, depth)
       {color:0xffffff, shading: THREE.SmoothShading} );
   var mesh = new THREE.Mesh(geometry, material);
   return mesh;
+};
+
+GZ3D.Scene.prototype.loadURI = function(uri)
+{
+  var uriPath = uri.substring(0, uri.lastIndexOf('/'));
+  var uriFile = uri.substring(uri.lastIndexOf('/') + 1);
+
+  // load urdf model
+  if (uriFile.substr(-4).toLowerCase() === '.dae')
+  {
+    return this.loadCollada(uri);
+  }
+  else if (uriFile.substr(-5).toLowerCase() === '.urdf')
+  {
+    var urdfModel = new ROSLIB.UrdfModel({
+      string : uri
+    });
+
+    // adapted from ros3djs
+    var links = urdfModel.links;
+    for ( var l in links) {
+      var link = links[l];
+      if (link.visual && link.visual.geometry) {
+        if (link.visual.geometry.type === ROSLIB.URDF_MESH) {
+          var frameID = '/' + link.name;
+          var filename = link.visual.geometry.filename;
+          var meshType = filename.substr(-4).toLowerCase();
+          var mesh = filename.substring(filename.indexOf('://') + 3);
+          // ignore mesh files which are not in Collada format
+          if (meshType === '.dae')
+          {
+            var dae = this.loadCollada(uriPath + '/' + mesh);
+            // check for a scale
+            if(link.visual.geometry.scale)
+            {
+              dae.scale = new THREE.Vector3(
+                  link.visual.geometry.scale.x,
+                  link.visual.geometry.scale.y,
+                  link.visual.geometry.scale.z
+              );
+            }
+            return dae;
+          }
+        }
+      }
+    }
+  }
+};
+
+GZ3D.Scene.prototype.loadCollada = function(uri)
+{
+  var dae;
+  var loader = new THREE.ColladaLoader();
+  // loader.options.convertUpAxis = true;
+  loader.load(uri, function(collada)
+  {
+    dae = collada.scene;
+    dae.updateMatrix();
+    //init();
+    //animate();
+  } );
+  return dae;
 };

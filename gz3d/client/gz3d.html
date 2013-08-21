@@ -52,11 +52,11 @@
 //      var webSocket;
 
 //      ConnectToWebServer();
-      Init();
-      Animate();
+      init();
+      animate();
 
 
-      function Init()
+      function init()
       {
         scene = new GZ3D.Scene();
 
@@ -74,7 +74,7 @@
 
       function onWindowResize()
       {
-        scene.SetWindowSize(window.innerWidth, window.innerHeight);
+        scene.wetWindowSize(window.innerWidth, window.innerHeight);
       }
 
 

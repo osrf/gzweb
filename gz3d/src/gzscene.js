@@ -45,7 +45,7 @@ GZ3D.Scene.prototype.init = function()
   this.controls.dynamicDampingFactor = 0.3;
   this.controls.keys = [ 65, 83, 68 ];
 
-  this.controls.addEventListener('change', this.Render.call(this));
+  this.controls.addEventListener('change', this.render.call(this));
 
   this.iface = new GZ3D.GZIface(this);
 
@@ -89,29 +89,6 @@ GZ3D.Scene.prototype.getByName = function(name)
   return this.scene.getObjectByName(name);
 };
 
-GZ3D.Scene.prototype.createGeom  = function(geom, material, parent)
-{
-  var mesh;
-  if (geom.box)
-  {
-    mesh = this.createBox(geom.box.size.x, geom.box.size.y, geom.box.size.z);
-  }
-  if (geom.cylinder)
-  {
-    mesh = this.createCylinder(geom.cylinder.radius, geom.cylinder.length);
-  }
-  if (geom.sphere)
-  {
-    mesh = this.createSphere(geom.sphere.radius);
-  }
-
-  if (mesh)
-  {
-    mesh.updateMatrix();
-    parent.add(mesh);
-  }
-};
-
 GZ3D.Scene.prototype.createGrid = function()
 {
   var grid = new THREE.GridHelper(10, 1);
@@ -147,4 +124,66 @@ GZ3D.Scene.prototype.createBox = function(width, height, depth)
       {color:0xffffff, shading: THREE.SmoothShading} );
   var mesh = new THREE.Mesh(geometry, material);
   return mesh;
+};
+
+GZ3D.Scene.prototype.loadURI = function(uri)
+{
+  var uriPath = uri.substring(0, uri.lastIndexOf('/'));
+  var uriFile = uri.substring(uri.lastIndexOf('/') + 1);
+
+  // load urdf model
+  if (uriFile.substr(-4).toLowerCase() === '.dae')
+  {
+    return this.loadCollada(uri);
+  }
+  else if (uriFile.substr(-5).toLowerCase() === '.urdf')
+  {
+    var urdfModel = new ROSLIB.UrdfModel({
+      string : uri
+    });
+
+    // adapted from ros3djs
+    var links = urdfModel.links;
+    for ( var l in links) {
+      var link = links[l];
+      if (link.visual && link.visual.geometry) {
+        if (link.visual.geometry.type === ROSLIB.URDF_MESH) {
+          var frameID = '/' + link.name;
+          var filename = link.visual.geometry.filename;
+          var meshType = filename.substr(-4).toLowerCase();
+          var mesh = filename.substring(filename.indexOf('://') + 3);
+          // ignore mesh files which are not in Collada format
+          if (meshType === '.dae')
+          {
+            var dae = this.loadCollada(uriPath + '/' + mesh);
+            // check for a scale
+            if(link.visual.geometry.scale)
+            {
+              dae.scale = new THREE.Vector3(
+                  link.visual.geometry.scale.x,
+                  link.visual.geometry.scale.y,
+                  link.visual.geometry.scale.z
+              );
+            }
+            return dae;
+          }
+        }
+      }
+    }
+  }
+};
+
+GZ3D.Scene.prototype.loadCollada = function(uri)
+{
+  var dae;
+  var loader = new THREE.ColladaLoader();
+  // loader.options.convertUpAxis = true;
+  loader.load(uri, function(collada)
+  {
+    dae = collada.scene;
+    dae.updateMatrix();
+    //init();
+    //animate();
+  } );
+  return dae;
 };
