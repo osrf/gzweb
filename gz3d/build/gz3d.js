@@ -366,7 +366,7 @@ GZ3D.Scene.prototype.setWindowSize = function(width, height)
 
   this.renderer.setSize( width, height);
   this.controls.handleResize();
-  this.Render();
+  this.render();
 };
 
 GZ3D.Scene.prototype.add = function(model)

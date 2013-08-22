@@ -9,6 +9,7 @@ set (sources
   gzbridge.cc
   pb2json.cc
   GazeboInterface.cc
+  HttpWebSocketServer.cc
   WebSocketServer.cc
   pb2json.cc
 )
@@ -16,6 +17,7 @@ set (sources
 set (headers
   pb2json.hh
   GazeboInterface.hh
+  HttpWebSocketServer.hh
   WebSocketServer.hh
 )
 

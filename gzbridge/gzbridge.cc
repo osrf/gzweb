@@ -19,6 +19,7 @@
 #include <gazebo/gazebo.hh>
 
 #include "GazeboInterface.hh"
+#include "HttpWebSocketServer.hh"
 #include "WebSocketServer.hh"
 
 #include <iostream>
@@ -29,6 +30,19 @@ bool run(int _argc, char **_argv)
   // Load gazebo
   gazebo::load(_argc, _argv);
   gazebo::run();
+
+  // run http server
+  gzweb::HttpWebSocketServer httpServer;
+  httpServer.RunThread();
+
+  int timeout = 0;
+  while (!httpServer.IsInit() && timeout < 300)
+  {
+    gazebo::common::Time::MSleep(10);
+    timeout++;
+  }
+  if (timeout == 300)
+    gzerr << "http server timed out" << std::endl;
 
   // run webserver;
   gzweb::WebSocketServer server;
@@ -43,7 +57,7 @@ bool run(int _argc, char **_argv)
   while (true)
     gazebo::common::Time::MSleep(10);
 
-  gzIface.Fini();
+//  gzIface.Fini();
 
   // Make sure to shut everything down.
   gazebo::transport::fini();

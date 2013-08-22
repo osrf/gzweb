@@ -33,11 +33,6 @@ namespace gzweb
         MAX_ECHO_PAYLOAD + LWS_SEND_BUFFER_POST_PADDING];
   };
 
-  struct HttpSessionData
-  {
-    public: int fd;;
-  };
-
   class WebSocketServer
   {
     /// \brief Constructor.
@@ -60,46 +55,61 @@ namespace gzweb
     /// \brief Clear incoming messages
     public: void ClearIncomingMessages();
 
+    /// \brief Check if server is initialized.
+    /// return True if initialized.
+    public: bool IsInit();
+
+    /// \brief Set custom protocol to used
+    /// \param[in] _protocols libwebsocket protocols.
+    public: void SetProtocol(struct libwebsocket_protocols _protocol);
+
     /// \brief Run websocket server.
     private: void Run();
 
+    /// \brief Default libwebsocket protocol callback
     public: static int ServerCallback(struct libwebsocket_context *context,
       struct libwebsocket *wsi, enum libwebsocket_callback_reasons reason,
       void *user, void *in, size_t len);
-
-    public: static int HttpCallback(struct libwebsocket_context *context,
-      struct libwebsocket *wsi, enum libwebsocket_callback_reasons reason,
-      void *user, void *in, size_t len);
-
-    /// \brief Websocket server port.
-    private: int port;
-
-    /// \brief True to enable SSL.
-    private: bool useSSL;
-
-    /// \brief Debug level.
-    private: int debugLevel;
-
-    /// \brief Websocket server options.
-    private: int options;
-
-    /// \brief True to fork into the background and log to syslog.
-    private: bool daemonize;
-
-    /// \brief Syslog options. LOG_PID, LOG_PERROR.
-    private: int syslogOptions;
-
-    /// \brief Interface name.
-    private: std::string interface;
-
-    /// \brief Thread to run the main loop.
-    private: boost::thread *runThread;
 
     /// \brief Incoming messages.
     public: static std::vector<std::string> incoming;
 
     /// \brief Outgoing messages.
     public: static std::vector<std::string> outgoing;
+
+    /// \brief Websocket server port.
+    protected: int port;
+
+    /// \brief True to enable SSL.
+    protected: bool useSSL;
+
+    /// \brief Debug level.
+    protected: int debugLevel;
+
+    /// \brief Websocket server options.
+    protected: int options;
+
+    /// \brief True to fork into the background and log to syslog.
+    protected: bool daemonize;
+
+    /// \brief Syslog options. LOG_PID, LOG_PERROR.
+    protected: int syslogOptions;
+
+    /// \brief Interface name.
+    protected: std::string interface;
+
+    /// \brief Invoke libwebsockets write callback in loop.
+    protected: bool writeLoop;
+
+    /// \brief Thread to run the main loop.
+    private: boost::thread *runThread;
+
+    /// \brief libwebsockets protocols
+    private: struct libwebsocket_protocols protocols[2];
+
+    /// \brief True if server is initialized.
+    private: bool initialized;
+
   };
 }
 
