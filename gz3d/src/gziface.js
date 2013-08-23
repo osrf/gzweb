@@ -55,8 +55,10 @@ GZ3D.GZIface.prototype.init = function(scene)
   var poseUpdate = function(message)
   {
     var entity = this.scene.getByName(message.name);
+    // console.log(message.name);
     if (entity)
     {
+      // console.log(message.name + 'found');
       entity.position = message.position;
       entity.quaternion = message.orientation;
     }
@@ -131,6 +133,9 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
     var link = model.link[j];
     var linkObj = new THREE.Object3D();
     linkObj.name = link.name;
+
+    // console.log('link name ' + linkObj.name);
+
     if (link.pose)
     {
       linkObj.position = link.pose.position;
@@ -218,7 +223,9 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
       rootModel = rootModel.parent;
     }
 
-    // find model from database, download the mesh if it exists
+    var uriPath = 'assets';
+
+    /*// find model from database, download the mesh if it exists
     var manifestXML;
     var manifestURI = GAZEBO_MODEL_DATABASE_URI + '/manifest.xml';
     var request = new XMLHttpRequest();
@@ -248,14 +255,17 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
       }
     }
 
-    if (modelAvailable)
+    if (modelAvailable)*/
     {
-      var meshUri = geom.mesh.uri;
+      var meshUri = geom.mesh.filename;
+
+      console.log(geom.mesh.filename);
+
       var uriType = meshUri.substring(0, meshUri.indexOf('://'));
       if (uriType === 'file' || uriType === 'model')
       {
-        obj = this.scene.loadURI(uriPath + '/' +
-            meshUri.substring(meshUri.indexOf('://') + 3));
+        this.scene.loadURI(uriPath + '/' +
+            meshUri.substring(meshUri.indexOf('://') + 3), parent);
       }
     }
   }

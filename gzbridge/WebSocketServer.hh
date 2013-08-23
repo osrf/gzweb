@@ -23,7 +23,7 @@
 
 #include <libwebsockets.h>
 
-#define MAX_ECHO_PAYLOAD 32768
+#define MAX_ECHO_PAYLOAD 1048576
 
 namespace gzweb
 {

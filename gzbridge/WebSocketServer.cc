@@ -79,7 +79,7 @@ int WebSocketServer::ServerCallback(struct libwebsocket_context *context,
       int n = libwebsocket_write(wsi, &pss->buf[LWS_SEND_BUFFER_PRE_PADDING],
           out.size(), LWS_WRITE_TEXT);
 
-       std::cerr << out.c_str() << std::endl;
+      // std::cerr << out.c_str() << std::endl;
       if (n < 0)
       {
         lwsl_err("ERROR %d writing to socket, hanging up\n", n);
@@ -136,6 +136,7 @@ WebSocketServer::WebSocketServer()
   this->protocols[0].name  = "server";
   this->protocols[0].callback = WebSocketServer::ServerCallback;
   this->protocols[0].per_session_data_size = sizeof(struct SessionData);
+  this->protocols[0].rx_buffer_size = 10000000;
 
   this->protocols[1].name  = NULL;
   this->protocols[1].callback = NULL;

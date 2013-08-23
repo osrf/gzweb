@@ -86,7 +86,7 @@ GZ3D.Scene.prototype.remove = function(model)
 
 GZ3D.Scene.prototype.getByName = function(name)
 {
-  return this.scene.getObjectByName(name);
+  return this.scene.getObjectByName(name, true);
 };
 
 GZ3D.Scene.prototype.createGrid = function()
@@ -126,7 +126,7 @@ GZ3D.Scene.prototype.createBox = function(width, height, depth)
   return mesh;
 };
 
-GZ3D.Scene.prototype.loadURI = function(uri)
+GZ3D.Scene.prototype.loadURI = function(uri, parent)
 {
   var uriPath = uri.substring(0, uri.lastIndexOf('/'));
   var uriFile = uri.substring(uri.lastIndexOf('/') + 1);
@@ -134,7 +134,7 @@ GZ3D.Scene.prototype.loadURI = function(uri)
   // load urdf model
   if (uriFile.substr(-4).toLowerCase() === '.dae')
   {
-    return this.loadCollada(uri);
+    return this.loadCollada(uri, parent);
   }
   else if (uriFile.substr(-5).toLowerCase() === '.urdf')
   {
@@ -155,7 +155,7 @@ GZ3D.Scene.prototype.loadURI = function(uri)
           // ignore mesh files which are not in Collada format
           if (meshType === '.dae')
           {
-            var dae = this.loadCollada(uriPath + '/' + mesh);
+            var dae = this.loadCollada(uriPath + '/' + mesh, parent);
             // check for a scale
             if(link.visual.geometry.scale)
             {
@@ -165,7 +165,6 @@ GZ3D.Scene.prototype.loadURI = function(uri)
                   link.visual.geometry.scale.z
               );
             }
-            return dae;
           }
         }
       }
@@ -173,17 +172,25 @@ GZ3D.Scene.prototype.loadURI = function(uri)
   }
 };
 
-GZ3D.Scene.prototype.loadCollada = function(uri)
+GZ3D.Scene.prototype.loadCollada = function(uri, parent)
 {
   var dae;
   var loader = new THREE.ColladaLoader();
+//  var loader = new ColladaLoader2();
   // loader.options.convertUpAxis = true;
   loader.load(uri, function(collada)
   {
+    // check for a scale factor
+    /*if(collada.dae.asset.unit)
+    {
+      var scale = collada.dae.asset.unit;
+      collada.scene.scale = new THREE.Vector3(scale, scale, scale);
+    }*/
     dae = collada.scene;
     dae.updateMatrix();
+    parent.add(dae);
     //init();
     //animate();
   } );
-  return dae;
+//  return dae;
 };
