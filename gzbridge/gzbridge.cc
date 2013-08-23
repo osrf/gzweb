@@ -28,8 +28,13 @@
 bool run(int _argc, char **_argv)
 {
   // Load gazebo
-  gazebo::load(_argc, _argv);
-  gazebo::run();
+//  gazebo::load(_argc, _argv);
+//  gazebo::run();
+
+  if (!gazebo::transport::init())
+    return false;
+
+  gazebo::transport::run();
 
   // run http server
 /*  gzweb::HttpWebSocketServer httpServer;
