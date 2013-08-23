@@ -32,7 +32,7 @@ bool run(int _argc, char **_argv)
   gazebo::run();
 
   // run http server
-  gzweb::HttpWebSocketServer httpServer;
+/*  gzweb::HttpWebSocketServer httpServer;
   httpServer.RunThread();
 
   int timeout = 0;
@@ -42,7 +42,7 @@ bool run(int _argc, char **_argv)
     timeout++;
   }
   if (timeout == 300)
-    gzerr << "http server timed out" << std::endl;
+    gzerr << "http server timed out" << std::endl;*/
 
   // run webserver;
   gzweb::WebSocketServer server;

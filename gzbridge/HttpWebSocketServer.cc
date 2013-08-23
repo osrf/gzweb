@@ -85,18 +85,18 @@ int HttpWebSocketServer::HttpCallback(struct libwebsocket_context *context,
           pathFound))
       {
         if (ext == "js")
-          mime = "text/javascript";
+          mime = "application/javascript";
         else if (ext == "html")
           mime = "text/html";
         else if (ext == "ico")
           mime = "image/x-icon";
         buf = pathFound.string();
-
       }
       else
       {
         mime = "text/html";
-        buf = std::string("../../gz3d/client/gz3d.html");
+        buf = std::string("../../gz3d/client/index.html");
+
       }
       if (libwebsockets_serve_http_file(context, wsi, buf.c_str(),
           mime.c_str()))

@@ -47,6 +47,7 @@ find_package(Protobuf REQUIRED)
 
 add_subdirectory(deps)
 add_subdirectory(gzbridge)
+add_subdirectory(gz3d)
 
 ########### Add uninstall target ###############
 configure_file(
