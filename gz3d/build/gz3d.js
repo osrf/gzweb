@@ -17,7 +17,7 @@ GZ3D.GZIface.prototype.init = function(scene)
 {
   // Set up initial scene
   this.webSocket = new ROSLIB.Ros({
-    url : 'ws://localhost:7681'
+    url : 'ws://' + location.hostname + ':7681'
   });
 
   var sceneTopic = new ROSLIB.Topic({
@@ -482,7 +482,7 @@ GZ3D.Scene.prototype.loadCollada = function(uri, parent)
   var dae;
   var loader = new THREE.ColladaLoader();
 //  var loader = new ColladaLoader2();
-  // loader.options.convertUpAxis = true;
+//  loader.options.convertUpAxis = true;
   loader.load(uri, function(collada)
   {
     // check for a scale factor

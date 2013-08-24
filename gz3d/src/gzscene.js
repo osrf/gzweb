@@ -177,7 +177,7 @@ GZ3D.Scene.prototype.loadCollada = function(uri, parent)
   var dae;
   var loader = new THREE.ColladaLoader();
 //  var loader = new ColladaLoader2();
-  // loader.options.convertUpAxis = true;
+//  loader.options.convertUpAxis = true;
   loader.load(uri, function(collada)
   {
     // check for a scale factor

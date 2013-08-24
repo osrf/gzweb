@@ -12,7 +12,7 @@ GZ3D.GZIface.prototype.init = function(scene)
 {
   // Set up initial scene
   this.webSocket = new ROSLIB.Ros({
-    url : 'ws://localhost:7681'
+    url : 'ws://' + location.hostname + ':7681'
   });
 
   var sceneTopic = new ROSLIB.Topic({
