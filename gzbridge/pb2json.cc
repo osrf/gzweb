@@ -231,7 +231,7 @@ namespace gzweb {
   {
     if(json_is_array(obj))
     {
-      for(int i = 0; i < json_array_size(obj); ++i)
+      for(unsigned int i = 0; i < json_array_size(obj); ++i)
       {
         json_t *data = json_array_get(obj, i);
         std::string result = get(data, key);

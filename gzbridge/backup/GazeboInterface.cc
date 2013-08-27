@@ -18,23 +18,25 @@
 #include <boost/thread.hpp>
 
 #include "pb2json.hh"
-//#include "WebSocketServer.hh"
+#include "WebSocketServer.hh"
 #include "GazeboInterface.hh"
-
-#define MAX_NUM_MSG_SIZE 1000
 
 using namespace gzweb;
 
-std::vector<std::string> GazeboInterface::incoming;
-std::vector<std::string> GazeboInterface::outgoing;
 
-boost::recursive_mutex incomingMutex;
-boost::recursive_mutex outgoingMutex;
+struct VisualMessageLess {
+    bool operator() (boost::shared_ptr<gazebo::msgs::Visual const> _i,
+                     boost::shared_ptr<gazebo::msgs::Visual const> _j)
+    {
+      return _i->name().size() < _j->name().size();
+    }
+} VisualMessageLessOp;
+
 
 /////////////////////////////////////////////////
-GazeboInterface::GazeboInterface()
+GazeboInterface::GazeboInterface(WebSocketServer *_server)
 {
-//  this->socketServer = _server;
+  this->socketServer = _server;
   this->receiveMutex = new boost::mutex();
   this->stop = false;
 
@@ -91,6 +93,12 @@ GazeboInterface::GazeboInterface()
 }
 
 /////////////////////////////////////////////////
+GazeboInterface::GazeboInterface()
+{
+  GazeboInterface(NULL);
+}
+
+/////////////////////////////////////////////////
 GazeboInterface::~GazeboInterface()
 {
   this->node->Fini();
@@ -114,6 +122,12 @@ void GazeboInterface::Init()
   this->requestPub->WaitForConnection();
   this->requestMsg = gazebo::msgs::CreateRequest("scene_info");
   this->requestPub->Publish(*this->requestMsg);
+}
+
+/////////////////////////////////////////////////
+void GazeboInterface::SetWebSocketServer(WebSocketServer *_server)
+{
+  this->socketServer = _server;
 }
 
 /////////////////////////////////////////////////
@@ -154,32 +168,7 @@ void GazeboInterface::ProcessMessages()
     boost::mutex::scoped_lock lock(*this->receiveMutex);
 
     // Process incoming messages.
-    std::vector<std::string> msgs = this->PopIncomingMessages();
-
-    for (unsigned int i = 0; i < msgs.size(); ++i)
-    {
-      std::string msg = msgs[i];
-      std::string topic = get_value(msg.c_str(), "topic");
-      if (!topic.empty())
-      {
-        if (topic == this->sceneTopic)
-        {
-          delete this->requestMsg;
-          this->requestMsg = gazebo::msgs::CreateRequest("scene_info");
-          this->requestPub->Publish(*this->requestMsg);
-        }
-        else if (topic == this->poseTopic)
-        {
-          // TODO we currently subscribe on init,
-          // should change logic so that  we subscribe only
-          // when we receive sub msgs
-        }
-      }
-    }
-    //this->ClearIncomingMessages();
-
-
-/*    if (this->socketServer)
+    if (this->socketServer)
     {
       std::vector<std::string> msgs =
           this->socketServer->GetIncomingMessages();
@@ -204,7 +193,7 @@ void GazeboInterface::ProcessMessages()
         this->socketServer->ClearIncomingMessages();
       }
     }
-*/
+
     std::string msg = "";
     // Forward the scene messages.
     for (sIter = this->sceneMsgs.begin(); sIter != this->sceneMsgs.end();
@@ -326,8 +315,8 @@ void GazeboInterface::OnRequest(ConstRequestPtr &_msg)
 /////////////////////////////////////////////////
 void GazeboInterface::OnResponse(ConstResponsePtr &_msg)
 {
-//  if (!this->requestMsg || _msg->id() != this->requestMsg->id())
-//    return;
+  if (!this->requestMsg || _msg->id() != this->requestMsg->id())
+    return;
 
   gazebo::msgs::Scene sceneMsg;
   sceneMsg.ParseFromString(_msg->serialized_data());
@@ -386,58 +375,8 @@ std::string GazeboInterface::PackOutgoingMsg(const std::string &_topic,
 /////////////////////////////////////////////////
 void GazeboInterface::Send(const std::string &_msg)
 {
-//  if (this->socketServer)
-//    this->socketServer->Write(_msg);
-  boost::recursive_mutex::scoped_lock lock(outgoingMutex);
-  if (outgoing.size() < MAX_NUM_MSG_SIZE)
-    outgoing.push_back(_msg);
-}
+  if (this->socketServer)
+    this->socketServer->Write(_msg);
 
-/*
-/////////////////////////////////////////////////
-void GazeboInterface::Write(const std::string &_msg)
-{
-  boost::recursive_mutex::scoped_lock lock(outgoingMutex);
-  if (outgoing.size() < MAX_NUM_MSG_SIZE)
-    outgoing.push_back(_msg);
-}*/
 
-/////////////////////////////////////////////////
-std::vector<std::string> GazeboInterface::PopIncomingMessages()
-{
-  boost::recursive_mutex::scoped_lock lock(incomingMutex);
-  std::vector<std::string> in = incoming;
-  incoming.clear();
-  return in;
-}
-
-/////////////////////////////////////////////////
-void GazeboInterface::ClearIncomingMessages()
-{
-  boost::recursive_mutex::scoped_lock lock(incomingMutex);
-  incoming.clear();
-}
-
-/////////////////////////////////////////////////
-std::vector<std::string> GazeboInterface::PopOutgoingMessages()
-{
-  boost::recursive_mutex::scoped_lock lock(outgoingMutex);
-  std::vector<std::string> out = outgoing;
-  outgoing.clear();
-  return out;
-}
-
-/////////////////////////////////////////////////
-void GazeboInterface::ClearOutgoingMessages()
-{
-  boost::recursive_mutex::scoped_lock lock(outgoingMutex);
-  outgoing.clear();
-}
-
-/////////////////////////////////////////////////
-void GazeboInterface::PushRequest(const std::string &_msg)
-{
-  boost::recursive_mutex::scoped_lock lock(incomingMutex);
-  if (incoming.size() < MAX_NUM_MSG_SIZE)
-    incoming.push_back(_msg);
 }

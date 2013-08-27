@@ -30,10 +30,15 @@ namespace boost
 
 namespace gzweb
 {
+  class WebSocketServer;
+
   class GazeboInterface
   {
     /// \brief Constructor.
     /// \param[in] _server Websocket server.
+    public: GazeboInterface(WebSocketServer *_server);
+
+    /// \brief Constructor.
     public: GazeboInterface();
 
     /// \brief Destructor.
@@ -42,40 +47,20 @@ namespace gzweb
     /// \brief Initialize gazebo interface.
     public: void Init();
 
+    /// \brief Set the websocket server to use when forwarding data from gazebo.
+    private: void SetWebSocketServer(WebSocketServer *_server);
+
     /// \brief Run the gazebo interface in a thread.
     public: void RunThread();
 
     /// \brief Stop the gazebo interace.
     public: void Fini();
 
-    /// \brief Push a request message to incoming messages buffer.
-    /// \return Request message.
-    public: void PushRequest(const std::string &_request);
-
-    /// \brief Get incoming messages.
-    /// \return Incoming messages.
-    public: std::vector<std::string> PopIncomingMessages();
-
-    /// \brief Clear incoming messages
-    public: void ClearIncomingMessages();
-
-    /// \brief Get outgoing messages.
-    /// \return Outgoing messages.
-    public: std::vector<std::string> PopOutgoingMessages();
-
-    /// \brief Clear outgoing messages
-    public: void ClearOutgoingMessages();
-
-    /// \brief Receive message from websocket server.
-    /// \param[in] _msg Message received.
-    public: void Receive(const std::string &_msg);
-
     /// \brief Pack message in a format that conforms to the client.
     private: std::string PackOutgoingMsg(const std::string &_topic,
         const std::string &_msg);
 
     /// \brief Send message through websocket server.
-    /// \param[in] _msg Message to be sent.
     private: void Send(const std::string &_msg);
 
     /// \brief Run the gazebo interace.
@@ -120,12 +105,6 @@ namespace gzweb
     /// \brief Response callback
     /// \param[in] _msg The message data.
     private: void OnResponse(ConstResponsePtr &_msg);
-
-    /// \brief Incoming messages.
-    public: static std::vector<std::string> incoming;
-
-    /// \brief Outgoing messages.
-    public: static std::vector<std::string> outgoing;
 
     /// \brief Thread to run the main loop.
     private: boost::thread *runThread;
@@ -233,6 +212,9 @@ namespace gzweb
 
     /// \brief True to stop the interface.
     private: bool stop;
+
+    /// \brief Websocket server.
+    private: WebSocketServer *socketServer;
 
     /// \brief Name of sensor topic.
     private: std::string sensorTopic;

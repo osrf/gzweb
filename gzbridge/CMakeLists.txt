@@ -6,19 +6,20 @@ include_directories(
 link_directories(${GAZEBO_LIBRARY_DIRS})
 
 set (sources
-  gzbridge.cc
+#  gzbridge.cc
+  gzbridge_node.cc
   pb2json.cc
   GazeboInterface.cc
-  HttpWebSocketServer.cc
-  WebSocketServer.cc
+#  HttpWebSocketServer.cc
+#  WebSocketServer.cc
   pb2json.cc
 )
 
 set (headers
   pb2json.hh
   GazeboInterface.hh
-  HttpWebSocketServer.hh
-  WebSocketServer.hh
+#  HttpWebSocketServer.hh
+#  WebSocketServer.hh
 )
 
 
