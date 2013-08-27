@@ -16,6 +16,6 @@ make -j 8
 
 cd ../gzbridge
 node-gyp configure
-node-gyp build
+node-gyp build -d
 
 cd $DIR

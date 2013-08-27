@@ -78,7 +78,7 @@ wsServer.on('request', function(request) {
     });
 });
 
-setInterval(update, 30);
+setInterval(update, 10);
 
 function update()
 {

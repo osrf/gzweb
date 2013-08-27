@@ -34,6 +34,8 @@ GZNode::GZNode()
   this->gzIface = new GazeboInterface();
   this->gzIface->Init();
   this->gzIface->RunThread();
+
+  gzerr << " created GZNode " << std::endl;
 };
 
 /////////////////////////////////////////////////
