@@ -412,7 +412,6 @@ ROSLIB.Ros.prototype.connect = function(url) {
   function onMessage(message) {
     function handleMessage(message) {
       if (message.op === 'publish') {
-        console.log (message.msg);
         that.emit(message.topic, message.msg);
       } else if (message.op === 'service_response') {
         that.emit(message.id, message.values);
