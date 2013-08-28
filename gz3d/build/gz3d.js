@@ -305,6 +305,7 @@ global.result = a === b;
 
 GZ3D.Scene = function()
 {
+  var that = this;
   this.init();
 };
 
@@ -350,7 +351,8 @@ GZ3D.Scene.prototype.init = function()
   this.controls.dynamicDampingFactor = 0.3;
   this.controls.keys = [ 65, 83, 68 ];
 
-  this.controls.addEventListener('change', this.render.call(this));
+//  var that = this;
+//  this.controls.addEventListener('change', function() {that.render();});
 
   this.iface = new GZ3D.GZIface(this);
 
