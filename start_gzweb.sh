@@ -7,7 +7,7 @@ cd $DIR
 
 ./stop_gzweb.sh
 
-http-server http/client &
+http-server http/client -p 80 &
 
 cd gzbridge
 ./ws_server.js &
