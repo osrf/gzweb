@@ -45,9 +45,13 @@ if [ "$1" == "-m" ]; then  # build a local model database
     rm -rf $TMP_DIR
 
     mv $DIR/http/client/models $DIR/http/client/assets 
-
+    
     cd $DIR
+    
+    echo "gather all models on the local machine"
+    ./get_local_models.py $DIR/http/client/assets
     ./webify_models.py $DIR/http/client/assets
+    
 else
   echo "Not cloning the model repo"
 fi
