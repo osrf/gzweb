@@ -221,6 +221,8 @@ void GazeboInterface::ProcessMessages()
     {
       msg = this->PackOutgoingMsg(this->modelTopic,
           pb2json(*(*modelIter).get()));
+
+      gzerr << "model msgs " << msg <<std::endl;
       this->Send(msg);
     }
     this->modelMsgs.clear();

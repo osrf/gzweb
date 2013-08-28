@@ -178,10 +178,14 @@ namespace gzweb {
         {
           case FieldDescriptor::CPPTYPE_DOUBLE:
             value1 = ref->GetDouble(*msg,field);
+            if (value1 != value1)
+              value1 = 0;
             json_object_set_new(root,name,json_real(value1));
             break;
           case FieldDescriptor::CPPTYPE_FLOAT:
             value2 = ref->GetFloat(*msg,field);
+            if (value2 != value2)
+              value2 = 0;
             json_object_set_new(root,name,json_real(value2));
             break;
           case FieldDescriptor::CPPTYPE_INT64:
