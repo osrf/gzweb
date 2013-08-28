@@ -105,15 +105,12 @@ GazeboInterface::~GazeboInterface()
   this->sensorMsgs.clear();
 
   delete this->receiveMutex;
-  delete this->requestMsg;
 }
 
 /////////////////////////////////////////////////
 void GazeboInterface::Init()
 {
   this->requestPub->WaitForConnection();
-  this->requestMsg = gazebo::msgs::CreateRequest("scene_info");
-  this->requestPub->Publish(*this->requestMsg);
 }
 
 /////////////////////////////////////////////////
@@ -164,9 +161,12 @@ void GazeboInterface::ProcessMessages()
       {
         if (topic == this->sceneTopic)
         {
-          delete this->requestMsg;
-          this->requestMsg = gazebo::msgs::CreateRequest("scene_info");
-          this->requestPub->Publish(*this->requestMsg);
+          gazebo::msgs::Request *requestMsg;
+          requestMsg = gazebo::msgs::CreateRequest("scene_info");
+          if (this->requests.find(requestMsg->id()) != this->requests.end())
+            requests.erase(requestMsg->id());
+          this->requests[requestMsg->id()] = requestMsg;
+          this->requestPub->Publish(*requestMsg);
         }
         else if (topic == this->poseTopic)
         {
@@ -326,14 +326,14 @@ void GazeboInterface::OnRequest(ConstRequestPtr &_msg)
 /////////////////////////////////////////////////
 void GazeboInterface::OnResponse(ConstResponsePtr &_msg)
 {
-//  if (!this->requestMsg || _msg->id() != this->requestMsg->id())
-//    return;
+  if (this->requests.find(_msg->id()) == this->requests.end())
+    return;
 
   gazebo::msgs::Scene sceneMsg;
   sceneMsg.ParseFromString(_msg->serialized_data());
   boost::shared_ptr<gazebo::msgs::Scene> sm(new gazebo::msgs::Scene(sceneMsg));
   this->sceneMsgs.push_back(sm);
-  this->requestMsg = NULL;
+  this->requests.erase(_msg->id());
 }
 
 /////////////////////////////////////////////////

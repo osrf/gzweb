@@ -164,7 +164,7 @@ namespace gzweb
     private: gazebo::transport::SubscriberPtr responseSub;
 
     /// \brief Request message for getting initial scene info.
-    private: gazebo::msgs::Request *requestMsg;
+    private: std::map<int, gazebo::msgs::Request *> requests;
 
     /// \brief Mutex to lock the various message buffers.
     private: boost::mutex *receiveMutex;
