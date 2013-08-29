@@ -51,6 +51,7 @@ GazeboInterface::GazeboInterface()
   this->requestTopic = "~/request";
   this->lightTopic = "~/light";
   this->sceneTopic = "~/scene";
+  this->modelModifyTopic = "~/model/modify";
 
   this->sensorSub = this->node->Subscribe(this->sensorTopic,
       &GazeboInterface::OnSensorMsg, this, true);
@@ -86,8 +87,16 @@ GazeboInterface::GazeboInterface()
   this->requestPub =
       this->node->Advertise<gazebo::msgs::Request>(this->requestTopic);
 
+  // For modifying models
+  this->modelPub =
+      this->node->Advertise<gazebo::msgs::Model>(this->modelModifyTopic);
+
+  // For modifying lights
+  this->lightPub = this->node->Advertise<gazebo::msgs::Light>(this->lightTopic);
+
   this->responseSub = this->node->Subscribe("~/response",
       &GazeboInterface::OnResponse, this);
+
 }
 
 /////////////////////////////////////////////////
@@ -103,6 +112,18 @@ GazeboInterface::~GazeboInterface()
   this->sceneMsgs.clear();
   this->jointMsgs.clear();
   this->sensorMsgs.clear();
+
+  this->sensorSub.reset();
+  this->visSub.reset();
+  this->lightSub.reset();
+  this->sceneSub.reset();
+  this->jointSub.reset();
+  this->modelInfoSub.reset();
+  this->requestPub.reset();
+  this->modelPub.reset();
+  this->lightPub.reset();
+  this->responseSub.reset();
+  this->node.reset();
 
   delete this->receiveMutex;
 }
@@ -173,6 +194,41 @@ void GazeboInterface::ProcessMessages()
           // TODO we currently subscribe on init,
           // should change logic so that  we subscribe only
           // when we receive sub msgs
+        }
+        else if (topic == this->modelModifyTopic)
+        {
+          std::string type = get_value(msg, "messageType");
+          std::string name = get_value(msg, "msg:name");
+          int id = atoi(get_value(msg, "msg:id").c_str());
+
+          if (name == "")
+            continue;
+
+          gazebo::math::Vector3 pos(
+            atof(get_value(msg, "msg:position:x").c_str()),
+            atof(get_value(msg, "msg:position:y").c_str()),
+            atof(get_value(msg, "msg:position:z").c_str()));
+          gazebo::math::Quaternion quat(
+            atof(get_value(msg, "msg:orientation:w").c_str()),
+            atof(get_value(msg, "msg:orientation:x").c_str()),
+            atof(get_value(msg, "msg:orientation:y").c_str()),
+            atof(get_value(msg, "msg:orientation:z").c_str()));
+          gazebo::math::Pose pose(pos, quat);
+
+          gazebo::msgs::Model modelMsg;
+          modelMsg.set_id(id);
+          modelMsg.set_name(name);
+          gazebo::msgs::Set(modelMsg.mutable_pose(), pose);
+
+          this->modelPub->Publish(modelMsg);
+
+          /* else if (type == "light")
+          {
+            gazebo::msgs::Light msg;
+            msg.set_name(name);
+            gazebo::msgs::Set(msg.mutable_pose(), pose);
+            this->lightPub->Publish(msg);
+          }*/
         }
       }
     }

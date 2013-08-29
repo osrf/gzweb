@@ -129,21 +129,28 @@ GZ3D.GZIface.prototype.init = function(scene)
   var that = this;
   var publishModelModify = function(model)
   {
+    var matrix = model.matrixWorld;
+    var translation = new THREE.Vector3();
+    var quaternion = new THREE.Quaternion();
+    var scale = new THREE.Vector3();
+    matrix.decompose(translation, quaternion, scale);
+
     var modelMsg =
     {
       name : model.name,
+      id : model.userData,
       position :
       {
-        x : model.position.x,
-        y : model.position.y,
-        z : model.position.z
+        x : translation.x,
+        y : translation.y,
+        z : translation.z
       },
       orientation :
       {
-        w: model.quaternion.w,
-        x: model.quaternion.x,
-        y: model.quaternion.y,
-        z: model.quaternion.z
+        w: quaternion.w,
+        x: quaternion.x,
+        y: quaternion.y,
+        z: quaternion.z
       }
     };
     that.modelModifyTopic.publish(modelMsg);
@@ -153,32 +160,11 @@ GZ3D.GZIface.prototype.init = function(scene)
 
 };
 
-GZ3D.GZIface.prototype.publishModelModify = function(model)
-{
-  var modelMsg =
-  {
-    name : model.name,
-    position :
-    {
-      x : model.position.x,
-      y : model.position.y,
-      z : model.position.z
-    },
-    orientation :
-    {
-      w: model.quaternion.w,
-      x: model.quaternion.x,
-      y: model.quaternion.y,
-      z: model.quaternion.z
-    }
-  };
-  this.modelModifyTopic.publish(modelMsg);
-};
-
 GZ3D.GZIface.prototype.createModelFromMsg = function(model)
 {
   var modelObj = new THREE.Object3D();
   modelObj.name = model.name;
+  modelObj.userData = model.id;
   if (model.pose)
   {
     this.scene.setPose(modelObj, model.pose.position, model.pose.orientation);
@@ -188,7 +174,7 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
     var link = model.link[j];
     var linkObj = new THREE.Object3D();
     linkObj.name = link.name;
-
+    linkObj.userData = link.id;
     // console.log('link name ' + linkObj.name);
 
     if (link.pose)
