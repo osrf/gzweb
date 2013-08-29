@@ -36,7 +36,7 @@ GZ3D.Scene.prototype.init = function()
   this.camera.position.x = 0;
   this.camera.position.y = -5;
   this.camera.position.z = 5;
-//  this.camera.up = new THREE.Vector3(0, 0, 1);
+  this.camera.up = new THREE.Vector3(0, 0, 1);
   this.camera.lookAt(0, 0, 0);
 
   var that = this;
