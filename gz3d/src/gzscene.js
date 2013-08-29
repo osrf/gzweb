@@ -1,12 +1,16 @@
 GZ3D.Scene = function()
 {
-  var that = this;
   this.init();
 };
 
 GZ3D.Scene.prototype.init = function()
 {
   this.scene = new THREE.Scene();
+  this.scene.name = 'scene';
+
+  this.selectedEntity = null;
+  this.mouseEntity = null;
+
   // scene.fog = new THREE.FogExp2( 0xcccccc, 0.002 );
 /*  var geometry = new THREE.CylinderGeometry( 0, 1, 3, 4, 1 );
   var material =  new THREE.MeshLambertMaterial(
@@ -28,13 +32,21 @@ GZ3D.Scene.prototype.init = function()
   this.scene.add(light);
 
   this.camera = new THREE.PerspectiveCamera(
-      60, window.innerWidth / window.innerHeight, 1, 1000 );
+      60, window.innerWidth / window.innerHeight, 0.1, 1000 );
   this.camera.position.x = 0;
   this.camera.position.y = -5;
   this.camera.position.z = 5;
   this.camera.up = new THREE.Vector3(0, 0, 1);
   this.camera.lookAt(0, 0, 0);
 
+  var that = this;
+  this.getDomElement().addEventListener( 'mousedown',
+      function(event) {that.onMouseDown(event);}, false );
+  this.getDomElement().addEventListener( 'mouseup',
+      function(event) {that.onMouseUp(event);}, false );
+
+  this.modelManipulator = new THREE.TransformControls(this.camera,
+      this.getDomElement());
 
   this.controls = new THREE.TrackballControls(this.camera);
   this.controls.rotateSpeed = 1.0;
@@ -46,11 +58,98 @@ GZ3D.Scene.prototype.init = function()
   this.controls.dynamicDampingFactor = 0.3;
   this.controls.keys = [ 65, 83, 68 ];
 
-  var that = this;
-  this.controls.addEventListener('change', function() {that.render();});
+//  this.controls.addEventListener('change', function() {that.render();});
+//  this.modelManipulator.addEventListener('change', function() {that.render();});
+
+  this.emitter = new EventEmitter2({ verbose: true });
 
   this.iface = new GZ3D.GZIface(this);
+};
 
+GZ3D.Scene.prototype.onMouseDown = function(event)
+{
+  event.preventDefault();
+
+  var projector = new THREE.Projector();
+  var vector = new THREE.Vector3( (event.clientX / window.innerWidth) * 2 - 1,
+      -(event.clientY / window.innerHeight) * 2 + 1, 0.5);
+  projector.unprojectVector( vector, this.camera );
+  var ray = new THREE.Raycaster( this.camera.position,
+      vector.sub(this.camera.position).normalize() );
+
+  var allObjects = [];
+  this.scene.getDescendants(allObjects);
+  var objects = ray.intersectObjects(allObjects);
+
+  // grab root model
+  if (objects.length > 0)
+  {
+    if (objects[0].object.name !== 'grid')
+    {
+      var model = objects[0].object;
+      while (model.parent !== this.scene)
+      {
+        model = model.parent;
+      }
+      console.log('found model ' + model.name);
+  //    if (this.modelManipulator.hovered)
+      if (this.selectedEntity === null && model.name !== '')
+      {
+        console.log('attached');
+        this.modelManipulator.attach(model);
+        this.selectedEntity = model;
+        this.mouseEntity = this.selectedEntity;
+        this.scene.add(this.modelManipulator.gizmo);
+        this.killCameraControl = true;
+      }
+      else if (this.modelManipulator.hovered)
+      {
+        console.log('hovered ' + this.modelManipulator.object.name);
+        this.modelManipulator.update();
+        this.modelManipulator.object.updateMatrixWorld();
+//        this.modelManipulator.attach(this.modelManipulator.object);
+        this.mouseEntity = this.selectedEntity;
+        //this.selectedEntity = model;
+        this.killCameraControl = true;
+      }
+      else
+      {
+        this.killCameraControl = false;
+      }
+    }
+    else
+    {
+      console.log('detached');
+      this.modelManipulator.detach();
+      this.scene.remove(this.modelManipulator.gizmo);
+      this.killCameraControl = false;
+      this.selectedEntity = null;
+    }
+  }
+  else
+  {
+    console.log('detached - no object');
+    this.modelManipulator.detach();
+    this.scene.remove(this.modelManipulator.gizmo);
+    this.killCameraControl = false;
+    this.selectedEntity = null;
+  }
+};
+
+
+GZ3D.Scene.prototype.onMouseUp = function(event)
+{
+  event.preventDefault();
+
+  if (this.modelManipulator.hovered && this.selectedEntity)
+  {
+    this.emitter.emit('poseChanged', this.modelManipulator.object);
+  }
+  else if (this.killCameraControl)
+  {
+    this.killCameraControl = false;
+  }
+  this.mouseEntity = null;
 };
 
 GZ3D.Scene.prototype.getDomElement = function()
@@ -61,8 +160,13 @@ GZ3D.Scene.prototype.getDomElement = function()
 
 GZ3D.Scene.prototype.render = function()
 {
+  if (!this.killCameraControl)
+  {
+    this.controls.update();
+  }
+  this.modelManipulator.update();
+
   this.renderer.render(this.scene, this.camera);
-  this.controls.update();
 };
 
 GZ3D.Scene.prototype.setWindowSize = function(width, height)
@@ -90,9 +194,21 @@ GZ3D.Scene.prototype.getByName = function(name)
   return this.scene.getObjectByName(name, true);
 };
 
+GZ3D.Scene.prototype.setPose = function(model, position, orientation)
+{
+  model.position.x = position.x;
+  model.position.y = position.y;
+  model.position.z = position.z;
+  model.quaternion.w = orientation.w;
+  model.quaternion.x = orientation.x;
+  model.quaternion.y = orientation.y;
+  model.quaternion.z = orientation.z;
+};
+
 GZ3D.Scene.prototype.createGrid = function()
 {
   var grid = new THREE.GridHelper(10, 1);
+  grid.name = 'grid';
   grid.rotation.x = Math.PI * 0.5;
   this.scene.add(grid);
 };
