@@ -59,8 +59,9 @@ GZ3D.GZIface.prototype.init = function(scene)
     if (entity)
     {
       // console.log(message.name + 'found');
-      entity.position = message.position;
-      entity.quaternion = message.orientation;
+      this.scene.setPose(entity, message.position, message.orientation);
+//      entity.position = message.position;
+//      entity.quaternion = message.orientation;
     }
   };
 
@@ -117,6 +118,61 @@ GZ3D.GZIface.prototype.init = function(scene)
   };
 
   lightTopic.subscribe(ligthtUpdate.bind(this));
+
+  // Model modify messages - for modifying model pose
+  this.modelModifyTopic = new ROSLIB.Topic({
+    ros : this.webSocket,
+    name : '~/model/modify',
+    messageType : 'model',
+  });
+
+  var that = this;
+  var publishModelModify = function(model)
+  {
+    var modelMsg =
+    {
+      name : model.name,
+      position :
+      {
+        x : model.position.x,
+        y : model.position.y,
+        z : model.position.z
+      },
+      orientation :
+      {
+        w: model.quaternion.w,
+        x: model.quaternion.x,
+        y: model.quaternion.y,
+        z: model.quaternion.z
+      }
+    };
+    that.modelModifyTopic.publish(modelMsg);
+  };
+
+  this.scene.emitter.on('poseChanged', publishModelModify);
+
+};
+
+GZ3D.GZIface.prototype.publishModelModify = function(model)
+{
+  var modelMsg =
+  {
+    name : model.name,
+    position :
+    {
+      x : model.position.x,
+      y : model.position.y,
+      z : model.position.z
+    },
+    orientation :
+    {
+      w: model.quaternion.w,
+      x: model.quaternion.x,
+      y: model.quaternion.y,
+      z: model.quaternion.z
+    }
+  };
+  this.modelModifyTopic.publish(modelMsg);
 };
 
 GZ3D.GZIface.prototype.createModelFromMsg = function(model)
@@ -125,8 +181,7 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
   modelObj.name = model.name;
   if (model.pose)
   {
-    modelObj.position = model.pose.position;
-    modelObj.quaternion = model.pose.orientation;
+    this.scene.setPose(modelObj, model.pose.position, model.pose.orientation);
   }
   for (var j = 0; j < model.link.length; ++j)
   {
@@ -138,8 +193,8 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
 
     if (link.pose)
     {
-      linkObj.position = link.pose.position;
-      linkObj.quaternion = link.pose.orientation;
+      this.scene.setPose(linkObj, link.pose.position,
+          link.pose.orientation);
     }
     modelObj.add(linkObj);
     for (var k = 0; k < link.visual.length; ++k)
@@ -152,8 +207,8 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
         visualObj.name = visual.name;
         if (visual.pose)
         {
-          visualObj.position = visual.pose.position;
-          visualObj.quaternion = visual.pose.orientation;
+          this.scene.setPose(visualObj, visual.pose.position,
+              visual.pose.orientation);
         }
         // TODO  mat = FindMaterial(material);
         this.createGeom(geom, visual.material, visualObj);
@@ -189,8 +244,9 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
 
   if (light.pose)
   {
-    lightObj.position = light.pose.position;
-    lightObj.quaternion = light.pose.orientation;
+    this.scene.setPose(lightObj, light.pose.position,
+        light.pose.orientation);
+
   }
   lightObj.name = light.name;
 
