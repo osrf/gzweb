@@ -27,5 +27,6 @@ for file in files:
           "-e", 's/\.gif/\.png/g', file]
       print sed_cmd
       subprocess.check_call(sed_cmd)
-  except:
-      pass
+  except Exception, e:
+      print "error %s" % e
+      raise
