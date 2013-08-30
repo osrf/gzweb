@@ -335,14 +335,34 @@ void GazeboInterface::ProcessMessages()
     pIter = this->poseMsgs.begin();
     while (pIter != this->poseMsgs.end())
     {
-      msg = this->PackOutgoingMsg(this->poseTopic,
-          pb2json(*pIter));
-      this->Send(msg);
-      ++pIter;
+	  msg = this->PackOutgoingMsg(this->poseTopic,
+			  pb2json(*pIter));
+	  this->Send(msg);
+	  ++pIter;
     }
     this->poseMsgs.clear();
   }
 }
+
+/////////////////////////////////////////////////
+/*
+bool GazeboInterface::FilterPoseMsg()
+{
+
+
+	std::string name = poseMsg.name();
+	PoseMsgsFilter_M::iterator iter = poseMsgsFilterMap.find(name);
+	if (iter == poseMsgsFilterMap.end())
+	{
+		poseMsgsFilterMap.insert(make_pair(name, poseMsg));
+		return false;
+	}
+
+	std::cout << "Msg: " <<  name << std::endl;
+	std::cout << "  " << "time: " << iter->time() << std::endl;
+	return false;
+}
+*/
 
 /////////////////////////////////////////////////
 void GazeboInterface::OnModelMsg(ConstModelPtr &_msg)
@@ -368,6 +388,20 @@ void GazeboInterface::OnPoseMsg(ConstPosesStampedPtr &_msg)
         break;
       }
     }
+
+    std::string name = _msg->pose(i).name();
+    std::cout << name << std::endl;
+
+    //
+    const gazebo::msgs::Vector3d& pos = _msg->pose(i).position();
+    double x = pos.x();
+    double y = pos.y();
+    double z = pos.z();
+   // std::cout << " pose ["<< x << "," << y << "," << z << "]" << std::endl;
+   // int sec =_msg->time().seconds();
+   // std::cout << " time "<< _msg->time() << std::endl;
+
+
     this->poseMsgs.push_back(_msg->pose(i));
   }
 }

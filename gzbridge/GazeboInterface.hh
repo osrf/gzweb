@@ -121,6 +121,9 @@ namespace gzweb
     /// \param[in] _msg The message data.
     private: void OnResponse(ConstResponsePtr &_msg);
 
+    /// \brief True if the message is to be ignored
+    //private: bool FilterPoseMsg(ConstPosesStampedPtr &_msg);
+
     /// \brief Incoming messages.
     public: static std::vector<std::string> incoming;
 
@@ -233,6 +236,13 @@ namespace gzweb
     /// \brief List of scene messages.
     typedef std::list<boost::shared_ptr<gazebo::msgs::Scene const> >
         SceneMsgs_L;
+
+    /// \def PoseMsgsFilter_M
+    /// \brief Map of last pose messages used for filtering
+    typedef std::map< std::string,
+        gazebo::msgs::PosesStampedPtr> PoseMsgsFilter_M;
+
+    private: PoseMsgsFilter_M poseMsgsFilterMap;
 
     /// \brief List of scene message to process.
     private: SceneMsgs_L sceneMsgs;

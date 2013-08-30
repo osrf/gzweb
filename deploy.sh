@@ -50,7 +50,7 @@ if [ "$1" == "-m" ]; then  # build a local model database
     cd $DIR
     
     echo "gather all models on the local machine"
-    rm -rf $DIR/http/client/assets
+
     ./get_local_models.py $DIR/http/client/assets
     ./webify_models.py $DIR/http/client/assets
     
