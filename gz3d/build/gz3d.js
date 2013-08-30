@@ -431,56 +431,82 @@ GZ3D.Scene.prototype.onMouseDown = function(event)
   // grab root model
   if (objects.length > 0)
   {
-    if (objects[0].object.name !== 'grid')
     {
-      var model = objects[0].object;
-      while (model.parent !== this.scene)
+      var model;
+      for (var i = 0; i < objects.length; ++i)
       {
-        model = model.parent;
+        model = objects[i].object;
+
+        if (objects[i].object.name === 'grid')
+        {
+          this.killCameraControl = false;
+          return;
+        }
+
+        while (model.parent !== this.scene)
+        {
+          model = model.parent;
+        }
+
+        if (this.modelManipulator.hovered)
+        {
+          if (model === this.modelManipulator.gizmo)
+          {
+            break;
+          }
+        }
+        else if (model.name !== '')
+        {
+          break;
+        }
       }
-      console.log('found model ' + model.name);
-  //    if (this.modelManipulator.hovered)
-      if (this.selectedEntity === null && model.name !== '')
+
+      if (model)
       {
-        console.log('attached');
-        this.modelManipulator.attach(model);
-        this.selectedEntity = model;
-        this.mouseEntity = this.selectedEntity;
-        this.scene.add(this.modelManipulator.gizmo);
-        this.killCameraControl = true;
-      }
-      else if (this.modelManipulator.hovered)
-      {
-        console.log('hovered ' + this.modelManipulator.object.name);
-        this.modelManipulator.update();
-        this.modelManipulator.object.updateMatrixWorld();
-//        this.modelManipulator.attach(this.modelManipulator.object);
-        this.mouseEntity = this.selectedEntity;
-        //this.selectedEntity = model;
-        this.killCameraControl = true;
+        console.log('found model ' + model.name + ' ' + objects.length);
+    //    if (this.modelManipulator.hovered)
+        if (model.name !== '')
+        {
+          console.log('attached');
+          this.modelManipulator.attach(model);
+          this.selectedEntity = model;
+          this.mouseEntity = this.selectedEntity;
+          this.scene.add(this.modelManipulator.gizmo);
+          this.killCameraControl = true;
+        }
+        else if (this.modelManipulator.hovered)
+        {
+          console.log('hovered ' + this.modelManipulator.object.name);
+          this.modelManipulator.update();
+          this.modelManipulator.object.updateMatrixWorld();
+  //        this.modelManipulator.attach(this.modelManipulator.object);
+          this.mouseEntity = this.selectedEntity;
+          //this.selectedEntity = model;
+          this.killCameraControl = true;
+        }
+        else
+        {
+          this.killCameraControl = false;
+        }
       }
       else
       {
+        console.log('detached');
+        this.modelManipulator.detach();
+        this.scene.remove(this.modelManipulator.gizmo);
         this.killCameraControl = false;
+        this.selectedEntity = null;
       }
     }
-    else
-    {
-      console.log('detached');
-      this.modelManipulator.detach();
-      this.scene.remove(this.modelManipulator.gizmo);
-      this.killCameraControl = false;
-      this.selectedEntity = null;
-    }
   }
-  else
+/*  else
   {
     console.log('detached - no object');
     this.modelManipulator.detach();
     this.scene.remove(this.modelManipulator.gizmo);
     this.killCameraControl = false;
     this.selectedEntity = null;
-  }
+  }*/
 };
 
 
