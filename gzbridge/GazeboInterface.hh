@@ -160,6 +160,12 @@ namespace gzweb
     /// \brief Publish requests
     private: gazebo::transport::PublisherPtr requestPub;
 
+    /// \brief Publish model modify messages
+    private: gazebo::transport::PublisherPtr modelPub;
+
+    /// \brief Publish light modify messages
+    private: gazebo::transport::PublisherPtr lightPub;
+
     /// \brief Subscribe to reponses.
     private: gazebo::transport::SubscriberPtr responseSub;
 
@@ -257,6 +263,9 @@ namespace gzweb
 
     /// \brief Name of scene topic.
     private: std::string sceneTopic;
+
+    /// \brief Name of model modify topic.
+    private: std::string modelModifyTopic;
   };
 }
 

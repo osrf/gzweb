@@ -15,8 +15,11 @@
  *
 */
 
+
 #include <string>
+#include <sstream>
 #include <iostream>
+
 
 #include "pb2json.hh"
 
@@ -58,7 +61,7 @@ namespace gzweb {
     return json; // should be freed by caller
   }
 
-  static json_t *parse_repeated_field(const Message *msg,
+  json_t *parse_repeated_field(const Message *msg,
       const Reflection *ref,
       const FieldDescriptor *field)
   {
@@ -144,7 +147,7 @@ namespace gzweb {
     return arr;
   }
 
-  static json_t *parse_msg(const Message *msg)
+  json_t *parse_msg(const Message *msg)
   {
     const Descriptor *d = msg->GetDescriptor();
     if(!d)return NULL;
@@ -231,16 +234,56 @@ namespace gzweb {
     return root;
   }
 
-  std::string get(json_t *obj, const char *key)
+//  std::string get(json_t *obj, const char *key)
+  std::string get(json_t *obj, const std::string &key)
   {
+    if (key.empty())
+      return "";
+
+    std::string keyToken = key;
+    std::string keyRest = key;
+    std::size_t pos = key.find(":");
+    if (pos != std::string::npos)
+    {
+      keyToken = key.substr(0, pos);
+      keyRest = key.substr(pos+1);
+    }
+    json_t *data = json_object_get(obj, keyToken.c_str());
+
+    if (json_is_object(data))
+    {
+      return get(data, keyRest);
+    }
+    else if(json_is_string(data))
+    {
+      const char *result = json_string_value(data);
+      return std::string(result);
+    }
+    else if (json_is_real(data))
+    {
+      std::stringstream ss;
+      ss << json_real_value(data);
+      return ss.str();
+    }
+    else if (json_is_integer(data))
+    {
+      std::stringstream ss;
+      ss << json_integer_value(data);
+      return ss.str();
+    }
+    return "";
+
+
+/*
+
     if(json_is_array(obj))
     {
       for(unsigned int i = 0; i < json_array_size(obj); ++i)
       {
         json_t *data = json_array_get(obj, i);
-        std::string result = get(data, key);
-        if (!result.empty())
-          return result;
+//        std::string result = get(data, key);
+//        if (!result.empty())
+//          return result;
       }
       return "";
     }
@@ -255,14 +298,15 @@ namespace gzweb {
       else
         return "";
     }
-    return "";
+    return "";*/
   }
 
-  std::string get_value(const char *msg, const char *key)
+//  std::string get_value(const char *msg, const char *key)
+  std::string get_value(const std::string &msg, const std::string &key)
   {
     json_t *root;
     json_error_t error;
-    root = json_loads(msg, 0, &error);
+    root = json_loads(msg.c_str(), 0, &error);
     std::string result = get(root, key);
     json_decref(root);
     return result;

@@ -20,6 +20,24 @@ GZ3D.GZIface.prototype.init = function(scene)
     url : 'ws://' + location.hostname + ':7681'
   });
 
+  this.heartbeatTopic = new ROSLIB.Topic({
+    ros : this.webSocket,
+    name : '~/heartbeat',
+    messageType : 'heartbeat',
+  });
+
+  var that = this;
+  var publishHeartbeat = function()
+  {
+    var hearbeatMsg =
+    {
+      alive : 1
+    };
+    that.heartbeatTopic.publish(hearbeatMsg);
+  };
+
+  setInterval(publishHeartbeat, 5000);
+
   var sceneTopic = new ROSLIB.Topic({
     ros : this.webSocket,
     name : '~/scene',
@@ -64,7 +82,7 @@ GZ3D.GZIface.prototype.init = function(scene)
     if (entity)
     {
       // console.log(message.name + 'found');
-      this.scene.setPose(entity, message.position, message.orientation);
+      this.scene.updatePose(entity, message.position, message.orientation);
 //      entity.position = message.position;
 //      entity.quaternion = message.orientation;
     }
@@ -131,25 +149,30 @@ GZ3D.GZIface.prototype.init = function(scene)
     messageType : 'model',
   });
 
-
-  var that = this;
   var publishModelModify = function(model)
   {
+    var matrix = model.matrixWorld;
+    var translation = new THREE.Vector3();
+    var quaternion = new THREE.Quaternion();
+    var scale = new THREE.Vector3();
+    matrix.decompose(translation, quaternion, scale);
+
     var modelMsg =
     {
       name : model.name,
+      id : model.userData,
       position :
       {
-        x : model.position.x,
-        y : model.position.y,
-        z : model.position.z
+        x : translation.x,
+        y : translation.y,
+        z : translation.z
       },
       orientation :
       {
-        w: model.quaternion.w,
-        x: model.quaternion.x,
-        y: model.quaternion.y,
-        z: model.quaternion.z
+        w: quaternion.w,
+        x: quaternion.x,
+        y: quaternion.y,
+        z: quaternion.z
       }
     };
     that.modelModifyTopic.publish(modelMsg);
@@ -159,32 +182,11 @@ GZ3D.GZIface.prototype.init = function(scene)
 
 };
 
-GZ3D.GZIface.prototype.publishModelModify = function(model)
-{
-  var modelMsg =
-  {
-    name : model.name,
-    position :
-    {
-      x : model.position.x,
-      y : model.position.y,
-      z : model.position.z
-    },
-    orientation :
-    {
-      w: model.quaternion.w,
-      x: model.quaternion.x,
-      y: model.quaternion.y,
-      z: model.quaternion.z
-    }
-  };
-  this.modelModifyTopic.publish(modelMsg);
-};
-
 GZ3D.GZIface.prototype.createModelFromMsg = function(model)
 {
   var modelObj = new THREE.Object3D();
   modelObj.name = model.name;
+  modelObj.userData = model.id;
   if (model.pose)
   {
     this.scene.setPose(modelObj, model.pose.position, model.pose.orientation);
@@ -194,7 +196,7 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
     var link = model.link[j];
     var linkObj = new THREE.Object3D();
     linkObj.name = link.name;
-
+    linkObj.userData = link.id;
     // console.log('link name ' + linkObj.name);
 
     if (link.pose)
@@ -398,7 +400,7 @@ GZ3D.Scene.prototype.init = function()
   this.camera.position.x = 0;
   this.camera.position.y = -5;
   this.camera.position.z = 5;
-//  this.camera.up = new THREE.Vector3(0, 0, 1);
+  this.camera.up = new THREE.Vector3(0, 0, 1);
   this.camera.lookAt(0, 0, 0);
 
   var that = this;
@@ -446,56 +448,82 @@ GZ3D.Scene.prototype.onMouseDown = function(event)
   // grab root model
   if (objects.length > 0)
   {
-    if (objects[0].object.name !== 'grid')
     {
-      var model = objects[0].object;
-      while (model.parent !== this.scene)
+      var model;
+      for (var i = 0; i < objects.length; ++i)
       {
-        model = model.parent;
+        model = objects[i].object;
+
+        if (objects[i].object.name === 'grid')
+        {
+          this.killCameraControl = false;
+          return;
+        }
+
+        while (model.parent !== this.scene)
+        {
+          model = model.parent;
+        }
+
+        if (this.modelManipulator.hovered)
+        {
+          if (model === this.modelManipulator.gizmo)
+          {
+            break;
+          }
+        }
+        else if (model.name !== '')
+        {
+          break;
+        }
       }
-      console.log('found model ' + model.name);
-  //    if (this.modelManipulator.hovered)
-      if (this.selectedEntity === null && model.name !== '')
+
+      if (model)
       {
-        console.log('attached');
-        this.modelManipulator.attach(model);
-        this.selectedEntity = model;
-        this.mouseEntity = this.selectedEntity;
-        this.scene.add(this.modelManipulator.gizmo);
-        this.killCameraControl = true;
-      }
-      else if (this.modelManipulator.hovered)
-      {
-        console.log('hovered ' + this.modelManipulator.object.name);
-        this.modelManipulator.update();
-        this.modelManipulator.object.updateMatrixWorld();
-//        this.modelManipulator.attach(this.modelManipulator.object);
-        this.mouseEntity = this.selectedEntity;
-        //this.selectedEntity = model;
-        this.killCameraControl = true;
+        console.log('found model ' + model.name + ' ' + objects.length);
+    //    if (this.modelManipulator.hovered)
+        if (model.name !== '')
+        {
+          console.log('attached');
+          this.modelManipulator.attach(model);
+          this.selectedEntity = model;
+          this.mouseEntity = this.selectedEntity;
+          this.scene.add(this.modelManipulator.gizmo);
+          this.killCameraControl = true;
+        }
+        else if (this.modelManipulator.hovered)
+        {
+          console.log('hovered ' + this.modelManipulator.object.name);
+          this.modelManipulator.update();
+          this.modelManipulator.object.updateMatrixWorld();
+  //        this.modelManipulator.attach(this.modelManipulator.object);
+          this.mouseEntity = this.selectedEntity;
+          //this.selectedEntity = model;
+          this.killCameraControl = true;
+        }
+        else
+        {
+          this.killCameraControl = false;
+        }
       }
       else
       {
+        console.log('detached');
+        this.modelManipulator.detach();
+        this.scene.remove(this.modelManipulator.gizmo);
         this.killCameraControl = false;
+        this.selectedEntity = null;
       }
     }
-    else
-    {
-      console.log('detached');
-      this.modelManipulator.detach();
-      this.scene.remove(this.modelManipulator.gizmo);
-      this.killCameraControl = false;
-      this.selectedEntity = null;
-    }
   }
-  else
+/*  else
   {
     console.log('detached - no object');
     this.modelManipulator.detach();
     this.scene.remove(this.modelManipulator.gizmo);
     this.killCameraControl = false;
     this.selectedEntity = null;
-  }
+  }*/
 };
 
 
@@ -505,12 +533,7 @@ GZ3D.Scene.prototype.onMouseUp = function(event)
 
   if (this.modelManipulator.hovered && this.selectedEntity)
   {
-//    console.log(this.modelManipulator.position.x);
-//    console.log(this.modelManipulator.gizmo.position.x);
-//    this.selectedEntity.position = this.modelManipulator.gizmo.position;
-//    this.selectedEntity.position = this.modelManipulator.gizmo.position;
     this.emitter.emit('poseChanged', this.modelManipulator.object);
-//    console.log(this.selectedEntity.name + ' ' + this.selectedEntity.position.x);
   }
   else if (this.killCameraControl)
   {
@@ -559,6 +582,17 @@ GZ3D.Scene.prototype.remove = function(model)
 GZ3D.Scene.prototype.getByName = function(name)
 {
   return this.scene.getObjectByName(name, true);
+};
+
+GZ3D.Scene.prototype.updatePose = function(model, position, orientation)
+{
+  if (this.modelManipulator && this.modelManipulator.object &&
+      this.modelManipulator.hovered && this.mouseEntity)
+  {
+    return;
+  }
+
+  this.setPose(model, position, orientation);
 };
 
 GZ3D.Scene.prototype.setPose = function(model, position, orientation)
