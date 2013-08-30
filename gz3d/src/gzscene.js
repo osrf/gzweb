@@ -220,6 +220,17 @@ GZ3D.Scene.prototype.getByName = function(name)
   return this.scene.getObjectByName(name, true);
 };
 
+GZ3D.Scene.prototype.updatePose = function(model, position, orientation)
+{
+  if (this.modelManipulator && this.modelManipulator.object &&
+      this.modelManipulator.hovered && this.mouseEntity)
+  {
+    return;
+  }
+
+  this.setPose(model, position, orientation);
+};
+
 GZ3D.Scene.prototype.setPose = function(model, position, orientation)
 {
   model.position.x = position.x;

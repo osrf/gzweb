@@ -15,6 +15,24 @@ GZ3D.GZIface.prototype.init = function(scene)
     url : 'ws://' + location.hostname + ':7681'
   });
 
+  this.heartbeatTopic = new ROSLIB.Topic({
+    ros : this.webSocket,
+    name : '~/heartbeat',
+    messageType : 'heartbeat',
+  });
+
+  var that = this;
+  var publishHeartbeat = function()
+  {
+    var hearbeatMsg =
+    {
+      alive : 1
+    };
+    that.heartbeatTopic.publish(hearbeatMsg);
+  };
+
+  setInterval(publishHeartbeat, 5000);
+
   var sceneTopic = new ROSLIB.Topic({
     ros : this.webSocket,
     name : '~/scene',
@@ -59,7 +77,7 @@ GZ3D.GZIface.prototype.init = function(scene)
     if (entity)
     {
       // console.log(message.name + 'found');
-      this.scene.setPose(entity, message.position, message.orientation);
+      this.scene.updatePose(entity, message.position, message.orientation);
 //      entity.position = message.position;
 //      entity.quaternion = message.orientation;
     }
@@ -126,7 +144,6 @@ GZ3D.GZIface.prototype.init = function(scene)
     messageType : 'model',
   });
 
-  var that = this;
   var publishModelModify = function(model)
   {
     var matrix = model.matrixWorld;
