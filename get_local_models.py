@@ -16,7 +16,8 @@ def copy_models(src, dst):
             print (".", end="")
             dest_dir = os.path.join(dst, os.path.split(model_path)[1] )
             if os.path.isdir(dest_dir):
-                shutil.rmtree(dest_dir) 
+                shutil.rmtree(dest_dir)
+                print("overriding model %s" % model_path)
             shutil.copytree(model_path, dest_dir)
         else:
             print (" %s ignored" % model_path)
@@ -40,4 +41,6 @@ except:
 for path in unique_pahts:
     print("\npath: [%s]" % path)
     copy_models(path, dest_dir)
+    
+print("local models transfered")
         
