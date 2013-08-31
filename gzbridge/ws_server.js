@@ -4,8 +4,8 @@ var http = require('http');
 
 var connections = [];
 var addon = require('./build/Debug/gzbridge');
-var gzconnection = new addon.GZNode(10);
-
+var gzconnection = new addon.GZNode();
+gzconnection.loadMaterialScripts('../http/client/assets');
 
 var server = http.createServer(function(request, response) {
     console.log((new Date()) + ' Received request for ' + request.url);

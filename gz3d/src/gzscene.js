@@ -280,7 +280,7 @@ GZ3D.Scene.prototype.createBox = function(width, height, depth)
   return mesh;
 };
 
-GZ3D.Scene.prototype.loadURI = function(uri, parent)
+GZ3D.Scene.prototype.loadURI = function(uri, parent, material)
 {
   var uriPath = uri.substring(0, uri.lastIndexOf('/'));
   var uriFile = uri.substring(uri.lastIndexOf('/') + 1);
@@ -288,7 +288,7 @@ GZ3D.Scene.prototype.loadURI = function(uri, parent)
   // load urdf model
   if (uriFile.substr(-4).toLowerCase() === '.dae')
   {
-    return this.loadCollada(uri, parent);
+    return this.loadCollada(uri, parent, material);
   }
   else if (uriFile.substr(-5).toLowerCase() === '.urdf')
   {
@@ -326,7 +326,7 @@ GZ3D.Scene.prototype.loadURI = function(uri, parent)
   }
 };
 
-GZ3D.Scene.prototype.loadCollada = function(uri, parent)
+GZ3D.Scene.prototype.loadCollada = function(uri, parent, material)
 {
   var dae;
   var loader = new THREE.ColladaLoader();
@@ -340,9 +340,17 @@ GZ3D.Scene.prototype.loadCollada = function(uri, parent)
       var scale = collada.dae.asset.unit;
       collada.scene.scale = new THREE.Vector3(scale, scale, scale);
     }*/
+
     dae = collada.scene;
     dae.updateMatrix();
     parent.add(dae);
+
+    if (material)
+    {
+      var texture = new THREE.MeshBasicMaterial(
+          {map: THREE.ImageUtils.loadTexture(material)});
+      dae.children[0].material = texture;
+    }
     //init();
     //animate();
   } );

@@ -10,6 +10,8 @@ GZ3D.GZIface = function(scene)
 
 GZ3D.GZIface.prototype.init = function(scene)
 {
+  this.material = [];
+
   // Set up initial scene
   this.webSocket = new ROSLIB.Ros({
     url : 'ws://' + location.hostname + ':7681'
@@ -32,6 +34,18 @@ GZ3D.GZIface.prototype.init = function(scene)
   };
 
   setInterval(publishHeartbeat, 5000);
+
+  var materialTopic = new ROSLIB.Topic({
+    ros : this.webSocket,
+    name : '~/material',
+    messageType : 'material',
+  });
+
+  var materialUpdate = function(message)
+  {
+    this.material = message;
+  };
+  materialTopic.subscribe(materialUpdate.bind(this));
 
   var sceneTopic = new ROSLIB.Topic({
     ros : this.webSocket,
@@ -242,7 +256,7 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
     lightObj = new THREE.DirectionalLight(color);
   }
 
-  lightObj.intensity = light.attenuation_constant;
+//  lightObj.intensity = light.attenuation_constant;
   lightObj.castShadow = light.cast_shadows;
 
   if (light.pose)
@@ -323,8 +337,37 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
       var uriType = meshUri.substring(0, meshUri.indexOf('://'));
       if (uriType === 'file' || uriType === 'model')
       {
-        this.scene.loadURI(uriPath + '/' +
-            meshUri.substring(meshUri.indexOf('://') + 3), parent);
+        var modelName = meshUri.substring(meshUri.indexOf('://') + 3);
+        if (geom.mesh.scale)
+        {
+          parent.scale.x = geom.mesh.scale.x;
+          parent.scale.y = geom.mesh.scale.y;
+          parent.scale.z = geom.mesh.scale.z;
+        }
+
+        var texture;
+        if (material)
+        {
+          var script  = material.script;
+          if (script)
+          {
+            if (script.name)
+            {
+              var textureName = this.material[script.name];
+              if (textureName)
+              {
+                textureName =
+                    textureName.substring(0, textureName.lastIndexOf('.') + 1)
+                    + 'png';
+                texture = uriPath + '/' +
+                    modelName.substring(0, modelName.lastIndexOf('/'))
+                    + '/' + textureName;
+              }
+            }
+          }
+        }
+
+        this.scene.loadURI(uriPath + '/' + modelName, parent, texture);
       }
     }
   }

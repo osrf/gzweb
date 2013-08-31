@@ -67,10 +67,12 @@ THREE.TransformControls = function ( camera, domElement, doc ) {
 	var parentScale = new THREE.Vector3();
 
 	var worldPosition = new THREE.Vector3();
-	var worldRotation = new THREE.Euler();
+//	var worldRotation = new THREE.Euler();
+	var worldRotation = new THREE.Vector3();
 	var worldRotationMatrix  = new THREE.Matrix4();
 	var camPosition = new THREE.Vector3();
-	var camRotation = new THREE.Euler();
+//	var camRotation = new THREE.Euler();
+	var camRotation = new THREE.Vector3();
 
 	var displayAxes = {};
 	var pickerAxes = {};
@@ -380,11 +382,11 @@ THREE.TransformControls = function ( camera, domElement, doc ) {
 
 		this.object.updateMatrixWorld();
 		worldPosition.getPositionFromMatrix( this.object.matrixWorld );
-		worldRotation.setFromRotationMatrix( tempMatrix.extractRotation( this.object.matrixWorld ) );
+		// worldRotation.setFromRotationMatrix( tempMatrix.extractRotation( this.object.matrixWorld ) );
 
 		this.camera.updateMatrixWorld();
 		camPosition.getPositionFromMatrix( this.camera.matrixWorld );
-		camRotation.setFromRotationMatrix( tempMatrix.extractRotation( this.camera.matrixWorld ) );
+		// camRotation.setFromRotationMatrix( tempMatrix.extractRotation( this.camera.matrixWorld ) );
 
 		scale = worldPosition.distanceTo( camPosition ) / 6 * this.scale;
 		this.gizmo.position.copy( worldPosition )
@@ -408,7 +410,8 @@ THREE.TransformControls = function ( camera, domElement, doc ) {
 
 					if ( this.space == 'local' ) {
 
-						tempQuaternion.setFromEuler( worldRotation );
+						// tempQuaternion.setFromEuler( worldRotation );
+						tempQuaternion.setFromRotationMatrix( tempMatrix.extractRotation( this.object.matrixWorld ) );
 
 						if ( name.search('R') != -1 ){
 

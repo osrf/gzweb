@@ -44,14 +44,15 @@ GZNode::~GZNode()
 };
 
 /////////////////////////////////////////////////
-void GZNode::Init(Handle<Object> exports) {
+void GZNode::Init(Handle<Object> exports)
+{
   // Prepare constructor template
   Local<FunctionTemplate> tpl = FunctionTemplate::New(New);
   tpl->SetClassName(String::NewSymbol("GZNode"));
   tpl->InstanceTemplate()->SetInternalFieldCount(1);
   // Prototype
-  tpl->PrototypeTemplate()->Set(String::NewSymbol("plusOne"),
-      FunctionTemplate::New(PlusOne)->GetFunction());
+  tpl->PrototypeTemplate()->Set(String::NewSymbol("loadMaterialScripts"),
+      FunctionTemplate::New(LoadMaterialScripts)->GetFunction());
 
   tpl->PrototypeTemplate()->Set(String::NewSymbol("setCallback"),
       FunctionTemplate::New(Callback)->GetFunction());
@@ -62,36 +63,26 @@ void GZNode::Init(Handle<Object> exports) {
   tpl->PrototypeTemplate()->Set(String::NewSymbol("getMessages"),
       FunctionTemplate::New(GetMessages)->GetFunction());
 
-  Persistent<Function> constructor = Persistent<Function>::New(tpl->GetFunction());
+  Persistent<Function> constructor =
+      Persistent<Function>::New(tpl->GetFunction());
   exports->Set(String::NewSymbol("GZNode"), constructor);
 }
 
 /////////////////////////////////////////////////
-Handle<Value> GZNode::New(const Arguments& args) {
+Handle<Value> GZNode::New(const Arguments& args)
+{
   HandleScope scope;
 
   GZNode* obj = new GZNode();
-  obj->counter_ = args[0]->IsUndefined() ? 0 : args[0]->NumberValue();
   obj->Wrap(args.This());
 
   return args.This();
 }
 
 /////////////////////////////////////////////////
-Handle<Value> GZNode::PlusOne(const Arguments& args) {
+Handle<Value> GZNode::LoadMaterialScripts(const Arguments& args)
+{
   HandleScope scope;
-
-  GZNode* obj = ObjectWrap::Unwrap<GZNode>(args.This());
-  obj->counter_ += 1;
-
-  return scope.Close(Number::New(obj->counter_));
-}
-
-/////////////////////////////////////////////////
-Handle<Value> GZNode::Request(const Arguments& args) {
-  HandleScope scope;
-
-  GZNode* obj = ObjectWrap::Unwrap<GZNode>(args.This());
 
   if (args.Length() < 1)
   {
@@ -107,6 +98,34 @@ Handle<Value> GZNode::Request(const Arguments& args) {
     return scope.Close(Undefined());
   }
 
+  GZNode* obj = ObjectWrap::Unwrap<GZNode>(args.This());
+
+  String::Utf8Value path(args[0]->ToString());
+  obj->gzIface->LoadMaterialScripts(std::string(*path));
+
+  return scope.Close(Undefined());
+}
+
+/////////////////////////////////////////////////
+Handle<Value> GZNode::Request(const Arguments& args)
+{
+  HandleScope scope;
+
+  if (args.Length() < 1)
+  {
+    ThrowException(Exception::TypeError(
+        String::New("Wrong number of arguments")));
+    return scope.Close(Undefined());
+  }
+
+  if (!args[0]->IsString())
+  {
+    ThrowException(Exception::TypeError(
+        String::New("Wrong argument type. String expected.")));
+    return scope.Close(Undefined());
+  }
+
+  GZNode* obj = ObjectWrap::Unwrap<GZNode>(args.This());
 
   String::Utf8Value request(args[0]->ToString());
   obj->gzIface->PushRequest(std::string(*request));
@@ -128,7 +147,8 @@ Handle<Value> GZNode::Callback(const Arguments& args) {
 
 
 /////////////////////////////////////////////////
-Handle<Value> GZNode::GetMessages(const Arguments& args) {
+Handle<Value> GZNode::GetMessages(const Arguments& args)
+{
   HandleScope scope;
 
   GZNode* obj = ObjectWrap::Unwrap<GZNode>(args.This());
@@ -143,7 +163,8 @@ Handle<Value> GZNode::GetMessages(const Arguments& args) {
 }
 
 /////////////////////////////////////////////////
-void InitAll(Handle<Object> exports) {
+void InitAll(Handle<Object> exports)
+{
   GZNode::Init(exports);
 }
 

@@ -19,6 +19,7 @@
 
 #include "pb2json.hh"
 //#include "WebSocketServer.hh"
+#include "OgreMaterialParser.hh"
 #include "GazeboInterface.hh"
 
 #define MAX_NUM_MSG_SIZE 1000
@@ -52,6 +53,9 @@ GazeboInterface::GazeboInterface()
   this->lightTopic = "~/light";
   this->sceneTopic = "~/scene";
   this->modelModifyTopic = "~/model/modify";
+
+  // material topic
+  this->materialTopic = "~/material";
 
   this->sensorSub = this->node->Subscribe(this->sensorTopic,
       &GazeboInterface::OnSensorMsg, this, true);
@@ -97,6 +101,7 @@ GazeboInterface::GazeboInterface()
   this->responseSub = this->node->Subscribe("~/response",
       &GazeboInterface::OnResponse, this);
 
+  this->materialParser = new OgreMaterialParser();
 }
 
 /////////////////////////////////////////////////
@@ -229,6 +234,17 @@ void GazeboInterface::ProcessMessages()
             gazebo::msgs::Set(msg.mutable_pose(), pose);
             this->lightPub->Publish(msg);
           }*/
+        }
+        else if (topic == this->materialTopic)
+        {
+
+          if (this->materialParser)
+          {
+            std::string msg =
+                this->PackOutgoingMsg(this->materialTopic,
+                this->materialParser->GetMaterialAsJson());
+            this->Send(msg);
+          }
         }
       }
     }
@@ -609,4 +625,11 @@ void GazeboInterface::PushRequest(const std::string &_msg)
   boost::recursive_mutex::scoped_lock lock(incomingMutex);
   if (incoming.size() < MAX_NUM_MSG_SIZE)
     incoming.push_back(_msg);
+}
+
+/////////////////////////////////////////////////
+void GazeboInterface::LoadMaterialScripts(const std::string &_path)
+{
+  if (this->materialParser)
+    this->materialParser->Load(_path);
 }

@@ -31,6 +31,8 @@ namespace boost
 
 namespace gzweb
 {
+  class OgreMaterialParser;
+
   class GazeboInterface
   {
     /// \brief Constructor.
@@ -70,6 +72,10 @@ namespace gzweb
     /// \brief Receive message from websocket server.
     /// \param[in] _msg Message received.
     public: void Receive(const std::string &_msg);
+
+    /// \brief Load material scripts.
+    /// \param[in] _path Path to the material scripts.
+    public: void LoadMaterialScripts(const std::string &_path);
 
     /// \brief Pack message in a format that conforms to the client.
     private: std::string PackOutgoingMsg(const std::string &_topic,
@@ -284,6 +290,13 @@ namespace gzweb
 
     /// \brief Name of model modify topic.
     private: std::string modelModifyTopic;
+
+    /// \brief A custom topic for getting mapping of materials to textures
+    /// referenced by gazebo
+    private: std::string materialTopic;
+
+    /// \brief Ogre material parser.
+    private: OgreMaterialParser *materialParser;
   };
 }
 

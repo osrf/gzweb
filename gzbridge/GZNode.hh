@@ -40,7 +40,11 @@ namespace gzweb
 
     private: static v8::Handle<v8::Value> Request(const v8::Arguments& args);
 
-    private: static v8::Handle<v8::Value> GetMessages(const v8::Arguments& args);
+    private: static v8::Handle<v8::Value>
+        GetMessages(const v8::Arguments& args);
+
+    private: static v8::Handle<v8::Value>
+        LoadMaterialScripts(const v8::Arguments& args);
 
     private: double counter_;
 

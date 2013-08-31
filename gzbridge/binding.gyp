@@ -2,8 +2,11 @@
   "targets": [
     {
       "target_name": "gzbridge",
-      "sources": [ "GZNode.cc", "GZNode.hh", "GazeboInterface.cc", 
-        "GazeboInterface.hh", "pb2json.cc", "pb2json.hh" ],
+      "sources": [ "GZNode.cc", "GZNode.hh", 
+        "GazeboInterface.cc", "GazeboInterface.hh", 
+        "pb2json.cc", "pb2json.hh", 
+        "ConfigLoader.cc", "ConfigLoader.hh",
+        "OgreMaterialParser.cc", "OgreMaterialParser.hh"],
       'cflags_cc!': [ '-fno-rtti', '-fno-exceptions' ],
       'cflags!': [ '-fno-exceptions' ],
       "conditions": [        
