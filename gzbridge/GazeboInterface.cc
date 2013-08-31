@@ -372,6 +372,63 @@ void GazeboInterface::OnModelMsg(ConstModelPtr &_msg)
 }
 
 /////////////////////////////////////////////////
+bool GazeboInterface::FilterPoses(const TimedPose &_old,
+    const TimedPose &_current)
+{
+
+	bool has_moved = false;
+	bool is_too_early = false;
+
+	double minimumDistanceSquared = 0.1;
+	double minimumQuaternionSquared = 0.1;
+
+	gazebo::common::Time mininumTimeElapsed(0.02);
+
+	gazebo::common::Time timeDifference =  _current.first - _old.first;
+	if (timeDifference < mininumTimeElapsed )
+	{
+		//std::cout << "t" << std::endl;
+		is_too_early = true;
+	}
+
+	gazebo::math::Vector3 posDiff = _current.second.pos - _old.second.pos;
+	double translationSquared = posDiff.GetSquaredLength();
+	if (translationSquared < minimumDistanceSquared)
+	{
+		//std::cout << "x" << std::endl;
+	}
+	else
+	{
+		has_moved = true;
+	}
+
+	gazebo::math::Quaternion i = _current.second.rot.GetInverse();
+	gazebo::math::Quaternion qDiff =  i * _old.second.rot;
+
+	gazebo::math::Vector3 d(qDiff.x, qDiff.y, qDiff.z);
+	if (d.GetSquaredLength() < minimumQuaternionSquared)
+	{
+		//std::cout << "r" << std::endl;
+	}
+	else
+	{
+		has_moved = true;
+	}
+	if (is_too_early)
+	{
+		return true;
+	}
+	if(!has_moved)
+	{
+		std::cout << "-" << std::endl;
+		return true;
+	}
+	std::cout << "+" << std::endl;
+    return false;
+}
+
+
+/////////////////////////////////////////////////
 void GazeboInterface::OnPoseMsg(ConstPosesStampedPtr &_msg)
 {
   boost::mutex::scoped_lock lock(*this->receiveMutex);
@@ -388,21 +445,43 @@ void GazeboInterface::OnPoseMsg(ConstPosesStampedPtr &_msg)
         break;
       }
     }
+    bool filtered = false;
 
+    /*
     std::string name = _msg->pose(i).name();
-    std::cout << name << std::endl;
 
-    //
-    const gazebo::msgs::Vector3d& pos = _msg->pose(i).position();
-    double x = pos.x();
-    double y = pos.y();
-    double z = pos.z();
-   // std::cout << " pose ["<< x << "," << y << "," << z << "]" << std::endl;
-   // int sec =_msg->time().seconds();
-   // std::cout << " time "<< _msg->time() << std::endl;
+    gazebo::math::Pose pose = gazebo::msgs::Convert(_msg->pose(i));
+    gazebo::common::Time time = gazebo::msgs::Convert(_msg->time());
 
 
-    this->poseMsgs.push_back(_msg->pose(i));
+
+    PoseMsgsFilter_M::iterator it = poseMsgsFilterMap.find(name);
+
+    TimedPose currentPose;
+	currentPose.first = time;
+	currentPose.second = pose;
+
+    if (it == poseMsgsFilterMap.end())
+    {
+    	std::pair<PoseMsgsFilter_M::iterator, bool> r;
+    	r = poseMsgsFilterMap.insert(make_pair(name, currentPose));
+    }
+    else
+    {
+      TimedPose oldPose = it->second;
+      filtered = FilterPoses(oldPose, currentPose);
+      if (filtered)
+      {
+        // update the map
+    	it->second.first = currentPose.first;
+    	it->second.second = currentPose.second;
+      }
+    }
+    */
+    if(!filtered)
+    {
+      this->poseMsgs.push_back(_msg->pose(i));
+    }
   }
 }
 

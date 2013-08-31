@@ -20,6 +20,7 @@
 
 #include <string>
 #include <list>
+#include <boost/unordered/unordered_map.hpp>
 
 #include <gazebo/gazebo.hh>
 
@@ -121,8 +122,15 @@ namespace gzweb
     /// \param[in] _msg The message data.
     private: void OnResponse(ConstResponsePtr &_msg);
 
-    /// \brief True if the message is to be ignored
-    //private: bool FilterPoseMsg(ConstPosesStampedPtr &_msg);
+
+    /// \brief a pose at a specific time
+    typedef std::pair<gazebo::common::Time, gazebo::math::Pose > TimedPose;
+
+    /// \brief True if the message is to be ignored because it is either
+    /// too old, or too similar
+    /// \param[in] _previous The previous pose
+    /// \param[in] _current The latest pose
+    bool FilterPoses(const TimedPose &_previous, const TimedPose &_current);
 
     /// \brief Incoming messages.
     public: static std::vector<std::string> incoming;
@@ -237,10 +245,10 @@ namespace gzweb
     typedef std::list<boost::shared_ptr<gazebo::msgs::Scene const> >
         SceneMsgs_L;
 
+
     /// \def PoseMsgsFilter_M
     /// \brief Map of last pose messages used for filtering
-    typedef std::map< std::string,
-        gazebo::msgs::PosesStampedPtr> PoseMsgsFilter_M;
+    typedef boost::unordered_map< std::string, TimedPose> PoseMsgsFilter_M;
 
     private: PoseMsgsFilter_M poseMsgsFilterMap;
 
