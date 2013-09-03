@@ -499,7 +499,8 @@ GZ3D.Scene.prototype.onMouseDown = function(event)
       {
         model = objects[i].object;
 
-        if (objects[i].object.name === 'grid')
+        if (!this.modelManipulator.hovered &&
+            objects[i].object.name === 'grid')
         {
           this.killCameraControl = false;
           return;
