@@ -48,12 +48,11 @@ GZ3D.GZIface.prototype.init = function(scene)
 
   var materialUpdate = function(message)
   {
-    console.log('got material');
     this.material = message;
   };
   materialTopic.subscribe(materialUpdate.bind(this));
 
-  var sceneTopic = new ROSLIB.Topic({
+  this.sceneTopic = new ROSLIB.Topic({
     ros : this.webSocket,
     name : '~/scene',
     messageType : 'scene',
@@ -79,8 +78,10 @@ GZ3D.GZIface.prototype.init = function(scene)
       var modelObj = this.createModelFromMsg(model);
       this.scene.add(modelObj);
     }
+
+    this.sceneTopic.unsubscribe();
   };
-  sceneTopic.subscribe(sceneUpdate.bind(this));
+  this.sceneTopic.subscribe(sceneUpdate.bind(this));
 
 
   // Update model pose
@@ -368,8 +369,6 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
                 texture = uriPath + '/' +
                     modelName.substring(0, modelName.lastIndexOf('/'))
                     + '/' + textureName;
-                console.log('material texture ' + script.name + ' '
-                    + texture);
               }
             }
           }

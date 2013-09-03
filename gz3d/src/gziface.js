@@ -47,7 +47,7 @@ GZ3D.GZIface.prototype.init = function(scene)
   };
   materialTopic.subscribe(materialUpdate.bind(this));
 
-  var sceneTopic = new ROSLIB.Topic({
+  this.sceneTopic = new ROSLIB.Topic({
     ros : this.webSocket,
     name : '~/scene',
     messageType : 'scene',
@@ -73,8 +73,10 @@ GZ3D.GZIface.prototype.init = function(scene)
       var modelObj = this.createModelFromMsg(model);
       this.scene.add(modelObj);
     }
+
+    this.sceneTopic.unsubscribe();
   };
-  sceneTopic.subscribe(sceneUpdate.bind(this));
+  this.sceneTopic.subscribe(sceneUpdate.bind(this));
 
 
   // Update model pose
