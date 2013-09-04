@@ -297,6 +297,48 @@ namespace gzweb
 
     /// \brief Ogre material parser.
     private: OgreMaterialParser *materialParser;
+
+    /// \brief filter pose message based on minimum distance criteria
+    private: double minimumDistanceSquared;
+
+    /// \brief filter pose message based on minimum rotation criteria
+    private: double minimumQuaternionSquared;
+
+    /// \brief filter pose message based on minimum elapsed time (seconds)
+    private: double minimumMsgAge;
+
+    private: int skippedMsgCount;
+    private: int messageWindowSize;
+    private: int messageCount;
+
+    public: inline void SetPoseFilterMinimumDistanceSquared(double m)
+    {
+    	this->minimumDistanceSquared = m;
+    }
+    public: inline double GetPoseFilterMinimumDistanceSquared()
+    {
+    	return this->minimumDistanceSquared;
+    }
+
+    public: inline void SetPoseFilterMinimumQuaternionSquared(double m)
+    {
+    	this->minimumQuaternionSquared = m;
+    }
+
+    public: inline double GetPoseFilterMinimumQuaternionSquared()
+    {
+    	return this->minimumQuaternionSquared;
+    }
+
+    public: inline void SetPoseFilterMinimumMsgAge(double m)
+    {
+    	this->minimumMsgAge = m;
+    }
+
+    public: inline double GetPoseFilterMinimumMsgAge()
+    {
+    	return this->minimumMsgAge;
+    }
   };
 }
 
