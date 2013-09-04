@@ -753,14 +753,23 @@ GZ3D.Scene.prototype.loadCollada = function(uri, parent, material)
 
     dae = collada.scene;
     dae.updateMatrix();
-    parent.add(dae);
 
     if (material)
     {
-      var texture = new THREE.MeshBasicMaterial(
+      var texture = new THREE.MeshPhongMaterial(
           {map: THREE.ImageUtils.loadTexture(material)});
-      dae.children[0].material = texture;
+      var allChildren = [];
+      dae.getDescendants(allChildren);
+      for (var i = 0; i < allChildren.length; ++i)
+      {
+        if (allChildren[i] instanceof THREE.Mesh)
+        {
+          allChildren[i].material = texture;
+          break;
+        }
+      }
     }
+    parent.add(dae);
     //init();
     //animate();
   } );

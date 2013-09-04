@@ -3192,12 +3192,18 @@ THREE.ColladaLoader = function () {
 						if ( cot.isTexture() ) {
 
 							var samplerId = cot.texture;
+
+
+							var image;
+
 							var surfaceId = this.effect.sampler[samplerId];
-
 							if ( surfaceId !== undefined && surfaceId.source !== undefined ) {
-
 								var surface = this.effect.surface[surfaceId.source];
-								var image = images[surface.init_from];
+								image = images[surface.init_from];
+							}
+							else {
+                image = images[samplerId];
+							}
 
 								if (image) {
 
@@ -3215,7 +3221,7 @@ THREE.ColladaLoader = function () {
 
 								}
 
-							}
+//							}
 
 						} else if ( prop === 'diffuse' || !transparent ) {
 
