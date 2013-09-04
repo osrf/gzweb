@@ -275,6 +275,45 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
 GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
 {
   var obj;
+
+  var uriPath = 'assets';
+  var texture;
+  if (material)
+  {
+    var script  = material.script;
+    if (script)
+    {
+      if (script.uri.length > 0)
+      {
+        if (script.name)
+        {
+          var textureName = this.material[script.name];
+          if (textureName)
+          {
+            var textureUri;
+            for (var i = 0; i < script.uri.length; ++i)
+            {
+              if (script.uri[i].indexOf('textures') > 0)
+              {
+                textureUri = script.uri[i].substring(
+                    script.uri[i].indexOf('://') + 3);
+                break;
+              }
+            }
+            if (textureUri)
+            {
+              textureName =
+                  textureName.substring(0, textureName.lastIndexOf('.') + 1)
+                  + 'png';
+              texture = uriPath + '/' +
+                  textureUri  + '/' + textureName;
+            }
+          }
+        }
+      }
+    }
+  }
+
   if (geom.box)
   {
     obj = this.scene.createBox(geom.box.size.x, geom.box.size.y,
@@ -297,8 +336,6 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
     {
       rootModel = rootModel.parent;
     }
-
-    var uriPath = 'assets';
 
     /*// find model from database, download the mesh if it exists
     var manifestXML;
@@ -347,28 +384,6 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
           parent.scale.z = geom.mesh.scale.z;
         }
 
-        var texture;
-        if (material)
-        {
-          var script  = material.script;
-          if (script)
-          {
-            if (script.name)
-            {
-              var textureName = this.material[script.name];
-              if (textureName)
-              {
-                textureName =
-                    textureName.substring(0, textureName.lastIndexOf('.') + 1)
-                    + 'png';
-                texture = uriPath + '/' +
-                    modelName.substring(0, modelName.lastIndexOf('/'))
-                    + '/' + textureName;
-              }
-            }
-          }
-        }
-
         this.scene.loadURI(uriPath + '/' + modelName, parent, texture);
       }
     }
@@ -376,6 +391,12 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
 
   if (obj)
   {
+    if (texture)
+    {
+      obj.material = new THREE.MeshPhongMaterial(
+         {map: THREE.ImageUtils.loadTexture(texture)});
+    }
+
     obj.updateMatrix();
     parent.add(obj);
   }
