@@ -307,12 +307,6 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
             }
             if (textureUri)
             {
-              textureName =
-                  textureName.substring(0, textureName.lastIndexOf('.') + 1)
-                  + 'png';
-//                texture = uriPath + '/' +
-//                    textureUri.substring(0, textureUri.lastIndexOf('/'))
-//                    + '/' + textureName;
               texture = uriPath + '/' +
                   textureUri  + '/' + textureName;
             }

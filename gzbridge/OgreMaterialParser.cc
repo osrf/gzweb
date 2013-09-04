@@ -61,6 +61,12 @@ std::string OgreMaterialParser::GetMaterialAsJson() const
               name = name.substr(index+1);
             }
             std::string textureStr = textureNode->getValue(0);
+            index = textureStr.rfind(".");
+            if (index != std::string::npos)
+            {
+              textureStr = textureStr.substr(0, index+1) + "png";
+            }
+
             jsonStr += "\"" + name + "\" : \"" + textureStr + "\"";
           }
         }
