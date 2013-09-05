@@ -7,6 +7,19 @@ var addon = require('./build/Debug/gzbridge');
 var gzconnection = new addon.GZNode();
 gzconnection.loadMaterialScripts('../http/client/assets');
 
+gzconnection.setPoseMsgFilterMinimumAge(0.02);
+gzconnection.setPoseMsgFilterMinimumDistanceSquared(0.00001);
+gzconnection.setPoseMsgFilterMinimumQuaternionSquared(0.00001);
+
+console.log("Pose message filter parameters: ");
+console.log("  minimum seconds between successive messages: " + 
+			gzconnection.getPoseMsgFilterMinimumAge());
+console.log("  minimum XYZ distance squared between successive messages: " + 
+			gzconnection.getPoseMsgFilterMinimumDistanceSquared());
+console.log("  minimum Quartenion distance squared between successive messages: " + 
+			gzconnection.getPoseMsgFilterMinimumQuaternionSquared());
+
+			
 var server = http.createServer(function(request, response) {
     console.log((new Date()) + ' Received request for ' + request.url);
     response.writeHead(404);
