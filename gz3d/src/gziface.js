@@ -325,6 +325,11 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
   {
     obj = this.scene.createSphere(geom.sphere.radius);
   }
+  else if (geom.plane)
+  {
+    obj = this.scene.createPlane(geom.plane.normal.x, geom.plane.normal.y,
+        geom.plane.normal.z, geom.plane.size.x, geom.plane.size.y);
+  }
   else if (geom.mesh)
   {
     // get model name which the mesh is in

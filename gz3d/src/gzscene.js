@@ -50,8 +50,8 @@ GZ3D.Scene.prototype.init = function()
       this.getDomElement());
 
   this.controls = new THREE.OrbitControls(this.camera);
-  this.controls.noPan = false;
-/*  this.controls.rotateSpeed = 1.0;
+/*  this.controls.noPan = false;
+  this.controls.rotateSpeed = 1.0;
   this.controls.zoomSpeed = 1.2;
   this.controls.panSpeed = 0.8;
   this.controls.noZoom = false;
@@ -71,6 +71,8 @@ GZ3D.Scene.prototype.init = function()
 GZ3D.Scene.prototype.onMouseDown = function(event)
 {
   event.preventDefault();
+
+  this.controls.enabled = true;
 
   var projector = new THREE.Projector();
   var vector = new THREE.Vector3( (event.clientX / window.innerWidth) * 2 - 1,
@@ -93,9 +95,11 @@ GZ3D.Scene.prototype.onMouseDown = function(event)
         model = objects[i].object;
 
         if (!this.modelManipulator.hovered &&
-            objects[i].object.name === 'grid')
+            (objects[i].object.name === 'grid' ||
+            objects[i].object.name === 'plane'))
         {
           this.killCameraControl = false;
+          console.log('got plane or grid');
           return;
         }
 
@@ -123,7 +127,7 @@ GZ3D.Scene.prototype.onMouseDown = function(event)
     //    if (this.modelManipulator.hovered)
         if (model.name !== '')
         {
-          console.log('attached');
+          console.log('attached ' + model.name);
           this.modelManipulator.attach(model);
           this.selectedEntity = model;
           this.mouseEntity = this.selectedEntity;
@@ -170,6 +174,8 @@ GZ3D.Scene.prototype.onMouseUp = function(event)
 {
   event.preventDefault();
 
+  this.controls.enabled = true;
+
   if (this.modelManipulator.hovered && this.selectedEntity)
   {
     this.emitter.emit('poseChanged', this.modelManipulator.object);
@@ -191,8 +197,14 @@ GZ3D.Scene.prototype.render = function()
 {
   if (!this.killCameraControl)
   {
+    this.controls.enabled = true;
     this.controls.update();
   }
+  else
+  {
+    this.controls.enabled = false;
+  }
+
   this.modelManipulator.update();
 
   this.renderer.render(this.scene, this.camera);
@@ -249,8 +261,23 @@ GZ3D.Scene.prototype.createGrid = function()
 {
   var grid = new THREE.GridHelper(10, 1);
   grid.name = 'grid';
+  grid.position.z = 0.01;
   grid.rotation.x = Math.PI * 0.5;
   this.scene.add(grid);
+};
+
+GZ3D.Scene.prototype.createPlane = function(normalX, normalY, normalZ,
+    width, height)
+{
+  var geometry = new THREE.PlaneGeometry(width, height, 1, 1);
+  var material =  new THREE.MeshPhongMaterial(
+      {color:0xbbbbbb, shading: THREE.SmoothShading} );
+  var mesh = new THREE.Mesh(geometry, material);
+  var normal = new THREE.Vector3(normalX, normalY, normalZ);
+  var cross = normal.crossVectors(normal, mesh.up);
+  mesh.rotation = normal.applyAxisAngle(cross, -(normal.angleTo(mesh.up)));
+  mesh.name = 'plane';
+  return mesh;
 };
 
 GZ3D.Scene.prototype.createSphere = function(radius)
