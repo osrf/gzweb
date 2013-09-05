@@ -2293,6 +2293,7 @@ THREE.ColladaLoader = function () {
 	function Geometry() {
 
 		this.id = "";
+		this.name = "";
 		this.mesh = null;
 
 	};
@@ -2300,6 +2301,7 @@ THREE.ColladaLoader = function () {
 	Geometry.prototype.parse = function ( element ) {
 
 		this.id = element.getAttribute('id');
+		this.name = element.getAttribute('name');
 
 		extractDoubleSided( this, element );
 
@@ -3199,10 +3201,10 @@ THREE.ColladaLoader = function () {
 							var surfaceId = this.effect.sampler[samplerId];
 							if ( surfaceId !== undefined && surfaceId.source !== undefined ) {
 								var surface = this.effect.surface[surfaceId.source];
-								var image = images[surface.init_from];
+								image = images[surface.init_from];
 							}
 							else {
-
+                image = images[samplerId];
 							}
 
 								if (image) {

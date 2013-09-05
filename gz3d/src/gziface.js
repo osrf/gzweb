@@ -229,8 +229,8 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
           this.scene.setPose(visualObj, visual.pose.position,
               visual.pose.orientation);
         }
-        // TODO  mat = FindMaterial(material);
         this.createGeom(geom, visual.material, visualObj);
+        visualObj.castShadow = true;
         linkObj.add(visualObj);
       }
     }
@@ -367,8 +367,10 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
     if (modelAvailable)*/
     {
       var meshUri = geom.mesh.filename;
+      var submesh = geom.mesh.submesh;
+      var centerSubmesh = geom.mesh.center_submesh;
 
-      console.log(geom.mesh.filename);
+      console.log(geom.mesh.filename + ' ' + submesh);
 
       var uriType = meshUri.substring(0, meshUri.indexOf('://'));
       if (uriType === 'file' || uriType === 'model')
@@ -381,7 +383,7 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
           parent.scale.z = geom.mesh.scale.z;
         }
 
-        this.scene.loadURI(uriPath + '/' + modelName, parent, texture);
+        this.scene.loadMesh(uriPath + '/' + modelName, submesh, centerSubmesh, texture, parent);
       }
     }
   }

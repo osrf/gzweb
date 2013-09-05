@@ -234,8 +234,8 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
           this.scene.setPose(visualObj, visual.pose.position,
               visual.pose.orientation);
         }
-        // TODO  mat = FindMaterial(material);
         this.createGeom(geom, visual.material, visualObj);
+        visualObj.castShadow = true;
         linkObj.add(visualObj);
       }
     }
@@ -372,8 +372,10 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
     if (modelAvailable)*/
     {
       var meshUri = geom.mesh.filename;
+      var submesh = geom.mesh.submesh;
+      var centerSubmesh = geom.mesh.center_submesh;
 
-      console.log(geom.mesh.filename);
+      console.log(geom.mesh.filename + ' ' + submesh);
 
       var uriType = meshUri.substring(0, meshUri.indexOf('://'));
       if (uriType === 'file' || uriType === 'model')
@@ -386,7 +388,7 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
           parent.scale.z = geom.mesh.scale.z;
         }
 
-        this.scene.loadURI(uriPath + '/' + modelName, parent, texture);
+        this.scene.loadMesh(uriPath + '/' + modelName, submesh, centerSubmesh, texture, parent);
       }
     }
   }
@@ -434,6 +436,7 @@ GZ3D.Scene.prototype.init = function()
 {
   this.scene = new THREE.Scene();
   this.scene.name = 'scene';
+  this.meshes = {};
 
   this.selectedEntity = null;
   this.mouseEntity = null;
@@ -708,7 +711,7 @@ GZ3D.Scene.prototype.createBox = function(width, height, depth)
   return mesh;
 };
 
-GZ3D.Scene.prototype.loadURI = function(uri, parent, material)
+GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh, material, parent)
 {
   var uriPath = uri.substring(0, uri.lastIndexOf('/'));
   var uriFile = uri.substring(uri.lastIndexOf('/') + 1);
@@ -716,7 +719,7 @@ GZ3D.Scene.prototype.loadURI = function(uri, parent, material)
   // load urdf model
   if (uriFile.substr(-4).toLowerCase() === '.dae')
   {
-    return this.loadCollada(uri, parent, material);
+    return this.loadCollada(uri, submesh, centerSubmesh, material, parent);
   }
   else if (uriFile.substr(-5).toLowerCase() === '.urdf')
   {
@@ -754,12 +757,28 @@ GZ3D.Scene.prototype.loadURI = function(uri, parent, material)
   }
 };
 
-GZ3D.Scene.prototype.loadCollada = function(uri, parent, material)
+GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh, material, parent)
 {
   var dae;
+  if (this.meshes[uri])
+  {
+    dae = this.meshes[uri];
+    if (submesh)
+    {
+      console.log (' sub returned ' + submesh);
+      //return;
+
+    }
+    //return;
+  }
+
   var loader = new THREE.ColladaLoader();
 //  var loader = new ColladaLoader2();
 //  loader.options.convertUpAxis = true;
+  var thatURI = uri;
+  var thatSubmesh = submesh;
+  var thatCenterSubmesh = centerSubmesh;
+
   loader.load(uri, function(collada)
   {
     // check for a scale factor
@@ -772,24 +791,127 @@ GZ3D.Scene.prototype.loadCollada = function(uri, parent, material)
     dae = collada.scene;
     dae.updateMatrix();
 
+    this.scene.meshes[thatURI] = dae;
+
+//            console.log('sub ' + thatSubmesh);
+
+    var mesh;
+    var allChildren = [];
+    dae.getDescendants(allChildren);
+    for (var i = 0; i < allChildren.length; ++i)
+    {
+      if (allChildren[i] instanceof THREE.Mesh)
+      {
+
+        if (!thatSubmesh && !mesh)
+        {
+          mesh = allChildren[i];
+          //break;
+        }
+
+        if (thatSubmesh)
+        {
+
+          if (allChildren[i].geometry.name === thatSubmesh)
+          {
+
+            if (thatCenterSubmesh)
+            {
+              var vertices = allChildren[i].geometry.vertices;
+              var vMin = new THREE.Vector3();
+              var vMax = new THREE.Vector3();
+              vMin.x = vertices[0].x;
+              vMin.y = vertices[0].y;
+              vMin.z = vertices[0].z;
+              vMax.x = vMin.x;
+              vMax.y = vMin.y;
+              vMax.z = vMin.z;
+
+              for (var j = 1; j < vertices.length; ++j)
+              {
+                vMin.x = Math.min(vMin.x, vertices[j].x);
+                vMin.y = Math.min(vMin.y, vertices[j].y);
+                vMin.z = Math.min(vMin.z, vertices[j].z);
+                vMax.x = Math.max(vMax.x, vertices[j].x);
+                vMax.y = Math.max(vMax.y, vertices[j].y);
+                vMax.z = Math.max(vMax.z, vertices[j].z);
+              }
+
+              var trans  = new THREE.Vector3();
+  /*            trans.x = -(vMin.x + (0.5 * (vMax.x - vMin.x)));
+              trans.y = -(vMin.y + (0.5 * (vMax.y - vMin.y)));
+              trans.z = -(vMin.z + (0.5 * (vMax.z - vMin.z)));*/
+  /*            trans.x = -((0.5 * (vMax.x - vMin.x)));
+              trans.y = -((0.5 * (vMax.y - vMin.y)));
+              trans.z = -((0.5 * (vMax.z - vMin.z)));*/
+
+
+              /*for (var k = 0; k < vertices.length; ++k)
+              {
+                vertices[k].x += trans.x;
+                vertices[k].y += trans.y;
+                vertices[k].z += trans.z;
+              }
+              allChildren[i].geometry.verticesNeedUpdate = true;*/
+              //allChildren[i].parent.position.x += trans.x;
+  //            allChildren[i].parent.position.y += trans.y;
+  //            allChildren[i].parent.position.z += trans.z;
+
+  /*            allChildren[i].parent.position.x = 0;
+              allChildren[i].parent.position.y = 0;
+              allChildren[i].parent.position.z = 0;*/
+
+
+              allChildren[i].parent.position.x += trans.x;
+              allChildren[i].parent.position.y += trans.y;
+              allChildren[i].parent.position.z += trans.z;
+
+  //            console.log('half ' + allChildren[i].geometry.name + ' ' +  0.5 * (vMax.x - vMin.x) + ' ' + 0.5 * (vMax.y - vMin.y) + ' ' + 0.5 * (vMax.y - vMin.y));
+
+              /*console.log(vMin.x + ' '
+              + vMin.y + ' '
+              + vMin.z + ' ' + vMax.x + ' ' + vMax.y + ' ' + vMax.z + ' ' + thatSubmesh + ' ' + trans.x + ' ' + trans.y + ' ' + trans.z);*/
+            }
+
+            mesh = allChildren[i];
+
+  /*          mesh.parent.position.x = 0;
+            mesh.parent.position.y = 0;
+            mesh.parent.position.z = 0;*/
+
+              console.log ('mesh ' + allChildren[i].geometry.name
+                  + ' ' + mesh.position.x
+                  + ' ' + mesh.position.y
+                  + ' ' + mesh.position.z);
+              console.log ('parent ' + allChildren[i].geometry.name
+                  + ' ' + mesh.parent.position.x
+                  + ' ' + mesh.parent.position.y
+                  + ' ' + mesh.parent.position.z);
+
+
+          }
+          else
+          {
+            allChildren[i].parent.remove(allChildren[i]);
+          }
+        }
+      }
+      else if (allChildren[i] instanceof THREE.AmbientLight)
+      {
+        allChildren[i].parent.remove(allChildren[i]);
+      }
+    }
+
     if (material)
     {
       var texture = new THREE.MeshPhongMaterial(
           {map: THREE.ImageUtils.loadTexture(material)});
-      var allChildren = [];
-      dae.getDescendants(allChildren);
-      for (var i = 0; i < allChildren.length; ++i)
-      {
-        if (allChildren[i] instanceof THREE.Mesh)
-        {
-          allChildren[i].material = texture;
-          break;
-        }
-      }
+
+      mesh.material = texture;
     }
     parent.add(dae);
-    //init();
-    //animate();
+//    parent.add(mesh);
+
   } );
 //  return dae;
 };
