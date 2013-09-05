@@ -3,4 +3,8 @@ syntax: glob
 build
 build_*
 .DS_Store
+*.*~
+*~
+*.swp
+http/client/assets
 gz3d/utils/node_modules

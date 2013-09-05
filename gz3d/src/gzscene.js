@@ -49,15 +49,16 @@ GZ3D.Scene.prototype.init = function()
   this.modelManipulator = new THREE.TransformControls(this.camera,
       this.getDomElement());
 
-  this.controls = new THREE.TrackballControls(this.camera);
-  this.controls.rotateSpeed = 1.0;
+  this.controls = new THREE.OrbitControls(this.camera);
+  this.controls.noPan = false;
+/*  this.controls.rotateSpeed = 1.0;
   this.controls.zoomSpeed = 1.2;
   this.controls.panSpeed = 0.8;
   this.controls.noZoom = false;
   this.controls.noPan = false;
   this.controls.staticMoving = true;
   this.controls.dynamicDampingFactor = 0.3;
-  this.controls.keys = [ 65, 83, 68 ];
+  this.controls.keys = [ 65, 83, 68 ];*/
 
 //  this.controls.addEventListener('change', function() {that.render();});
 //  this.modelManipulator.addEventListener('change', function() {that.render();});
@@ -407,15 +408,17 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh, materia
               }
 
               var trans  = new THREE.Vector3();
-  /*            trans.x = -(vMin.x + (0.5 * (vMax.x - vMin.x)));
+              trans.x = -(vMin.x + (0.5 * (vMax.x - vMin.x)));
               trans.y = -(vMin.y + (0.5 * (vMax.y - vMin.y)));
-              trans.z = -(vMin.z + (0.5 * (vMax.z - vMin.z)));*/
+              trans.z = -(vMin.z + (0.5 * (vMax.z - vMin.z)));
+
+
   /*            trans.x = -((0.5 * (vMax.x - vMin.x)));
               trans.y = -((0.5 * (vMax.y - vMin.y)));
               trans.z = -((0.5 * (vMax.z - vMin.z)));*/
 
 
-              /*for (var k = 0; k < vertices.length; ++k)
+/*              for (var k = 0; k < vertices.length; ++k)
               {
                 vertices[k].x += trans.x;
                 vertices[k].y += trans.y;
@@ -426,21 +429,21 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh, materia
   //            allChildren[i].parent.position.y += trans.y;
   //            allChildren[i].parent.position.z += trans.z;
 
-  /*            allChildren[i].parent.position.x = 0;
+              allChildren[i].parent.position.x = 0;
               allChildren[i].parent.position.y = 0;
-              allChildren[i].parent.position.z = 0;*/
+              allChildren[i].parent.position.z = 0;
 
 
-              allChildren[i].parent.position.x += trans.x;
+
+/*              allChildren[i].parent.position.x += trans.x;
               allChildren[i].parent.position.y += trans.y;
-              allChildren[i].parent.position.z += trans.z;
+              allChildren[i].parent.position.z += trans.z;*/
 
-  //            console.log('half ' + allChildren[i].geometry.name + ' ' +  0.5 * (vMax.x - vMin.x) + ' ' + 0.5 * (vMax.y - vMin.y) + ' ' + 0.5 * (vMax.y - vMin.y));
-
-              /*console.log(vMin.x + ' '
-              + vMin.y + ' '
-              + vMin.z + ' ' + vMax.x + ' ' + vMax.y + ' ' + vMax.z + ' ' + thatSubmesh + ' ' + trans.x + ' ' + trans.y + ' ' + trans.z);*/
+/*            console.log('half ' + allChildren[i].geometry.name + ' ' +  0.5 * (vMax.x - vMin.x) + ' ' + 0.5 * (vMax.y - vMin.y) + ' ' + 0.5 * (vMax.y - vMin.y) );
+              console.log('mm ' + vMin.x + ' ' + vMin.y + ' ' + vMin.z + ' ' + vMax.x + ' ' + vMax.y + ' ' + vMax.z + ' ' + thatSubmesh + ' ' + trans.x + ' ' + trans.y + ' ' + trans.z);
+              console.log(vMin.x + ' ' + vMin.y + ' ' + vMin.z + ' ' + vMin2.x + ' ' + vMin2.y + ' ' + vMin2.z + ' ' + thatSubmesh + ' ' + trans.x + ' ' + trans.y + ' ' + trans.z);*/
             }
+
 
             mesh = allChildren[i];
 
