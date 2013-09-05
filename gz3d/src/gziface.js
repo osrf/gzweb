@@ -241,24 +241,30 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
 GZ3D.GZIface.prototype.createLightFromMsg = function(light)
 {
   var lightObj;
-  var color = 'rgb(' + light.diffuse.r*255 + ',' + light.diffuse.g*255 + ',' +
-      light.diffuse.b*255 + ')';
+
+  var factor = 1;
+
+  var color = new THREE.Color();
+  color.r = light.diffuse.r * factor;
+  color.g = light.diffuse.g * factor;
+  color.b = light.diffuse.b * factor;
+
   if (light.type === 1)
   {
-    lightObj = new THREE.PointLight(color);
+    lightObj = new THREE.AmbientLight(color.getHex());
     lightObj.distance = light.range;
   }
   if (light.type === 2)
   {
-    lightObj = new THREE.SpotLight(color);
+    lightObj = new THREE.SpotLight(color.getHex());
     lightObj.distance = light.range;
   }
   else if (light.type === 3)
   {
-    lightObj = new THREE.DirectionalLight(color);
+    lightObj = new THREE.DirectionalLight(color.getHex());
   }
 
-//  lightObj.intensity = light.attenuation_constant;
+  lightObj.intensity = light.attenuation_constant;
   lightObj.castShadow = light.cast_shadows;
 
   if (light.pose)

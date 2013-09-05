@@ -74,6 +74,11 @@ GZ3D.Scene.prototype.onMouseDown = function(event)
 
   this.controls.enabled = true;
 
+  if (event.button !== 0)
+  {
+    return;
+  }
+
   var projector = new THREE.Projector();
   var vector = new THREE.Vector3( (event.clientX / window.innerWidth) * 2 - 1,
       -(event.clientY / window.innerHeight) * 2 + 1, 0.5);
@@ -493,7 +498,7 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh, materia
           }
         }
       }
-      else if (allChildren[i] instanceof THREE.AmbientLight)
+      else if (allChildren[i] instanceof THREE.Light)
       {
         allChildren[i].parent.remove(allChildren[i]);
       }
