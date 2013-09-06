@@ -27,6 +27,8 @@ GZ3D.Scene.prototype.init = function()
   this.renderer = new THREE.WebGLRenderer({antialias: false });
   this.renderer.setClearColor(0xcccccc, 1);
   this.renderer.setSize( window.innerWidth, window.innerHeight);
+//  this.renderer.shadowMapEnabled = true;
+//  this.renderer.shadowMapSoft = true;
 
   // lights
   var light = new THREE.AmbientLight( 0x222222 );
@@ -104,7 +106,6 @@ GZ3D.Scene.prototype.onMouseDown = function(event)
             objects[i].object.name === 'plane'))
         {
           this.killCameraControl = false;
-          console.log('got plane or grid');
           return;
         }
 
@@ -221,7 +222,7 @@ GZ3D.Scene.prototype.setWindowSize = function(width, height)
   this.camera.updateProjectionMatrix();
 
   this.renderer.setSize( width, height);
-  this.controls.handleResize();
+  // this.controls.handleResize();
   this.render();
 };
 
@@ -268,6 +269,7 @@ GZ3D.Scene.prototype.createGrid = function()
   grid.name = 'grid';
   grid.position.z = 0.01;
   grid.rotation.x = Math.PI * 0.5;
+  grid.castShadow = false;
   this.scene.add(grid);
 };
 
@@ -282,6 +284,7 @@ GZ3D.Scene.prototype.createPlane = function(normalX, normalY, normalZ,
   var cross = normal.crossVectors(normal, mesh.up);
   mesh.rotation = normal.applyAxisAngle(cross, -(normal.angleTo(mesh.up)));
   mesh.name = 'plane';
+  mesh.receiveShadow = true;
   return mesh;
 };
 
@@ -312,10 +315,12 @@ GZ3D.Scene.prototype.createBox = function(width, height, depth)
   var material =  new THREE.MeshPhongMaterial(
       {color:0xffffff, shading: THREE.SmoothShading} );
   var mesh = new THREE.Mesh(geometry, material);
+  mesh.castShadow = true;
   return mesh;
 };
 
-GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh, material, parent)
+GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh, material,
+    normalMap, parent)
 {
   var uriPath = uri.substring(0, uri.lastIndexOf('/'));
   var uriFile = uri.substring(uri.lastIndexOf('/') + 1);
@@ -323,7 +328,8 @@ GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh, material, 
   // load urdf model
   if (uriFile.substr(-4).toLowerCase() === '.dae')
   {
-    return this.loadCollada(uri, submesh, centerSubmesh, material, parent);
+    return this.loadCollada(uri, submesh, centerSubmesh, material, normalMap,
+        parent);
   }
   else if (uriFile.substr(-5).toLowerCase() === '.urdf')
   {
@@ -361,7 +367,8 @@ GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh, material, 
   }
 };
 
-GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh, material, parent)
+GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
+    material, normalMap, parent)
 {
   var dae;
   if (this.meshes[uri])
@@ -504,12 +511,18 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh, materia
       }
     }
 
-    if (material)
+    if (material || normalMap)
     {
-      var texture = new THREE.MeshPhongMaterial(
-          {map: THREE.ImageUtils.loadTexture(material)});
-
-      mesh.material = texture;
+      var mat = new THREE.MeshPhongMaterial();
+      if (material)
+      {
+        mat.map = THREE.ImageUtils.loadTexture(material);
+      }
+      if (normalMap)
+      {
+        mat.normalMap = THREE.ImageUtils.loadTexture(normalMap);
+      }
+      mesh.material = mat;
     }
     parent.add(dae);
 

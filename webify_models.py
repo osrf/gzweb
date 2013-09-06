@@ -23,20 +23,19 @@ for file in files:
     # dest_dir = path.replace('materials/textures', 'meshes')
     dest_dir = path
     dest_path = "%s/%s.png" % (dest_dir, name)
-    if dest_path == file:
-      continue
     cmd = None
     if format.lower() in ['tif', 'tga', 'tiff', 'jpeg', 'jpg', 'gif', 'png']:
-      cmd = ['convert', file, dest_path]
-      subprocess.check_call(cmd)
+      if dest_path != file:
+        cmd = ['convert', file, dest_path]
+        subprocess.check_call(cmd)
 
       mesh_dest_dir = path.replace('materials/textures', 'meshes')
       if mesh_dest_dir != dest_dir:
         cmd = ['cp', dest_path, mesh_dest_dir]
-      if format.lower() == 'png':
-        cmd = ['cp', file, mesh_dest_dir]
-      print cmd
-      subprocess.check_call(cmd)
+      # if format.lower() == 'png':
+      #  cmd = ['cp', file, mesh_dest_dir]
+        print cmd
+        subprocess.check_call(cmd)
 
     if format.lower() in ['dae']:
       sed_cmd = ["sed", "-i", "-e", 's/\.tga/\.png/g', "-e",

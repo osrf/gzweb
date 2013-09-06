@@ -230,7 +230,11 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
               visual.pose.orientation);
         }
         this.createGeom(geom, visual.material, visualObj);
-        visualObj.castShadow = true;
+        if (visualObj.children.length > 0)
+        {
+          visualObj.children[0].castShadow = visual.cast_shadows || true;
+          visualObj.children[0].receiveShadow = true;
+        }
         linkObj.add(visualObj);
       }
     }
@@ -242,37 +246,58 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
 {
   var lightObj;
 
-  var factor = 1;
-
   var color = new THREE.Color();
-  color.r = light.diffuse.r * factor;
-  color.g = light.diffuse.g * factor;
-  color.b = light.diffuse.b * factor;
+  color.r = light.diffuse.r;
+  color.g = light.diffuse.g;
+  color.b = light.diffuse.b;
 
   if (light.type === 1)
   {
     lightObj = new THREE.AmbientLight(color.getHex());
     lightObj.distance = light.range;
+    this.scene.setPose(lightObj, light.pose.position,
+        light.pose.orientation);
   }
   if (light.type === 2)
   {
     lightObj = new THREE.SpotLight(color.getHex());
     lightObj.distance = light.range;
+    this.scene.setPose(lightObj, light.pose.position,
+        light.pose.orientation);
   }
   else if (light.type === 3)
   {
     lightObj = new THREE.DirectionalLight(color.getHex());
-  }
+    var dir = new THREE.Vector3(light.direction.x, light.direction.y,
+        light.direction.z);
+    var target = dir;
+    var negDir = dir.negate();
+    negDir.normalize();
+    var factor = 10;
+    light.pose.position.x += factor * negDir.x;
+    light.pose.position.y += factor * negDir.y;
+    light.pose.position.z += factor * negDir.z;
 
-  lightObj.intensity = light.attenuation_constant;
-  lightObj.castShadow = light.cast_shadows;
+    target.x -= light.pose.position.x;
+    target.y -= light.pose.position.y;
+    target.z -= light.pose.position.z;
 
-  if (light.pose)
-  {
+    lightObj.target.position = target;
+    lightObj.shadowCameraNear = 1;
+    lightObj.shadowCameraFar = 50;
+    lightObj.shadowMapWidth = 2048;
+    lightObj.shadowMapHeight = 2048;
+    lightObj.shadowCameraVisible = false;
+    lightObj.shadowCameraBottom = -100;
+    lightObj.shadowCameraLeft = -100;
+    lightObj.shadowCameraRight = 100;
+    lightObj.shadowCameraTop = 100;
     this.scene.setPose(lightObj, light.pose.position,
         light.pose.orientation);
-
   }
+  lightObj.intensity = light.attenuation_constant;
+  lightObj.castShadow = light.cast_shadows;
+  lightObj.shadowDarkness = 0.5;
   lightObj.name = light.name;
 
   return lightObj;
@@ -284,8 +309,12 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
 
   var uriPath = 'assets';
   var texture;
+  var normalMap;
+  var textureUri;
+  var mat;
   if (material)
   {
+    // get texture from material script
     var script  = material.script;
     if (script)
     {
@@ -293,27 +322,58 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
       {
         if (script.name)
         {
-          var textureName = this.material[script.name];
-          if (textureName)
+          mat = this.material[script.name];
+          if (mat)
           {
-            var textureUri;
-            for (var i = 0; i < script.uri.length; ++i)
+            var textureName = mat['texture'];
+            if (textureName)
             {
-              if (script.uri[i].indexOf('textures') > 0)
+              for (var i = 0; i < script.uri.length; ++i)
               {
-                textureUri = script.uri[i].substring(
-                    script.uri[i].indexOf('://') + 3);
-                break;
+                if (script.uri[i].indexOf('textures') > 0)
+                {
+                  textureUri = script.uri[i].substring(
+                      script.uri[i].indexOf('://') + 3);
+                  break;
+                }
               }
-            }
-            if (textureUri)
-            {
-              texture = uriPath + '/' +
-                  textureUri  + '/' + textureName;
+              if (textureUri)
+              {
+                texture = uriPath + '/' +
+                    textureUri  + '/' + textureName;
+              }
             }
           }
         }
       }
+    }
+    // normal map
+    if (material.normal_map)
+    {
+      var mapUri;
+      if (material.normal_map.indexOf('://') > 0)
+      {
+        mapUri = material.normal_map.substring(
+            material.normal_map.indexOf('://') + 3,
+            material.normal_map.lastIndexOf('/'));
+      }
+      else
+      {
+        mapUri = textureUri;
+      }
+      if (mapUri)
+      {
+        var startIndex = material.normal_map.lastIndexOf('/');
+        if (startIndex < 0)
+        {
+          startIndex = 0;
+        }
+        var normalMapName = material.normal_map.substr(startIndex,
+            material.normal_map.lastIndexOf('.'));
+        normalMap = uriPath + '/' +
+          mapUri  + '/' + normalMapName + '.png';
+      }
+
     }
   }
 
@@ -394,19 +454,43 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
           parent.scale.z = geom.mesh.scale.z;
         }
 
-        this.scene.loadMesh(uriPath + '/' + modelName, submesh, centerSubmesh, texture, parent);
+        this.scene.loadMesh(uriPath + '/' + modelName, submesh, centerSubmesh,
+            texture, normalMap, parent);
       }
     }
   }
 
   if (obj)
   {
-    if (texture)
+    if (mat)
     {
-      obj.material = new THREE.MeshPhongMaterial(
-         {map: THREE.ImageUtils.loadTexture(texture)});
-    }
+      obj.material = new THREE.MeshPhongMaterial();
 
+      var ambient = mat['ambient'];
+      if (ambient)
+      {
+        obj.material.ambient.setRGB(ambient[0], ambient[1], ambient[2]);
+      }
+      var diffuse = mat['diffuse'];
+      if (diffuse)
+      {
+        obj.material.color.setRGB(diffuse[0], diffuse[1], diffuse[2]);
+      }
+      var specular = mat['specular'];
+      if (specular)
+      {
+        obj.material.specular.setRGB(specular[0], specular[1], specular[2]);
+      }
+
+      if (texture)
+      {
+        obj.material.map = THREE.ImageUtils.loadTexture(texture);
+      }
+      if (normalMap)
+      {
+        obj.material.normalMap = THREE.ImageUtils.loadTexture(normalMap);
+      }
+    }
     obj.updateMatrix();
     parent.add(obj);
   }
