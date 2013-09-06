@@ -368,13 +368,13 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
       }
       if (mapUri)
       {
-        var startIndex = material.normal_map.lastIndexOf('/');
+        var startIndex = material.normal_map.lastIndexOf('/') + 1;
         if (startIndex < 0)
         {
           startIndex = 0;
         }
         var normalMapName = material.normal_map.substr(startIndex,
-            material.normal_map.lastIndexOf('.'));
+            material.normal_map.lastIndexOf('.') - startIndex);
         normalMap = uriPath + '/' +
           mapUri  + '/' + normalMapName + '.png';
       }

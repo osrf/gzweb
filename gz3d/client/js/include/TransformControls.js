@@ -568,7 +568,7 @@ THREE.TransformControls = function ( camera, domElement, doc ) {
 
 			currentPlane = 'XZ';
 
-		} 
+		}
 
 		if ( isActive("RZ") ) {
 
@@ -710,7 +710,7 @@ THREE.TransformControls = function ( camera, domElement, doc ) {
 						scope.object.position.copy( oldPosition );
 						scope.object.position.add( point );
 
-					} 
+					}
 
 					if ( scope.space == 'world' || isActive("XYZ") ) {
 
@@ -868,26 +868,26 @@ THREE.TransformControls = function ( camera, domElement, doc ) {
 		var currentSpace = scope.space;
 		var currentScale = scope.scale;
 
-		if ( event.keyCode == 87 ) { // W
+		if ( event.keyCode == 84 ) { // T
 
 			if ( scope.mode == 'translate' ) scope.space = ( scope.space == 'world' ) ? 'local' : 'world';
 			scope.mode = 'translate';
 
 		}
 
-		if ( event.keyCode == 69 ) { // E
+		if ( event.keyCode == 82 ) { // R
 
 			if ( scope.mode == 'rotate' ) scope.space = ( scope.space == 'world' ) ? 'local' : 'world';
 			scope.mode = 'rotate';
 
 		}
 
-		if ( event.keyCode == 82 ) { // R
+/*		if ( event.keyCode == 82 ) { // R
 
 			scope.mode = 'scale';
 			scope.space = 'local';
 
-		}
+		}*/
 
 		if ( event.keyCode == 187 || event.keyCode == 107 ) { // +,=,num+
 
