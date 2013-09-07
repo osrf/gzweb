@@ -108,7 +108,7 @@ GazeboInterface::GazeboInterface()
   this->minimumQuaternionSquared = 0.0001;
   this->minimumMsgAge = 0.03;
   this->skippedMsgCount = 0;
-  this->messageWindowSize = 500;
+  this->messageWindowSize = 10000;
   this->messageCount = 0;
 
 }

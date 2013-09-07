@@ -44,7 +44,7 @@ if [ "$1" == "-m" ]; then  # build a local model database
 
     # Remove temp dir
     rm -rf $TMP_DIR
-
+    rm -rf $DIR/http/client/assets
     mv $DIR/http/client/models $DIR/http/client/assets 
     
     cd $DIR
