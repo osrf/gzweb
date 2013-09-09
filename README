@@ -6,13 +6,16 @@ Dependencies: sudo apt-get install the following:
 - npm
 
 Install nodejs' http-server and websocket
-npm install http-server -g
-npm install websocket
+$ npm install http-server -g
+$ npm install websocket
+
+Install nodejs' native addon modules
+$ npm install -g node-gyp
 
 # Build
 
 The first time you build, you'll need to download all the models from the
-model database and prepare them for the web, so run the deply script with the
+model database and prepare them for the web, so run the deploy script with the
 `-m` flag.
 
 $ ./deploy -m
@@ -26,10 +29,10 @@ $ ./deploy
 Start gazebo or gzserver first
 $ gzserver
 
-Start the websocket server that connects to gzserver
+Start the http and websocket servers
 $ ./start_gzweb
 
-Open a browser and point it to the ip address and port where the http server
-is started. By default it's on port 8080, e.g.
+Open a browser that has webgl support and point it to the ip address and port
+where the http server is started, by default it's on port 8080, e.g.
 
 http://localhost:8080
