@@ -2,7 +2,7 @@
 
  1. Install Nodejs. version >= 0.8.0. http://nodejs.org/
  2. Install Grunt. http://gruntjs.com/
- 2. Install Grunt's package manager, `npm`.
+ 2. Install Node's package manager, `npm`.
  3. Install the Grunt tasks specific to this project
    * `cd /path/to/gzweb/gz3d/utils/`
    * `npm install .`

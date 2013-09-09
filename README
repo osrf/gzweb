@@ -1,0 +1,35 @@
+# Installation
+
+Dependencies: sudo apt-get install the following:
+- libjasson-dev (gzbridge)
+- nodejs
+- npm
+
+Install nodejs' http-server and websocket
+npm install http-server -g
+npm install websocket
+
+# Build
+
+The first time you build, you'll need to download all the models from the
+model database and prepare them for the web, so run the deply script with the
+`-m` flag.
+
+$ ./deploy -m
+
+for all subsequent builds:
+
+$ ./deploy
+
+# Running gzserver, gzweb, and webgl
+
+Start gazebo or gzserver first
+$ gzserver
+
+Start the websocket server that connects to gzserver
+$ ./start_gzweb
+
+Open a browser and point it to the ip address and port where the http server
+is started. By default it's on port 8080, e.g.
+
+http://localhost:8080
