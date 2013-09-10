@@ -14,13 +14,15 @@ $ npm install -g node-gyp
 
 # Build
 
-The first time you build, you'll need to download all the models from the
-model database and prepare them for the web, so run the deploy script with the
-`-m` flag.
+The first time you build, you'll need to gather all the gazebo models and
+put them in the right directory and prepare them for the web. To do this,
+you'll need to source the gazebo/drcsim setup.sh files, and run a deploy script.
 
 $ ./deploy -m
 
-for all subsequent builds:
+Note the `-m` flag tells the deploy script to grab models from the model
+database and any other models in your gazebo paths. For all subsequent builds,
+the `-m` flag will not be needed, i.e.:
 
 $ ./deploy
 

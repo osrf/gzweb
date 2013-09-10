@@ -249,9 +249,11 @@ void GazeboInterface::ProcessMessages()
 
           if (this->materialParser)
           {
+            gzerr << "GetMaterialAsJson" << std::endl;
             std::string msg =
                 this->PackOutgoingMsg(this->materialTopic,
                 this->materialParser->GetMaterialAsJson());
+            gzerr << msg << std::endl;
             this->Send(msg);
           }
         }

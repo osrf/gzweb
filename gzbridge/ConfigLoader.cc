@@ -168,6 +168,21 @@ void ConfigLoader::_nextToken(std::ifstream &stream)
 				tok = TOKEN_NewLine;
 				return;
 			}
+      else if (ch2 == '*')
+      {
+        stream.get();
+				do
+				{
+					ch = stream.get();
+					ch2 = stream.peek();
+				} while (!(ch == '*' && ch2 == '/') && !stream.eof());
+        stream.get();
+				do
+				{
+					ch = stream.get();
+				} while (ch != '\r' && ch != '\n' && !stream.eof());
+        continue;
+      }
 		}
 
 		//Add valid char to tokVal

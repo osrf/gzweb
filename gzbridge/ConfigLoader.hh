@@ -5,6 +5,7 @@
 #include <vector>
 #include <cassert>
 #include <string>
+#include <iostream>
 
 namespace gzweb
 {

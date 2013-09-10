@@ -61,10 +61,20 @@ std::string OgreMaterialParser::GetMaterialAsJson() const
         if (ambientNode)
         {
           std::stringstream ss;
-          ss << ambientNode->getValue(0) << ","
-              << ambientNode->getValue(1) << ","
-              << ambientNode->getValue(2) << ","
-              << ambientNode->getValue(3);
+          std::vector<std::string> values = ambientNode->getValues();
+          if (values.size() == 1)
+            ss << "\"";
+          for (unsigned int i = 0; i < values.size(); ++i)
+          {
+            std::string value = ambientNode->getValue(i);
+            if (value[0] == '.')
+              value = '0' + value;
+            ss << value;
+            if (i != values.size() - 1)
+              ss << ",";
+          }
+          if (values.size() == 1)
+            ss << "\"";
           jsonStr += "\"ambient\":[" + ss.str() + "],";
         }
 
@@ -72,10 +82,20 @@ std::string OgreMaterialParser::GetMaterialAsJson() const
         if (diffuseNode)
         {
           std::stringstream ss;
-          ss << diffuseNode->getValue(0) << ","
-              << diffuseNode->getValue(1) << ","
-              << diffuseNode->getValue(2) << ","
-              << diffuseNode->getValue(3);
+          std::vector<std::string> values = diffuseNode->getValues();
+          if (values.size() == 1)
+            ss << "\"";
+          for (unsigned int i = 0; i < values.size(); ++i)
+          {
+            std::string value = diffuseNode->getValue(i);
+            if (value[0] == '.')
+              value = '0' + value;
+            ss << value;
+            if (i != values.size() - 1)
+              ss << ",";
+          }
+          if (values.size() == 1)
+            ss << "\"";
           jsonStr += "\"diffuse\":[" + ss.str() + "],";
         }
 
@@ -83,10 +103,20 @@ std::string OgreMaterialParser::GetMaterialAsJson() const
         if (specularNode)
         {
           std::stringstream ss;
-          ss << specularNode->getValue(0) << ","
-              << specularNode->getValue(1) << ","
-              << specularNode->getValue(2) << ","
-              << specularNode->getValue(3);
+          std::vector<std::string> values = specularNode->getValues();
+          if (values.size() == 1)
+            ss << "\"";
+          for (unsigned int i = 0; i < values.size(); ++i)
+          {
+            std::string value = specularNode->getValue(i);
+            if (value[0] == '.')
+              value = '0' + value;
+            ss << value;
+            if (i != values.size() - 1)
+              ss << ",";
+          }
+          if (values.size() == 1)
+            ss << "\"";
           jsonStr += "\"specular\":[" + ss.str() + "],";
         }
 

@@ -4,10 +4,10 @@ from __future__ import print_function
 import sys
 import os
 import shutil
-
+import distutils.core
 
 def copy_models(src, dst):
-     
+
     list_dir = [os.path.join(src,x) for x in os.listdir(src)]
     sub_dirs = [x for x in list_dir if os.path.isdir(x)]
     for model_path in sub_dirs:
@@ -21,7 +21,7 @@ def copy_models(src, dst):
             shutil.copytree(model_path, dest_dir)
         else:
             print (" %s ignored" % model_path)
-        
+
 
 dest_dir = sys.argv[1]
 
@@ -33,14 +33,41 @@ try:
     gazebo_path =  os.environ['GAZEBO_MODEL_PATH'].split(':')
 
     model_paths = [x for x in gazebo_path if os.path.isdir(x)]
-    unique_pahts = list(set(model_paths))
+    unique_paths = list(set(model_paths))
 except:
-    print ("No local models")
+    print ("No local models.")
+#    exit(0)
+
+if unique_paths is not None:
+  for path in unique_paths:
+      print("\nmodel path: [%s]" % path)
+      copy_models(path, dest_dir)
+
+  print("local models transfered")
+
+
+print("copying local resources to %s" % dest_dir)
+
+def copy_resources(src, dst):
+    media_path = os.path.join(src, "media")
+    if os.path.exists(media_path) and os.path.isdir(media_path):
+      dest_dir = os.path.join(dst, "media")
+      distutils.dir_util.copy_tree(media_path, dest_dir)
+
+unique_paths = None
+try:
+    resource_path =  os.environ['GAZEBO_RESOURCE_PATH'].split(':')
+
+    resource_paths = [x for x in resource_path if os.path.isdir(x)]
+    unique_paths = list(set(resource_paths))
+except:
+    print ("No local resources")
     exit(0)
-     
-for path in unique_pahts:
-    print("\npath: [%s]" % path)
-    copy_models(path, dest_dir)
-    
-print("local models transfered")
-        
+
+if unique_paths is not None:
+  for path in unique_paths:
+      print("\nresource path: [%s]" % path)
+      copy_resources(path, dest_dir)
+
+print("local resources transfered")
+

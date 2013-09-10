@@ -330,11 +330,27 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
             {
               for (var i = 0; i < script.uri.length; ++i)
               {
-                if (script.uri[i].indexOf('textures') > 0)
+                var type = script.uri[i].substring(0,
+                      script.uri[i].indexOf('://'));
+                console.log ('type ' + type);
+                if (type === 'model')
                 {
-                  textureUri = script.uri[i].substring(
-                      script.uri[i].indexOf('://') + 3);
-                  break;
+                  if (script.uri[i].indexOf('textures') > 0)
+                  {
+                    textureUri = script.uri[i].substring(
+                        script.uri[i].indexOf('://') + 3);
+                    break;
+                  }
+                }
+                else if (type === 'file')
+                {
+                  if (script.uri[i].indexOf('materials') > 0)
+                  {
+                    textureUri = script.uri[i].substring(
+                        script.uri[i].indexOf('://') + 3,
+                        script.uri[i].indexOf('materials') + 9) + '/textures';
+                    break;
+                  }
                 }
               }
               if (textureUri)
