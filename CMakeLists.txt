@@ -45,7 +45,6 @@ include(FindBoost)
 find_package(Boost ${MIN_BOOST_VERSION} REQUIRED system filesystem regex thread)
 find_package(Protobuf REQUIRED)
 
-# add_subdirectory(deps)
 add_subdirectory(gzbridge)
 add_subdirectory(gz3d)
 
