@@ -277,7 +277,6 @@ GZ3D.Scene.prototype.createPlane = function(normalX, normalY, normalZ,
     width, height)
 {
   var geometry = new THREE.PlaneGeometry(width, height, 1, 1);
-
   var material =  new THREE.MeshPhongMaterial(
       {color:0xbbbbbb, shading: THREE.SmoothShading} );
   var mesh = new THREE.Mesh(geometry, material);
@@ -347,7 +346,6 @@ GZ3D.Scene.prototype.createBox = function(width, height, depth)
 
   var material =  new THREE.MeshPhongMaterial(
       {color:0xffffff, shading: THREE.SmoothShading} );
-
   var mesh = new THREE.Mesh(geometry, material);
   mesh.castShadow = true;
   return mesh;
