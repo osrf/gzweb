@@ -4,6 +4,8 @@ Dependencies: sudo apt-get install the following:
 - libjasson-dev (gzbridge)
 - nodejs
 - npm
+- libboost-dev
+- gazebo
 
 Install nodejs' http-server and websocket
 $ npm install http-server -g
