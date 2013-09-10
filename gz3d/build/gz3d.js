@@ -505,38 +505,6 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
 
       if (texture)
       {
-/*        var mapCanvas = document.createElement('canvas');
-        var image = new Image();
-        var textureMap = new THREE.Texture( image, new THREE.UVMapping() );
-
-        var loader = new THREE.ImageLoader();
-        loader.crossOrigin = 'anonymous';
-        loader.load( texture, function ( image ) {
-
-          var mapCanvas = document.createElement('canvas');
-//          mapCanvas.width = mapCanvas.height = 512;
-          mapCanvas.width = image.width;
-          mapCanvas.height = image.height;
-          var ctx = mapCanvas.getContext('2d');
-          ctx.translate(mapCanvas.height/2.0, mapCanvas.height/2.0);
-          ctx.rotate(Math.PI/2.0);
-          ctx.translate(-mapCanvas.height/2.0, -mapCanvas.height/2.0);
-          ctx.drawImage(image, 0, 0, mapCanvas.width, mapCanvas.height);
-
-          textureMap.image = mapCanvas;
-          textureMap.needsUpdate = true;
-
-          //if ( onLoad ) onLoad( textureMap );
-
-        } );
-
-        textureMap.sourceFile = texture;
-          console.log ('nsdfo==============================');
-        obj.material.map = textureMap;*/
-
-        //  console.log ('no==============================');
-
-
         obj.material.map = THREE.ImageUtils.loadTexture(texture);
       }
       if (normalMap)
@@ -849,7 +817,6 @@ GZ3D.Scene.prototype.createPlane = function(normalX, normalY, normalZ,
     width, height)
 {
   var geometry = new THREE.PlaneGeometry(width, height, 1, 1);
-
   var material =  new THREE.MeshPhongMaterial(
       {color:0xbbbbbb, shading: THREE.SmoothShading} );
   var mesh = new THREE.Mesh(geometry, material);
@@ -919,7 +886,6 @@ GZ3D.Scene.prototype.createBox = function(width, height, depth)
 
   var material =  new THREE.MeshPhongMaterial(
       {color:0xffffff, shading: THREE.SmoothShading} );
-
   var mesh = new THREE.Mesh(geometry, material);
   mesh.castShadow = true;
   return mesh;
