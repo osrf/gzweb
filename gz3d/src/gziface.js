@@ -332,7 +332,7 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
               {
                 var type = script.uri[i].substring(0,
                       script.uri[i].indexOf('://'));
-                console.log ('type ' + type);
+
                 if (type === 'model')
                 {
                   if (script.uri[i].indexOf('textures') > 0)
@@ -500,6 +500,38 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
 
       if (texture)
       {
+/*        var mapCanvas = document.createElement('canvas');
+        var image = new Image();
+        var textureMap = new THREE.Texture( image, new THREE.UVMapping() );
+
+        var loader = new THREE.ImageLoader();
+        loader.crossOrigin = 'anonymous';
+        loader.load( texture, function ( image ) {
+
+          var mapCanvas = document.createElement('canvas');
+//          mapCanvas.width = mapCanvas.height = 512;
+          mapCanvas.width = image.width;
+          mapCanvas.height = image.height;
+          var ctx = mapCanvas.getContext('2d');
+          ctx.translate(mapCanvas.height/2.0, mapCanvas.height/2.0);
+          ctx.rotate(Math.PI/2.0);
+          ctx.translate(-mapCanvas.height/2.0, -mapCanvas.height/2.0);
+          ctx.drawImage(image, 0, 0, mapCanvas.width, mapCanvas.height);
+
+          textureMap.image = mapCanvas;
+          textureMap.needsUpdate = true;
+
+          //if ( onLoad ) onLoad( textureMap );
+
+        } );
+
+        textureMap.sourceFile = texture;
+          console.log ('nsdfo==============================');
+        obj.material.map = textureMap;*/
+
+        //  console.log ('no==============================');
+
+
         obj.material.map = THREE.ImageUtils.loadTexture(texture);
       }
       if (normalMap)

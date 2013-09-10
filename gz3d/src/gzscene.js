@@ -277,6 +277,7 @@ GZ3D.Scene.prototype.createPlane = function(normalX, normalY, normalZ,
     width, height)
 {
   var geometry = new THREE.PlaneGeometry(width, height, 1, 1);
+
   var material =  new THREE.MeshPhongMaterial(
       {color:0xbbbbbb, shading: THREE.SmoothShading} );
   var mesh = new THREE.Mesh(geometry, material);
@@ -312,8 +313,41 @@ GZ3D.Scene.prototype.createCylinder = function(radius, length)
 GZ3D.Scene.prototype.createBox = function(width, height, depth)
 {
   var geometry = new THREE.CubeGeometry(width, height, depth, 1, 1, 1);
+
+  // Fix UVs so textures are mapped in a way that is consistent to gazebo
+  geometry.dynamic = true;
+  var faceUVFixA = [1, 4, 5];
+  var faceUVFixB = [0];
+  for (var i = 0; i < faceUVFixA.length; ++i)
+  {
+    var idx = faceUVFixA[i];
+    var length = geometry.faceVertexUvs[0][idx].length;
+    var uva = geometry.faceVertexUvs[0][idx][length-1];
+    for (var j = length-2; j >= 0; --j)
+    {
+      var uvb = geometry.faceVertexUvs[0][idx][j];
+      geometry.faceVertexUvs[0][idx][j] = uva;
+      uva = uvb;
+    }
+    geometry.faceVertexUvs[0][idx][length-1] = uva;
+  }
+  for (var ii = 0; ii < faceUVFixB.length; ++ii)
+  {
+    var idxB = faceUVFixB[ii];
+    var uvc = geometry.faceVertexUvs[0][idxB][0];
+    for (var jj = 1; jj < geometry.faceVertexUvs[0][idxB].length; ++jj)
+    {
+      var uvd = geometry.faceVertexUvs[0][idxB][jj];
+      geometry.faceVertexUvs[0][idxB][jj] = uvc;
+      uvc = uvd;
+    }
+    geometry.faceVertexUvs[0][idxB][0] = uvc;
+  }
+  geometry.uvsNeedUpdate = true;
+
   var material =  new THREE.MeshPhongMaterial(
       {color:0xffffff, shading: THREE.SmoothShading} );
+
   var mesh = new THREE.Mesh(geometry, material);
   mesh.castShadow = true;
   return mesh;

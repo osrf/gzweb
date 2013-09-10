@@ -337,7 +337,7 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
               {
                 var type = script.uri[i].substring(0,
                       script.uri[i].indexOf('://'));
-                console.log ('type ' + type);
+
                 if (type === 'model')
                 {
                   if (script.uri[i].indexOf('textures') > 0)
@@ -354,7 +354,6 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
                     textureUri = script.uri[i].substring(
                         script.uri[i].indexOf('://') + 3,
                         script.uri[i].indexOf('materials') + 9) + '/textures';
-                    console.log ('tet ' + textureUri);
                     break;
                   }
                 }
@@ -363,7 +362,6 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
               {
                 texture = uriPath + '/' +
                     textureUri  + '/' + textureName;
-                console.log ('texture ' + texture);
               }
             }
           }
@@ -507,6 +505,38 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
 
       if (texture)
       {
+/*        var mapCanvas = document.createElement('canvas');
+        var image = new Image();
+        var textureMap = new THREE.Texture( image, new THREE.UVMapping() );
+
+        var loader = new THREE.ImageLoader();
+        loader.crossOrigin = 'anonymous';
+        loader.load( texture, function ( image ) {
+
+          var mapCanvas = document.createElement('canvas');
+//          mapCanvas.width = mapCanvas.height = 512;
+          mapCanvas.width = image.width;
+          mapCanvas.height = image.height;
+          var ctx = mapCanvas.getContext('2d');
+          ctx.translate(mapCanvas.height/2.0, mapCanvas.height/2.0);
+          ctx.rotate(Math.PI/2.0);
+          ctx.translate(-mapCanvas.height/2.0, -mapCanvas.height/2.0);
+          ctx.drawImage(image, 0, 0, mapCanvas.width, mapCanvas.height);
+
+          textureMap.image = mapCanvas;
+          textureMap.needsUpdate = true;
+
+          //if ( onLoad ) onLoad( textureMap );
+
+        } );
+
+        textureMap.sourceFile = texture;
+          console.log ('nsdfo==============================');
+        obj.material.map = textureMap;*/
+
+        //  console.log ('no==============================');
+
+
         obj.material.map = THREE.ImageUtils.loadTexture(texture);
       }
       if (normalMap)
@@ -819,6 +849,7 @@ GZ3D.Scene.prototype.createPlane = function(normalX, normalY, normalZ,
     width, height)
 {
   var geometry = new THREE.PlaneGeometry(width, height, 1, 1);
+
   var material =  new THREE.MeshPhongMaterial(
       {color:0xbbbbbb, shading: THREE.SmoothShading} );
   var mesh = new THREE.Mesh(geometry, material);
@@ -854,8 +885,41 @@ GZ3D.Scene.prototype.createCylinder = function(radius, length)
 GZ3D.Scene.prototype.createBox = function(width, height, depth)
 {
   var geometry = new THREE.CubeGeometry(width, height, depth, 1, 1, 1);
+
+  // Fix UVs so textures are mapped in a way that is consistent to gazebo
+  geometry.dynamic = true;
+  var faceUVFixA = [1, 4, 5];
+  var faceUVFixB = [0];
+  for (var i = 0; i < faceUVFixA.length; ++i)
+  {
+    var idx = faceUVFixA[i];
+    var length = geometry.faceVertexUvs[0][idx].length;
+    var uva = geometry.faceVertexUvs[0][idx][length-1];
+    for (var j = length-2; j >= 0; --j)
+    {
+      var uvb = geometry.faceVertexUvs[0][idx][j];
+      geometry.faceVertexUvs[0][idx][j] = uva;
+      uva = uvb;
+    }
+    geometry.faceVertexUvs[0][idx][length-1] = uva;
+  }
+  for (var ii = 0; ii < faceUVFixB.length; ++ii)
+  {
+    var idxB = faceUVFixB[ii];
+    var uvc = geometry.faceVertexUvs[0][idxB][0];
+    for (var jj = 1; jj < geometry.faceVertexUvs[0][idxB].length; ++jj)
+    {
+      var uvd = geometry.faceVertexUvs[0][idxB][jj];
+      geometry.faceVertexUvs[0][idxB][jj] = uvc;
+      uvc = uvd;
+    }
+    geometry.faceVertexUvs[0][idxB][0] = uvc;
+  }
+  geometry.uvsNeedUpdate = true;
+
   var material =  new THREE.MeshPhongMaterial(
       {color:0xffffff, shading: THREE.SmoothShading} );
+
   var mesh = new THREE.Mesh(geometry, material);
   mesh.castShadow = true;
   return mesh;
