@@ -1,14 +1,13 @@
-var GAZEBO_MODEL_DATABASE_URI='http://gazebosim.org/models';
-// we shouldn't really load anything from local filesystem
-//var GAZEBO_MODEL_PATH = '~/.gazebo/models'
+//var GAZEBO_MODEL_DATABASE_URI='http://gazebosim.org/models';
 
-GZ3D.GZIface = function(scene)
+GZ3D.GZIface = function(scene, gui)
 {
   this.scene = scene;
+  this.gui = gui;
   this.init();
 };
 
-GZ3D.GZIface.prototype.init = function(scene)
+GZ3D.GZIface.prototype.init = function()
 {
   this.material = [];
 
@@ -191,6 +190,44 @@ GZ3D.GZIface.prototype.init = function(scene)
 
   this.scene.emitter.on('poseChanged', publishModelModify);
 
+  // Factory messages - for spawning new models
+  this.factoryTopic = new ROSLIB.Topic({
+    ros : this.webSocket,
+    name : '~/factory',
+    messageType : 'factory',
+  });
+
+  var publishFactory = function(model, type)
+  {
+    var matrix = model.matrixWorld;
+    var translation = new THREE.Vector3();
+    var quaternion = new THREE.Quaternion();
+    var scale = new THREE.Vector3();
+    matrix.decompose(translation, quaternion, scale);
+    var modelMsg =
+    {
+      name : model.name,
+      type : type,
+      position :
+      {
+        x : translation.x,
+        y : translation.y,
+        z : translation.z
+      },
+      orientation :
+      {
+        w: quaternion.w,
+        x: quaternion.x,
+        y: quaternion.y,
+        z: quaternion.z
+      }
+    };
+    that.factoryTopic.publish(modelMsg);
+  };
+
+  this.scene.emitter.on('poseChanged', publishModelModify);
+
+  this.gui.emitter.on('entityCreated', publishFactory);
 };
 
 GZ3D.GZIface.prototype.createModelFromMsg = function(model)

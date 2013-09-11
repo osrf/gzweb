@@ -4,6 +4,21 @@
     <title>gz3d</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="stylesheet" href="style/jquery-ui/jquery-ui.css"/>
+    <link rel="stylesheet" href="style/toolbar.css"/>
+    <script src="js/include/jquery-1.9.1.js"></script>
+    <script src="js/include/jquery-ui.js"></script>
+    <script src="js/include/three.js"></script>
+    <script src="js/include/OrbitControls.js"></script>
+    <script src="js/include/TransformControls.js"></script>
+    <script src="js/include/Detector.js"></script>
+    <script src="js/include/stats.min.js"></script>
+    <script src="js/include/eventemitter2.js"></script>
+    <script src="js/include/roslib.js"></script>
+    <script src="js/include/ColladaLoader.js"></script>
+    <script src="js/include/dat.gui.min.js"></script>
+    <script src="gz3d.js"></script>
+
     <style>
       body {
         color: #000;
@@ -28,21 +43,25 @@
       a {
         color: red;
       }
+      #toolbar {
+        padding: 1px;
+
+      }
+      /* support: IE7 */
+      *+html #toolbar {
+        display: inline;
+      }
     </style>
   </head>
 
   <body>
-    <div id="container"></div>
-    <script src="js/include/three.js"></script>
-    <script src="js/include/OrbitControls.js"></script>
-    <script src="js/include/TransformControls.js"></script>
-    <script src="js/include/Detector.js"></script>
-    <script src="js/include/stats.min.js"></script>
-    <script src="js/include/eventemitter2.js"></script>
-    <script src="js/include/roslib.js"></script>
-    <script src="js/include/ColladaLoader.js"></script>
-    <script src="gz3d.js"></script>
+    <div id="toolbar" class="ui-widget-header" align='right'>
+      <button id="box">Box</button>
+      <button id="sphere">Sphere</button>
+      <button id="cylinder">Cylinder</button>
+    </div>
 
+    <div id="container"></div>
     <script>
 
       if (!Detector.webgl)
@@ -60,6 +79,8 @@
       function init()
       {
         scene = new GZ3D.Scene();
+        gui = new GZ3D.Gui(scene);
+        iface = new GZ3D.GZIface(scene, gui);
 
         container = document.getElementById( 'container' );
         container.appendChild(scene.getDomElement());

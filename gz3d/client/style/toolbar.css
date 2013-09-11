@@ -1,0 +1,35 @@
+.ui-button .ui-icon.toolbar-box {
+    background-image: url(images/box.png);
+    width: 16;
+    height: 16;
+}
+
+.ui-button.ui-state-hover .ui-icon.toolbar-box {
+    background-image: url(images/box.png);
+    width: 16;
+    height: 16;
+}
+
+.ui-button .ui-icon.toolbar-sphere {
+    background-image: url(images/sphere.png);
+    width: 5;
+    height: 5;
+}
+
+.ui-button.ui-state-hover .ui-icon.toolbar-sphere {
+    background-image: url(images/sphere.png);
+    width: 16;
+    height: 16;
+}
+
+.ui-button .ui-icon.toolbar-cylinder {
+    background-image: url(images/cylinder.png);
+    width: 16;
+    height: 16;
+}
+
+.ui-button.ui-state-hover .ui-icon.toolbar-cylinder {
+    background-image: url(images/cylinder.png);
+    width: 16;
+    height: 16;
+}

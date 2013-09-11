@@ -66,8 +66,6 @@ GZ3D.Scene.prototype.init = function()
 //  this.modelManipulator.addEventListener('change', function() {that.render();});
 
   this.emitter = new EventEmitter2({ verbose: true });
-
-  this.iface = new GZ3D.GZIface(this);
 };
 
 GZ3D.Scene.prototype.onMouseDown = function(event)
@@ -84,7 +82,7 @@ GZ3D.Scene.prototype.onMouseDown = function(event)
   var projector = new THREE.Projector();
   var vector = new THREE.Vector3( (event.clientX / window.innerWidth) * 2 - 1,
       -(event.clientY / window.innerHeight) * 2 + 1, 0.5);
-  projector.unprojectVector( vector, this.camera );
+  projector.unprojectVector(vector, this.camera);
   var ray = new THREE.Raycaster( this.camera.position,
       vector.sub(this.camera.position).normalize() );
 
@@ -267,7 +265,7 @@ GZ3D.Scene.prototype.createGrid = function()
 {
   var grid = new THREE.GridHelper(10, 1);
   grid.name = 'grid';
-  grid.position.z = 0.01;
+  grid.position.z = 0.05;
   grid.rotation.x = Math.PI * 0.5;
   grid.castShadow = false;
   this.scene.add(grid);

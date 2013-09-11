@@ -183,6 +183,9 @@ namespace gzweb
     /// \brief Publish light modify messages
     private: gazebo::transport::PublisherPtr lightPub;
 
+    /// \brief Publish factory messages
+    private: gazebo::transport::PublisherPtr factoryPub;
+
     /// \brief Subscribe to reponses.
     private: gazebo::transport::SubscriberPtr responseSub;
 
@@ -290,6 +293,9 @@ namespace gzweb
 
     /// \brief Name of model modify topic.
     private: std::string modelModifyTopic;
+
+    /// \brief Name of factory topic.
+    private: std::string factoryTopic;
 
     /// \brief A custom topic for getting mapping of materials to textures
     /// referenced by gazebo
