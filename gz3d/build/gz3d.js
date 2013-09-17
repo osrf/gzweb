@@ -858,7 +858,7 @@ GZ3D.Scene.prototype.init = function()
   this.selectedEntity = null;
   this.mouseEntity = null;
 
-  this.renderer = new THREE.WebGLRenderer({antialias: false });
+  this.renderer = new THREE.WebGLRenderer({antialias: true });
   this.renderer.setClearColor(0xcccccc, 1);
   this.renderer.setSize( window.innerWidth, window.innerHeight);
 //  this.renderer.shadowMapEnabled = true;
