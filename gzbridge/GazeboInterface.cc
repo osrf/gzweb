@@ -279,11 +279,6 @@ void GazeboInterface::ProcessMessages()
             atof(get_value(msg, "msg:orientation:z").c_str()));
 
           gazebo::math::Vector3 rpy = quat.GetAsEuler();
-          /*gazebo::math::Pose pose(pos, quat);
-
-          gazebo::sdf::SDFPtr modelSDF;
-          modelSDF.reset(new gazebo::sdf::SDF);
-          gazebo::sdf::initFile("root.sdf", this->modelSDF);*/
 
           std::stringstream geom;
           if (type == "box")
@@ -350,9 +345,16 @@ void GazeboInterface::ProcessMessages()
           }
           if (!reset.empty())
           {
-            worldControlMsg.mutable_reset()->set_all(false);
-            worldControlMsg.mutable_reset()->set_time_only(false);
-            worldControlMsg.mutable_reset()->set_model_only(true);
+            if (reset == "model")
+            {
+              worldControlMsg.mutable_reset()->set_all(false);
+              worldControlMsg.mutable_reset()->set_time_only(false);
+              worldControlMsg.mutable_reset()->set_model_only(true);
+            }
+            else if (reset == "world")
+            {
+              worldControlMsg.mutable_reset()->set_all(true);
+            }
           }
           if (!pause.empty() || !reset.empty())
             this->worldControlPub->Publish(worldControlMsg);

@@ -146,7 +146,6 @@ GZ3D.GZIface.prototype.init = function()
   var worldStatsUpdate = function(message)
   {
     this.updateStatsGuiFromMsg(message);
-    console.log(message);
   };
 
   worldStatsTopic.subscribe(worldStatsUpdate.bind(this));

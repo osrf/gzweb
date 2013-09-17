@@ -62,6 +62,10 @@ $(function() {
     .click(function() {
       guiEvents.emit('model_reset');
     });
+    $( '#reset-world' )
+    .click(function() {
+      guiEvents.emit('world_reset');
+    });
   });
 
 GZ3D.Gui = function(scene)
@@ -86,6 +90,13 @@ GZ3D.Gui.prototype.init = function()
             {
               that.emitter.emit('entityCreated', obj, entity);
             });
+      }
+  );
+
+  guiEvents.on('world_reset',
+      function ()
+      {
+        that.emitter.emit('reset', 'world');
       }
   );
 
@@ -274,7 +285,6 @@ GZ3D.GZIface.prototype.init = function()
   var worldStatsUpdate = function(message)
   {
     this.updateStatsGuiFromMsg(message);
-    console.log(message);
   };
 
   worldStatsTopic.subscribe(worldStatsUpdate.bind(this));

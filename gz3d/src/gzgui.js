@@ -57,6 +57,10 @@ $(function() {
     .click(function() {
       guiEvents.emit('model_reset');
     });
+    $( '#reset-world' )
+    .click(function() {
+      guiEvents.emit('world_reset');
+    });
   });
 
 GZ3D.Gui = function(scene)
@@ -81,6 +85,13 @@ GZ3D.Gui.prototype.init = function()
             {
               that.emitter.emit('entityCreated', obj, entity);
             });
+      }
+  );
+
+  guiEvents.on('world_reset',
+      function ()
+      {
+        that.emitter.emit('reset', 'world');
       }
   );
 
