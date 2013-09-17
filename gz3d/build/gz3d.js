@@ -137,6 +137,17 @@ GZ3D.Gui.prototype.setPaused = function(paused)
   $('#play').button('option', options);
 };
 
+GZ3D.Gui.prototype.setRealTime = function(realTime)
+{
+  $('#real-time-value').text(realTime);
+};
+
+GZ3D.Gui.prototype.setSimTime = function(simTime)
+{
+  $('#sim-time-value').text(simTime);
+ // console.log(simTime);
+};
+
 //var GAZEBO_MODEL_DATABASE_URI='http://gazebosim.org/models';
 
 GZ3D.GZIface = function(scene, gui)
@@ -420,10 +431,102 @@ GZ3D.GZIface.prototype.init = function()
 GZ3D.GZIface.prototype.updateStatsGuiFromMsg = function(stats)
 {
   this.gui.setPaused(stats.paused);
-/*  stats.real_time.nsec
-  stats.real_time.sec
-  stats.sim_time.nsec
-  stats.sim_time.sec   */
+
+  var simSec = stats.sim_time.sec;
+  var simNSec = stats.sim_time.nsec;
+
+  var simDay = Math.floor(simSec / 86400);
+  simSec -= simDay * 86400;
+
+  var simHour = Math.floor(simSec / 3600);
+  simSec -= simHour * 3600;
+
+  var simMin = Math.floor(simSec / 60);
+  simSec -= simMin * 60;
+
+  var simMsec = Math.floor(simNSec * 1e-6);
+
+  var realSec = stats.real_time.sec;
+  var realNSec = stats.real_time.nsec;
+
+  var realDay = Math.floor(realSec / 86400);
+  realSec -= realDay * 86400;
+
+  var realHour = Math.floor(realSec / 3600);
+  realSec -= realHour * 3600;
+
+  var realMin = Math.floor(realSec / 60);
+  realSec -= realMin * 60;
+
+  var realMsec = Math.floor(realNSec * 1e-6);
+
+/*
+    sec = _msg->real_time().sec();
+
+    day = sec / 86400;
+    sec -= day * 86400;
+
+    hour = sec / 3600;
+    sec -= hour * 3600;
+
+    min = sec / 60;
+    sec -= min * 60;
+
+    msec = rint(_msg->sim_time().nsec() * 1e-6);
+
+    stream << std::setw(2) << std::setfill('0') << day << " ";
+    stream << std::setw(2) << std::setfill('0') << hour << ":";
+    stream << std::setw(2) << std::setfill('0') << min << ":";
+    stream << std::setw(2) << std::setfill('0') << sec << ".";
+    stream << std::setw(3) << std::setfill('0') << msec;*/
+
+  var simTimeValue = '';
+  var realTimeValue = '';
+
+  if (realDay < 10)
+  {
+    realTimeValue += '0';
+  }
+  realTimeValue += realDay.toFixed(0) + ' ';
+  if (realHour < 10)
+  {
+    realTimeValue += '0';
+  }
+  realTimeValue += realHour.toFixed(0) + ':';
+  if (realMin < 10)
+  {
+    realTimeValue += '0';
+  }
+  realTimeValue += realMin.toFixed(0)  + ':';
+  if (realSec < 10)
+  {
+    realTimeValue += '0';
+  }
+  realTimeValue += realSec.toFixed(0);
+
+  if (simDay < 10)
+  {
+    simTimeValue += '0';
+  }
+  simTimeValue += simDay.toFixed(0)  + ' ';
+  if (simHour < 10)
+  {
+    simTimeValue += '0';
+  }
+  simTimeValue += simHour.toFixed(0) + ':';
+  if (simMin < 10)
+  {
+    simTimeValue += '0';
+  }
+  simTimeValue += simMin.toFixed(0) + ':';
+  if (simSec < 10)
+  {
+    simTimeValue += '0';
+  }
+  simTimeValue += simSec.toFixed(0);
+
+  this.gui.setRealTime(realTimeValue);
+  this.gui.setSimTime(simTimeValue);
 };
 
 GZ3D.GZIface.prototype.createModelFromMsg = function(model)

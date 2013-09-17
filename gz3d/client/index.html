@@ -66,23 +66,45 @@
         float: left;
         display: inline-block;
       }
+
+      #world-stats {
+        padding: 1px;
+        display: inline-block;
+        vertical-align: middle;
+      }
     </style>
   </head>
 
   <body>
-    <ul id='menu'>
-      <li>
-        <a href='#'>Edit</a>
-        <ul>
-          <li id='reset-world'><a href='#'>Reset World</a></li>
-          <li id='reset-model'><a href='#'>Reset Model Poses</a></li>
-        </ul>
-      </li>
-    </ul>
+    <div>
+      <ul id='menu'>
+        <li>
+          <a href='#'>Edit</a>
+          <ul>
+            <li id='reset-world'><a href='#'>Reset World</a></li>
+            <li id='reset-model'><a href='#'>Reset Model Poses</a></li>
+          </ul>
+        </li>
+      </ul>
+    </div>
 
     <div id='toolbar' class='ui-widget-content'>
       <div id="toolbar-play" >
         <button id="play">Play</button>
+      </div>
+
+      <div id='world-stats'>
+        <table>
+          <tr>
+            <td>Sim Time: </td>
+            <td id='sim-time-value'>00 00:00:00</td>
+            <td>&nbsp;</td>
+            <td>Real Time: </td>
+            <td id='real-time-value'>00 00:00:00</td>
+
+
+          </tr>
+        </table>
       </div>
 
       <div id='toolbar-shapes'>
@@ -91,10 +113,15 @@
         <button id="cylinder">Cylinder</button>
       </div>
 
-    <div class"clear"></div>
+      <div class"clear"></div>
     </div>
 
     <div id="container"></div>
+
+<!--                        <td>Sim Time: </td>
+            <td id='sim-time-value'>00 00:00:00</td>
+            <td>Real Time: </td>
+            <td id='real-time-value'>00 00:00:00</td>-->
 
     <script>
       if (!Detector.webgl)

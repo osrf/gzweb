@@ -131,3 +131,14 @@ GZ3D.Gui.prototype.setPaused = function(paused)
   }
   $('#play').button('option', options);
 };
+
+GZ3D.Gui.prototype.setRealTime = function(realTime)
+{
+  $('#real-time-value').text(realTime);
+};
+
+GZ3D.Gui.prototype.setSimTime = function(simTime)
+{
+  $('#sim-time-value').text(simTime);
+ // console.log(simTime);
+};
