@@ -12,18 +12,6 @@ GZ3D.Scene.prototype.init = function()
   this.selectedEntity = null;
   this.mouseEntity = null;
 
-  // scene.fog = new THREE.FogExp2( 0xcccccc, 0.002 );
-/*  var geometry = new THREE.CylinderGeometry( 0, 1, 3, 4, 1 );
-  var material =  new THREE.MeshLambertMaterial(
-      { color:0xffffff, shading: THREE.FlatShading } );
-  var mesh = new THREE.Mesh( geometry, material );
-  mesh.position.x = 0;
-  mesh.position.y = 0;
-  mesh.position.z = 0;
-  mesh.updateMatrix();
-  mesh.matrixAutoUpdate = false;
-  this.scene.add( mesh );*/
-
   this.renderer = new THREE.WebGLRenderer({antialias: false });
   this.renderer.setClearColor(0xcccccc, 1);
   this.renderer.setSize( window.innerWidth, window.innerHeight);
@@ -52,18 +40,6 @@ GZ3D.Scene.prototype.init = function()
       this.getDomElement());
 
   this.controls = new THREE.OrbitControls(this.camera);
-/*  this.controls.noPan = false;
-  this.controls.rotateSpeed = 1.0;
-  this.controls.zoomSpeed = 1.2;
-  this.controls.panSpeed = 0.8;
-  this.controls.noZoom = false;
-  this.controls.noPan = false;
-  this.controls.staticMoving = true;
-  this.controls.dynamicDampingFactor = 0.3;
-  this.controls.keys = [ 65, 83, 68 ];*/
-
-//  this.controls.addEventListener('change', function() {that.render();});
-//  this.modelManipulator.addEventListener('change', function() {that.render();});
 
   this.emitter = new EventEmitter2({ verbose: true });
 };
@@ -127,8 +103,7 @@ GZ3D.Scene.prototype.onMouseDown = function(event)
 
       if (model)
       {
-        console.log('found model ' + model.name + ' ' + objects.length);
-    //    if (this.modelManipulator.hovered)
+        // console.log('found model ' + model.name + ' ' + objects.length);
         if (model.name !== '')
         {
           console.log('attached ' + model.name);
@@ -140,12 +115,10 @@ GZ3D.Scene.prototype.onMouseDown = function(event)
         }
         else if (this.modelManipulator.hovered)
         {
-          console.log('hovered ' + this.modelManipulator.object.name);
+          // console.log('hovered ' + this.modelManipulator.object.name);
           this.modelManipulator.update();
           this.modelManipulator.object.updateMatrixWorld();
-  //        this.modelManipulator.attach(this.modelManipulator.object);
           this.mouseEntity = this.selectedEntity;
-          //this.selectedEntity = model;
           this.killCameraControl = true;
         }
         else
@@ -155,7 +128,7 @@ GZ3D.Scene.prototype.onMouseDown = function(event)
       }
       else
       {
-        console.log('detached');
+        // console.log('detached');
         this.modelManipulator.detach();
         this.scene.remove(this.modelManipulator.gizmo);
         this.killCameraControl = false;
@@ -220,7 +193,6 @@ GZ3D.Scene.prototype.setWindowSize = function(width, height)
   this.camera.updateProjectionMatrix();
 
   this.renderer.setSize( width, height);
-  // this.controls.handleResize();
   this.render();
 };
 

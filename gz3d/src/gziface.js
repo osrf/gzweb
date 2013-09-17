@@ -88,13 +88,9 @@ GZ3D.GZIface.prototype.init = function()
   var poseUpdate = function(message)
   {
     var entity = this.scene.getByName(message.name);
-    // console.log(message.name);
     if (entity)
     {
-      // console.log(message.name + 'found');
       this.scene.updatePose(entity, message.position, message.orientation);
-//      entity.position = message.position;
-//      entity.quaternion = message.orientation;
     }
   };
 
@@ -310,26 +306,6 @@ GZ3D.GZIface.prototype.updateStatsGuiFromMsg = function(stats)
 
   var realMsec = Math.floor(realNSec * 1e-6);
 
-/*
-    sec = _msg->real_time().sec();
-
-    day = sec / 86400;
-    sec -= day * 86400;
-
-    hour = sec / 3600;
-    sec -= hour * 3600;
-
-    min = sec / 60;
-    sec -= min * 60;
-
-    msec = rint(_msg->sim_time().nsec() * 1e-6);
-
-    stream << std::setw(2) << std::setfill('0') << day << " ";
-    stream << std::setw(2) << std::setfill('0') << hour << ":";
-    stream << std::setw(2) << std::setfill('0') << min << ":";
-    stream << std::setw(2) << std::setfill('0') << sec << ".";
-    stream << std::setw(3) << std::setfill('0') << msec;*/
-
   var simTimeValue = '';
   var realTimeValue = '';
 
@@ -394,7 +370,6 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
     var linkObj = new THREE.Object3D();
     linkObj.name = link.name;
     linkObj.userData = link.id;
-    // console.log('link name ' + linkObj.name);
 
     if (link.pose)
     {
