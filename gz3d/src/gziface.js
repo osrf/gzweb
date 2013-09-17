@@ -136,6 +136,20 @@ GZ3D.GZIface.prototype.init = function()
 
   modelInfoTopic.subscribe(modelUpdate.bind(this));
 
+  // world stats
+  var worldStatsTopic = new ROSLIB.Topic({
+    ros : this.webSocket,
+    name : '~/world_stats',
+    messageType : 'world_stats',
+  });
+
+  var worldStatsUpdate = function(message)
+  {
+    this.updateStatsGuiFromMsg(message);
+    console.log(message);
+  };
+
+  worldStatsTopic.subscribe(worldStatsUpdate.bind(this));
 
   // Lights
   var lightTopic = new ROSLIB.Topic({
@@ -225,9 +239,53 @@ GZ3D.GZIface.prototype.init = function()
     that.factoryTopic.publish(modelMsg);
   };
 
+  // World control messages - for resetting world/models
+  this.worldControlTopic = new ROSLIB.Topic({
+    ros : this.webSocket,
+    name : '~/world_control',
+    messageType : 'world_control',
+  });
+
+  var publishWorldControl = function(state, resetType)
+  {
+    var worldControlMsg = {};
+    if (state !== null)
+    {
+      worldControlMsg.pause = state;
+    }
+    if (resetType)
+    {
+      worldControlMsg.reset = resetType;
+    }
+    that.worldControlTopic.publish(worldControlMsg);
+  };
+
   this.scene.emitter.on('poseChanged', publishModelModify);
 
   this.gui.emitter.on('entityCreated', publishFactory);
+
+  this.gui.emitter.on('reset',
+      function(resetType)
+      {
+        publishWorldControl(null, resetType);
+      }
+  );
+
+  this.gui.emitter.on('pause',
+      function(paused)
+      {
+        publishWorldControl(paused, null);
+      }
+  );
+};
+
+GZ3D.GZIface.prototype.updateStatsGuiFromMsg = function(stats)
+{
+  this.gui.setPaused(stats.paused);
+/*  stats.real_time.nsec
+  stats.real_time.sec
+  stats.sim_time.nsec
+  stats.sim_time.sec   */
 };
 
 GZ3D.GZIface.prototype.createModelFromMsg = function(model)

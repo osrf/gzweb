@@ -54,6 +54,8 @@ GazeboInterface::GazeboInterface()
   this->sceneTopic = "~/scene";
   this->modelModifyTopic = "~/model/modify";
   this->factoryTopic = "~/factory";
+  this->worldControlTopic = "~/world_control";
+  this->statsTopic = "~/world_stats";
 
   // material topic
   this->materialTopic = "~/material";
@@ -88,6 +90,9 @@ GazeboInterface::GazeboInterface()
   this->sceneSub = this->node->Subscribe(this->sceneTopic,
       &GazeboInterface::OnScene, this);
 
+  this->statsSub = this->node->Subscribe(this->statsTopic,
+      &GazeboInterface::OnStats, this);
+
   // For getting scene info on connect
   this->requestPub =
       this->node->Advertise<gazebo::msgs::Request>(this->requestTopic);
@@ -103,10 +108,18 @@ GazeboInterface::GazeboInterface()
   this->factoryPub =
       this->node->Advertise<gazebo::msgs::Factory>(this->factoryTopic);
 
+  // For controling world
+  this->worldControlPub =
+      this->node->Advertise<gazebo::msgs::WorldControl>(
+      this->worldControlTopic);
+
   this->responseSub = this->node->Subscribe("~/response",
       &GazeboInterface::OnResponse, this);
 
   this->materialParser = new OgreMaterialParser();
+
+  this->lastStatsTime = gazebo::common::Time::Zero;
+  this->lastPausedState = true;
 
   // message filtering apparatus
   this->minimumDistanceSquared = 0.0001;
@@ -179,6 +192,7 @@ void GazeboInterface::ProcessMessages()
 {
   static RequestMsgs_L::iterator rIter;
   static SceneMsgs_L::iterator sIter;
+  static WorldStatsMsgs_L::iterator wIter;
   static ModelMsgs_L::iterator modelIter;
   static VisualMsgs_L::iterator visualIter;
   static LightMsgs_L::iterator lightIter;
@@ -324,6 +338,25 @@ void GazeboInterface::ProcessMessages()
             factoryMsg.set_sdf(newModelStr.str());
             this->factoryPub->Publish(factoryMsg);
         }
+        else if (topic == this->worldControlTopic)
+        {
+          gazebo::msgs::WorldControl worldControlMsg;
+          std::string pause = get_value(msg, "msg:pause");
+          std::string reset = get_value(msg, "msg:reset");
+          if (!pause.empty())
+          {
+            int pauseValue = atoi(pause.c_str());
+            worldControlMsg.set_pause(pauseValue);
+          }
+          if (!reset.empty())
+          {
+            worldControlMsg.mutable_reset()->set_all(false);
+            worldControlMsg.mutable_reset()->set_time_only(false);
+            worldControlMsg.mutable_reset()->set_model_only(true);
+          }
+          if (!pause.empty() || !reset.empty())
+            this->worldControlPub->Publish(worldControlMsg);
+        }
         else if (topic == this->materialTopic)
         {
 
@@ -408,6 +441,15 @@ void GazeboInterface::ProcessMessages()
     }
     this->requestMsgs.clear();
 
+    // Forward the stats messages.
+    for (wIter = this->statsMsgs.begin(); wIter != this->statsMsgs.end();
+        ++wIter)
+    {
+      msg = this->PackOutgoingMsg(this->statsTopic, pb2json(*(*wIter).get()));
+      this->Send(msg);
+    }
+    this->statsMsgs.clear();
+
     // Forward all the pose messages.
     pIter = this->poseMsgs.begin();
     while (pIter != this->poseMsgs.end())
@@ -432,67 +474,60 @@ void GazeboInterface::OnModelMsg(ConstModelPtr &_msg)
 bool GazeboInterface::FilterPoses(const TimedPose &_old,
     const TimedPose &_current)
 {
-	if(this->messageCount >= this->messageWindowSize)
-	{
-	  double ratio =  100.0 * this->skippedMsgCount  / this->messageWindowSize;
-	  std::cout << "Message filter: " << ratio << " %" << std::endl;
-	 // std::cout << "Message count : " << this->skippedMsgCount;
-	 // std::cout << " "  << << std::endl;
-	  this->skippedMsgCount = 0;
-	  this->messageCount = 0;
-	}
-	this->messageCount++;
+  if(this->messageCount >= this->messageWindowSize)
+  {
+    double ratio =  100.0 * this->skippedMsgCount  / this->messageWindowSize;
+    std::cout << "Message filter: " << ratio << " %" << std::endl;
+   // std::cout << "Message count : " << this->skippedMsgCount;
+   // std::cout << " "  << << std::endl;
+    this->skippedMsgCount = 0;
+    this->messageCount = 0;
+  }
+  this->messageCount++;
 
-	bool has_moved = false;
-	bool is_too_early = false;
-	bool has_rotated = false;
+  bool has_moved = false;
+  bool is_too_early = false;
+  bool has_rotated = false;
 
-	gazebo::common::Time mininumTimeElapsed(minimumMsgAge);
+  gazebo::common::Time mininumTimeElapsed(minimumMsgAge);
 
-	gazebo::common::Time timeDifference =  _current.first - _old.first;
-	if (timeDifference < mininumTimeElapsed )
-	{
+  gazebo::common::Time timeDifference =  _current.first - _old.first;
+  if (timeDifference < mininumTimeElapsed )
+  {
+    is_too_early = true;
+  }
 
-		is_too_early = true;
+  gazebo::math::Vector3 posDiff = _current.second.pos - _old.second.pos;
+  double translationSquared = posDiff.GetSquaredLength();
+  if (translationSquared > minimumDistanceSquared)
+  {
+    has_moved = true;
+  }
 
-	}
+  gazebo::math::Quaternion i = _current.second.rot.GetInverse();
+  gazebo::math::Quaternion qDiff =  i * _old.second.rot;
 
-	gazebo::math::Vector3 posDiff = _current.second.pos - _old.second.pos;
-	double translationSquared = posDiff.GetSquaredLength();
-	if (translationSquared > minimumDistanceSquared)
-	{
-		has_moved = true;
-	}
+  gazebo::math::Vector3 d(qDiff.x, qDiff.y, qDiff.z);
+  double rotation = d.GetSquaredLength();
+  if (rotation > minimumQuaternionSquared)
+  {
+    has_rotated = true;
+  }
 
-	gazebo::math::Quaternion i = _current.second.rot.GetInverse();
-	gazebo::math::Quaternion qDiff =  i * _old.second.rot;
+  if (is_too_early)
+  {
+    this->skippedMsgCount++;
+    return true;
+  }
 
-	gazebo::math::Vector3 d(qDiff.x, qDiff.y, qDiff.z);
-	double rotation = d.GetSquaredLength();
-	if (rotation > minimumQuaternionSquared)
-	{
-		has_rotated = true;
-	}
-
-
-	if (is_too_early)
-	{
-
-		this->skippedMsgCount++;
-		return true;
-	}
-
-
-	if( (has_moved == false) && (has_rotated == false))
-	{
-
-		this->skippedMsgCount++;
-		return true;
-	}
+  if( (has_moved == false) && (has_rotated == false))
+  {
+    this->skippedMsgCount++;
+    return true;
+  }
 
     return false;
 }
-
 
 /////////////////////////////////////////////////
 void GazeboInterface::OnPoseMsg(ConstPosesStampedPtr &_msg)
@@ -513,22 +548,21 @@ void GazeboInterface::OnPoseMsg(ConstPosesStampedPtr &_msg)
     }
     bool filtered = false;
 
-
     std::string name = _msg->pose(i).name();
 
     gazebo::math::Pose pose = gazebo::msgs::Convert(_msg->pose(i));
     gazebo::common::Time time = gazebo::msgs::Convert(_msg->time());
 
-    PoseMsgsFilter_M::iterator it = poseMsgsFilterMap.find(name);
+    PoseMsgsFilter_M::iterator it = this->poseMsgsFilterMap.find(name);
 
     TimedPose currentPose;
-	currentPose.first = time;
-	currentPose.second = pose;
+    currentPose.first = time;
+    currentPose.second = pose;
 
-    if (it == poseMsgsFilterMap.end())
+    if (it == this->poseMsgsFilterMap.end())
     {
-    	std::pair<PoseMsgsFilter_M::iterator, bool> r;
-    	r = poseMsgsFilterMap.insert(make_pair(name, currentPose));
+      std::pair<PoseMsgsFilter_M::iterator, bool> r;
+      r = this->poseMsgsFilterMap.insert(make_pair(name, currentPose));
     }
     else
     {
@@ -537,9 +571,9 @@ void GazeboInterface::OnPoseMsg(ConstPosesStampedPtr &_msg)
       if (!filtered)
       {
         // update the map
-    	it->second.first = currentPose.first;
-    	it->second.second = currentPose.second;
-    	this->poseMsgs.push_back(_msg->pose(i));
+        it->second.first = currentPose.first;
+        it->second.second = currentPose.second;
+        this->poseMsgs.push_back(_msg->pose(i));
       }
     }
   }
@@ -578,6 +612,22 @@ void GazeboInterface::OnScene(ConstScenePtr &_msg)
 {
   boost::mutex::scoped_lock lock(*this->receiveMutex);
   this->sceneMsgs.push_back(_msg);
+}
+
+/////////////////////////////////////////////////
+void GazeboInterface::OnStats(ConstWorldStatisticsPtr &_msg)
+{
+  gazebo::common::Time wallTime;
+  wallTime = gazebo::msgs::Convert(_msg->real_time());
+  bool paused = _msg->paused();
+  if (((wallTime - this->lastStatsTime).Double() >= 1.0) ||
+      this->lastPausedState != paused)
+  {
+    this->lastStatsTime = wallTime;
+    this->lastPausedState = paused;
+    boost::mutex::scoped_lock lock(*this->receiveMutex);
+    this->statsMsgs.push_back(_msg);
+  }
 }
 
 /////////////////////////////////////////////////
