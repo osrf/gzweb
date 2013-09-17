@@ -124,10 +124,12 @@ namespace gzweb
     /// \param[in] _msg The message.
     private: void OnScene(ConstScenePtr &_msg);
 
+    /// \brief World stats message callback.
+    /// \param[in] _msg The message.
+    private: void OnStats(ConstWorldStatisticsPtr &_msg);
     /// \brief Response callback
     /// \param[in] _msg The message data.
     private: void OnResponse(ConstResponsePtr &_msg);
-
 
     /// \brief a pose at a specific time
     typedef std::pair<gazebo::common::Time, gazebo::math::Pose > TimedPose;
@@ -168,6 +170,9 @@ namespace gzweb
     /// \brief Subscribe to scene topic
     private: gazebo::transport::SubscriberPtr sceneSub;
 
+    /// \brief Subscribe to world stats topic
+    private: gazebo::transport::SubscriberPtr statsSub;
+
     /// \brief Subscribe to visual topic
     private: gazebo::transport::SubscriberPtr visSub;
 
@@ -185,6 +190,9 @@ namespace gzweb
 
     /// \brief Publish factory messages
     private: gazebo::transport::PublisherPtr factoryPub;
+
+    /// \brief Publish world control messages
+    private: gazebo::transport::PublisherPtr worldControlPub;
 
     /// \brief Subscribe to reponses.
     private: gazebo::transport::SubscriberPtr responseSub;
@@ -254,15 +262,22 @@ namespace gzweb
     typedef std::list<boost::shared_ptr<gazebo::msgs::Scene const> >
         SceneMsgs_L;
 
+    /// \brief List of scene message to process.
+    private: SceneMsgs_L sceneMsgs;
+
+    /// \def SceneMsgs_L
+    /// \brief List of world stats messages.
+    typedef std::list<boost::shared_ptr<gazebo::msgs::WorldStatistics const> >
+        WorldStatsMsgs_L;
+
+    /// \brief List of world stats message to process.
+    private: WorldStatsMsgs_L statsMsgs;
 
     /// \def PoseMsgsFilter_M
     /// \brief Map of last pose messages used for filtering
     typedef boost::unordered_map< std::string, TimedPose> PoseMsgsFilter_M;
 
     private: PoseMsgsFilter_M poseMsgsFilterMap;
-
-    /// \brief List of scene message to process.
-    private: SceneMsgs_L sceneMsgs;
 
     /// \brief True to stop the interface.
     private: bool stop;
@@ -291,11 +306,17 @@ namespace gzweb
     /// \brief Name of scene topic.
     private: std::string sceneTopic;
 
+    /// \brief Name of world stats topic.
+    private: std::string statsTopic;
+
     /// \brief Name of model modify topic.
     private: std::string modelModifyTopic;
 
     /// \brief Name of factory topic.
     private: std::string factoryTopic;
+
+    /// \brief Name of world control topic.
+    private: std::string worldControlTopic;
 
     /// \brief A custom topic for getting mapping of materials to textures
     /// referenced by gazebo
@@ -303,6 +324,12 @@ namespace gzweb
 
     /// \brief Ogre material parser.
     private: OgreMaterialParser *materialParser;
+
+    /// \brief Last world stats time received
+    private: gazebo::common::Time lastStatsTime;
+
+    /// \brief Last world state received, play or paused.
+    private: bool lastPausedState;
 
     /// \brief filter pose message based on minimum distance criteria
     private: double minimumDistanceSquared;
@@ -319,31 +346,31 @@ namespace gzweb
 
     public: inline void SetPoseFilterMinimumDistanceSquared(double m)
     {
-    	this->minimumDistanceSquared = m;
+      this->minimumDistanceSquared = m;
     }
     public: inline double GetPoseFilterMinimumDistanceSquared()
     {
-    	return this->minimumDistanceSquared;
+      return this->minimumDistanceSquared;
     }
 
     public: inline void SetPoseFilterMinimumQuaternionSquared(double m)
     {
-    	this->minimumQuaternionSquared = m;
+      this->minimumQuaternionSquared = m;
     }
 
     public: inline double GetPoseFilterMinimumQuaternionSquared()
     {
-    	return this->minimumQuaternionSquared;
+      return this->minimumQuaternionSquared;
     }
 
     public: inline void SetPoseFilterMinimumMsgAge(double m)
     {
-    	this->minimumMsgAge = m;
+      this->minimumMsgAge = m;
     }
 
     public: inline double GetPoseFilterMinimumMsgAge()
     {
-    	return this->minimumMsgAge;
+      return this->minimumMsgAge;
     }
   };
 }

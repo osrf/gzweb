@@ -32,8 +32,32 @@ $(function() {
   .click(function() {
     guiEvents.emit('entity_create', 'cylinder');
   });
+
+  $( '#play' ).button({
+    text: false,
+    icons: {
+      primary: 'ui-icon-play'
+    }
+  })
+  .click(function() {
+    var options;
+    if ( $( this ).text() === 'Play' )
+    {
+      guiEvents.emit('pause', false);
+    } else
+    {
+      guiEvents.emit('pause', true);
+    }
+  });
 });
 
+  $(function() {
+    $( '#menu' ).menu();
+    $( '#reset-model' )
+    .click(function() {
+      guiEvents.emit('model_reset');
+    });
+  });
 
 GZ3D.Gui = function(scene)
 {
@@ -57,6 +81,42 @@ GZ3D.Gui.prototype.init = function()
             {
               that.emitter.emit('entityCreated', obj, entity);
             });
+      }
+  );
 
-      });
+  guiEvents.on('model_reset',
+      function ()
+      {
+        that.emitter.emit('reset', 'model');
+      }
+  );
+
+  guiEvents.on('pause',
+      function (paused)
+      {
+        that.emitter.emit('pause', paused);
+      }
+  );
+};
+
+GZ3D.Gui.prototype.setPaused = function(paused)
+{
+  var options;
+  if (paused)
+  {
+    options =
+    {
+      label: 'Play',
+      icons: { primary: 'ui-icon-play' }
+    };
+  }
+  else
+  {
+    options =
+    {
+      label: 'Pause',
+      icons: { primary: 'ui-icon-pause' }
+    };
+  }
+  $('#play').button('option', options);
 };

@@ -16,7 +16,6 @@
     <script src="js/include/eventemitter2.js"></script>
     <script src="js/include/roslib.js"></script>
     <script src="js/include/ColladaLoader.js"></script>
-    <script src="js/include/dat.gui.min.js"></script>
     <script src="gz3d.js"></script>
 
     <style>
@@ -33,37 +32,71 @@
       }
 
       #info {
-	      color:#000;
-	      position: absolute;
-	      top: 0px; width: 100%;
-	      padding: 5px;
-
+        color:#000;
+        position: absolute;
+        top: 0px; width: 100%;
+        padding: 5px;
       }
 
       a {
         color: red;
       }
-      #toolbar {
+
+      #toolbar-shapes {
         padding: 1px;
+        display: inline-block;
+        float: right
+      }
+      /* support: IE7 */
+      *+html #toolbar-shapes {
+        display: inline-block;
+      }
+      #toolbar-play {
+        padding: 1px;
+        display: inline-block;
 
       }
       /* support: IE7 */
-      *+html #toolbar {
-        display: inline;
+      *+html #toolbar-play {
+        display: inline-block;
+      }
+
+      #menu {
+        padding: 1px;
+        float: left;
+        display: inline-block;
       }
     </style>
   </head>
 
   <body>
-    <div id="toolbar" class="ui-widget-header" align='right'>
-      <button id="box">Box</button>
-      <button id="sphere">Sphere</button>
-      <button id="cylinder">Cylinder</button>
+    <ul id='menu'>
+      <li>
+        <a href='#'>Edit</a>
+        <ul>
+          <li id='reset-model'><a href='#'>Reset Model Poses'</a></li>
+        </ul>
+      </li>
+    </ul>
+
+    <div id='toolbar' class='ui-widget-content'>
+<!--      <div id="toolbarTop" class="ui-widget-header" align='right'>-->
+      <div id="toolbar-play" >
+        <button id="play">Play</button>
+      </div>
+
+      <div id='toolbar-shapes'>
+        <button id="box">Box</button>
+        <button id="sphere">Sphere</button>
+        <button id="cylinder">Cylinder</button>
+      </div>
+
+    <div class"clear"></div>
     </div>
 
     <div id="container"></div>
-    <script>
 
+    <script>
       if (!Detector.webgl)
         Detector.addGetWebGLMessage();
 
@@ -74,7 +107,6 @@
 
       init();
       animate();
-
 
       function init()
       {
@@ -87,7 +119,7 @@
 
         stats = new Stats();
         stats.domElement.style.position = 'absolute';
-        stats.domElement.style.top = '0px';
+        stats.domElement.style.bottom = '0px';
         stats.domElement.style.zIndex = 100;
         container.appendChild( stats.domElement );
 
@@ -98,7 +130,6 @@
       {
         scene.setWindowSize(window.innerWidth, window.innerHeight);
       }
-
 
       function animate()
       {

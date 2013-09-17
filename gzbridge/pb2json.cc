@@ -234,7 +234,6 @@ namespace gzweb {
     return root;
   }
 
-//  std::string get(json_t *obj, const char *key)
   std::string get(json_t *obj, const std::string &key)
   {
     if (key.empty())
@@ -271,37 +270,22 @@ namespace gzweb {
       ss << json_integer_value(data);
       return ss.str();
     }
+    else if (json_is_true(data))
+    {
+      std::stringstream ss;
+      ss << "1";
+      return ss.str();
+    }
+    else if (json_is_false(data))
+    {
+      std::stringstream ss;
+      ss << "0";
+      return ss.str();
+    }
+
     return "";
-
-
-/*
-
-    if(json_is_array(obj))
-    {
-      for(unsigned int i = 0; i < json_array_size(obj); ++i)
-      {
-        json_t *data = json_array_get(obj, i);
-//        std::string result = get(data, key);
-//        if (!result.empty())
-//          return result;
-      }
-      return "";
-    }
-    else
-    {
-      json_t *data = json_object_get(obj, key);
-      if(json_is_string(data))
-      {
-        const char *result = json_string_value(data);
-        return std::string(result);
-      }
-      else
-        return "";
-    }
-    return "";*/
   }
 
-//  std::string get_value(const char *msg, const char *key)
   std::string get_value(const std::string &msg, const std::string &key)
   {
     json_t *root;
