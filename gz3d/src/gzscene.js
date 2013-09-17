@@ -373,128 +373,149 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
     material, normalMap, parent)
 {
   var dae;
+  var mesh = null;
   if (this.meshes[uri])
   {
     dae = this.meshes[uri];
     if (submesh)
     {
-      //console.log (' sub returned ' + submesh);
-      //return;
+      mesh = this.prepareColladaMesh(dae, submesh, centerSubmesh);
     }
-    //return;
+    else
+    {
+      mesh = this.prepareColladaMesh(dae, null, null);
+    }
+    this.setMaterial(mesh, material, normalMap);
   }
 
-  var loader = new THREE.ColladaLoader();
-//  var loader = new ColladaLoader2();
-//  loader.options.convertUpAxis = true;
-  var thatURI = uri;
-  var thatSubmesh = submesh;
-  var thatCenterSubmesh = centerSubmesh;
-
-  loader.load(uri, function(collada)
+  if (!mesh)
   {
-    // check for a scale factor
-    /*if(collada.dae.asset.unit)
+    var loader = new THREE.ColladaLoader();
+    // var loader = new ColladaLoader2();
+    // loader.options.convertUpAxis = true;
+    var thatURI = uri;
+    var thatSubmesh = submesh;
+    var thatCenterSubmesh = centerSubmesh;
+
+    loader.load(uri, function(collada)
     {
-      var scale = collada.dae.asset.unit;
-      collada.scene.scale = new THREE.Vector3(scale, scale, scale);
-    }*/
+      // check for a scale factor
+      /*if(collada.dae.asset.unit)
+      {
+        var scale = collada.dae.asset.unit;
+        collada.scene.scale = new THREE.Vector3(scale, scale, scale);
+      }*/
 
-    dae = collada.scene;
-    dae.updateMatrix();
+      dae = collada.scene;
+      dae.updateMatrix();
+      this.scene.meshes[thatURI] = dae;
+      mesh = this.scene.prepareColladaMesh(dae, thatSubmesh, centerSubmesh);
+      this.scene.setMaterial(mesh, material, normalMap);
+      parent.add(dae);
+    });
+  }
+  else
+  {
+    parent.add(dae);
+  }
+};
 
-    this.scene.meshes[thatURI] = dae;
-
-    var mesh;
-    var allChildren = [];
-    dae.getDescendants(allChildren);
-    for (var i = 0; i < allChildren.length; ++i)
+GZ3D.Scene.prototype.prepareColladaMesh = function(dae, submesh, centerSubmesh)
+{
+  var mesh;
+  var allChildren = [];
+  dae.getDescendants(allChildren);
+  for (var i = 0; i < allChildren.length; ++i)
+  {
+    if (allChildren[i] instanceof THREE.Mesh)
     {
-      if (allChildren[i] instanceof THREE.Mesh)
+      if (!submesh && !mesh)
+      {
+        mesh = allChildren[i];
+      }
+
+      if (submesh)
       {
 
-        if (!thatSubmesh && !mesh)
+        if (allChildren[i].geometry.name === submesh)
         {
+          if (centerSubmesh)
+          {
+            var vertices = allChildren[i].geometry.vertices;
+            var vMin = new THREE.Vector3();
+            var vMax = new THREE.Vector3();
+            vMin.x = vertices[0].x;
+            vMin.y = vertices[0].y;
+            vMin.z = vertices[0].z;
+            vMax.x = vMin.x;
+            vMax.y = vMin.y;
+            vMax.z = vMin.z;
+
+            for (var j = 1; j < vertices.length; ++j)
+            {
+              vMin.x = Math.min(vMin.x, vertices[j].x);
+              vMin.y = Math.min(vMin.y, vertices[j].y);
+              vMin.z = Math.min(vMin.z, vertices[j].z);
+              vMax.x = Math.max(vMax.x, vertices[j].x);
+              vMax.y = Math.max(vMax.y, vertices[j].y);
+              vMax.z = Math.max(vMax.z, vertices[j].z);
+            }
+
+            var center  = new THREE.Vector3();
+            center.x = vMin.x + (0.5 * (vMax.x - vMin.x));
+            center.y = vMin.y + (0.5 * (vMax.y - vMin.y));
+            center.z = vMin.z + (0.5 * (vMax.z - vMin.z));
+
+            for (var k = 0; k < vertices.length; ++k)
+            {
+              vertices[k].x -= center.x;
+              vertices[k].y -= center.y;
+              vertices[k].z -= center.z;
+            }
+            allChildren[i].geometry.verticesNeedUpdate = true;
+
+            allChildren[i].position.x = 0;
+            allChildren[i].position.y = 0;
+            allChildren[i].position.z = 0;
+
+            allChildren[i].parent.position.x = 0;
+            allChildren[i].parent.position.y = 0;
+            allChildren[i].parent.position.z = 0;
+          }
           mesh = allChildren[i];
         }
-
-        if (thatSubmesh)
+        else
         {
-
-          if (allChildren[i].geometry.name === thatSubmesh)
-          {
-
-            if (thatCenterSubmesh)
-            {
-              var vertices = allChildren[i].geometry.vertices;
-              var vMin = new THREE.Vector3();
-              var vMax = new THREE.Vector3();
-              vMin.x = vertices[0].x;
-              vMin.y = vertices[0].y;
-              vMin.z = vertices[0].z;
-              vMax.x = vMin.x;
-              vMax.y = vMin.y;
-              vMax.z = vMin.z;
-
-              for (var j = 1; j < vertices.length; ++j)
-              {
-                vMin.x = Math.min(vMin.x, vertices[j].x);
-                vMin.y = Math.min(vMin.y, vertices[j].y);
-                vMin.z = Math.min(vMin.z, vertices[j].z);
-                vMax.x = Math.max(vMax.x, vertices[j].x);
-                vMax.y = Math.max(vMax.y, vertices[j].y);
-                vMax.z = Math.max(vMax.z, vertices[j].z);
-              }
-
-              var center  = new THREE.Vector3();
-              center.x = vMin.x + (0.5 * (vMax.x - vMin.x));
-              center.y = vMin.y + (0.5 * (vMax.y - vMin.y));
-              center.z = vMin.z + (0.5 * (vMax.z - vMin.z));
-
-              for (var k = 0; k < vertices.length; ++k)
-              {
-                vertices[k].x -= center.x;
-                vertices[k].y -= center.y;
-                vertices[k].z -= center.z;
-              }
-              allChildren[i].geometry.verticesNeedUpdate = true;
-
-              allChildren[i].position.x = 0;
-              allChildren[i].position.y = 0;
-              allChildren[i].position.z = 0;
-
-              allChildren[i].parent.position.x = 0;
-              allChildren[i].parent.position.y = 0;
-              allChildren[i].parent.position.z = 0;
-            }
-            mesh = allChildren[i];
-          }
-          else
-          {
-            allChildren[i].parent.remove(allChildren[i]);
-          }
+          allChildren[i].parent.remove(allChildren[i]);
         }
       }
-      else if (allChildren[i] instanceof THREE.Light)
-      {
-        allChildren[i].parent.remove(allChildren[i]);
-      }
     }
-
-    if (material || normalMap)
+    else if (allChildren[i] instanceof THREE.Light)
     {
-      var mat = new THREE.MeshPhongMaterial();
-      if (material)
-      {
-        mat.map = THREE.ImageUtils.loadTexture(material);
-      }
-      if (normalMap)
-      {
-        mat.normalMap = THREE.ImageUtils.loadTexture(normalMap);
-      }
-      mesh.material = mat;
+      allChildren[i].parent.remove(allChildren[i]);
     }
-    parent.add(dae);
+  }
+  return mesh;
+};
 
-  } );
+GZ3D.Scene.prototype.setMaterial = function(mesh, material, normalMap)
+{
+  if (!mesh)
+  {
+    return;
+  }
+
+  if (material || normalMap)
+  {
+    var mat = new THREE.MeshPhongMaterial();
+    if (material)
+    {
+      mat.map = THREE.ImageUtils.loadTexture(material);
+    }
+    if (normalMap)
+    {
+      mat.normalMap = THREE.ImageUtils.loadTexture(normalMap);
+    }
+    mesh.material = mat;
+  }
 };
