@@ -35,7 +35,6 @@ if [ "$1" == "-m" ]; then  # build a local model database
     cd gazebo_models; hg up cloudsim_release
 
     echo "Download complete"
-    cd gazebo_models
     mkdir build
     cd build
     echo -n "Installing gazebo_models..."
