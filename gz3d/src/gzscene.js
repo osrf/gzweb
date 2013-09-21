@@ -33,6 +33,7 @@ GZ3D.Scene.prototype.init = function()
   var that = this;
   this.getDomElement().addEventListener( 'mousedown',
       function(event) {that.onMouseDown(event);}, false );
+
   this.getDomElement().addEventListener( 'mouseup',
       function(event) {that.onMouseUp(event);}, false );
 
@@ -56,8 +57,11 @@ GZ3D.Scene.prototype.onMouseDown = function(event)
   }
 
   var projector = new THREE.Projector();
-  var vector = new THREE.Vector3( (event.clientX / window.innerWidth) * 2 - 1,
-      -(event.clientY / window.innerHeight) * 2 + 1, 0.5);
+  var vector = new THREE.Vector3(
+      ((event.clientX - this.renderer.domElement.offsetLeft)
+      / window.innerWidth) * 2 - 1,
+      -((event.clientY - this.renderer.domElement.offsetTop)
+      / window.innerHeight) * 2 + 1, 1);
   projector.unprojectVector(vector, this.camera);
   var ray = new THREE.Raycaster( this.camera.position,
       vector.sub(this.camera.position).normalize() );
@@ -69,72 +73,75 @@ GZ3D.Scene.prototype.onMouseDown = function(event)
   // grab root model
   if (objects.length > 0)
   {
+    var model;
+    for (var i = 0; i < objects.length; ++i)
     {
-      var model;
-      for (var i = 0; i < objects.length; ++i)
+      model = objects[i].object;
+      if (!this.modelManipulator.hovered &&
+          (objects[i].object.name === 'plane'))
       {
-        model = objects[i].object;
+        this.killCameraControl = false;
+        return;
+      }
 
-        if (!this.modelManipulator.hovered &&
-            (objects[i].object.name === 'grid' ||
-            objects[i].object.name === 'plane'))
-        {
-          this.killCameraControl = false;
-          return;
-        }
+      if (objects[i].object.name === 'grid')
+      {
+        model = null;
+        continue;
+      }
 
-        while (model.parent !== this.scene)
-        {
-          model = model.parent;
-        }
+      while (model.parent !== this.scene)
+      {
+        model = model.parent;
+      }
 
-        if (this.modelManipulator.hovered)
-        {
-          if (model === this.modelManipulator.gizmo)
-          {
-            break;
-          }
-        }
-        else if (model.name !== '')
+      if (this.modelManipulator.hovered)
+      {
+        if (model === this.modelManipulator.gizmo)
         {
           break;
         }
       }
-
-      if (model)
+      else if (model.name !== '')
       {
-        // console.log('found model ' + model.name + ' ' + objects.length);
-        if (model.name !== '')
-        {
-          console.log('attached ' + model.name);
-          this.modelManipulator.attach(model);
-          this.selectedEntity = model;
-          this.mouseEntity = this.selectedEntity;
-          this.scene.add(this.modelManipulator.gizmo);
-          this.killCameraControl = true;
-        }
-        else if (this.modelManipulator.hovered)
-        {
-          // console.log('hovered ' + this.modelManipulator.object.name);
-          this.modelManipulator.update();
-          this.modelManipulator.object.updateMatrixWorld();
-          this.mouseEntity = this.selectedEntity;
-          this.killCameraControl = true;
-        }
-        else
-        {
-          this.killCameraControl = false;
-        }
+        break;
+      }
+    }
+
+    if (model)
+    {
+      // console.log('found model ' + model.name + ' ' + objects.length);
+      if (model.name !== '')
+      {
+        // console.log('attached ' + model.name);
+        this.modelManipulator.attach(model);
+        this.selectedEntity = model;
+        this.mouseEntity = this.selectedEntity;
+        this.scene.add(this.modelManipulator.gizmo);
+        this.killCameraControl = true;
+      }
+      else if (this.modelManipulator.hovered)
+      {
+        // console.log('hovered ' + this.modelManipulator.object.name);
+        this.modelManipulator.update();
+        this.modelManipulator.object.updateMatrixWorld();
+        this.mouseEntity = this.selectedEntity;
+        this.killCameraControl = true;
       }
       else
       {
-        // console.log('detached');
-        this.modelManipulator.detach();
-        this.scene.remove(this.modelManipulator.gizmo);
         this.killCameraControl = false;
-        this.selectedEntity = null;
       }
     }
+    else
+    {
+      // console.log('detached');
+      this.modelManipulator.detach();
+      this.scene.remove(this.modelManipulator.gizmo);
+      this.killCameraControl = false;
+      this.selectedEntity = null;
+    }
+
   }
 /*  else
   {
