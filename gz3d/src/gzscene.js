@@ -12,6 +12,8 @@ GZ3D.Scene.prototype.init = function()
   this.selectedEntity = null;
   this.mouseEntity = null;
 
+  this.manipulationMode = 'view';
+
   this.renderer = new THREE.WebGLRenderer({antialias: true });
   this.renderer.setClearColor(0xcccccc, 1);
   this.renderer.setSize( window.innerWidth, window.innerHeight);
@@ -52,6 +54,11 @@ GZ3D.Scene.prototype.onMouseDown = function(event)
   this.controls.enabled = true;
 
   if (event.button !== 0)
+  {
+    return;
+  }
+
+  if (this.manipulationMode === 'view')
   {
     return;
   }
@@ -524,5 +531,17 @@ GZ3D.Scene.prototype.setMaterial = function(mesh, material, normalMap)
       mat.normalMap = THREE.ImageUtils.loadTexture(normalMap);
     }
     mesh.material = mat;
+  }
+};
+
+GZ3D.Scene.prototype.setManipulationMode = function(mode)
+{
+  this.manipulationMode = mode;
+
+  if (this.manipulationMode === 'view')
+  {
+    this.killCameraControl = false;
+    this.modelManipulator.detach();
+    this.scene.remove(this.modelManipulator.gizmo);
   }
 };

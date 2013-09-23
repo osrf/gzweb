@@ -3,6 +3,29 @@
 var guiEvents = new EventEmitter2({ verbose: true });
 
 $(function() {
+  $( '#toolbar-shapes' ).buttonset();
+  $( '#toolbar-manipulate' ).buttonset();
+
+  $( '#arrow' ).button({
+    text: false,
+    icons: {
+      primary: 'toolbar-arrow'
+    }
+  })
+  .click(function() {
+    guiEvents.emit('manipulation_mode', 'view');
+  });
+
+  $( '#translate' ).button({
+    text: false,
+    icons: {
+      primary: 'toolbar-translate'
+    }
+  })
+  .click(function() {
+    guiEvents.emit('manipulation_mode', 'translate');
+  });
+
   $( '#box' ).button({
     text: false,
     icons: {
@@ -106,6 +129,13 @@ GZ3D.Gui.prototype.init = function()
       function (paused)
       {
         that.emitter.emit('pause', paused);
+      }
+  );
+
+  guiEvents.on('manipulation_mode',
+      function (mode)
+      {
+        that.scene.setManipulationMode(mode);
       }
   );
 };

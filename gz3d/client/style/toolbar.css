@@ -33,3 +33,27 @@
     width: 16;
     height: 16;
 }
+
+.ui-button .ui-icon.toolbar-arrow {
+    background-image: url(images/arrow.png);
+    width: 16;
+    height: 16;
+}
+
+.ui-button.ui-state-hover .ui-icon.toolbar-arrow {
+    background-image: url(images/arrow.png);
+    width: 16;
+    height: 16;
+}
+
+.ui-button .ui-icon.toolbar-translate {
+    background-image: url(images/translate.png);
+    width: 16;
+    height: 16;
+}
+
+.ui-button.ui-state-hover .ui-icon.toolbar-translate {
+    background-image: url(images/translate.png);
+    width: 16;
+    height: 16;
+}
