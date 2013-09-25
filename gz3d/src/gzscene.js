@@ -12,6 +12,8 @@ GZ3D.Scene.prototype.init = function()
   this.selectedEntity = null;
   this.mouseEntity = null;
 
+  this.manipulationMode = 'view';
+
   this.renderer = new THREE.WebGLRenderer({antialias: true });
   this.renderer.setClearColor(0xcccccc, 1);
   this.renderer.setSize( window.innerWidth, window.innerHeight);
@@ -33,8 +35,24 @@ GZ3D.Scene.prototype.init = function()
   var that = this;
   this.getDomElement().addEventListener( 'mousedown',
       function(event) {that.onMouseDown(event);}, false );
+
+  // Need to use `document` instead of getDomElement in order to get events
+  // outside the webgl div element.
+  document.addEventListener( 'mouseup',
+      function(event) {that.onMouseUp(event);}, false );
+
   this.getDomElement().addEventListener( 'mouseup',
       function(event) {that.onMouseUp(event);}, false );
+
+  this.getDomElement().addEventListener( 'DOMMouseScroll',
+      function(event) {that.onMouseScroll(event);}, false ); //firefox
+
+  this.getDomElement().addEventListener( 'mousewheel',
+      function(event) {that.onMouseScroll(event);}, false );
+
+  document.addEventListener( 'keydown',
+      function(event) {that.onKeyDown(event);}, false );
+
 
   this.modelManipulator = new THREE.TransformControls(this.camera,
       this.getDomElement());
@@ -50,100 +68,54 @@ GZ3D.Scene.prototype.onMouseDown = function(event)
 
   this.controls.enabled = true;
 
-  if (event.button !== 0)
+  var pos = new THREE.Vector2(event.clientX, event.clientY);
+
+  var intersect = new THREE.Vector3();
+  var model = this.getRayCastModel(pos, intersect);
+
+  if (intersect)
+  {
+    this.controls.target = intersect;
+  }
+
+  if (this.manipulationMode === 'view')
   {
     return;
   }
 
-  var projector = new THREE.Projector();
-  var vector = new THREE.Vector3( (event.clientX / window.innerWidth) * 2 - 1,
-      -(event.clientY / window.innerHeight) * 2 + 1, 0.5);
-  projector.unprojectVector(vector, this.camera);
-  var ray = new THREE.Raycaster( this.camera.position,
-      vector.sub(this.camera.position).normalize() );
-
-  var allObjects = [];
-  this.scene.getDescendants(allObjects);
-  var objects = ray.intersectObjects(allObjects);
-
-  // grab root model
-  if (objects.length > 0)
+  if (model)
   {
+    // console.log('found model ' + model.name + ' ' + objects.length);
+    if (model.name !== '')
     {
-      var model;
-      for (var i = 0; i < objects.length; ++i)
-      {
-        model = objects[i].object;
-
-        if (!this.modelManipulator.hovered &&
-            (objects[i].object.name === 'grid' ||
-            objects[i].object.name === 'plane'))
-        {
-          this.killCameraControl = false;
-          return;
-        }
-
-        while (model.parent !== this.scene)
-        {
-          model = model.parent;
-        }
-
-        if (this.modelManipulator.hovered)
-        {
-          if (model === this.modelManipulator.gizmo)
-          {
-            break;
-          }
-        }
-        else if (model.name !== '')
-        {
-          break;
-        }
-      }
-
-      if (model)
-      {
-        // console.log('found model ' + model.name + ' ' + objects.length);
-        if (model.name !== '')
-        {
-          console.log('attached ' + model.name);
-          this.modelManipulator.attach(model);
-          this.selectedEntity = model;
-          this.mouseEntity = this.selectedEntity;
-          this.scene.add(this.modelManipulator.gizmo);
-          this.killCameraControl = true;
-        }
-        else if (this.modelManipulator.hovered)
-        {
-          // console.log('hovered ' + this.modelManipulator.object.name);
-          this.modelManipulator.update();
-          this.modelManipulator.object.updateMatrixWorld();
-          this.mouseEntity = this.selectedEntity;
-          this.killCameraControl = true;
-        }
-        else
-        {
-          this.killCameraControl = false;
-        }
-      }
-      else
-      {
-        // console.log('detached');
-        this.modelManipulator.detach();
-        this.scene.remove(this.modelManipulator.gizmo);
-        this.killCameraControl = false;
-        this.selectedEntity = null;
-      }
+      // console.log('attached ' + model.name);
+      this.modelManipulator.attach(model);
+      this.selectedEntity = model;
+      this.mouseEntity = this.selectedEntity;
+      this.scene.add(this.modelManipulator.gizmo);
+      this.killCameraControl = true;
+    }
+    else if (this.modelManipulator.hovered)
+    {
+      // console.log('hovered ' + this.modelManipulator.object.name);
+      this.modelManipulator.update();
+      this.modelManipulator.object.updateMatrixWorld();
+      this.mouseEntity = this.selectedEntity;
+      this.killCameraControl = true;
+    }
+    else
+    {
+      this.killCameraControl = false;
     }
   }
-/*  else
+  else
   {
-    console.log('detached - no object');
+    // console.log('detached');
     this.modelManipulator.detach();
     this.scene.remove(this.modelManipulator.gizmo);
     this.killCameraControl = false;
     this.selectedEntity = null;
-  }*/
+  }
 };
 
 
@@ -162,7 +134,124 @@ GZ3D.Scene.prototype.onMouseUp = function(event)
     this.killCameraControl = false;
   }
   this.mouseEntity = null;
+
+  console.log('up');
 };
+
+GZ3D.Scene.prototype.onMouseScroll = function(event)
+{
+  event.preventDefault();
+
+  this.controls.enabled = true;
+
+  var pos = new THREE.Vector2(event.clientX, event.clientY);
+
+  var intersect = new THREE.Vector3();
+  var model = this.getRayCastModel(pos, intersect);
+
+  if (intersect)
+  {
+    this.controls.target = intersect;
+  }
+};
+
+GZ3D.Scene.prototype.onKeyDown = function(event)
+{
+  console.log(event.keyCode);
+  if (event.shiftKey)
+  {
+    if (event.keyCode === 187 || event.keyCode === 189)
+    {
+      this.controls.enabled = true;
+      var pos = new THREE.Vector2(window.innerWidth/2.0,
+          window.innerHeight/2.0);
+
+      var intersect = new THREE.Vector3();
+      var model = this.getRayCastModel(pos, intersect);
+
+      if (intersect)
+      {
+        this.controls.target = intersect;
+      }
+
+      if (event.keyCode === 187)
+      {
+        this.controls.dollyOut();
+      }
+      else
+      {
+        this.controls.dollyIn();
+      }
+    }
+  }
+};
+
+GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
+{
+  var projector = new THREE.Projector();
+  var vector = new THREE.Vector3(
+      ((pos.x - this.renderer.domElement.offsetLeft)
+      / window.innerWidth) * 2 - 1,
+      -((pos.y - this.renderer.domElement.offsetTop)
+      / window.innerHeight) * 2 + 1, 1);
+  projector.unprojectVector(vector, this.camera);
+  var ray = new THREE.Raycaster( this.camera.position,
+      vector.sub(this.camera.position).normalize() );
+
+  var allObjects = [];
+  this.scene.getDescendants(allObjects);
+  var objects = ray.intersectObjects(allObjects);
+
+  var model;
+  var point;
+  if (objects.length > 0)
+  {
+    for (var i = 0; i < objects.length; ++i)
+    {
+      model = objects[i].object;
+      if (!this.modelManipulator.hovered &&
+          (objects[i].object.name === 'plane'))
+      {
+        model = null;
+        this.killCameraControl = false;
+        point = objects[i].point;
+        break;
+      }
+
+      if (objects[i].object.name === 'grid')
+      {
+        model = null;
+        continue;
+      }
+
+      while (model.parent !== this.scene)
+      {
+        model = model.parent;
+      }
+
+      if (this.modelManipulator.hovered)
+      {
+        if (model === this.modelManipulator.gizmo)
+        {
+          break;
+        }
+      }
+      else if (model.name !== '')
+      {
+        point = objects[i].point;
+        break;
+      }
+    }
+  }
+  if (point)
+  {
+    intersect.x = point.x;
+    intersect.y = point.y;
+    intersect.z = point.z;
+  }
+  return model;
+};
+
 
 GZ3D.Scene.prototype.getDomElement = function()
 {
@@ -517,5 +606,17 @@ GZ3D.Scene.prototype.setMaterial = function(mesh, material, normalMap)
       mat.normalMap = THREE.ImageUtils.loadTexture(normalMap);
     }
     mesh.material = mat;
+  }
+};
+
+GZ3D.Scene.prototype.setManipulationMode = function(mode)
+{
+  this.manipulationMode = mode;
+
+  if (this.manipulationMode === 'view')
+  {
+    this.killCameraControl = false;
+    this.modelManipulator.detach();
+    this.scene.remove(this.modelManipulator.gizmo);
   }
 };

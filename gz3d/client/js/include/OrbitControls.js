@@ -1,5 +1,5 @@
 /**
- * @author qiao / https://github.com/qiao 
+ * @author qiao / https://github.com/qiao
  * @author mrdoob / http://mrdoob.com
  * @author alteredq / http://alteredqualia.com/
  * @author WestLangley / http://github.com/WestLangley
@@ -36,7 +36,7 @@ THREE.OrbitControls = function ( object, domElement ) {
 	this.target = new THREE.Vector3();
 	// center is old, deprecated; use "target" instead
 	this.center = this.target;
-
+	this.object.lookAt( this.target );
 	// This option actually enables dollying in and out; left as "zoom" for
 	// backwards compatibility
 	this.noZoom = false;
@@ -133,7 +133,7 @@ THREE.OrbitControls = function ( object, domElement ) {
 		// get X column of matrix
 		panOffset.set( te[0], te[1], te[2] );
 		panOffset.multiplyScalar(-distance);
-		
+
 		pan.add( panOffset );
 
 	};
@@ -146,10 +146,10 @@ THREE.OrbitControls = function ( object, domElement ) {
 		// get Y column of matrix
 		panOffset.set( te[4], te[5], te[6] );
 		panOffset.multiplyScalar(distance);
-		
+
 		pan.add( panOffset );
 	};
-	
+
 	// main entry point; pass in Vector2 of change desired in pixel space,
 	// right and down are positive
 	this.pan = function ( delta ) {
@@ -161,7 +161,8 @@ THREE.OrbitControls = function ( object, domElement ) {
 			// perspective
 			var position = scope.object.position;
 			var offset = position.clone().sub( scope.target );
-			var targetDistance = offset.length();
+
+			var targetDistance = Math.max(offset.length(), 15);
 
 			// half of the fov is center to top of screen
 			targetDistance *= Math.tan( (scope.object.fov/2) * Math.PI / 180.0 );
@@ -205,7 +206,6 @@ THREE.OrbitControls = function ( object, domElement ) {
 		}
 
 		scale *= dollyScale;
-
 	};
 
 	this.update = function () {
@@ -227,6 +227,9 @@ THREE.OrbitControls = function ( object, domElement ) {
 
 		}
 
+    var oldTheta = theta;
+    var oldPhi = phi;
+
 		theta -= thetaDelta;
 		phi += phiDelta;
 
@@ -240,17 +243,95 @@ THREE.OrbitControls = function ( object, domElement ) {
 
 		// restrict radius to be between desired limits
 		radius = Math.max( this.minDistance, Math.min( this.maxDistance, radius ) );
-		
+
 		// move target to panned location
-		this.target.add( pan );
+    this.target.add(pan);
 
-		offset.x = radius * Math.sin( phi ) * Math.sin( theta );
-		offset.z = radius * Math.cos( phi );
-		offset.y = radius * Math.sin( phi ) * Math.cos( theta );
+    offset.x = radius * Math.sin( phi ) * Math.sin( theta );
+    offset.z = radius * Math.cos( phi );
+    offset.y = radius * Math.sin( phi ) * Math.cos( theta );
 
-		position.copy( this.target ).add( offset );
+    if (thetaDelta || phiDelta)
+    {
+      var rotateAroundWorldAxis = function (object, axis, radians) {
+          rotWorldMatrix = new THREE.Matrix4();
+          rotWorldMatrix.makeRotationAxis(axis.normalize(), radians);
+          rotWorldMatrix.multiply(object.matrix); // pre-multiply
 
-		this.object.lookAt( this.target );
+          rotWorldMatrix.decompose(object.position,
+              object.quaternion, object.scale);
+          object.updateMatrix();
+      }
+
+      this.object.position.sub(this.target);
+      this.object.updateMatrix();
+      rotateAroundWorldAxis(this.object, new THREE.Vector3(0, 0, 1),
+          oldTheta - theta);
+      var localPitch = new THREE.Vector3(1, 0, 0);
+      localPitch.applyQuaternion(this.object.quaternion);
+      rotateAroundWorldAxis(this.object, localPitch, phi - oldPhi);
+      this.object.position.add(this.target);
+      this.object.updateMatrix();
+
+      /*var refObj = new THREE.Object3D();
+      refObj.position.x = this.target.x;
+      refObj.position.y = this.target.y;
+      refObj.position.z = this.target.z;
+      refObj.updateMatrix();
+      refObj.updateMatrixWorld();
+
+      var parent = this.object.parent;
+      if (parent)
+      {
+        parent.remove(this.object);
+      }
+
+      refObj.add(this.object);
+      this.object.position.x = offset.x;
+      this.object.position.y = offset.y;
+      this.object.position.z = offset.z;
+
+//      console.log (offset.x + ' ' + offset.y + ' ');
+      this.object.updateMatrix();
+      this.object.updateMatrixWorld();
+
+      var quat = new THREE.Quaternion();
+      quat.setFromEuler(new THREE.Vector3(theta, 0, phi));
+//      console.log('p t ' + phi + ' ' + theta);
+      refObj.quaternion.w = quat.w;
+      refObj.quaternion.x = quat.x;
+      refObj.quaternion.y = quat.y;
+      refObj.quaternion.z = quat.z;
+      refObj.updateMatrix();
+      refObj.updateMatrixWorld();
+
+      var matrixWorld = new THREE.Matrix4();
+      matrixWorld.copy(this.object.matrixWorld);
+
+      refObj.remove(this.object);
+      if (parent)
+        parent.add(this.object);
+
+
+      matrixWorld.decompose(this.object.position, this.object.quaternion,
+          this.object.scale);
+      console.log('p t ' + this.object.position.x + ' ' + this.object.position.y + ' ' +
+          this.object.position.z);
+
+//      this.object.matrxiWorld = matrixWorld;
+      this.object.updateMatrix();
+      this.object.updateMatrixWorld();*/
+      //this.object.lookAt( this.target );
+		}
+		else
+		{
+		  position.copy( this.target ).add( offset );
+//		  position.copy( newPos ).add( offset );
+		}
+
+    //console.log(offset.x + ' ' + offset.y + ' ' +  offset.z);
+
+
 
 		thetaDelta = 0;
 		phiDelta = 0;
@@ -361,7 +442,7 @@ THREE.OrbitControls = function ( object, domElement ) {
 
 			panEnd.set( event.clientX, event.clientY );
 			panDelta.subVectors( panEnd, panStart );
-			
+
 			scope.pan( panDelta );
 
 			panStart.copy( panEnd );
@@ -422,7 +503,7 @@ THREE.OrbitControls = function ( object, domElement ) {
 		// pan a pixel - I guess for precise positioning?
 		// Greggman fix: https://github.com/greggman/three.js/commit/fde9f9917d6d8381f06bf22cdff766029d1761be
 		var needUpdate = false;
-		
+
 		switch ( event.keyCode ) {
 
 			case scope.keys.UP:
@@ -451,7 +532,7 @@ THREE.OrbitControls = function ( object, domElement ) {
 		}
 
 	}
-	
+
 	function touchstart( event ) {
 
 		if ( scope.enabled === false ) { return; }
@@ -547,7 +628,7 @@ THREE.OrbitControls = function ( object, domElement ) {
 
 				panEnd.set( event.touches[ 0 ].pageX, event.touches[ 0 ].pageY );
 				panDelta.subVectors( panEnd, panStart );
-				
+
 				scope.pan( panDelta );
 
 				panStart.copy( panEnd );
