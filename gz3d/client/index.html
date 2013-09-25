@@ -31,26 +31,28 @@
         overflow: hidden;
       }
 
-      #info {
-        color:#000;
-        position: absolute;
-        top: 0px; width: 100%;
-        padding: 5px;
+      #toolbar-manipulate {
+        padding: 3px;
+        display: inline-block;
+        float: right;
       }
-
-      a {
-        color: red;
+      /* support: IE7 */
+      *+html #toolbar-manipulate {
+        display: inline-block;
+        float: right;
       }
 
       #toolbar-shapes {
         padding: 1px;
         display: inline-block;
-        float: right
+        float: right;
       }
       /* support: IE7 */
       *+html #toolbar-shapes {
         display: inline-block;
+        float: right;
       }
+
       #toolbar-play {
         padding: 1px;
         display: inline-block;
@@ -62,13 +64,11 @@
       }
 
       #menu {
-        padding: 1px;
         float: left;
         display: inline-block;
       }
 
       #world-stats {
-        padding: 1px;
         display: inline-block;
         vertical-align: middle;
       }
@@ -105,16 +105,21 @@
             <td>&nbsp;</td>
             <td>Real Time: </td>
             <td id='real-time-value'>00 00:00:00</td>
-
-
           </tr>
         </table>
       </div>
 
       <div id='toolbar-shapes'>
-        <button id="box">Box</button>
-        <button id="sphere">Sphere</button>
-        <button id="cylinder">Cylinder</button>
+        <button id="box">Add Box</button>
+        <button id="sphere">Add Sphere</button>
+        <button id="cylinder">Add Cylinder</button>
+      </div>
+
+      <div id='toolbar-manipulate'>
+        <input type='radio' id='arrow' name='radio' checked='checked' />
+            <label for='arrow' />View Mode</label>
+        <input type='radio' id='translate' name='radio'>
+            <label for='translate' />Move Mode</label>
       </div>
 
       <div class"clear"></div>
