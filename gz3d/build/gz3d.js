@@ -912,7 +912,9 @@ GZ3D.Scene.prototype.init = function()
   this.getDomElement().addEventListener( 'mousedown',
       function(event) {that.onMouseDown(event);}, false );
 
-  this.getDomElement().addEventListener( 'mouseup',
+  // Need to use `document` instead of getDomElement in order to get events
+  // outside the webgl div element.
+  document.addEventListener( 'mouseup',
       function(event) {that.onMouseUp(event);}, false );
 
   this.getDomElement().addEventListener( 'mouseup',
@@ -941,18 +943,6 @@ GZ3D.Scene.prototype.onMouseDown = function(event)
   event.preventDefault();
 
   this.controls.enabled = true;
-
-
-
-/*  if (event.button !== 0)
-  {
-    return;
-  }
-
-  if (this.manipulationMode === 'view')
-  {
-    return;
-  }*/
 
   var pos = new THREE.Vector2(event.clientX, event.clientY);
 
@@ -1002,16 +992,6 @@ GZ3D.Scene.prototype.onMouseDown = function(event)
     this.killCameraControl = false;
     this.selectedEntity = null;
   }
-
-
-/*  else
-  {
-    console.log('detached - no object');
-    this.modelManipulator.detach();
-    this.scene.remove(this.modelManipulator.gizmo);
-    this.killCameraControl = false;
-    this.selectedEntity = null;
-  }*/
 };
 
 
@@ -1030,6 +1010,8 @@ GZ3D.Scene.prototype.onMouseUp = function(event)
     this.killCameraControl = false;
   }
   this.mouseEntity = null;
+
+  console.log('up');
 };
 
 GZ3D.Scene.prototype.onMouseScroll = function(event)
