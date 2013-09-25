@@ -5,15 +5,20 @@
  * @author WestLangley / http://github.com/WestLangley
  * @author erich666 / http://erichaines.com
  */
+
+ /**
+  * Modified by Ian Chen ichen@osrfoundation.org
+  */
+
 /*global THREE, console */
 
 // This set of controls performs orbiting, dollying (zooming), and panning. It maintains
 // the "up" direction as +Y, unlike the TrackballControls. Touch on tablet and phones is
 // supported.
 //
-//    Orbit - left mouse / touch: one finger move
-//    Zoom - middle mouse, or mousewheel / touch: two finger spread or squish
-//    Pan - right mouse, or arrow keys / touch: three finter swipe
+//    Orbit - middle mouse / touch: one finger move
+//    Zoom - right mouse, or mousewheel / touch: two finger spread or squish
+//    Pan - left mouse, or arrow keys / touch: three finter swipe
 //
 // This is a drop-in replacement for (most) TrackballControls used in examples.
 // That is, include this js file and wherever you see:
@@ -363,31 +368,37 @@ THREE.OrbitControls = function ( object, domElement ) {
 
 	function onMouseDown( event ) {
 
-		if ( scope.enabled === false ) { return; }
-		event.preventDefault();
 
-		if ( event.button === 1 ) {
-			if ( scope.noRotate === true ) { return; }
+    if ( scope.enabled === false ) { return; }
+    event.preventDefault();
 
-			state = STATE.ROTATE;
+    if ( event.shiftKey && event.button === 0 ) {
+      if ( scope.noRotate === true ) { return; }
+      state = STATE.ROTATE;
+      rotateStart.set( event.clientX, event.clientY );
+    }
+    else if ( event.button === 1 ) {
+      if ( scope.noRotate === true ) { return; }
 
-			rotateStart.set( event.clientX, event.clientY );
+      state = STATE.ROTATE;
 
-		} else if ( event.button === 2 ) {
-			if ( scope.noZoom === true ) { return; }
+      rotateStart.set( event.clientX, event.clientY );
 
-			state = STATE.DOLLY;
+    } else if ( event.button === 2 ) {
+      if ( scope.noZoom === true ) { return; }
 
-			dollyStart.set( event.clientX, event.clientY );
+      state = STATE.DOLLY;
 
-		} else if ( event.button === 0 ) {
-			if ( scope.noPan === true ) { return; }
+      dollyStart.set( event.clientX, event.clientY );
 
-			state = STATE.PAN;
+    } else if ( event.button === 0 ) {
+      if ( scope.noPan === true ) { return; }
 
-			panStart.set( event.clientX, event.clientY );
+      state = STATE.PAN;
 
-		}
+      panStart.set( event.clientX, event.clientY );
+
+    }
 
 		// Greggman fix: https://github.com/greggman/three.js/commit/fde9f9917d6d8381f06bf22cdff766029d1761be
 		scope.domElement.addEventListener( 'mousemove', onMouseMove, false );
