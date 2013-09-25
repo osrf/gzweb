@@ -924,6 +924,9 @@ GZ3D.Scene.prototype.init = function()
   this.getDomElement().addEventListener( 'mousewheel',
       function(event) {that.onMouseScroll(event);}, false );
 
+  document.addEventListener( 'keydown',
+      function(event) {that.onKeyDown(event);}, false );
+
 
   this.modelManipulator = new THREE.TransformControls(this.camera,
       this.getDomElement());
@@ -1043,6 +1046,37 @@ GZ3D.Scene.prototype.onMouseScroll = function(event)
   if (intersect)
   {
     this.controls.target = intersect;
+  }
+};
+
+GZ3D.Scene.prototype.onKeyDown = function(event)
+{
+  console.log(event.keyCode);
+  if (event.shiftKey)
+  {
+    if (event.keyCode === 187 || event.keyCode === 189)
+    {
+      this.controls.enabled = true;
+      var pos = new THREE.Vector2(window.innerWidth/2.0,
+          window.innerHeight/2.0);
+
+      var intersect = new THREE.Vector3();
+      var model = this.getRayCastModel(pos, intersect);
+
+      if (intersect)
+      {
+        this.controls.target = intersect;
+      }
+
+      if (event.keyCode === 187)
+      {
+        this.controls.dollyOut();
+      }
+      else
+      {
+        this.controls.dollyIn();
+      }
+    }
   }
 };
 
@@ -1544,7 +1578,6 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
   this.active = true;
 };
 
-
 GZ3D.SpawnModel.prototype.finish = function()
 {
   this.active = false;
@@ -1596,7 +1629,6 @@ GZ3D.SpawnModel.prototype.onMouseUp = function(event)
 
 GZ3D.SpawnModel.prototype.onKeyDown = function(event)
 {
-  console.log(event.keyCode);
   if ( event.keyCode === 27 ) // Esc
   {
     this.finish();

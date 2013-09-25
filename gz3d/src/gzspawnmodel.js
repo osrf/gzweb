@@ -61,7 +61,6 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
   this.active = true;
 };
 
-
 GZ3D.SpawnModel.prototype.finish = function()
 {
   this.active = false;
@@ -113,7 +112,6 @@ GZ3D.SpawnModel.prototype.onMouseUp = function(event)
 
 GZ3D.SpawnModel.prototype.onKeyDown = function(event)
 {
-  console.log(event.keyCode);
   if ( event.keyCode === 27 ) // Esc
   {
     this.finish();
