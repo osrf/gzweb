@@ -1010,8 +1010,6 @@ GZ3D.Scene.prototype.onMouseUp = function(event)
     this.killCameraControl = false;
   }
   this.mouseEntity = null;
-
-  console.log('up');
 };
 
 GZ3D.Scene.prototype.onMouseScroll = function(event)
@@ -1033,7 +1031,6 @@ GZ3D.Scene.prototype.onMouseScroll = function(event)
 
 GZ3D.Scene.prototype.onKeyDown = function(event)
 {
-  console.log(event.keyCode);
   if (event.shiftKey)
   {
     if (event.keyCode === 187 || event.keyCode === 189)

@@ -85,8 +85,12 @@ GZ3D.Scene.prototype.onMouseDown = function(event)
 
   if (model)
   {
+    if (model.name === 'plane')
+    {
+      this.killCameraControl = false;
+    }
     // console.log('found model ' + model.name + ' ' + objects.length);
-    if (model.name !== '')
+    else if (model.name !== '')
     {
       // console.log('attached ' + model.name);
       this.modelManipulator.attach(model);
@@ -134,8 +138,6 @@ GZ3D.Scene.prototype.onMouseUp = function(event)
     this.killCameraControl = false;
   }
   this.mouseEntity = null;
-
-  console.log('up');
 };
 
 GZ3D.Scene.prototype.onMouseScroll = function(event)
@@ -157,7 +159,6 @@ GZ3D.Scene.prototype.onMouseScroll = function(event)
 
 GZ3D.Scene.prototype.onKeyDown = function(event)
 {
-  console.log(event.keyCode);
   if (event.shiftKey)
   {
     if (event.keyCode === 187 || event.keyCode === 189)
@@ -212,8 +213,7 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
       if (!this.modelManipulator.hovered &&
           (objects[i].object.name === 'plane'))
       {
-        model = null;
-        this.killCameraControl = false;
+        // model = null;
         point = objects[i].point;
         break;
       }
