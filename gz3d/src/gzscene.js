@@ -104,7 +104,7 @@ GZ3D.Scene.prototype.onMouseDown = function(event)
     }
     else if (this.modelManipulator.hovered)
     {
-       console.log('hovered ' + this.modelManipulator.object.name);
+      // console.log('hovered ' + this.modelManipulator.object.name);
       this.modelManipulator.update();
       this.modelManipulator.object.updateMatrixWorld();
       this.mouseEntity = this.selectedEntity;

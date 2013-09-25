@@ -980,7 +980,7 @@ GZ3D.Scene.prototype.onMouseDown = function(event)
     }
     else if (this.modelManipulator.hovered)
     {
-       console.log('hovered ' + this.modelManipulator.object.name);
+      // console.log('hovered ' + this.modelManipulator.object.name);
       this.modelManipulator.update();
       this.modelManipulator.object.updateMatrixWorld();
       this.mouseEntity = this.selectedEntity;
@@ -1488,7 +1488,7 @@ GZ3D.SpawnModel = function(scene, domElement)
   this.init();
   this.obj = undefined;
   this.callback = undefined;
-  this.counter = 0;
+  this.counter = new Date();
 };
 
 GZ3D.SpawnModel.prototype.init = function()
@@ -1516,17 +1516,17 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
   if (entity === 'box')
   {
     mesh = this.scene.createBox(1, 1, 1);
-    this.obj.name = 'unit_box_gzweb_' + this.counter++;
+    this.obj.name = 'unit_box_' + this.counter.getTime();
   }
   else if (entity === 'sphere')
   {
     mesh = this.scene.createSphere(0.5);
-    this.obj.name = 'unit_sphere_gzweb_' + this.counter++ ;
+    this.obj.name = 'unit_sphere_' + this.counter.getTime();
   }
   else if (entity === 'cylinder')
   {
     mesh = this.scene.createCylinder(0.5, 1.0);
-    this.obj.name = 'unit_cylinder_gzweb_' + this.counter++;
+    this.obj.name = 'unit_cylinder_' + this.counter.getTime();
   }
 
   this.obj.add(mesh);
