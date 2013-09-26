@@ -961,8 +961,12 @@ GZ3D.Scene.prototype.onMouseDown = function(event)
 
   if (model)
   {
+    if (model.name === 'plane')
+    {
+      this.killCameraControl = false;
+    }
     // console.log('found model ' + model.name + ' ' + objects.length);
-    if (model.name !== '')
+    else if (model.name !== '')
     {
       // console.log('attached ' + model.name);
       this.modelManipulator.attach(model);
@@ -1085,8 +1089,7 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
       if (!this.modelManipulator.hovered &&
           (objects[i].object.name === 'plane'))
       {
-        model = null;
-        this.killCameraControl = false;
+        // model = null;
         point = objects[i].point;
         break;
       }
