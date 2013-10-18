@@ -311,8 +311,11 @@ GZ3D.GZIface.prototype.init = function()
 
   var modelUpdate = function(message)
   {
-    var modelObj = this.createModelFromMsg(message);
-    this.scene.add(modelObj);
+    if (!this.scene.getByName(message.name))
+    {
+      var modelObj = this.createModelFromMsg(message);
+      this.scene.add(modelObj);
+    }
   };
 
   modelInfoTopic.subscribe(modelUpdate.bind(this));
@@ -340,8 +343,11 @@ GZ3D.GZIface.prototype.init = function()
 
   var ligthtUpdate = function(message)
   {
-    var lightObj = this.createLightFromMsg(message);
-    this.scene.add(lightObj);
+    if (!this.scene.getByName(message.name))
+    {
+      var lightObj = this.createLightFromMsg(message);
+      this.scene.add(lightObj);
+    }
   };
 
   lightTopic.subscribe(ligthtUpdate.bind(this));
@@ -586,7 +592,7 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
         this.createGeom(geom, visual.material, visualObj);
         if (visualObj.children.length > 0)
         {
-          visualObj.children[0].castShadow = visual.cast_shadows || true;
+          visualObj.children[0].castShadow = visual.cast_shadows;
           visualObj.children[0].receiveShadow = true;
         }
         linkObj.add(visualObj);
@@ -1406,7 +1412,7 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
     canvas.height = height;
 
     context = canvas.getContext( '2d' );
-    context.fillStyle = '0x08B5A2B';
+    context.fillStyle = '#000';
     context.fillRect( 0, 0, width, height );
 
     image = context.getImageData( 0, 0, canvas.width, canvas.height );
@@ -1429,7 +1435,6 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
     context.putImageData( image, 0, 0 );
 
     // Scaled 4x
-
     canvasScaled = document.createElement( 'canvas' );
     canvasScaled.width = width * 4;
     canvasScaled.height = height * 4;
