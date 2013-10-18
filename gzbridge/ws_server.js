@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+
 var WebSocketServer = require('websocket').server;
 var http = require('http');
 
@@ -11,15 +12,15 @@ gzconnection.setPoseMsgFilterMinimumAge(0.02);
 gzconnection.setPoseMsgFilterMinimumDistanceSquared(0.00001);
 gzconnection.setPoseMsgFilterMinimumQuaternionSquared(0.00001);
 
-console.log("Pose message filter parameters: ");
-console.log("  minimum seconds between successive messages: " + 
-			gzconnection.getPoseMsgFilterMinimumAge());
-console.log("  minimum XYZ distance squared between successive messages: " + 
-			gzconnection.getPoseMsgFilterMinimumDistanceSquared());
-console.log("  minimum Quartenion distance squared between successive messages: " + 
-			gzconnection.getPoseMsgFilterMinimumQuaternionSquared());
+console.log('Pose message filter parameters: ');
+console.log('  minimum seconds between successive messages: ' +
+    gzconnection.getPoseMsgFilterMinimumAge());
+console.log('  minimum XYZ distance squared between successive messages: ' +
+    gzconnection.getPoseMsgFilterMinimumDistanceSquared());
+console.log('  minimum Quartenion distance squared between successive messages:'
+    + ' ' + gzconnection.getPoseMsgFilterMinimumQuaternionSquared());
 
-			
+
 var server = http.createServer(function(request, response) {
     console.log((new Date()) + ' Received request for ' + request.url);
     response.writeHead(404);
@@ -48,45 +49,31 @@ wsServer.on('request', function(request) {
     if (!originIsAllowed(request.origin)) {
       // Make sure we only accept requests from an allowed origin
       request.reject();
-      console.log((new Date()) + ' Connection from origin ' + request.origin + ' rejected.');
+      console.log((new Date()) + ' Connection from origin ' +
+          request.origin + ' rejected.');
       return;
     }
 
-//    var connection = request.accept('echo-protocol', request.origin);
     var connection = request.accept(null, request.origin);
 
-//    connections.push([gzconnection, connection]);
     connections.push(connection);
 
-//    var gzclient = gzclient();
     console.log((new Date()) + ' Connection accepted.');
     connection.on('message', function(message) {
         if (message.type === 'utf8') {
             console.log('Received Message: ' + message.utf8Data + ' from ' +
                 request.origin + ' ' + connection.remoteAddress);
             gzconnection.request(message.utf8Data);
-//            connection.sendUTF(message.utf8Data);
-//            console.log('asdfasdfasdfasdf' +  gzconnection.plusOne() ); // 11
-
-/*            gzconnection.setCallback(function(msg){
-              console.log(msg);
-//              connection.sendUTF(msg);
-            })*/
-
-//            gzclient.set_callback(connection.sendUTF);
-//          gzconnection.setCallback(function (
-//              connection.sendUTF)
-//            );
-//          gzbridge.set_callback(function (){ cb(gzclient, connection)}
-
         }
         else if (message.type === 'binary') {
-            console.log('Received Binary Message of ' + message.binaryData.length + ' bytes');
+            console.log('Received Binary Message of ' +
+                message.binaryData.length + ' bytes');
             connection.sendBytes(message.binaryData);
         }
     });
     connection.on('close', function(reasonCode, description) {
-        console.log((new Date()) + ' Peer ' + connection.remoteAddress + ' disconnected.');
+        console.log((new Date()) + ' Peer ' + connection.remoteAddress +
+            ' disconnected.');
         // gzlient.remove_connection();
     });
 });

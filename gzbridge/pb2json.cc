@@ -282,6 +282,14 @@ namespace gzweb {
       ss << "0";
       return ss.str();
     }
+    else if (json_is_array(data))
+    {
+      // TODO: only gets the first element in array and treats it as string
+      // Need a more generic get_array function later.
+      std::stringstream ss;
+      ss << json_string_value(json_array_get(data, 0));
+      return ss.str();
+    }
 
     return "";
   }

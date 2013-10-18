@@ -19,6 +19,9 @@
 
 #include "pb2json.hh"
 //#include "WebSocketServer.hh"
+#include <gazebo/rendering/RenderingIface.hh>
+#include <gazebo/rendering/Scene.hh>
+#include <gazebo/transport/TransportIface.hh>
 #include "OgreMaterialParser.hh"
 #include "GazeboInterface.hh"
 
@@ -36,7 +39,8 @@ boost::recursive_mutex outgoingMutex;
 GazeboInterface::GazeboInterface()
 {
 //  this->socketServer = _server;
-  this->receiveMutex = new boost::mutex();
+  this->receiveMutex = new boost::recursive_mutex();
+  this->serviceMutex = new boost::recursive_mutex();
   this->stop = false;
 
   // Create our node for communication
@@ -56,6 +60,7 @@ GazeboInterface::GazeboInterface()
   this->factoryTopic = "~/factory";
   this->worldControlTopic = "~/world_control";
   this->statsTopic = "~/world_stats";
+  this->heightmapService = "~/heightmap_data";
 
   // material topic
   this->materialTopic = "~/material";
@@ -128,7 +133,6 @@ GazeboInterface::GazeboInterface()
   this->skippedMsgCount = 0;
   this->messageWindowSize = 10000;
   this->messageCount = 0;
-
 }
 
 /////////////////////////////////////////////////
@@ -170,6 +174,9 @@ void GazeboInterface::Init()
 void GazeboInterface::RunThread()
 {
   this->runThread = new boost::thread(boost::bind(&GazeboInterface::Run, this));
+  this->serviceThread = new boost::thread(
+      boost::bind(&GazeboInterface::RunService, this));
+
 }
 
 /////////////////////////////////////////////////
@@ -178,6 +185,15 @@ void GazeboInterface::Run()
   while (!this->stop)
   {
     this->ProcessMessages();
+  }
+}
+
+//////////////////////////////////////////////////
+void GazeboInterface::RunService()
+{
+  while (!this->stop)
+  {
+    this->ProcessServiceRequests();
   }
 }
 
@@ -202,7 +218,7 @@ void GazeboInterface::ProcessMessages()
   static SensorMsgs_L::iterator sensorIter;
 
   {
-    boost::mutex::scoped_lock lock(*this->receiveMutex);
+    boost::recursive_mutex::scoped_lock lock(*this->receiveMutex);
 
     // Process incoming messages.
     std::vector<std::string> msgs = this->PopIncomingMessages();
@@ -211,6 +227,8 @@ void GazeboInterface::ProcessMessages()
     {
       std::string msg = msgs[i];
       std::string topic = get_value(msg.c_str(), "topic");
+
+      // Process subscribe requests
       if (!topic.empty())
       {
         if (topic == this->sceneTopic)
@@ -365,12 +383,23 @@ void GazeboInterface::ProcessMessages()
           if (this->materialParser)
           {
             std::string msg =
-                this->PackOutgoingMsg(this->materialTopic,
+                this->PackOutgoingTopicMsg(this->materialTopic,
                 this->materialParser->GetMaterialAsJson());
             this->Send(msg);
           }
         }
       }
+      else
+      {
+        // store service calls for processing later
+        std::string service = get_value(msg.c_str(), "service");
+        if (!service.empty())
+        {
+          boost::recursive_mutex::scoped_lock lock(*this->serviceMutex);
+          this->serviceRequests.push_back(msg);
+        }
+      }
+
     }
 
     std::string msg = "";
@@ -378,16 +407,17 @@ void GazeboInterface::ProcessMessages()
     for (sIter = this->sceneMsgs.begin(); sIter != this->sceneMsgs.end();
         ++sIter)
     {
-      msg = this->PackOutgoingMsg(this->sceneTopic, pb2json(*(*sIter).get()));
+      msg = this->PackOutgoingTopicMsg(this->sceneTopic,
+          pb2json(*(*sIter).get()));
       this->Send(msg);
     }
     this->sceneMsgs.clear();
 
     // Forward the model messages.
-    for (modelIter = this->modelMsgs.begin(); modelIter != this->modelMsgs.end();
-        ++modelIter)
+    for (modelIter = this->modelMsgs.begin();
+        modelIter != this->modelMsgs.end(); ++modelIter)
     {
-      msg = this->PackOutgoingMsg(this->modelTopic,
+      msg = this->PackOutgoingTopicMsg(this->modelTopic,
           pb2json(*(*modelIter).get()));
       this->Send(msg);
     }
@@ -397,7 +427,7 @@ void GazeboInterface::ProcessMessages()
     for (sensorIter = this->sensorMsgs.begin();
         sensorIter != this->sensorMsgs.end(); ++sensorIter)
     {
-      msg = this->PackOutgoingMsg(this->sensorTopic,
+      msg = this->PackOutgoingTopicMsg(this->sensorTopic,
           pb2json(*(*sensorIter).get()));
       this->Send(msg);
     }
@@ -407,7 +437,7 @@ void GazeboInterface::ProcessMessages()
     for (lightIter = this->lightMsgs.begin();
         lightIter != this->lightMsgs.end(); ++lightIter)
     {
-      msg = this->PackOutgoingMsg(this->lightTopic,
+      msg = this->PackOutgoingTopicMsg(this->lightTopic,
           pb2json(*(*lightIter).get()));
       this->Send(msg);
     }
@@ -417,7 +447,7 @@ void GazeboInterface::ProcessMessages()
     for (visualIter = this->visualMsgs.begin();
         visualIter != this->visualMsgs.end(); ++visualIter)
     {
-      msg = this->PackOutgoingMsg(this->visualTopic,
+      msg = this->PackOutgoingTopicMsg(this->visualTopic,
           pb2json(*(*visualIter).get()));
       this->Send(msg);
     }
@@ -427,7 +457,7 @@ void GazeboInterface::ProcessMessages()
     for (jointIter = this->jointMsgs.begin();
         jointIter != this->jointMsgs.end(); ++jointIter)
     {
-      msg = this->PackOutgoingMsg(this->jointTopic,
+      msg = this->PackOutgoingTopicMsg(this->jointTopic,
           pb2json(*(*jointIter).get()));
       this->Send(msg);
     }
@@ -437,7 +467,7 @@ void GazeboInterface::ProcessMessages()
     for (rIter =  this->requestMsgs.begin(); rIter != this->requestMsgs.end();
         ++rIter)
     {
-      msg = this->PackOutgoingMsg(this->requestTopic,
+      msg = this->PackOutgoingTopicMsg(this->requestTopic,
           pb2json(*(*rIter).get()));
       this->Send(msg);
     }
@@ -447,7 +477,8 @@ void GazeboInterface::ProcessMessages()
     for (wIter = this->statsMsgs.begin(); wIter != this->statsMsgs.end();
         ++wIter)
     {
-      msg = this->PackOutgoingMsg(this->statsTopic, pb2json(*(*wIter).get()));
+      msg = this->PackOutgoingTopicMsg(this->statsTopic,
+          pb2json(*(*wIter).get()));
       this->Send(msg);
     }
     this->statsMsgs.clear();
@@ -456,19 +487,57 @@ void GazeboInterface::ProcessMessages()
     pIter = this->poseMsgs.begin();
     while (pIter != this->poseMsgs.end())
     {
-	  msg = this->PackOutgoingMsg(this->poseTopic,
-			  pb2json(*pIter));
-	  this->Send(msg);
-	  ++pIter;
+      msg = this->PackOutgoingTopicMsg(this->poseTopic,
+          pb2json(*pIter));
+      this->Send(msg);
+      ++pIter;
     }
     this->poseMsgs.clear();
   }
 }
 
 /////////////////////////////////////////////////
+void GazeboInterface::ProcessServiceRequests()
+{
+  std::vector<std::string> services;
+  {
+    boost::recursive_mutex::scoped_lock lock(*this->serviceMutex);
+    services = this->serviceRequests;
+    this->serviceRequests.clear();
+  }
+
+  // process service request outside lock otherwise somehow it deadlocks
+  for (unsigned int i = 0; i < services.size(); ++i)
+  {
+    std::string request = services[i];
+    std::string service = get_value(request.c_str(), "service");
+    std::string id = get_value(request.c_str(), "id");
+    std::string name = get_value(request.c_str(), "args");
+    if (service == this->heightmapService)
+    {
+      gzerr << " sending request " << name << std::endl;
+      boost::shared_ptr<gazebo::msgs::Response> response
+          = gazebo::transport::request(name, "heightmap_data");
+
+      gazebo::msgs::Geometry geomMsg;
+      if (response->response() != "error" &&
+          response->type() == geomMsg.GetTypeName())
+      {
+        gzerr << " got res  " << std::endl;
+        geomMsg.ParseFromString(response->serialized_data());
+
+        std::string msg = this->PackOutgoingServiceMsg(id,
+            pb2json(geomMsg));
+        this->Send(msg);
+      }
+    }
+  }
+}
+
+/////////////////////////////////////////////////
 void GazeboInterface::OnModelMsg(ConstModelPtr &_msg)
 {
-  boost::mutex::scoped_lock lock(*this->receiveMutex);
+  boost::recursive_mutex::scoped_lock lock(*this->receiveMutex);
   this->modelMsgs.push_back(_msg);
 }
 
@@ -534,7 +603,7 @@ bool GazeboInterface::FilterPoses(const TimedPose &_old,
 /////////////////////////////////////////////////
 void GazeboInterface::OnPoseMsg(ConstPosesStampedPtr &_msg)
 {
-  boost::mutex::scoped_lock lock(*this->receiveMutex);
+  boost::recursive_mutex::scoped_lock lock(*this->receiveMutex);
   PoseMsgs_L::iterator iter;
 
   for (int i = 0; i < _msg->pose_size(); ++i)
@@ -585,7 +654,7 @@ void GazeboInterface::OnPoseMsg(ConstPosesStampedPtr &_msg)
 /////////////////////////////////////////////////
 void GazeboInterface::OnRequest(ConstRequestPtr &_msg)
 {
-  boost::mutex::scoped_lock lock(*this->receiveMutex);
+  boost::recursive_mutex::scoped_lock lock(*this->receiveMutex);
   this->requestMsgs.push_back(_msg);
 }
 
@@ -605,14 +674,14 @@ void GazeboInterface::OnResponse(ConstResponsePtr &_msg)
 /////////////////////////////////////////////////
 void GazeboInterface::OnLightMsg(ConstLightPtr &_msg)
 {
-  boost::mutex::scoped_lock lock(*this->receiveMutex);
+  boost::recursive_mutex::scoped_lock lock(*this->receiveMutex);
   this->lightMsgs.push_back(_msg);
 }
 
 /////////////////////////////////////////////////
 void GazeboInterface::OnScene(ConstScenePtr &_msg)
 {
-  boost::mutex::scoped_lock lock(*this->receiveMutex);
+  boost::recursive_mutex::scoped_lock lock(*this->receiveMutex);
   this->sceneMsgs.push_back(_msg);
 }
 
@@ -627,7 +696,7 @@ void GazeboInterface::OnStats(ConstWorldStatisticsPtr &_msg)
   {
     this->lastStatsTime = wallTime;
     this->lastPausedState = paused;
-    boost::mutex::scoped_lock lock(*this->receiveMutex);
+    boost::recursive_mutex::scoped_lock lock(*this->receiveMutex);
     this->statsMsgs.push_back(_msg);
   }
 }
@@ -635,31 +704,43 @@ void GazeboInterface::OnStats(ConstWorldStatisticsPtr &_msg)
 /////////////////////////////////////////////////
 void GazeboInterface::OnJointMsg(ConstJointPtr &_msg)
 {
-  boost::mutex::scoped_lock lock(*this->receiveMutex);
+  boost::recursive_mutex::scoped_lock lock(*this->receiveMutex);
   this->jointMsgs.push_back(_msg);
 }
 
 /////////////////////////////////////////////////
 void GazeboInterface::OnSensorMsg(ConstSensorPtr &_msg)
 {
-  boost::mutex::scoped_lock lock(*this->receiveMutex);
+  boost::recursive_mutex::scoped_lock lock(*this->receiveMutex);
   this->sensorMsgs.push_back(_msg);
 }
 
 /////////////////////////////////////////////////
 void GazeboInterface::OnVisualMsg(ConstVisualPtr &_msg)
 {
-  boost::mutex::scoped_lock lock(*this->receiveMutex);
+  boost::recursive_mutex::scoped_lock lock(*this->receiveMutex);
   this->visualMsgs.push_back(_msg);
 }
 
 /////////////////////////////////////////////////
-std::string GazeboInterface::PackOutgoingMsg(const std::string &_topic,
+std::string GazeboInterface::PackOutgoingTopicMsg(const std::string &_topic,
     const std::string &_msg)
 {
   // Use roslibjs format for now.
   std::string out;
   out += "{\"op\":\"publish\",\"topic\":\"" + _topic + "\", \"msg\":";
+  out += _msg;
+  out += "}";
+  return out;
+}
+
+/////////////////////////////////////////////////
+std::string GazeboInterface::PackOutgoingServiceMsg(const std::string &_id,
+    const std::string &_msg)
+{
+  // Use roslibjs format for now.
+  std::string out;
+  out += "{\"op\":\"service_response\",\"id\":\"" + _id + "\", \"values\":";
   out += _msg;
   out += "}";
   return out;

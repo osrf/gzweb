@@ -5,9 +5,13 @@ GZ3D.Scene = function()
 
 GZ3D.Scene.prototype.init = function()
 {
+  this.name = 'default';
   this.scene = new THREE.Scene();
-  this.scene.name = 'scene';
+  // this.scene.name = this.name;
   this.meshes = {};
+
+  // only support one heightmap for now.
+  this.heightmap = null;
 
   this.selectedEntity = null;
   this.mouseEntity = null;
@@ -410,6 +414,133 @@ GZ3D.Scene.prototype.createBox = function(width, height, depth)
   return mesh;
 };
 
+GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
+    segmentWidth, segmentHeight, origin, parent)
+{
+  if (this.heightmap)
+  {
+    return;
+  }
+  // unfortunately large heightmaps kills the fps and freeze everything so
+  // we have to scale it down
+  var scale = 1;
+  var maxHeightmapWidth = 256;
+  var maxHeightmapHeight = 256;
+
+  if ((segmentWidth-1) > maxHeightmapWidth)
+  {
+    scale = maxHeightmapWidth / (segmentWidth-1);
+  }
+
+  var geometry = new THREE.PlaneGeometry(width, height,
+      (segmentWidth-1) * scale, (segmentHeight-1) * scale);
+
+  console.log('loading heightmap 2');
+
+  // flip the heights
+  var vertices = [];
+  for (var h = segmentHeight-1; h >= 0; --h)
+  {
+    for (var w = 0; w < segmentWidth; ++w)
+    {
+      vertices[(segmentHeight-h-1)*segmentWidth  + w]
+          = heights[h*segmentWidth + w];
+    }
+  }
+
+  // subsample
+  var col = (segmentWidth-1) * scale;
+  var row = (segmentHeight-1) * scale;
+  for (var r = 0; r < row; ++r)
+  {
+    for (var c = 0; c < col; ++c)
+    {
+      var index = (r * col * 1/(scale*scale)) +   (c * (1/scale));
+      geometry.vertices[r*col + c].z = vertices[index];
+    }
+  }
+
+//  var material =  new THREE.MeshBasicMaterial({color:0x08B5A2B} );
+//  var mesh = new THREE.Mesh(geometry, material);
+
+  var texture = new THREE.Texture(
+      generateTexture( vertices, col, row ),
+      new THREE.UVMapping(), THREE.ClampToEdgeWrapping,
+      THREE.ClampToEdgeWrapping );
+  texture.needsUpdate = true;
+
+  var mesh = new THREE.Mesh( geometry,
+      new THREE.MeshBasicMaterial( { map: texture } ) );
+
+  mesh.position.x = origin.x;
+  mesh.position.y = origin.y;
+  mesh.position.z = origin.z;
+  parent.add(mesh);
+
+  this.heightmap = parent;
+
+  function generateTexture( data, width, height )
+  {
+    var canvas, canvasScaled, context, image, imageData,
+    level, diff, vector3, sun, shade;
+
+    vector3 = new THREE.Vector3( 0, 0, 0 );
+
+    sun = new THREE.Vector3( 1, 1, 1 );
+    sun.normalize();
+
+    canvas = document.createElement( 'canvas' );
+    canvas.width = width;
+    canvas.height = height;
+
+    context = canvas.getContext( '2d' );
+    context.fillStyle = '#000';
+    context.fillRect( 0, 0, width, height );
+
+    image = context.getImageData( 0, 0, canvas.width, canvas.height );
+    imageData = image.data;
+
+    for ( var i = 0, j = 0, l = imageData.length; i < l; i += 4, j ++ ) {
+
+      vector3.x = data[ j - 2 ] - data[ j + 2 ];
+      vector3.y = 2;
+      vector3.z = data[ j - width * 2 ] - data[ j + width * 2 ];
+      vector3.normalize();
+
+      shade = vector3.dot( sun );
+
+      imageData[ i ] = ( 96 + shade * 128 ) * ( 0.5 + data[ j ] * 0.007 );
+      imageData[ i + 1 ] = ( 32 + shade * 96 ) * ( 0.5 + data[ j ] * 0.007 );
+      imageData[ i + 2 ] = ( shade * 96 ) * ( 0.5 + data[ j ] * 0.007 );
+    }
+
+    context.putImageData( image, 0, 0 );
+
+    // Scaled 4x
+    canvasScaled = document.createElement( 'canvas' );
+    canvasScaled.width = width * 4;
+    canvasScaled.height = height * 4;
+
+    context = canvasScaled.getContext( '2d' );
+    context.scale( 4, 4 );
+    context.drawImage( canvas, 0, 0 );
+
+    image = context.getImageData( 0, 0, canvasScaled.width, canvasScaled.height );
+    imageData = image.data;
+
+    for ( var k = 0, m = imageData.length; k < m; k += 4 ) {
+      var v = ~~ ( Math.random() * 5 );
+      imageData[ k ] += v;
+      imageData[ k + 1 ] += v;
+      imageData[ k + 2 ] += v;
+    }
+
+    context.putImageData( image, 0, 0 );
+
+    return canvasScaled;
+  }
+};
+
 GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh, material,
     normalMap, parent)
 {
@@ -458,6 +589,7 @@ GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh, material,
   }
 };
 
+// load the collada file
 GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
     material, normalMap, parent)
 {
@@ -509,6 +641,8 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
   }
 };
 
+// Prepare collada by handling submesh-only loading and removing other
+// non-mesh entities such as lights
 GZ3D.Scene.prototype.prepareColladaMesh = function(dae, submesh, centerSubmesh)
 {
   var mesh;

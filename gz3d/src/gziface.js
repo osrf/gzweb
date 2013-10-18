@@ -54,6 +54,11 @@ GZ3D.GZIface.prototype.init = function()
 
   var sceneUpdate = function(message)
   {
+    if (message.name)
+    {
+      this.scene.name = message.name;
+    }
+
     if (message.grid === true)
     {
       this.scene.createGrid();
@@ -160,6 +165,14 @@ GZ3D.GZIface.prototype.init = function()
   };
 
   lightTopic.subscribe(ligthtUpdate.bind(this));
+
+
+  // heightmap
+  this.heightmapDataService = new ROSLIB.Service({
+    ros : this.webSocket,
+    name : '~/heightmap_data',
+    serviceType : 'heightmap_data'
+  });
 
   // Model modify messages - for modifying model pose
   this.modelModifyTopic = new ROSLIB.Topic({
@@ -636,7 +649,30 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
       }
     }
   }
+  else if (geom.heightmap)
+  {
+    var that = this;
+    var request = new ROSLIB.ServiceRequest({
+      name : that.scene.name
+    });
 
+    this.heightmapDataService.callService(request,
+        function(result)
+        {
+          var heightmap = result.heightmap;
+          // gazebo heightmap is always square shaped,
+          // and a dimension of: 2^N + 1
+          that.scene.loadHeightmap(heightmap.heights, heightmap.size.x,
+              heightmap.size.y, heightmap.width, heightmap.height,
+              heightmap.origin, parent);
+            console.log('Result for service call on ' + result);
+        });
+
+    //this.scene.loadHeightmap(parent)
+  }
+
+  // texture mapping for simple shapes and planes only,
+  // not used by mesh and terrain
   if (obj)
   {
     if (mat)

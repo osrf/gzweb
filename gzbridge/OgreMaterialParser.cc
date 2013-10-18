@@ -148,7 +148,7 @@ std::string OgreMaterialParser::GetMaterialAsJson() const
 
   jsonStr += "}";
 
-  std::cout << jsonStr << std::endl;
+  // std::cout << jsonStr << std::endl;
 
   return jsonStr;
 }
