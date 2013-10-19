@@ -483,6 +483,13 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
   return lightObj;
 };
 
+
+GZ3D.GZIface.prototype.parseUri = function(uri)
+{
+  var uriPath = 'assets';
+  return uriPath + '/' + uri.substring(uri.indexOf('://') + 3);
+};
+
 GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
 {
   var obj;
@@ -662,6 +669,17 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
       name : that.scene.name
     });
 
+    // redirect the texture paths to the assets dir
+    var textures = geom.heightmap.texture;
+    for ( var k = 0; k < textures.length; ++k)
+    {
+      textures[k].diffuse = this.parseUri(textures[k].diffuse);
+      textures[k].normal = this.parseUri(textures[k].normal);
+    }
+
+    var sizes = geom.heightmap.size;
+
+    // send service request and load heightmap on response
     this.heightmapDataService.callService(request,
         function(result)
         {
@@ -670,8 +688,9 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
           // and a dimension of: 2^N + 1
           that.scene.loadHeightmap(heightmap.heights, heightmap.size.x,
               heightmap.size.y, heightmap.width, heightmap.height,
-              heightmap.origin, parent);
-            console.log('Result for service call on ' + result);
+              heightmap.origin, textures,
+              geom.heightmap.blend, parent);
+            //console.log('Result for service call on ' + result);
         });
 
     //this.scene.loadHeightmap(parent)

@@ -415,7 +415,7 @@ GZ3D.Scene.prototype.createBox = function(width, height, depth)
 };
 
 GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
-    segmentWidth, segmentHeight, origin, parent)
+    segmentWidth, segmentHeight, origin, textures, blends, parent)
 {
   if (this.heightmap)
   {
@@ -435,8 +435,6 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
   var geometry = new THREE.PlaneGeometry(width, height,
       (segmentWidth-1) * scale, (segmentHeight-1) * scale);
 
-  console.log('loading heightmap 2');
-
   // flip the heights
   var vertices = [];
   for (var h = segmentHeight-1; h >= 0; --h)
@@ -448,7 +446,7 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
     }
   }
 
-  // subsample
+  // sub-sample
   var col = (segmentWidth-1) * scale;
   var row = (segmentHeight-1) * scale;
   for (var r = 0; r < row; ++r)
@@ -460,17 +458,69 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
     }
   }
 
-//  var material =  new THREE.MeshBasicMaterial({color:0x08B5A2B} );
-//  var mesh = new THREE.Mesh(geometry, material);
+  var mesh;
+  if (textures && textures.length > 0)
+  {
+    geometry.computeFaceNormals();
+    geometry.computeVertexNormals();
 
-  var texture = new THREE.Texture(
-      generateTexture( vertices, col, row ),
-      new THREE.UVMapping(), THREE.ClampToEdgeWrapping,
-      THREE.ClampToEdgeWrapping );
-  texture.needsUpdate = true;
+    var textureLoaded = [];
+    var repeats = [];
+    for (var t = 0; t < textures.length; ++t)
+    {
+      textureLoaded[t] = THREE.ImageUtils.loadTexture(textures[t].diffuse,
+          new THREE.UVMapping());
+      textureLoaded[t].wrapS = THREE.RepeatWrapping;
+      textureLoaded[t].wrapT = THREE.RepeatWrapping;
+      repeats[t] = width/textures[t].size;
+    }
 
-  var mesh = new THREE.Mesh( geometry,
-      new THREE.MeshBasicMaterial( { map: texture } ) );
+    // for now, use fixed no. of textures and blends
+    // so populate the remaining ones to make the fragment shader happy
+    for (var tt = textures.length; tt< 3; ++tt)
+    {
+      textureLoaded[tt] = textureLoaded[tt-1];
+    }
+    for (var b = blends.length; tt < 2; ++b)
+    {
+      blends[b] = blends[b-1];
+    }
+    for (var rr = repeats.length; rr < 3; ++rr)
+    {
+      repeats[rr] = repeats[rr-1];
+    }
+
+    var material = new THREE.ShaderMaterial({
+      uniforms:
+      {
+        texture0: { type: 't', value: textureLoaded[0]},
+        texture1: { type: 't', value: textureLoaded[1]},
+        texture2: { type: 't', value: textureLoaded[2]},
+        repeat0: { type: 'f', value: repeats[0]},
+        repeat1: { type: 'f', value: repeats[1]},
+        repeat2: { type: 'f', value: repeats[2]},
+        minHeight1: { type: 'f', value: blends[0].min_height},
+        fadeDist1: { type: 'f', value: blends[0].fade_dist},
+        minHeight2: { type: 'f', value: blends[1].min_height},
+        fadeDist2: { type: 'f', value: blends[1].fade_dist}},
+        attributes: {},
+        vertexShader: document.getElementById( 'heightmapVS' ).innerHTML,
+        fragmentShader: document.getElementById( 'heightmapFS' ).innerHTML
+      });
+
+    mesh = new THREE.Mesh( geometry, material);
+  }
+  else
+  {
+    var texture = new THREE.Texture(
+        generateTexture( vertices, col, row ),
+        new THREE.UVMapping(), THREE.ClampToEdgeWrapping,
+        THREE.ClampToEdgeWrapping );
+    texture.needsUpdate = true;
+
+    mesh = new THREE.Mesh( geometry,
+        new THREE.MeshBasicMaterial( { map: texture } ) );
+  }
 
   mesh.position.x = origin.x;
   mesh.position.y = origin.y;
@@ -479,6 +529,7 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
 
   this.heightmap = parent;
 
+  // if no texture is supplied, then generate one as default.
   function generateTexture( data, width, height )
   {
     var canvas, canvasScaled, context, image, imageData,

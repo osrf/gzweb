@@ -79,6 +79,77 @@
     </style>
   </head>
 
+  <script id="heightmapVS" type="x-shader/x-vertex">
+    varying vec2 vUv;
+    varying vec3 vPosition;
+
+    void main( void ) {
+      vUv = uv;
+      vPosition = position;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1);
+
+    }
+  </script>
+
+  <script id="heightmapFS" type="x-shader/x-fragment">
+
+    uniform sampler2D texture0;
+    uniform sampler2D texture1;
+    uniform sampler2D texture2;
+
+    uniform float repeat0;
+    uniform float repeat1;
+    uniform float repeat2;
+
+    uniform float minHeight1;
+    uniform float minHeight2;
+
+    uniform float fadeDist1;
+    uniform float fadeDist2;
+
+    varying vec2 vUv;
+    varying vec3 vPosition;
+
+    float blend(float distance, float fadeDist) {
+      float alpha = distance / fadeDist;
+      if (alpha < 0.0) {
+        alpha = 0.0;
+      }
+      if (alpha > 1.0) {
+        alpha = 1.0;
+      }
+      return alpha;
+    }
+
+    void main()
+    {
+      // Texture loading
+      vec3 diffuse0 = texture2D( texture0, vUv*repeat0 ).rgb;
+      vec3 diffuse1 = texture2D( texture1, vUv*repeat1 ).rgb;
+      vec3 diffuse2 = texture2D( texture2, vUv*repeat2 ).rgb;
+
+      // Get base texture
+      vec3 fragcolor = diffuse0;
+
+      // texture level 1
+      fragcolor = mix(
+        fragcolor,
+        diffuse1,
+        blend(vPosition.z - minHeight1, fadeDist1)
+      );
+
+      // texture level 2
+      fragcolor = mix(
+        fragcolor,
+        diffuse2,
+        blend(vPosition.z - (minHeight1 + minHeight2), fadeDist2)
+      );
+
+      gl_FragColor = vec4(fragcolor, 1.0);
+    }
+
+  </script>
+
   <body>
     <div>
       <ul id='menu'>
