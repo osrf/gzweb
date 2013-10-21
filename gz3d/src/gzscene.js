@@ -25,8 +25,8 @@ GZ3D.Scene.prototype.init = function()
 //  this.renderer.shadowMapSoft = true;
 
   // lights
-  var light = new THREE.AmbientLight( 0x222222 );
-  this.scene.add(light);
+  this.ambient = new THREE.AmbientLight( 0x222222 );
+  this.scene.add(this.ambient);
 
   this.camera = new THREE.PerspectiveCamera(
       60, window.innerWidth / window.innerHeight, 0.1, 1000 );
@@ -434,6 +434,7 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
 
   var geometry = new THREE.PlaneGeometry(width, height,
       (segmentWidth-1) * scale, (segmentHeight-1) * scale);
+  geometry.dynamic = true;
 
   // flip the heights
   var vertices = [];
@@ -463,6 +464,7 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
   {
     geometry.computeFaceNormals();
     geometry.computeVertexNormals();
+    geometry.computeTangents();
 
     var textureLoaded = [];
     var repeats = [];
@@ -490,6 +492,22 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
       repeats[rr] = repeats[rr-1];
     }
 
+    // Use the same approach as gazebo scene, grab the first directional light
+    // and use it for shading the terrain
+    var lightDir = new THREE.Vector3(0, 0, 1);
+    var lightDiffuse = new THREE.Color(0xffffff);
+    var allObjects = [];
+    this.scene.getDescendants(allObjects);
+    for (var l = 0; l < allObjects.length; ++l)
+    {
+      if (allObjects[l] instanceof THREE.DirectionalLight)
+      {
+        lightDir = allObjects[l].position;
+        lightDiffuse = allObjects[l].color;
+        break;
+      }
+    }
+
     var material = new THREE.ShaderMaterial({
       uniforms:
       {
@@ -502,24 +520,22 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
         minHeight1: { type: 'f', value: blends[0].min_height},
         fadeDist1: { type: 'f', value: blends[0].fade_dist},
         minHeight2: { type: 'f', value: blends[1].min_height},
-        fadeDist2: { type: 'f', value: blends[1].fade_dist}},
-        attributes: {},
-        vertexShader: document.getElementById( 'heightmapVS' ).innerHTML,
-        fragmentShader: document.getElementById( 'heightmapFS' ).innerHTML
-      });
+        fadeDist2: { type: 'f', value: blends[1].fade_dist},
+        ambient: { type: 'c', value: this.ambient.color},
+        lightDiffuse: { type: 'c', value: lightDiffuse},
+        lightDir: { type: 'v3', value: lightDir}
+      },
+      attributes: {},
+      vertexShader: document.getElementById( 'heightmapVS' ).innerHTML,
+      fragmentShader: document.getElementById( 'heightmapFS' ).innerHTML
+    });
 
     mesh = new THREE.Mesh( geometry, material);
   }
   else
   {
-    var texture = new THREE.Texture(
-        generateTexture( vertices, col, row ),
-        new THREE.UVMapping(), THREE.ClampToEdgeWrapping,
-        THREE.ClampToEdgeWrapping );
-    texture.needsUpdate = true;
-
     mesh = new THREE.Mesh( geometry,
-        new THREE.MeshBasicMaterial( { map: texture } ) );
+        new THREE.MeshPhongMaterial( { color: 0x555555 } ) );
   }
 
   mesh.position.x = origin.x;
@@ -528,68 +544,6 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
   parent.add(mesh);
 
   this.heightmap = parent;
-
-  // if no texture is supplied, then generate one as default.
-  function generateTexture( data, width, height )
-  {
-    var canvas, canvasScaled, context, image, imageData,
-    level, diff, vector3, sun, shade;
-
-    vector3 = new THREE.Vector3( 0, 0, 0 );
-
-    sun = new THREE.Vector3( 1, 1, 1 );
-    sun.normalize();
-
-    canvas = document.createElement( 'canvas' );
-    canvas.width = width;
-    canvas.height = height;
-
-    context = canvas.getContext( '2d' );
-    context.fillStyle = '#000';
-    context.fillRect( 0, 0, width, height );
-
-    image = context.getImageData( 0, 0, canvas.width, canvas.height );
-    imageData = image.data;
-
-    for ( var i = 0, j = 0, l = imageData.length; i < l; i += 4, j ++ ) {
-
-      vector3.x = data[ j - 2 ] - data[ j + 2 ];
-      vector3.y = 2;
-      vector3.z = data[ j - width * 2 ] - data[ j + width * 2 ];
-      vector3.normalize();
-
-      shade = vector3.dot( sun );
-
-      imageData[ i ] = ( 96 + shade * 128 ) * ( 0.5 + data[ j ] * 0.007 );
-      imageData[ i + 1 ] = ( 32 + shade * 96 ) * ( 0.5 + data[ j ] * 0.007 );
-      imageData[ i + 2 ] = ( shade * 96 ) * ( 0.5 + data[ j ] * 0.007 );
-    }
-
-    context.putImageData( image, 0, 0 );
-
-    // Scaled 4x
-    canvasScaled = document.createElement( 'canvas' );
-    canvasScaled.width = width * 4;
-    canvasScaled.height = height * 4;
-
-    context = canvasScaled.getContext( '2d' );
-    context.scale( 4, 4 );
-    context.drawImage( canvas, 0, 0 );
-
-    image = context.getImageData( 0, 0, canvasScaled.width, canvasScaled.height );
-    imageData = image.data;
-
-    for ( var k = 0, m = imageData.length; k < m; k += 4 ) {
-      var v = ~~ ( Math.random() * 5 );
-      imageData[ k ] += v;
-      imageData[ k + 1 ] += v;
-      imageData[ k + 2 ] += v;
-    }
-
-    context.putImageData( image, 0, 0 );
-
-    return canvasScaled;
-  }
 };
 
 GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh, material,

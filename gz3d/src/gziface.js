@@ -472,6 +472,8 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
     lightObj.shadowCameraLeft = -100;
     lightObj.shadowCameraRight = 100;
     lightObj.shadowCameraTop = 100;
+
+    lightObj.position.set(negDir.x, negDir.y, negDir.z);
     this.scene.setPose(lightObj, light.pose.position,
         light.pose.orientation);
   }
