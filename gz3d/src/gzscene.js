@@ -546,7 +546,7 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
   this.heightmap = parent;
 };
 
-GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh, material,
+GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh, texture,
     normalMap, parent)
 {
   var uriPath = uri.substring(0, uri.lastIndexOf('/'));
@@ -555,7 +555,7 @@ GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh, material,
   // load urdf model
   if (uriFile.substr(-4).toLowerCase() === '.dae')
   {
-    return this.loadCollada(uri, submesh, centerSubmesh, material, normalMap,
+    return this.loadCollada(uri, submesh, centerSubmesh, texture, normalMap,
         parent);
   }
   else if (uriFile.substr(-5).toLowerCase() === '.urdf')
@@ -596,7 +596,7 @@ GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh, material,
 
 // load the collada file
 GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
-    material, normalMap, parent)
+    texture, normalMap, parent)
 {
   var dae;
   var mesh = null;
@@ -611,7 +611,7 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
     {
       mesh = this.prepareColladaMesh(dae, null, null);
     }
-    this.setMaterial(mesh, material, normalMap);
+    this.setMaterial(mesh, texture, normalMap);
   }
 
   if (!mesh)
@@ -636,7 +636,7 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
       dae.updateMatrix();
       this.scene.meshes[thatURI] = dae;
       mesh = this.scene.prepareColladaMesh(dae, thatSubmesh, centerSubmesh);
-      this.scene.setMaterial(mesh, material, normalMap);
+      this.scene.setMaterial(mesh, texture, normalMap);
       parent.add(dae);
     });
   }
@@ -726,25 +726,33 @@ GZ3D.Scene.prototype.prepareColladaMesh = function(dae, submesh, centerSubmesh)
   return mesh;
 };
 
-GZ3D.Scene.prototype.setMaterial = function(mesh, material, normalMap)
+GZ3D.Scene.prototype.setMaterial = function(mesh, texture, normalMap)
 {
   if (!mesh)
   {
     return;
   }
 
-  if (material || normalMap)
+  if (texture || normalMap)
   {
-    var mat = new THREE.MeshPhongMaterial();
-    if (material)
+    // normal map shader
+    var shader = THREE.ShaderLib['normalmap'];
+    var uniforms = THREE.UniformsUtils.clone( shader.uniforms );
+    if (texture)
     {
-      mat.map = THREE.ImageUtils.loadTexture(material);
+      uniforms['enableDiffuse'].value = true;
+      uniforms['tDiffuse'].value = THREE.ImageUtils.loadTexture(texture);
     }
     if (normalMap)
     {
-      mat.normalMap = THREE.ImageUtils.loadTexture(normalMap);
+      uniforms['tNormal'].value = THREE.ImageUtils.loadTexture(normalMap);
     }
-    mesh.material = mat;
+    var parameters = { fragmentShader: shader.fragmentShader,
+        vertexShader: shader.vertexShader, uniforms: uniforms,
+        lights: true, fog: false };
+    var shaderMaterial = new THREE.ShaderMaterial(parameters);
+    mesh.geometry.computeTangents();
+    mesh.material = shaderMaterial;
   }
 };
 
