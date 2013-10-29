@@ -21,8 +21,8 @@ GZ3D.Scene.prototype.init = function()
   this.renderer = new THREE.WebGLRenderer({antialias: true });
   this.renderer.setClearColor(0xcccccc, 1);
   this.renderer.setSize( window.innerWidth, window.innerHeight);
-//  this.renderer.shadowMapEnabled = true;
-//  this.renderer.shadowMapSoft = true;
+  this.renderer.shadowMapEnabled = true;
+  this.renderer.shadowMapSoft = true;
 
   // lights
   this.ambient = new THREE.AmbientLight( 0x222222 );
@@ -64,6 +64,30 @@ GZ3D.Scene.prototype.init = function()
   this.controls = new THREE.OrbitControls(this.camera);
 
   this.emitter = new EventEmitter2({ verbose: true });
+
+  // SSAO
+  this.effectsEnabled = false;
+  // depth
+  var depthShader = THREE.ShaderLib[ 'depthRGBA'];
+  var depthUniforms = THREE.UniformsUtils.clone( depthShader.uniforms );
+
+  this.depthMaterial = new THREE.ShaderMaterial( { fragmentShader: depthShader.fragmentShader, vertexShader: depthShader.vertexShader, uniforms: depthUniforms } );
+  this.depthMaterial.blending = THREE.NoBlending;
+
+  // postprocessing
+  this.composer = new THREE.EffectComposer(this.renderer );
+  this.composer.addPass( new THREE.RenderPass(this.scene,this.camera));
+
+  this.depthTarget = new THREE.WebGLRenderTarget( window.innerWidth, window.innerHeight, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat } );
+
+  var effect = new THREE.ShaderPass( THREE.SSAOShader );
+  effect.uniforms[ 'tDepth' ].value = this.depthTarget;
+  effect.uniforms[ 'size' ].value.set( window.innerWidth, window.innerHeight );
+  effect.uniforms[ 'cameraNear' ].value = this.camera.near;
+  effect.uniforms[ 'cameraFar' ].value = this.camera.far;
+  effect.renderToScreen = true;
+  this.composer.addPass( effect );
+
 };
 
 GZ3D.Scene.prototype.onMouseDown = function(event)
@@ -165,6 +189,7 @@ GZ3D.Scene.prototype.onKeyDown = function(event)
 {
   if (event.shiftKey)
   {
+    // + and - for zooming
     if (event.keyCode === 187 || event.keyCode === 189)
     {
       this.controls.enabled = true;
@@ -188,6 +213,12 @@ GZ3D.Scene.prototype.onKeyDown = function(event)
         this.controls.dollyIn();
       }
     }
+  }
+
+  // F2 for turning on effects
+  if (event.keyCode === 113)
+  {
+    this.effectsEnabled = !this.effectsEnabled;
   }
 };
 
@@ -277,7 +308,17 @@ GZ3D.Scene.prototype.render = function()
 
   this.modelManipulator.update();
 
-  this.renderer.render(this.scene, this.camera);
+  if (this.effectsEnabled)
+  {
+    this.scene.overrideMaterial = this.depthMaterial;
+    this.renderer.render(this.scene, this.camera, this.depthTarget);
+    this.scene.overrideMaterial = null;
+    this.composer.render();
+  }
+  else
+  {
+    this.renderer.render(this.scene, this.camera);
+  }
 };
 
 GZ3D.Scene.prototype.setWindowSize = function(width, height)

@@ -410,10 +410,17 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
               visual.pose.orientation);
         }
         this.createGeom(geom, visual.material, visualObj);
-        if (visualObj.children.length > 0)
+        for (var c = 0; c < visualObj.children.length; ++c)
         {
-          visualObj.children[0].castShadow = visual.cast_shadows;
-          visualObj.children[0].receiveShadow = true;
+          if (visual.cast_shadows)
+          {
+            visualObj.children[c].castShadow = visual.cast_shadows;
+          }
+          else
+          {
+            visualObj.children[c].castShadow = true;
+          }
+          visualObj.children[c].receiveShadow = true;
         }
         linkObj.add(visualObj);
       }
@@ -465,9 +472,9 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
     lightObj.target.position = target;
     lightObj.shadowCameraNear = 1;
     lightObj.shadowCameraFar = 50;
-    lightObj.shadowMapWidth = 2048;
-    lightObj.shadowMapHeight = 2048;
-    lightObj.shadowCameraVisible = false;
+    lightObj.shadowMapWidth = 4094;
+    lightObj.shadowMapHeight = 4094;
+    lightObj.shadowCameraVisible = true;
     lightObj.shadowCameraBottom = -100;
     lightObj.shadowCameraLeft = -100;
     lightObj.shadowCameraRight = 100;
@@ -479,7 +486,7 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
   }
   lightObj.intensity = light.attenuation_constant;
   lightObj.castShadow = light.cast_shadows;
-  lightObj.shadowDarkness = 0.5;
+  lightObj.shadowDarkness = 0.3;
   lightObj.name = light.name;
 
   return lightObj;
