@@ -515,15 +515,12 @@ void GazeboInterface::ProcessServiceRequests()
     std::string name = get_value(request.c_str(), "args");
     if (service == this->heightmapService)
     {
-      gzerr << " sending request " << name << std::endl;
       boost::shared_ptr<gazebo::msgs::Response> response
           = gazebo::transport::request(name, "heightmap_data");
-
       gazebo::msgs::Geometry geomMsg;
       if (response->response() != "error" &&
           response->type() == geomMsg.GetTypeName())
       {
-        gzerr << " got res  " << std::endl;
         geomMsg.ParseFromString(response->serialized_data());
 
         std::string msg = this->PackOutgoingServiceMsg(id,

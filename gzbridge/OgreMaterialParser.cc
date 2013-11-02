@@ -120,6 +120,30 @@ std::string OgreMaterialParser::GetMaterialAsJson() const
           jsonStr += "\"specular\":[" + ss.str() + "],";
         }
 
+        ConfigNode *depthWriteNode = passNode->findChild("depth_write");
+        if (depthWriteNode)
+        {
+          std::stringstream ss;
+          std::string depthWriteStr = depthWriteNode->getValue(0);
+          if (depthWriteStr == "off")
+            ss << "false";
+          else
+            ss << "true";
+          jsonStr += "\"depth_write\":" + ss.str() + ",";
+        }
+
+        ConfigNode *depthCheckNode = passNode->findChild("depth_check");
+        if (depthCheckNode)
+        {
+          std::stringstream ss;
+          std::string depthCheckStr = depthCheckNode->getValue(0);
+          if (depthCheckStr == "off")
+            ss << "false";
+          else
+            ss << "true";
+          jsonStr += "\"depth_check\":" + ss.str() + ",";
+        }
+
         ConfigNode *textureUnitNode = passNode->findChild("texture_unit");
         if (textureUnitNode)
         {
@@ -134,6 +158,20 @@ std::string OgreMaterialParser::GetMaterialAsJson() const
             }
 
             jsonStr += "\"texture\":\"" + textureStr + "\"";
+          }
+
+          ConfigNode *alphaOpNode = textureUnitNode->findChild("alpha_op_ex");
+          if (alphaOpNode)
+          {
+            std::stringstream ss;
+            std::vector<std::string> values = alphaOpNode->getValues();
+            // a bit hacky, just assuming there is an alpha value to use
+            // fix this to support more ogre alpha operations.
+            if (values[1] == "src_manual")
+            {
+              ss << values[3];
+            }
+            jsonStr += "\"opacity\":" + ss.str() + ",";
           }
         }
         if (jsonStr[jsonStr.size()-1] == ',')

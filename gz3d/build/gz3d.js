@@ -79,17 +79,21 @@ $(function() {
   });
 });
 
-  $(function() {
-    $( '#menu' ).menu();
-    $( '#reset-model' )
-    .click(function() {
-      guiEvents.emit('model_reset');
-    });
-    $( '#reset-world' )
-    .click(function() {
-      guiEvents.emit('world_reset');
-    });
+$(function() {
+  $( '#menu' ).menu();
+  $( '#reset-model' )
+  .click(function() {
+    guiEvents.emit('model_reset');
   });
+  $( '#reset-world' )
+  .click(function() {
+    guiEvents.emit('world_reset');
+  });
+  $( '#view-collisions' )
+  .click(function() {
+    guiEvents.emit('show_collision');
+  });
+});
 
 GZ3D.Gui = function(scene)
 {
@@ -141,6 +145,13 @@ GZ3D.Gui.prototype.init = function()
       function (mode)
       {
         that.scene.setManipulationMode(mode);
+      }
+  );
+
+  guiEvents.on('show_collision',
+      function ()
+      {
+        that.scene.showCollision(!that.scene.showCollisions);
       }
   );
 };
@@ -314,11 +325,35 @@ GZ3D.GZIface.prototype.init = function()
     if (!this.scene.getByName(message.name))
     {
       var modelObj = this.createModelFromMsg(message);
-      this.scene.add(modelObj);
+      if (modelObj)
+      {
+        this.scene.add(modelObj);
+      }
     }
   };
 
   modelInfoTopic.subscribe(modelUpdate.bind(this));
+
+  // Visual messages - currently just used for collision visuals
+  var visualTopic = new ROSLIB.Topic({
+    ros : this.webSocket,
+    name : '~/visual',
+    messageType : 'visual',
+  });
+
+  var visualUpdate = function(message)
+  {
+    if (!this.scene.getByName(message.name))
+    {
+      var visualObj = this.createVisualFromMsg(message);
+      if (visualObj)
+      {
+        this.scene.add(visualObj);
+      }
+    }
+  };
+
+  visualTopic.subscribe(visualUpdate.bind(this));
 
   // world stats
   var worldStatsTopic = new ROSLIB.Topic({
@@ -579,7 +614,9 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
     for (var k = 0; k < link.visual.length; ++k)
     {
       var visual = link.visual[k];
-      if (visual.geometry)
+      var visualObj = this.createVisualFromMsg(visual);
+      linkObj.add(visualObj);
+      /*if (visual.geometry)
       {
         var geom = visual.geometry;
         var visualObj = new THREE.Object3D();
@@ -603,10 +640,59 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
           visualObj.children[c].receiveShadow = true;
         }
         linkObj.add(visualObj);
+      }*/
+    }
+    for (var l = 0; l < link.collision.length; ++l)
+    {
+      var collision = link.collision[l];
+      for (var m = 0; m < link.collision[l].visual.length; ++m)
+      {
+        var collisionVisual = link.collision[l].visual[m];
+        var collisionVisualObj = this.createVisualFromMsg(collisionVisual);
+        linkObj.add(collisionVisualObj);
       }
     }
   }
   return modelObj;
+};
+
+GZ3D.GZIface.prototype.createVisualFromMsg = function(visual)
+{
+  if (visual.geometry)
+  {
+    var geom = visual.geometry;
+    var visualObj = new THREE.Object3D();
+    visualObj.name = visual.name;
+    if (visual.pose)
+    {
+      this.scene.setPose(visualObj, visual.pose.position,
+          visual.pose.orientation);
+    }
+    this.createGeom(geom, visual.material, visualObj);
+    for (var c = 0; c < visualObj.children.length; ++c)
+    {
+      visualObj.children[c].castShadow = true;
+      visualObj.children[c].receiveShadow = true;
+
+      if (visual.cast_shadows)
+      {
+        visualObj.children[c].castShadow = visual.cast_shadows;
+      }
+      if (visual.receive_shadows)
+      {
+        visualObj.children[c].receiveShadow = visual.receive_shadows;
+      }
+
+      if (visual.name.indexOf('COLLISION_VISUAL') >= 0)
+      {
+        visualObj.children[c].castShadow = false;
+        visualObj.children[c].receiveShadow = false;
+
+        visualObj.children[c].visible = this.scene.showCollisions;
+      }
+    }
+    return visualObj;
+  }
 };
 
 GZ3D.GZIface.prototype.createLightFromMsg = function(light)
@@ -654,11 +740,12 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
     lightObj.shadowCameraFar = 50;
     lightObj.shadowMapWidth = 4094;
     lightObj.shadowMapHeight = 4094;
-    lightObj.shadowCameraVisible = true;
+    lightObj.shadowCameraVisible = false;
     lightObj.shadowCameraBottom = -100;
     lightObj.shadowCameraLeft = -100;
     lightObj.shadowCameraRight = 100;
     lightObj.shadowCameraTop = 100;
+    lightObj.shadowBias = 0.0001;
 
     lightObj.position.set(negDir.x, negDir.y, negDir.z);
     this.scene.setPose(lightObj, light.pose.position,
@@ -908,6 +995,15 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
       {
         obj.material.specular.setRGB(specular[0], specular[1], specular[2]);
       }
+      var opacity = mat['opacity'];
+      if (opacity)
+      {
+        if (opacity < 1)
+        {
+          obj.material.transparent = true;
+          obj.material.opacity = opacity;
+        }
+      }
 
       if (texture)
       {
@@ -981,6 +1077,8 @@ GZ3D.Scene.prototype.init = function()
   this.camera.position.z = 5;
   this.camera.up = new THREE.Vector3(0, 0, 1);
   this.camera.lookAt(0, 0, 0);
+
+  this.showCollisions = false;
 
   var that = this;
   this.getDomElement().addEventListener( 'mousedown',
@@ -1199,7 +1297,8 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
         break;
       }
 
-      if (objects[i].object.name === 'grid')
+      if (objects[i].object.name === 'grid'
+          || objects[i].object.name.indexOf('COLLISION_VISUAL'))
       {
         model = null;
         continue;
@@ -1753,6 +1852,31 @@ GZ3D.Scene.prototype.setManipulationMode = function(mode)
     this.modelManipulator.detach();
     this.scene.remove(this.modelManipulator.gizmo);
   }
+};
+
+
+GZ3D.Scene.prototype.showCollision = function(show)
+{
+  if (show === this.showCollisions)
+  {
+    return;
+  }
+
+
+  var allObjects = [];
+  this.scene.getDescendants(allObjects);
+  for (var i = 0; i < allObjects.length; ++i)
+  {
+    if (allObjects[i].name.indexOf('COLLISION_VISUAL') >=0)
+    {
+      for (var j =0; j < allObjects[i].children.length; ++j)
+      {
+        allObjects[i].children[j].visible = show;
+      }
+    }
+  }
+  this.showCollisions = show;
+
 };
 
 GZ3D.SpawnModel = function(scene, domElement)

@@ -36,6 +36,8 @@ GZ3D.Scene.prototype.init = function()
   this.camera.up = new THREE.Vector3(0, 0, 1);
   this.camera.lookAt(0, 0, 0);
 
+  this.showCollisions = false;
+
   var that = this;
   this.getDomElement().addEventListener( 'mousedown',
       function(event) {that.onMouseDown(event);}, false );
@@ -253,7 +255,8 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
         break;
       }
 
-      if (objects[i].object.name === 'grid')
+      if (objects[i].object.name === 'grid'
+          || objects[i].object.name.indexOf('COLLISION_VISUAL'))
       {
         model = null;
         continue;
@@ -807,4 +810,28 @@ GZ3D.Scene.prototype.setManipulationMode = function(mode)
     this.modelManipulator.detach();
     this.scene.remove(this.modelManipulator.gizmo);
   }
+};
+
+
+GZ3D.Scene.prototype.showCollision = function(show)
+{
+  if (show === this.showCollisions)
+  {
+    return;
+  }
+
+  var allObjects = [];
+  this.scene.getDescendants(allObjects);
+  for (var i = 0; i < allObjects.length; ++i)
+  {
+    if (allObjects[i].name.indexOf('COLLISION_VISUAL') >=0)
+    {
+      for (var j =0; j < allObjects[i].children.length; ++j)
+      {
+        allObjects[i].children[j].visible = show;
+      }
+    }
+  }
+  this.showCollisions = show;
+
 };

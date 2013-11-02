@@ -74,17 +74,21 @@ $(function() {
   });
 });
 
-  $(function() {
-    $( '#menu' ).menu();
-    $( '#reset-model' )
-    .click(function() {
-      guiEvents.emit('model_reset');
-    });
-    $( '#reset-world' )
-    .click(function() {
-      guiEvents.emit('world_reset');
-    });
+$(function() {
+  $( '#menu' ).menu();
+  $( '#reset-model' )
+  .click(function() {
+    guiEvents.emit('model_reset');
   });
+  $( '#reset-world' )
+  .click(function() {
+    guiEvents.emit('world_reset');
+  });
+  $( '#view-collisions' )
+  .click(function() {
+    guiEvents.emit('show_collision');
+  });
+});
 
 GZ3D.Gui = function(scene)
 {
@@ -136,6 +140,13 @@ GZ3D.Gui.prototype.init = function()
       function (mode)
       {
         that.scene.setManipulationMode(mode);
+      }
+  );
+
+  guiEvents.on('show_collision',
+      function ()
+      {
+        that.scene.showCollision(!that.scene.showCollisions);
       }
   );
 };

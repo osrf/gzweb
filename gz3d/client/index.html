@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="stylesheet" href="style/jquery-ui/jquery-ui.css"/>
-    <link rel="stylesheet" href="style/toolbar.css"/>
+    <link rel="stylesheet" href="style/gz3d.css"/>
     <script src="js/include/jquery-1.9.1.js"></script>
     <script src="js/include/jquery-ui.js"></script>
     <script src="js/include/three.js"></script>
@@ -84,7 +84,6 @@
       }
     </style>
   </head>
-
   <script id="heightmapVS" type="x-shader/x-vertex">
     varying vec2 vUv;
     varying vec3 vPosition;
@@ -163,7 +162,6 @@
       vec3 vLightFactor = ambient + lightDiffuse * intensity;
       gl_FragColor = vec4(fragcolor.rgb * vLightFactor, 1.0);
     }
-
   </script>
 
   <body>
@@ -176,8 +174,19 @@
             <li id='reset-model'><a href='#'>Reset Model Poses</a></li>
           </ul>
         </li>
+        <li>
+          <a href='#'>View</a>
+          <ul>
+            <li id='view-collisions'><a href='#'>View Collisions</a></li>
+          </ul>
+        </li>
       </ul>
     </div>
+    <script>
+      $( "#menu" ).menu({
+          position: {at: "left bottom"}
+        });
+    </script>
 
     <div id='toolbar' class='ui-widget-content'>
       <div id="toolbar-play" >
