@@ -83,7 +83,7 @@ setInterval(update, 10);
 function update()
 {
   var msgs = gzconnection.getMessages();
-  for (var i = 0; i < connections.length; i++)
+  for (var i = 0; i < connections.length; ++i)
   {
     for (var j = 0; j < msgs.length; ++j)
     {

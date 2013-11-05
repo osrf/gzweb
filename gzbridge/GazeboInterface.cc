@@ -450,6 +450,7 @@ void GazeboInterface::ProcessMessages()
       msg = this->PackOutgoingTopicMsg(this->visualTopic,
           pb2json(*(*visualIter).get()));
       this->Send(msg);
+      std::cerr << msg << std::endl;
     }
     this->visualMsgs.clear();
 

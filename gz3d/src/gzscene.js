@@ -791,6 +791,7 @@ GZ3D.Scene.prototype.setMaterial = function(mesh, texture, normalMap)
     {
       uniforms['tNormal'].value = THREE.ImageUtils.loadTexture(normalMap);
     }
+
     var parameters = { fragmentShader: shader.fragmentShader,
         vertexShader: shader.vertexShader, uniforms: uniforms,
         lights: true, fog: false };
