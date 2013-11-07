@@ -586,7 +586,6 @@ THREE.TransformControls = function ( camera, domElement, doc ) {
 
 	var hovered = null;
 	var hoveredColor = new THREE.Color();
-	var hoveredOpacity = 1;
 
 	function onMouseHover( event ) {
 
@@ -603,16 +602,13 @@ THREE.TransformControls = function ( camera, domElement, doc ) {
 					if ( hovered !== null ) {
 
 						hovered.material.color.copy( hoveredColor );
-						hovered.material.opacity = hoveredOpacity;
 
 					}
 
 					hovered = intersect.object;
 					hoveredColor.copy( hovered.material.color );
-					hoveredOpacity = hovered.material.opacity;
 
-					hovered.material.color.setRGB( 1, 1, 0 );
-					hovered.material.opacity = 1;
+                    hovered.material.color.offsetHSL( 0, 0, -0.3 );
 
 					scope.dispatchEvent( changeEvent );
 
@@ -623,7 +619,6 @@ THREE.TransformControls = function ( camera, domElement, doc ) {
 			} else if ( hovered !== null ) {
 
 				hovered.material.color.copy( hoveredColor );
-				hovered.material.opacity = hoveredOpacity;
 
 				hovered = null;
 
