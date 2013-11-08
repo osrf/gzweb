@@ -1206,11 +1206,11 @@ GZ3D.Scene.prototype.onMouseDown = function(event)
 
   if (model)
   {
+    // console.log('found model ' + model.name );
     if (model.name === 'plane')
     {
       this.killCameraControl = false;
     }
-    // console.log('found model ' + model.name + ' ' + objects.length);
     else if (model.name !== '')
     {
       // console.log('attached ' + model.name);
@@ -1335,6 +1335,7 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
   var point;
   if (objects.length > 0)
   {
+
     for (var i = 0; i < objects.length; ++i)
     {
       model = objects[i].object;
@@ -1346,8 +1347,7 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
         break;
       }
 
-      if (objects[i].object.name === 'grid'
-          || objects[i].object.name.indexOf('COLLISION_VISUAL'))
+      if (objects[i].object.name === 'grid')
       {
         model = null;
         continue;
@@ -1356,6 +1356,12 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
       while (model.parent !== this.scene)
       {
         model = model.parent;
+      }
+
+      if (model.name.indexOf('COLLISION_VISUAL') >= 0)
+      {
+        model = null;
+        continue;
       }
 
       if (this.modelManipulator.hovered)
