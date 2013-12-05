@@ -138,6 +138,10 @@ namespace gzweb
     /// \param[in] _msg The message.
     private: void OnStats(ConstWorldStatisticsPtr &_msg);
 
+    /// \brief Road message callback.
+    /// \param[in] _msg The message.
+    private: void OnRoad(ConstRoadPtr &_msg);
+
     /// \brief Response callback
     /// \param[in] _msg The message data.
     private: void OnResponse(ConstResponsePtr &_msg);
@@ -192,6 +196,9 @@ namespace gzweb
 
     /// \brief Subscribe to joint updates.
     private: gazebo::transport::SubscriberPtr jointSub;
+
+    /// \brief Subscribe to road msgs.
+    private: gazebo::transport::SubscriberPtr roadSub;
 
     /// \brief Publish requests
     private: gazebo::transport::PublisherPtr requestPub;
@@ -290,6 +297,14 @@ namespace gzweb
     /// \brief List of world stats message to process.
     private: WorldStatsMsgs_L statsMsgs;
 
+    /// \def RoadMsgs_L
+    /// \brief List of road messages.
+    typedef std::list<boost::shared_ptr<gazebo::msgs::Road const> >
+        RoadMsgs_L;
+
+    /// \brief List of road message to process.
+    private: RoadMsgs_L roadMsgs;
+
     /// \def PoseMsgsFilter_M
     /// \brief Map of last pose messages used for filtering
     typedef boost::unordered_map< std::string, TimedPose> PoseMsgsFilter_M;
@@ -341,6 +356,9 @@ namespace gzweb
     /// \brief A custom topic for getting mapping of materials to textures
     /// referenced by gazebo
     private: std::string materialTopic;
+
+    /// \brief Name of road topic.
+    private: std::string roadTopic;
 
     /// \brief Name of heightmap data service.
     private: std::string heightmapService;

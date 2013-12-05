@@ -464,6 +464,175 @@ GZ3D.Scene.prototype.createBox = function(width, height, depth)
   return mesh;
 };
 
+GZ3D.Scene.prototype.createRoads = function(points, width, texture)
+{
+  var geometry = new THREE.Geometry();
+  geometry.dynamic = true;
+  var texCoord = 0.0;
+  var texMaxLen = width;
+  var factor = 1.0;
+  var curLen = 0.0;
+  var tangent = new THREE.Vector3(0,0,0);
+  var pA;
+  var pB;
+  var prevPt = new THREE.Vector3(0,0,0);
+  var prevTexCoord;
+  var texCoords = [];
+  var j = 0;
+  for (var i = 0; i < points.length; ++i)
+  {
+    var pt0 =  new THREE.Vector3(points[i].x, points[i].y,
+        points[i].z);
+    var pt1;
+    if (i !== points.length - 1)
+    {
+      pt1 =  new THREE.Vector3(points[i+1].x, points[i+1].y,
+          points[i+1].z);
+    }
+    factor = 1.0;
+    if (i > 0)
+    {
+      curLen += pt0.distanceTo(prevPt);
+    }
+    texCoord = curLen/texMaxLen;
+    if (i === 0)
+    {
+      tangent.x = pt1.x;
+      tangent.y = pt1.y;
+      tangent.z = pt1.z;
+      tangent.sub(pt0);
+      tangent.normalize();
+    }
+    else if (i === points.length - 1)
+    {
+      tangent.x = pt0.x;
+      tangent.y = pt0.y;
+      tangent.z = pt0.z;
+      tangent.sub(prevPt);
+      tangent.normalize();
+    }
+    else
+    {
+      var v0 = new THREE.Vector3(0,0,0);
+      var v1 = new THREE.Vector3(0,0,0);
+      v0.x = pt0.x;
+      v0.y = pt0.y;
+      v0.z = pt0.z;
+      v0.sub(prevPt);
+      v0.normalize();
+
+      v1.x = pt1.x;
+      v1.y = pt1.y;
+      v1.z = pt1.z;
+      v1.sub(pt0);
+      v1.normalize();
+
+      var dot = v0.dot(v1*-1);
+
+      tangent.x = pt1.x;
+      tangent.y = pt1.y;
+      tangent.z = pt1.z;
+      tangent.sub(prevPt);
+      tangent.normalize();
+
+      if (dot > -0.97 && dot < 0.97)
+      {
+        factor = 1.0 / Math.sin(Math.acos(dot) * 0.5);
+      }
+    }
+    var theta = Math.atan2(tangent.x, -tangent.y);
+    pA = new THREE.Vector3(pt0.x,pt0.y,pt0.z);
+    pB = new THREE.Vector3(pt0.x,pt0.y,pt0.z);
+    var w = (width * factor)*0.5;
+    pA.x += Math.cos(theta) * w;
+    pA.y += Math.sin(theta) * w;
+    pB.x -= Math.cos(theta) * w;
+    pB.y -= Math.sin(theta) * w;
+
+    geometry.vertices.push(pA);
+    geometry.vertices.push(pB);
+
+    texCoords.push([0, texCoord]);
+    texCoords.push([1, texCoord]);
+
+    // draw triangle strips
+    if (i > 0)
+    {
+      geometry.faces.push(new THREE.Face3(j, j+1, j+2,
+        new THREE.Vector3(0, 0, 1)));
+      geometry.faceVertexUvs[0].push(
+          [new THREE.Vector2(texCoords[j][0], texCoords[j][1]),
+           new THREE.Vector2(texCoords[j+1][0], texCoords[j+1][1]),
+           new THREE.Vector2(texCoords[j+2][0], texCoords[j+2][1])]);
+      j++;
+
+      geometry.faces.push(new THREE.Face3(j, j+2, j+1,
+        new THREE.Vector3(0, 0, 1)));
+      geometry.faceVertexUvs[0].push(
+          [new THREE.Vector2(texCoords[j][0], texCoords[j][1]),
+           new THREE.Vector2(texCoords[j+2][0], texCoords[j+2][1]),
+           new THREE.Vector2(texCoords[j+1][0], texCoords[j+1][1])]);
+      j++;
+
+    }
+
+    prevPt.x = pt0.x;
+    prevPt.y = pt0.y;
+    prevPt.z = pt0.z;
+
+    prevTexCoord = texCoord;
+  }
+
+/*  geometry.faceVertexUvs[0].push(
+   [new THREE.Vector2(0,0), new THREE.Vector2(1,0),
+           new THREE.Vector2(0,1)]);
+
+  geometry.faceVertexUvs[0].push(
+   [new THREE.Vector2(1,0), new THREE.Vector2(1,1),
+           new THREE.Vector2(0,1)]);*/
+
+/*  for (var j = 0; j < roads.point.length; ++j)
+  {
+    geometry.faces.push(new THREE.Face3(j, j+1, j+2));
+  }*/
+
+  // geometry.computeTangents();
+  geometry.computeFaceNormals();
+
+  geometry.verticesNeedUpdate = true;
+  geometry.uvsNeedUpdate = true;
+
+
+  var material =  new THREE.MeshPhongMaterial();
+
+ /* var ambient = mat['ambient'];
+  if (ambient)
+  {
+    material.ambient.setRGB(ambient[0], ambient[1], ambient[2]);
+  }
+  var diffuse = mat['diffuse'];
+  if (diffuse)
+  {
+    material.color.setRGB(diffuse[0], diffuse[1], diffuse[2]);
+  }
+  var specular = mat['specular'];
+  if (specular)
+  {
+    material.specular.setRGB(specular[0], specular[1], specular[2]);
+  }*/
+  //var texture = mat['texture'];
+  if (texture)
+  {
+    var tex = THREE.ImageUtils.loadTexture(texture);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    material.map = tex;
+  }
+
+  var mesh = new THREE.Mesh(geometry, material);
+  mesh.castShadow = false;
+  return mesh;
+};
+
 GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
     segmentWidth, segmentHeight, origin, textures, blends, parent)
 {
