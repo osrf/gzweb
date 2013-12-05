@@ -251,8 +251,8 @@ GZ3D.GZIface.prototype.init = function()
   this.roadService.callService(request,
   function(result)
   {
-    // var roadsObj = that.createRoadsFromMsg(result);
-    // this.scene.add(roadsObj);
+    var roadsObj = that.createRoadsFromMsg(result);
+    this.scene.add(roadsObj);
   });
 
   // Model modify messages - for modifying model pose
@@ -670,7 +670,7 @@ GZ3D.GZIface.prototype.createRoadsFromMsg = function(roads)
   var prevPt = new THREE.Vector3(0,0,0);
   var prevTexCoord;
   var texCoords = [];
-
+  var j = 0;
   for (var i = 0; i < roads.point.length; ++i)
   {
     var pt0 =  new THREE.Vector3(roads.point[i].x, roads.point[i].y,
@@ -747,35 +747,50 @@ GZ3D.GZIface.prototype.createRoadsFromMsg = function(roads)
     geometry.vertices.push(pA);
     geometry.vertices.push(pB);
 
-    var idx1 = 1;
-    var idx2 = 1;
-    if (i%2 === 0)
-    {
-      idx2++;
-    }
-    else
-    {
-      idx1++;
-    }
-    geometry.faces.push(new THREE.Face3(i, i+idx1, i+idx2,
-        new THREE.Vector3(0, 0, 1)));
 
-    geometry.faceVertexUvs[0].push(
+    //geometry.faces.push(new THREE.Face3(i, i+idx1, i+idx2,
+    //    new THREE.Vector3(0, 0, 1)));
+
+    /*geometry.faceVertexUvs[0].push(
      [new THREE.Vector2(0,0), new THREE.Vector2(1,0),
       new THREE.Vector2(0,1)]);
 
     geometry.faceVertexUvs[0].push(
      [new THREE.Vector2(1,0), new THREE.Vector2(1,1),
-      new THREE.Vector2(0,1)]);
+      new THREE.Vector2(0,1)]);*/
 
-    if (i === 0)
+    texCoords.push([0, texCoord]);
+    texCoords.push([1, texCoord]);
+
+    if (i > 0)
+    {
+      geometry.faces.push(new THREE.Face3(j, j+1, j+2,
+        new THREE.Vector3(0, 0, 1)));
+      geometry.faceVertexUvs[0].push(
+          [new THREE.Vector2(texCoords[j][0], texCoords[j][1]),
+           new THREE.Vector2(texCoords[j+1][0], texCoords[j+1][1]),
+           new THREE.Vector2(texCoords[j+2][0], texCoords[j+2][1])]);
+      j++;
+
+      geometry.faces.push(new THREE.Face3(j, j+2, j+1,
+        new THREE.Vector3(0, 0, 1)));
+      geometry.faceVertexUvs[0].push(
+          [new THREE.Vector2(texCoords[j][0], texCoords[j][1]),
+           new THREE.Vector2(texCoords[j+2][0], texCoords[j+2][1]),
+           new THREE.Vector2(texCoords[j+1][0], texCoords[j+1][1])]);
+      j++;
+
+    }
+
+    /*if (i === 0)
     {
       texCoords.push([0, texCoord]);
       texCoords.push([1, texCoord]);
     }
     else if (i > 0)
     {
-      texCoords.push([ i%2 - 1, texCoord]);
+      texCoords.push([ i%2^1, texCoord]);
+      texCoords.push([ i%2, texCoord]);
       geometry.faceVertexUvs[0].push(
           [new THREE.Vector2(texCoords[i-1][0], texCoords[i-1][1]),
            new THREE.Vector2(texCoords[i-1+idx2][0], texCoords[i-1+idx2][1]),
@@ -785,12 +800,11 @@ GZ3D.GZIface.prototype.createRoadsFromMsg = function(roads)
 
     if (i === roads.point.length - 1)
     {
-      texCoords.push([i%2, texCoord]);
       geometry.faceVertexUvs[0].push(
           [new THREE.Vector2(texCoords[i][0], texCoords[i][1]),
            new THREE.Vector2(texCoords[i + idx1][0], texCoords[i+idx1][1]),
            new THREE.Vector2(texCoords[i + idx2][0], texCoords[i+idx2][1])]);
-    }
+    }*/
 
     prevPt.x = pt0.x;
     prevPt.y = pt0.y;
@@ -799,6 +813,36 @@ GZ3D.GZIface.prototype.createRoadsFromMsg = function(roads)
     prevTexCoord = texCoord;
   }
 
+/*  for (var k = 1; k < roads.point.length; ++k)
+  {
+    var idx1 = 1;
+    var idx2 = 1;
+    if (k%2 === 0)
+    {
+      idx2++;
+    }
+    else
+    {
+      idx1++;
+    }
+
+    geometry.faces.push(new THREE.Face3(j, j+idx1, j+idx2,
+      new THREE.Vector3(0, 0, 1)));
+    geometry.faceVertexUvs[0].push(
+        [new THREE.Vector2(texCoords[j][0], texCoords[j][1]),
+         new THREE.Vector2(texCoords[j+idx2][0], texCoords[j+idx2][1]),
+         new THREE.Vector2(texCoords[j+idx1][0], texCoords[j+idx1][1])]);
+    j++;
+
+    geometry.faces.push(new THREE.Face3(j, j+idx2, j+idx1,
+      new THREE.Vector3(0, 0, 1)));
+    geometry.faceVertexUvs[0].push(
+        [new THREE.Vector2(texCoords[j][0], texCoords[j][1]),
+         new THREE.Vector2(texCoords[j+idx1][0], texCoords[j+idx1][1]),
+         new THREE.Vector2(texCoords[j+idx2][0], texCoords[j+idx2][1])]);
+    j++;
+  }
+*/
 /*  geometry.faceVertexUvs[0].push(
    [new THREE.Vector2(0,0), new THREE.Vector2(1,0),
            new THREE.Vector2(0,1)]);
@@ -839,8 +883,10 @@ GZ3D.GZIface.prototype.createRoadsFromMsg = function(roads)
   var texture = mat['texture'];
   if (texture)
   {
-    material.map = THREE.ImageUtils.loadTexture(
+    var tex = THREE.ImageUtils.loadTexture(
         this.parseUri('media/materials/textures/' + mat['texture']));
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    material.map = tex;
   }
 
   var mesh = new THREE.Mesh(geometry, material);
@@ -860,7 +906,7 @@ GZ3D.GZIface.prototype.parseUri = function(uri)
   return uriPath + '/' + uri.substring(idx);
 };
 
-GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
+/*GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
 {
   var obj;
 
@@ -978,37 +1024,6 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
       rootModel = rootModel.parent;
     }
 
-    /*// find model from database, download the mesh if it exists
-    var manifestXML;
-    var manifestURI = GAZEBO_MODEL_DATABASE_URI + '/manifest.xml';
-    var request = new XMLHttpRequest();
-    request.open('GET', manifestURI, false);
-    request.onreadystatechange = function(){
-      if (request.readyState === 4)
-      {
-        if (request.status === 200 || request.status === 0)
-        {
-            manifestXML = request.responseXML;
-        }
-      }
-    };
-    request.send();
-
-    var uriPath;
-    var modelAvailable = false;
-    var modelsElem = manifestXML.getElementsByTagName('models')[0];
-    var i;
-    for (i = 0; i < modelsElem.getElementsByTagName('uri').length; ++i)
-    {
-      var uri = modelsElem.getElementsByTagName('uri')[i];
-      var model = uri.substring(uri.indexOf('://') + 3);
-      if (model === rootModel)
-      {
-        modelAvailable = true;
-      }
-    }
-
-    if (modelAvailable)*/
     {
       var meshUri = geom.mesh.filename;
       var submesh = geom.mesh.submesh;
@@ -1115,8 +1130,8 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
     parent.add(obj);
   }
 };
+*/
 
-/*
 GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
 {
   var obj;
@@ -1285,7 +1300,7 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
     obj.updateMatrix();
     parent.add(obj);
   }
-};*/
+};
 
 GZ3D.GZIface.prototype.parseMaterial = function(material)
 {
