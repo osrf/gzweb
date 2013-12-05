@@ -535,7 +535,6 @@ void GazeboInterface::ProcessServiceRequests()
     }
     else if (service == this->roadTopic)
     {
-      gzerr << " road service " <<  this->roadMsgs.size() << std::endl;
       if (!this->roadMsgs.empty())
       {
         std::string msg = this->PackOutgoingServiceMsg(id,
