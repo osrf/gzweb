@@ -236,6 +236,25 @@ GZ3D.GZIface.prototype.init = function()
     serviceType : 'heightmap_data'
   });
 
+  // road
+  this.roadService = new ROSLIB.Service({
+    ros : this.webSocket,
+    name : '~/roads',
+    serviceType : 'roads'
+  });
+
+  var request = new ROSLIB.ServiceRequest({
+      name : 'roads'
+  });
+
+  // send service request and load road on response
+  this.roadService.callService(request,
+  function(result)
+  {
+    // var roadsObj = that.createRoadsFromMsg(result);
+    // this.scene.add(roadsObj);
+  });
+
   // Model modify messages - for modifying model pose
   this.modelModifyTopic = new ROSLIB.Topic({
     ros : this.webSocket,
@@ -614,11 +633,228 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
   return lightObj;
 };
 
+GZ3D.GZIface.prototype.createRoadsFromMsg = function(roads)
+{
+  var roadObj = new THREE.Object3D();
+  var geometry = new THREE.Geometry();
+
+  geometry.dynamic = true;
+//  geometry.faces
+//  geometry.faceVertexUvs
+
+  // triangle strips
+  /*var v0 = new THREE.Vector3(roads.point[0].x, roads.point[0].y,
+      roads.point[0].z);
+  var v1 = new THREE.Vector3(roads.point[1].x, roads.point[1].y,
+      roads.point[1].z);
+  geometry.vertices.push(v0);
+  geometry.vertices.push(v1);
+  for (var i = 2; i < roads.point.length; ++i)
+  {
+    var vi = new THREE.Vector3(roads.point[i].x, roads.point[i].y,
+      roads.point[i].z);
+    geometry.vertices.push(vi);
+    geometry.faces.push(new THREE.Face3(i-2, i-1, i));
+  }*/
+
+  var texCoord = 0.0;
+  var texMaxLen = roads.width;
+  var factor = 1.0;
+  var curLen = 0.0;
+  var tangent = new THREE.Vector3(0,0,0);
+  var pA;
+  var pB;
+  var prevPt = new THREE.Vector3(0,0,0);
+  var prevTexCoord;
+  var texCoords = [];
+
+  for (var i = 0; i < roads.point.length; ++i)
+  {
+    var pt0 =  new THREE.Vector3(roads.point[i].x, roads.point[i].y,
+        roads.point[i].z);
+    var pt1;
+    if (i !== roads.point.length - 1)
+    {
+      pt1 =  new THREE.Vector3(roads.point[i+1].x, roads.point[i+1].y,
+          roads.point[i+1].z);
+    }
+    factor = 1.0;
+    if (i > 0)
+    {
+      curLen += pt0.distanceTo(prevPt);
+    }
+    texCoord = curLen/texMaxLen;
+    if (i === 0)
+    {
+      tangent.x = pt1.x;
+      tangent.y = pt1.y;
+      tangent.z = pt1.z;
+      tangent.sub(pt0);
+      tangent.normalize();
+    }
+    else if (i === roads.point.length - 1)
+    {
+      tangent.x = pt0.x;
+      tangent.y = pt0.y;
+      tangent.z = pt0.z;
+      tangent.sub(prevPt);
+      tangent.normalize();
+    }
+    else
+    {
+      var v0 = new THREE.Vector3(0,0,0);
+      var v1 = new THREE.Vector3(0,0,0);
+      v0.x = pt0.x;
+      v0.y = pt0.y;
+      v0.z = pt0.z;
+      v0.sub(prevPt);
+      v0.normalize();
+
+      v1.x = pt1.x;
+      v1.y = pt1.y;
+      v1.z = pt1.z;
+      v1.sub(pt0);
+      v1.normalize();
+
+      var dot = v0.dot(v1*-1);
+
+      tangent.x = pt1.x;
+      tangent.y = pt1.y;
+      tangent.z = pt1.z;
+      tangent.sub(prevPt);
+      tangent.normalize();
+
+      if (dot > -0.97 && dot < 0.97)
+      {
+        factor = 1.0 / Math.sin(Math.acos(dot) * 0.5);
+      }
+    }
+    var theta = Math.atan2(tangent.x, -tangent.y);
+    pA = new THREE.Vector3(pt0.x,pt0.y,pt0.z);
+    pB = new THREE.Vector3(pt0.x,pt0.y,pt0.z);
+    var w = (roads.width * factor)*0.5;
+    pA.x += Math.cos(theta) * w;
+    pA.y += Math.sin(theta) * w;
+    pB.x -= Math.cos(theta) * w;
+    pB.y -= Math.sin(theta) * w;
+
+    console.log ('p ' + pA.x + ' ' + pA.y + ' ' + pB.x + ' ' + pB.y);
+    console.log ('theta w ' + theta + ' ' + w );
+
+    geometry.vertices.push(pA);
+    geometry.vertices.push(pB);
+
+    var idx1 = 1;
+    var idx2 = 1;
+    if (i%2 === 0)
+    {
+      idx2++;
+    }
+    else
+    {
+      idx1++;
+    }
+    geometry.faces.push(new THREE.Face3(i, i+idx1, i+idx2,
+        new THREE.Vector3(0, 0, 1)));
+
+    geometry.faceVertexUvs[0].push(
+     [new THREE.Vector2(0,0), new THREE.Vector2(1,0),
+      new THREE.Vector2(0,1)]);
+
+    geometry.faceVertexUvs[0].push(
+     [new THREE.Vector2(1,0), new THREE.Vector2(1,1),
+      new THREE.Vector2(0,1)]);
+
+    if (i === 0)
+    {
+      texCoords.push([0, texCoord]);
+      texCoords.push([1, texCoord]);
+    }
+    else if (i > 0)
+    {
+      texCoords.push([ i%2 - 1, texCoord]);
+      geometry.faceVertexUvs[0].push(
+          [new THREE.Vector2(texCoords[i-1][0], texCoords[i-1][1]),
+           new THREE.Vector2(texCoords[i-1+idx2][0], texCoords[i-1+idx2][1]),
+           new THREE.Vector2(texCoords[i-1+idx1][0], texCoords[i-1+idx1][1])]);
+
+    }
+
+    if (i === roads.point.length - 1)
+    {
+      texCoords.push([i%2, texCoord]);
+      geometry.faceVertexUvs[0].push(
+          [new THREE.Vector2(texCoords[i][0], texCoords[i][1]),
+           new THREE.Vector2(texCoords[i + idx1][0], texCoords[i+idx1][1]),
+           new THREE.Vector2(texCoords[i + idx2][0], texCoords[i+idx2][1])]);
+    }
+
+    prevPt.x = pt0.x;
+    prevPt.y = pt0.y;
+    prevPt.z = pt0.z;
+
+    prevTexCoord = texCoord;
+  }
+
+/*  geometry.faceVertexUvs[0].push(
+   [new THREE.Vector2(0,0), new THREE.Vector2(1,0),
+           new THREE.Vector2(0,1)]);
+
+  geometry.faceVertexUvs[0].push(
+   [new THREE.Vector2(1,0), new THREE.Vector2(1,1),
+           new THREE.Vector2(0,1)]);*/
+
+/*  for (var j = 0; j < roads.point.length; ++j)
+  {
+    geometry.faces.push(new THREE.Face3(j, j+1, j+2));
+  }*/
+
+  //geometry.computeTangents();
+  geometry.computeFaceNormals();
+
+  geometry.verticesNeedUpdate = true;
+  geometry.uvsNeedUpdate = true;
+
+  var mat = this.material['Gazebo/Road'];
+  var material =  new THREE.MeshPhongMaterial();
+
+ /* var ambient = mat['ambient'];
+  if (ambient)
+  {
+    material.ambient.setRGB(ambient[0], ambient[1], ambient[2]);
+  }
+  var diffuse = mat['diffuse'];
+  if (diffuse)
+  {
+    material.color.setRGB(diffuse[0], diffuse[1], diffuse[2]);
+  }
+  var specular = mat['specular'];
+  if (specular)
+  {
+    material.specular.setRGB(specular[0], specular[1], specular[2]);
+  }*/
+  var texture = mat['texture'];
+  if (texture)
+  {
+    material.map = THREE.ImageUtils.loadTexture(
+        this.parseUri('media/materials/textures/' + mat['texture']));
+  }
+
+  var mesh = new THREE.Mesh(geometry, material);
+  mesh.castShadow = false;
+  roadObj.add(mesh);
+  return roadObj;
+};
 
 GZ3D.GZIface.prototype.parseUri = function(uri)
 {
   var uriPath = 'assets';
-  return uriPath + '/' + uri.substring(uri.indexOf('://') + 3);
+  var idx = uri.indexOf('://');
+  if (idx > 0)
+  {
+    idx +=3;
+  }
+  return uriPath + '/' + uri.substring(idx);
 };
 
 GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
@@ -875,4 +1111,286 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
     obj.updateMatrix();
     parent.add(obj);
   }
+};
+
+/*
+GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
+{
+  var obj;
+  var mat = this.parseMaterial(material);
+  var uriPath = 'assets';
+
+  if (geom.box)
+  {
+    obj = this.scene.createBox(geom.box.size.x, geom.box.size.y,
+        geom.box.size.z);
+  }
+  else if (geom.cylinder)
+  {
+    obj = this.scene.createCylinder(geom.cylinder.radius,
+        geom.cylinder.length);
+  }
+  else if (geom.sphere)
+  {
+    obj = this.scene.createSphere(geom.sphere.radius);
+  }
+  else if (geom.plane)
+  {
+    obj = this.scene.createPlane(geom.plane.normal.x, geom.plane.normal.y,
+        geom.plane.normal.z, geom.plane.size.x, geom.plane.size.y);
+  }
+  else if (geom.mesh)
+  {
+    // get model name which the mesh is in
+    var rootModel = parent;
+    while (rootModel.parent)
+    {
+      rootModel = rootModel.parent;
+    }
+
+    // find model from database, download the mesh if it exists
+    // var manifestXML;
+    // var manifestURI = GAZEBO_MODEL_DATABASE_URI + '/manifest.xml';
+    // var request = new XMLHttpRequest();
+    // request.open('GET', manifestURI, false);
+    // request.onreadystatechange = function(){
+    //   if (request.readyState === 4)
+    //   {
+    //     if (request.status === 200 || request.status === 0)
+    //     {
+    //         manifestXML = request.responseXML;
+    //     }
+    //   }
+    // };
+    // request.send();
+
+    // var uriPath;
+    // var modelAvailable = false;
+    // var modelsElem = manifestXML.getElementsByTagName('models')[0];
+    // var i;
+    // for (i = 0; i < modelsElem.getElementsByTagName('uri').length; ++i)
+    // {
+    //   var uri = modelsElem.getElementsByTagName('uri')[i];
+    //   var model = uri.substring(uri.indexOf('://') + 3);
+    //   if (model === rootModel)
+    //   {
+    //     modelAvailable = true;
+    //   }
+    // }
+
+    // if (modelAvailable)
+    {
+      var meshUri = geom.mesh.filename;
+      var submesh = geom.mesh.submesh;
+      var centerSubmesh = geom.mesh.center_submesh;
+
+      console.log(geom.mesh.filename + ' ' + submesh);
+
+      var uriType = meshUri.substring(0, meshUri.indexOf('://'));
+      if (uriType === 'file' || uriType === 'model')
+      {
+        var modelName = meshUri.substring(meshUri.indexOf('://') + 3);
+        if (geom.mesh.scale)
+        {
+          parent.scale.x = geom.mesh.scale.x;
+          parent.scale.y = geom.mesh.scale.y;
+          parent.scale.z = geom.mesh.scale.z;
+        }
+
+        this.scene.loadMesh(uriPath + '/' + modelName, submesh,
+            centerSubmesh, mat.texture, mat.normalMap, parent);
+      }
+    }
+  }
+  else if (geom.heightmap)
+  {
+    var that = this;
+    var request = new ROSLIB.ServiceRequest({
+      name : that.scene.name
+    });
+
+    // redirect the texture paths to the assets dir
+    var textures = geom.heightmap.texture;
+    for ( var k = 0; k < textures.length; ++k)
+    {
+      textures[k].diffuse = this.parseUri(textures[k].diffuse);
+      textures[k].normal = this.parseUri(textures[k].normal);
+    }
+
+    var sizes = geom.heightmap.size;
+
+    // send service request and load heightmap on response
+    this.heightmapDataService.callService(request,
+        function(result)
+        {
+          var heightmap = result.heightmap;
+          // gazebo heightmap is always square shaped,
+          // and a dimension of: 2^N + 1
+          that.scene.loadHeightmap(heightmap.heights, heightmap.size.x,
+              heightmap.size.y, heightmap.width, heightmap.height,
+              heightmap.origin, textures,
+              geom.heightmap.blend, parent);
+            //console.log('Result for service call on ' + result);
+        });
+
+    //this.scene.loadHeightmap(parent)
+  }
+
+  // texture mapping for simple shapes and planes only,
+  // not used by mesh and terrain
+  if (obj)
+  {
+    if (mat)
+    {
+      obj.material = new THREE.MeshPhongMaterial();
+      var ambient = mat.ambient;
+      if (ambient)
+      {
+        obj.material.ambient.setRGB(ambient[0], ambient[1], ambient[2]);
+      }
+      var diffuse = mat.diffuse;
+      if (diffuse)
+      {
+        obj.material.color.setRGB(diffuse[0], diffuse[1], diffuse[2]);
+      }
+      var specular = mat.specular;
+      if (specular)
+      {
+        obj.material.specular.setRGB(specular[0], specular[1], specular[2]);
+      }
+      var opacity = mat.opacity;
+      if (opacity)
+      {
+        if (opacity < 1)
+        {
+          obj.material.transparent = true;
+          obj.material.opacity = opacity;
+        }
+      }
+
+      //this.scene.setMaterial(obj, texture, normalMap);
+
+      if (mat.texture)
+      {
+        obj.material.map = THREE.ImageUtils.loadTexture(mat.texture);
+      }
+      if (mat.normalMap)
+      {
+        obj.material.normalMap = THREE.ImageUtils.loadTexture(mat.normalMap);
+      }
+    }
+    obj.updateMatrix();
+    parent.add(obj);
+  }
+};*/
+
+GZ3D.GZIface.prototype.parseMaterial = function(material)
+{
+  if (!material)
+  {
+    return {};
+  }
+
+  var uriPath = 'assets';
+  var texture;
+  var normalMap;
+  var textureUri;
+  var ambient;
+  var diffuse;
+  var specular;
+  var opacity;
+  var mat;
+
+
+  // get texture from material script
+  var script  = material.script;
+  if (script)
+  {
+    if (script.uri.length > 0)
+    {
+      if (script.name)
+      {
+        mat = this.material[script.name];
+        if (mat)
+        {
+          ambient = mat['ambient'];
+          diffuse = mat['diffuse'];
+          specular = mat['specular'];
+          opacity = mat['opacity'];
+
+          var textureName = mat['texture'];
+          if (textureName)
+          {
+            for (var i = 0; i < script.uri.length; ++i)
+            {
+              var type = script.uri[i].substring(0,
+                    script.uri[i].indexOf('://'));
+
+              if (type === 'model')
+              {
+                if (script.uri[i].indexOf('textures') > 0)
+                {
+                  textureUri = script.uri[i].substring(
+                      script.uri[i].indexOf('://') + 3);
+                  break;
+                }
+              }
+              else if (type === 'file')
+              {
+                if (script.uri[i].indexOf('materials') > 0)
+                {
+                  textureUri = script.uri[i].substring(
+                      script.uri[i].indexOf('://') + 3,
+                      script.uri[i].indexOf('materials') + 9) + '/textures';
+                  break;
+                }
+              }
+            }
+            if (textureUri)
+            {
+              texture = uriPath + '/' +
+                  textureUri  + '/' + textureName;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // normal map
+  if (material.normal_map)
+  {
+    var mapUri;
+    if (material.normal_map.indexOf('://') > 0)
+    {
+      mapUri = material.normal_map.substring(
+          material.normal_map.indexOf('://') + 3,
+          material.normal_map.lastIndexOf('/'));
+    }
+    else
+    {
+      mapUri = textureUri;
+    }
+    if (mapUri)
+    {
+      var startIndex = material.normal_map.lastIndexOf('/') + 1;
+      if (startIndex < 0)
+      {
+        startIndex = 0;
+      }
+      var normalMapName = material.normal_map.substr(startIndex,
+          material.normal_map.lastIndexOf('.') - startIndex);
+      normalMap = uriPath + '/' +
+        mapUri  + '/' + normalMapName + '.png';
+    }
+  }
+
+  return {
+      texture: texture,
+      normalMap: normalMap,
+      ambient: ambient,
+      diffuse: diffuse,
+      specular: specular,
+      opacity: opacity
+  };
 };

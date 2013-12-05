@@ -60,6 +60,7 @@ GazeboInterface::GazeboInterface()
   this->factoryTopic = "~/factory";
   this->worldControlTopic = "~/world_control";
   this->statsTopic = "~/world_stats";
+  this->roadTopic = "~/roads";
   this->heightmapService = "~/heightmap_data";
 
   // material topic
@@ -97,6 +98,9 @@ GazeboInterface::GazeboInterface()
 
   this->statsSub = this->node->Subscribe(this->statsTopic,
       &GazeboInterface::OnStats, this);
+
+  this->roadSub = this->node->Subscribe(this->roadTopic,
+      &GazeboInterface::OnRoad, this, true);
 
   // For getting scene info on connect
   this->requestPub =
@@ -529,6 +533,16 @@ void GazeboInterface::ProcessServiceRequests()
         this->Send(msg);
       }
     }
+    else if (service == this->roadTopic)
+    {
+      gzerr << " road service " <<  this->roadMsgs.size() << std::endl;
+      if (!this->roadMsgs.empty())
+      {
+        std::string msg = this->PackOutgoingServiceMsg(id,
+            pb2json(*roadMsgs.front().get()));
+        this->Send(msg);
+      }
+    }
   }
 }
 
@@ -697,6 +711,13 @@ void GazeboInterface::OnStats(ConstWorldStatisticsPtr &_msg)
     boost::recursive_mutex::scoped_lock lock(*this->receiveMutex);
     this->statsMsgs.push_back(_msg);
   }
+}
+
+/////////////////////////////////////////////////
+void GazeboInterface::OnRoad(ConstRoadPtr &_msg)
+{
+  boost::recursive_mutex::scoped_lock lock(*this->receiveMutex);
+  this->roadMsgs.push_back(_msg);
 }
 
 /////////////////////////////////////////////////
