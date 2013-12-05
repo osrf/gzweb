@@ -194,7 +194,7 @@ GZ3D.GZIface.prototype.init = function()
     }
   };
 
-  visualTopic.subscribe(visualUpdate.bind(this));
+  // visualTopic.subscribe(visualUpdate.bind(this));
 
   // world stats
   var worldStatsTopic = new ROSLIB.Topic({
@@ -486,7 +486,10 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
         linkObj.add(visualObj);
       }*/
     }
-    for (var l = 0; l < link.collision.length; ++l)
+
+    // TODO disable collisions for now, somehow it affects texture mapping
+    // of certain models
+    /*for (var l = 0; l < link.collision.length; ++l)
     {
       var collision = link.collision[l];
       for (var m = 0; m < link.collision[l].visual.length; ++m)
@@ -498,7 +501,7 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
           linkObj.add(collisionVisualObj);
         }
       }
-    }
+    }*/
   }
   return modelObj;
 };
