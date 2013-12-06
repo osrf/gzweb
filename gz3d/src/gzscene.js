@@ -427,33 +427,35 @@ GZ3D.Scene.prototype.createBox = function(width, height, depth)
   var geometry = new THREE.CubeGeometry(width, height, depth, 1, 1, 1);
 
   // Fix UVs so textures are mapped in a way that is consistent to gazebo
+  // Some face uvs need to be rotated clockwise, while others anticlockwise
+  // After updating to threejs rev 62, geometries changed from quads (6 faces)
+  // to triangles (12 faces).
   geometry.dynamic = true;
   var faceUVFixA = [1, 4, 5];
   var faceUVFixB = [0];
   for (var i = 0; i < faceUVFixA.length; ++i)
   {
-    var idx = faceUVFixA[i];
-    var length = geometry.faceVertexUvs[0][idx].length;
-    var uva = geometry.faceVertexUvs[0][idx][length-1];
-    for (var j = length-2; j >= 0; --j)
-    {
-      var uvb = geometry.faceVertexUvs[0][idx][j];
-      geometry.faceVertexUvs[0][idx][j] = uva;
-      uva = uvb;
-    }
-    geometry.faceVertexUvs[0][idx][length-1] = uva;
+    var idx = faceUVFixA[i]*2;
+    var uva = geometry.faceVertexUvs[0][idx][0];
+    geometry.faceVertexUvs[0][idx][0] = geometry.faceVertexUvs[0][idx][1];
+    geometry.faceVertexUvs[0][idx][1] = geometry.faceVertexUvs[0][idx+1][1];
+    geometry.faceVertexUvs[0][idx][2] = uva;
+
+    geometry.faceVertexUvs[0][idx+1][0] = geometry.faceVertexUvs[0][idx+1][1];
+    geometry.faceVertexUvs[0][idx+1][1] = geometry.faceVertexUvs[0][idx+1][2];
+    geometry.faceVertexUvs[0][idx+1][2] = geometry.faceVertexUvs[0][idx][2];
   }
   for (var ii = 0; ii < faceUVFixB.length; ++ii)
   {
-    var idxB = faceUVFixB[ii];
+    var idxB = faceUVFixB[ii]*2;
     var uvc = geometry.faceVertexUvs[0][idxB][0];
-    for (var jj = 1; jj < geometry.faceVertexUvs[0][idxB].length; ++jj)
-    {
-      var uvd = geometry.faceVertexUvs[0][idxB][jj];
-      geometry.faceVertexUvs[0][idxB][jj] = uvc;
-      uvc = uvd;
-    }
-    geometry.faceVertexUvs[0][idxB][0] = uvc;
+    geometry.faceVertexUvs[0][idxB][0] = geometry.faceVertexUvs[0][idxB][2];
+    geometry.faceVertexUvs[0][idxB][1] = uvc;
+    geometry.faceVertexUvs[0][idxB][2] =  geometry.faceVertexUvs[0][idxB+1][1];
+
+    geometry.faceVertexUvs[0][idxB+1][2] = geometry.faceVertexUvs[0][idxB][2];
+    geometry.faceVertexUvs[0][idxB+1][1] = geometry.faceVertexUvs[0][idxB+1][0];
+    geometry.faceVertexUvs[0][idxB+1][0] = geometry.faceVertexUvs[0][idxB][1];
   }
   geometry.uvsNeedUpdate = true;
 
@@ -945,7 +947,7 @@ GZ3D.Scene.prototype.prepareColladaMesh = function(dae, submesh, centerSubmesh)
   return mesh;
 };
 
-GZ3D.Scene.prototype.setMaterial = function(mesh, texture, normalMap)
+/*GZ3D.Scene.prototype.setMaterial = function(mesh, texture, normalMap)
 {
   if (!mesh)
   {
@@ -973,6 +975,28 @@ GZ3D.Scene.prototype.setMaterial = function(mesh, texture, normalMap)
     var shaderMaterial = new THREE.ShaderMaterial(parameters);
     mesh.geometry.computeTangents();
     mesh.material = shaderMaterial;
+  }
+};*/
+
+GZ3D.Scene.prototype.setMaterial = function(mesh, material, normalMap)
+{
+  if (!mesh)
+  {
+    return;
+  }
+
+  if (material || normalMap)
+  {
+    var mat = new THREE.MeshPhongMaterial();
+    if (material)
+    {
+      mat.map = THREE.ImageUtils.loadTexture(material);
+    }
+    if (normalMap)
+    {
+      mat.normalMap = THREE.ImageUtils.loadTexture(normalMap);
+    }
+    mesh.material = mat;
   }
 };
 
