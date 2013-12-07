@@ -376,6 +376,7 @@ void GazeboInterface::ProcessMessages()
             else if (reset == "world")
             {
               worldControlMsg.mutable_reset()->set_all(true);
+
             }
           }
           if (!pause.empty() || !reset.empty())
@@ -556,34 +557,36 @@ void GazeboInterface::OnModelMsg(ConstModelPtr &_msg)
 bool GazeboInterface::FilterPoses(const TimedPose &_old,
     const TimedPose &_current)
 {
-  if(this->messageCount >= this->messageWindowSize)
+  if (this->messageCount >= this->messageWindowSize)
   {
-    double ratio =  100.0 * this->skippedMsgCount  / this->messageWindowSize;
-    std::cout << "Message filter: " << ratio << " %" << std::endl;
-   // std::cout << "Message count : " << this->skippedMsgCount;
-   // std::cout << " "  << << std::endl;
+    // double ratio =  100.0 * this->skippedMsgCount  / this->messageWindowSize;
+    // std::cout << "Message filter: " << ratio << " %" << std::endl;
+    // std::cout << "Message count : " << this->skippedMsgCount;
+    // std::cout << " "  << << std::endl;
     this->skippedMsgCount = 0;
     this->messageCount = 0;
   }
   this->messageCount++;
 
-  bool has_moved = false;
-  bool is_too_early = false;
-  bool has_rotated = false;
+  bool hasMoved = false;
+  bool isTooEarly = false;
+  bool hasRotated = false;
 
-  gazebo::common::Time mininumTimeElapsed(minimumMsgAge);
+  gazebo::common::Time mininumTimeElapsed(this->minimumMsgAge);
 
   gazebo::common::Time timeDifference =  _current.first - _old.first;
-  if (timeDifference < mininumTimeElapsed )
+
+  // checking > 0 because world may have been reset
+  if (timeDifference < mininumTimeElapsed && timeDifference.Double() > 0)
   {
-    is_too_early = true;
+    isTooEarly = true;
   }
 
   gazebo::math::Vector3 posDiff = _current.second.pos - _old.second.pos;
   double translationSquared = posDiff.GetSquaredLength();
   if (translationSquared > minimumDistanceSquared)
   {
-    has_moved = true;
+    hasMoved = true;
   }
 
   gazebo::math::Quaternion i = _current.second.rot.GetInverse();
@@ -593,16 +596,16 @@ bool GazeboInterface::FilterPoses(const TimedPose &_old,
   double rotation = d.GetSquaredLength();
   if (rotation > minimumQuaternionSquared)
   {
-    has_rotated = true;
+    hasRotated = true;
   }
 
-  if (is_too_early)
+  if (isTooEarly)
   {
     this->skippedMsgCount++;
     return true;
   }
 
-  if( (has_moved == false) && (has_rotated == false))
+  if ((hasMoved == false) && (hasRotated == false))
   {
     this->skippedMsgCount++;
     return true;
