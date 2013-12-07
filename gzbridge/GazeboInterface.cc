@@ -705,7 +705,10 @@ void GazeboInterface::OnStats(ConstWorldStatisticsPtr &_msg)
   gazebo::common::Time wallTime;
   wallTime = gazebo::msgs::Convert(_msg->real_time());
   bool paused = _msg->paused();
+
+  // pub at 1Hz, but force pub if world state changes
   if (((wallTime - this->lastStatsTime).Double() >= 1.0) ||
+      wallTime < this->lastStatsTime ||
       this->lastPausedState != paused)
   {
     this->lastStatsTime = wallTime;
