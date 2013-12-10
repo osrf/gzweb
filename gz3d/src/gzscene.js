@@ -585,19 +585,6 @@ GZ3D.Scene.prototype.createRoads = function(points, width, texture)
     prevTexCoord = texCoord;
   }
 
-/*  geometry.faceVertexUvs[0].push(
-   [new THREE.Vector2(0,0), new THREE.Vector2(1,0),
-           new THREE.Vector2(0,1)]);
-
-  geometry.faceVertexUvs[0].push(
-   [new THREE.Vector2(1,0), new THREE.Vector2(1,1),
-           new THREE.Vector2(0,1)]);*/
-
-/*  for (var j = 0; j < roads.point.length; ++j)
-  {
-    geometry.faces.push(new THREE.Face3(j, j+1, j+2));
-  }*/
-
   // geometry.computeTangents();
   geometry.computeFaceNormals();
 
@@ -622,7 +609,6 @@ GZ3D.Scene.prototype.createRoads = function(points, width, texture)
   {
     material.specular.setRGB(specular[0], specular[1], specular[2]);
   }*/
-  //var texture = mat['texture'];
   if (texture)
   {
     var tex = THREE.ImageUtils.loadTexture(texture);
@@ -767,8 +753,6 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
   this.heightmap = parent;
 };
 
-//GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh, texture,
-//    normalMap, parent)
 GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh,
     callback)
 {
@@ -778,8 +762,6 @@ GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh,
   // load urdf model
   if (uriFile.substr(-4).toLowerCase() === '.dae')
   {
-//    return this.loadCollada(uri, submesh, centerSubmesh, texture, normalMap,
-//        parent);
     return this.loadCollada(uri, submesh, centerSubmesh, callback);
   }
   else if (uriFile.substr(-5).toLowerCase() === '.urdf')
@@ -819,9 +801,7 @@ GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh,
 };
 
 // load the collada file
-// GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
-//    texture, normalMap, parent)
- GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
+GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
     callback)
 {
   var dae;
@@ -838,7 +818,6 @@ GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh,
       mesh = this.prepareColladaMesh(dae, null, null);
     }
     callback(dae);
-//    this.setMaterial(mesh, texture, normalMap);
   }
 
   if (!mesh)
@@ -864,15 +843,9 @@ GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh,
       this.scene.meshes[thatURI] = dae;
       mesh = this.scene.prepareColladaMesh(dae, thatSubmesh, centerSubmesh);
 
-//      this.scene.setMaterial(mesh, texture, normalMap);
-      //parent.add(dae);
       dae.name = uri;
       callback(dae);
     });
-  }
-  else
-  {
-//    parent.add(dae);
   }
 };
 
@@ -987,25 +960,48 @@ GZ3D.Scene.prototype.prepareColladaMesh = function(dae, submesh, centerSubmesh)
   }
 };*/
 
-GZ3D.Scene.prototype.setMaterial = function(mesh, material, normalMap)
+GZ3D.Scene.prototype.setMaterial = function(obj, material)
 {
-  if (!mesh)
+  if (obj)
   {
-    return;
-  }
-
-  if (material || normalMap)
-  {
-    var mat = new THREE.MeshPhongMaterial();
     if (material)
     {
-      mat.map = THREE.ImageUtils.loadTexture(material);
+      obj.material = new THREE.MeshPhongMaterial();
+      var ambient = material.ambient;
+      if (ambient)
+      {
+        obj.material.ambient.setRGB(ambient[0], ambient[1], ambient[2]);
+      }
+      var diffuse = material.diffuse;
+      if (diffuse)
+      {
+        obj.material.color.setRGB(diffuse[0], diffuse[1], diffuse[2]);
+      }
+      var specular = material.specular;
+      if (specular)
+      {
+        obj.material.specular.setRGB(specular[0], specular[1], specular[2]);
+      }
+      var opacity = material.opacity;
+      if (opacity)
+      {
+        if (opacity < 1)
+        {
+          obj.material.transparent = true;
+          obj.material.opacity = opacity;
+        }
+      }
+
+      if (material.texture)
+      {
+        obj.material.map = THREE.ImageUtils.loadTexture(material.texture);
+      }
+      if (material.normalMap)
+      {
+        obj.material.normalMap =
+            THREE.ImageUtils.loadTexture(material.normalMap);
+      }
     }
-    if (normalMap)
-    {
-      mat.normalMap = THREE.ImageUtils.loadTexture(normalMap);
-    }
-    mesh.material = mat;
   }
 };
 
@@ -1021,7 +1017,6 @@ GZ3D.Scene.prototype.setManipulationMode = function(mode)
   }
 };
 
-
 GZ3D.Scene.prototype.showCollision = function(show)
 {
   if (show === this.showCollisions)
@@ -1033,11 +1028,17 @@ GZ3D.Scene.prototype.showCollision = function(show)
   this.scene.getDescendants(allObjects);
   for (var i = 0; i < allObjects.length; ++i)
   {
-    if (allObjects[i].name.indexOf('COLLISION_VISUAL') >=0)
+    if (allObjects[i] instanceof THREE.Object3D &&
+        allObjects[i].name.indexOf('COLLISION_VISUAL') >=0)
     {
-      for (var j =0; j < allObjects[i].children.length; ++j)
+      var allChildren = [];
+      allObjects[i].getDescendants(allChildren);
+      for (var j =0; j < allChildren.length; ++j)
       {
-        allObjects[i].children[j].visible = show;
+        if (allChildren[j] instanceof THREE.Mesh)
+        {
+          allChildren[j].visible = show;
+        }
       }
     }
   }

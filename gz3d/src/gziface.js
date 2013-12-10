@@ -195,7 +195,7 @@ GZ3D.GZIface.prototype.init = function()
     }
   };
 
-  // visualTopic.subscribe(visualUpdate.bind(this));
+  visualTopic.subscribe(visualUpdate.bind(this));
 
   // world stats
   var worldStatsTopic = new ROSLIB.Topic({
@@ -480,36 +480,11 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
       {
         linkObj.add(visualObj);
       }
-      /*if (visual.geometry)
-      {
-        var geom = visual.geometry;
-        var visualObj = new THREE.Object3D();
-        visualObj.name = visual.name;
-        if (visual.pose)
-        {
-          this.scene.setPose(visualObj, visual.pose.position,
-              visual.pose.orientation);
-        }
-        this.createGeom(geom, visual.material, visualObj);
-        for (var c = 0; c < visualObj.children.length; ++c)
-        {
-          if (visual.cast_shadows)
-          {
-            visualObj.children[c].castShadow = visual.cast_shadows;
-          }
-          else
-          {
-            visualObj.children[c].castShadow = true;
-          }
-          visualObj.children[c].receiveShadow = true;
-        }
-        linkObj.add(visualObj);
-      }*/
     }
 
     // TODO disable collisions for now, somehow it affects texture mapping
     // of certain models
-    /*for (var l = 0; l < link.collision.length; ++l)
+    for (var l = 0; l < link.collision.length; ++l)
     {
       var collision = link.collision[l];
       for (var m = 0; m < link.collision[l].visual.length; ++m)
@@ -521,7 +496,7 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
           linkObj.add(collisionVisualObj);
         }
       }
-    }*/
+    }
   }
   return modelObj;
 };
@@ -538,37 +513,12 @@ GZ3D.GZIface.prototype.createVisualFromMsg = function(visual)
       this.scene.setPose(visualObj, visual.pose.position,
           visual.pose.orientation);
     }
+
+    visualObj.castShadow = visual.cast_shadows;
+    visualObj.receiveShadow = visual.receive_shadows;
+
     this.createGeom(geom, visual.material, visualObj);
-    for (var c = 0; c < visualObj.children.length; ++c)
-    {
-      visualObj.children[c].castShadow = true;
-      visualObj.children[c].receiveShadow = true;
 
-      if (visual.cast_shadows)
-      {
-        visualObj.children[c].castShadow = visual.cast_shadows;
-      }
-      if (visual.receive_shadows)
-      {
-        visualObj.children[c].receiveShadow = visual.receive_shadows;
-      }
-
-      if (visual.name.indexOf('COLLISION_VISUAL') >= 0)
-      {
-        visualObj.children[c].castShadow = false;
-        visualObj.children[c].receiveShadow = false;
-
-        visualObj.children[c].visible = this.scene.showCollisions;
-      }
-    }
-    if (visual.parent_name)
-    {
-      var parent = this.scene.getByName(visual.parent_name);
-      if (parent)
-      {
-        parent.add(visualObj);
-      }
-    }
     return visualObj;
   }
 };
@@ -746,15 +696,14 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
           parent.scale.z = geom.mesh.scale.z;
         }
 
-//        this.scene.loadMesh(uriPath + '/' + modelName, submesh,
-//            centerSubmesh, mat.texture, mat.normalMap, parent);
-
         var modelUri = uriPath + '/' + modelName;
-        this.entityMaterial[modelUri] = mat;
+
+        var materialName = parent.name + '::' + modelUri;
+        this.entityMaterial[materialName] = mat;
 
         this.scene.loadMesh(modelUri, submesh,
             centerSubmesh, function(dae) {
-              if (that.entityMaterial[dae.name])
+              if (that.entityMaterial[materialName])
               {
                 var allChildren = [];
                 dae.getDescendants(allChildren);
@@ -762,20 +711,20 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
                 {
                   if (allChildren[c] instanceof THREE.Mesh)
                   {
-                    that.applyMaterial(allChildren[c],
-                        that.entityMaterial[dae.name]);
+                    that.scene.setMaterial(allChildren[c],
+                        that.entityMaterial[materialName]);
                     break;
                   }
                 }
               }
               parent.add(dae);
+              loadGeom(parent);
             });
       }
     }
   }
   else if (geom.heightmap)
   {
-    //var that = this;
     var request = new ROSLIB.ServiceRequest({
       name : that.scene.name
     });
@@ -809,15 +758,47 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
 
   if (obj)
   {
-//    var mat = this.parseMaterial(material);
     if (mat)
     {
       // texture mapping for simple shapes and planes only,
       // not used by mesh and terrain
-      this.applyMaterial(obj, mat);
+      this.scene.setMaterial(obj, mat);
 
       obj.updateMatrix();
       parent.add(obj);
+    }
+    loadGeom(parent);
+  }
+
+  function loadGeom(visualObj)
+  {
+    var allChildren = [];
+    visualObj.getDescendants(allChildren);
+    for (var c = 0; c < allChildren.length; ++c)
+    {
+      if (allChildren[c] instanceof THREE.Mesh)
+      {
+        allChildren[c].castShadow = true;
+        allChildren[c].receiveShadow = true;
+
+        if (visualObj.castShadows)
+        {
+          allChildren[c].castShadow = visualObj.castShadows;
+        }
+        if (visualObj.receiveShadows)
+        {
+          allChildren[c].receiveShadow = visualObj.receiveShadows;
+        }
+
+        if (visualObj.name.indexOf('COLLISION_VISUAL') >= 0)
+        {
+          allChildren[c].castShadow = false;
+          allChildren[c].receiveShadow = false;
+
+          allChildren[c].visible = this.scene.showCollisions;
+        }
+        break;
+      }
     }
   }
 };
@@ -854,15 +835,13 @@ GZ3D.GZIface.prototype.applyMaterial = function(obj, mat)
         }
       }
 
-      //this.scene.setMaterial(obj, texture, normalMap);
-
       if (mat.texture)
       {
         obj.material.map = THREE.ImageUtils.loadTexture(mat.texture);
       }
       if (mat.normalMap)
       {
-        //obj.material.normalMap = THREE.ImageUtils.loadTexture(mat.normalMap);
+        obj.material.normalMap = THREE.ImageUtils.loadTexture(mat.normalMap);
       }
     }
   }
@@ -884,7 +863,6 @@ GZ3D.GZIface.prototype.parseMaterial = function(material)
   var specular;
   var opacity;
   var mat;
-
 
   // get texture from material script
   var script  = material.script;
