@@ -202,6 +202,7 @@ GZ3D.GZIface = function(scene, gui)
 GZ3D.GZIface.prototype.init = function()
 {
   this.material = [];
+  this.entityMaterial = {};
 
   // Set up initial scene
   this.webSocket = new ROSLIB.Ros({
@@ -856,9 +857,9 @@ GZ3D.GZIface.prototype.parseUri = function(uri)
 GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
 {
   var obj;
-  var mat = this.parseMaterial(material);
   var uriPath = 'assets';
-
+  var that = this;
+  var mat = this.parseMaterial(material);
   if (geom.box)
   {
     obj = this.scene.createBox(geom.box.size.x, geom.box.size.y,
@@ -936,14 +937,36 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
           parent.scale.z = geom.mesh.scale.z;
         }
 
-        this.scene.loadMesh(uriPath + '/' + modelName, submesh,
-            centerSubmesh, mat.texture, mat.normalMap, parent);
+//        this.scene.loadMesh(uriPath + '/' + modelName, submesh,
+//            centerSubmesh, mat.texture, mat.normalMap, parent);
+
+        var modelUri = uriPath + '/' + modelName;
+        this.entityMaterial[modelUri] = mat;
+
+        this.scene.loadMesh(modelUri, submesh,
+            centerSubmesh, function(dae) {
+              if (that.entityMaterial[dae.name])
+              {
+                var allChildren = [];
+                dae.getDescendants(allChildren);
+                for (var c = 0; c < allChildren.length; ++c)
+                {
+                  if (allChildren[c] instanceof THREE.Mesh)
+                  {
+                    that.applyMaterial(allChildren[c],
+                        that.entityMaterial[dae.name]);
+                    break;
+                  }
+                }
+              }
+              parent.add(dae);
+            });
       }
     }
   }
   else if (geom.heightmap)
   {
-    var that = this;
+    //var that = this;
     var request = new ROSLIB.ServiceRequest({
       name : that.scene.name
     });
@@ -975,8 +998,23 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
     //this.scene.loadHeightmap(parent)
   }
 
-  // texture mapping for simple shapes and planes only,
-  // not used by mesh and terrain
+  if (obj)
+  {
+//    var mat = this.parseMaterial(material);
+    if (mat)
+    {
+      // texture mapping for simple shapes and planes only,
+      // not used by mesh and terrain
+      this.applyMaterial(obj, mat);
+
+      obj.updateMatrix();
+      parent.add(obj);
+    }
+  }
+};
+
+GZ3D.GZIface.prototype.applyMaterial = function(obj, mat)
+{
   if (obj)
   {
     if (mat)
@@ -1015,11 +1053,9 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
       }
       if (mat.normalMap)
       {
-        obj.material.normalMap = THREE.ImageUtils.loadTexture(mat.normalMap);
+        //obj.material.normalMap = THREE.ImageUtils.loadTexture(mat.normalMap);
       }
     }
-    obj.updateMatrix();
-    parent.add(obj);
   }
 };
 
@@ -1027,7 +1063,7 @@ GZ3D.GZIface.prototype.parseMaterial = function(material)
 {
   if (!material)
   {
-    return {};
+    return null;
   }
 
   var uriPath = 'assets';
@@ -2151,8 +2187,10 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
   this.heightmap = parent;
 };
 
-GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh, texture,
-    normalMap, parent)
+//GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh, texture,
+//    normalMap, parent)
+GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh,
+    callback)
 {
   var uriPath = uri.substring(0, uri.lastIndexOf('/'));
   var uriFile = uri.substring(uri.lastIndexOf('/') + 1);
@@ -2160,12 +2198,13 @@ GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh, texture,
   // load urdf model
   if (uriFile.substr(-4).toLowerCase() === '.dae')
   {
-    return this.loadCollada(uri, submesh, centerSubmesh, texture, normalMap,
-        parent);
+//    return this.loadCollada(uri, submesh, centerSubmesh, texture, normalMap,
+//        parent);
+    return this.loadCollada(uri, submesh, centerSubmesh, callback);
   }
   else if (uriFile.substr(-5).toLowerCase() === '.urdf')
   {
-    var urdfModel = new ROSLIB.UrdfModel({
+    /*var urdfModel = new ROSLIB.UrdfModel({
       string : uri
     });
 
@@ -2195,13 +2234,15 @@ GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh, texture,
           }
         }
       }
-    }
+    }*/
   }
 };
 
 // load the collada file
-GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
-    texture, normalMap, parent)
+// GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
+//    texture, normalMap, parent)
+ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
+    callback)
 {
   var dae;
   var mesh = null;
@@ -2216,7 +2257,8 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
     {
       mesh = this.prepareColladaMesh(dae, null, null);
     }
-    this.setMaterial(mesh, texture, normalMap);
+    callback(dae);
+//    this.setMaterial(mesh, texture, normalMap);
   }
 
   if (!mesh)
@@ -2241,13 +2283,16 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
       dae.updateMatrix();
       this.scene.meshes[thatURI] = dae;
       mesh = this.scene.prepareColladaMesh(dae, thatSubmesh, centerSubmesh);
-      this.scene.setMaterial(mesh, texture, normalMap);
-      parent.add(dae);
+
+//      this.scene.setMaterial(mesh, texture, normalMap);
+      //parent.add(dae);
+      dae.name = uri;
+      callback(dae);
     });
   }
   else
   {
-    parent.add(dae);
+//    parent.add(dae);
   }
 };
 
