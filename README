@@ -19,7 +19,7 @@ Install nodejs modules
 
 From the gzweb root directory
 
-    npm install websocket
+    npm install
 
 # Build
 
