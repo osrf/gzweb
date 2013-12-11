@@ -23,7 +23,7 @@ put them in the right directory and prepare them for the web. To do this,
 you'll need to source the gazebo/drcsim setup.sh files, and run a deploy script.
 
     # if you have drcsim then source /usr/share/drcsim/setup.sh
-    ./usr/share/gazebo/setup.sh
+    . /usr/share/gazebo/setup.sh
 
 Run the deploy script, this downloads models from the web and may take a couple of minutes.
 
