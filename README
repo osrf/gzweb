@@ -12,12 +12,7 @@ Dependencies: sudo apt-get install the following:
 
     sudo apt-get install libjansson-dev nodejs npm libboost-dev
 
-Install nodejs modules
-
-    npm install -g http-server@0.5.5
-    npm install -g node-gyp
-
-From the gzweb root directory
+Install nodejs modules. From the gzweb root directory:
 
     npm install
 
