@@ -14,7 +14,7 @@ Dependencies: sudo apt-get install the following:
 
 Install nodejs modules
 
-    npm install http-server@0.5.5 -g
+    npm install -g http-server@0.5.5
     npm install -g node-gyp
 
 From the gzweb root directory
