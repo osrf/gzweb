@@ -25,10 +25,13 @@ node-gyp build -d
 cd $DIR
 
 if [ "$1" == "-m" ]; then  # build a local model database
-  
+
     # Temporal directory for the repository
     TMP_DIR=`mktemp -d`
     cd $TMP_DIR
+
+    # If no arg given then downlaod from gazebo_models repo
+    if [ "x$2" == "x"]; then
 
     echo -n "Downloading gazebo_models..."
     hg clone https://bitbucket.org/osrf/gazebo_models
@@ -46,13 +49,16 @@ if [ "$1" == "-m" ]; then  # build a local model database
     rm -rf $TMP_DIR
     rm -rf $DIR/http/client/assets
     mv $DIR/http/client/models $DIR/http/client/assets 
-    
+
+    fi
+
     cd $DIR
     
     echo "gather all models on the local machine"
 
     ./get_local_models.py $DIR/http/client/assets
     ./webify_models.py $DIR/http/client/assets
+    
     
 else
   echo "Not cloning the model repo"
