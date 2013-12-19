@@ -863,7 +863,7 @@ THREE.TransformControls = function ( camera, domElement, doc ) {
 		var currentSpace = scope.space;
 		var currentScale = scope.scale;
 
-		if ( event.keyCode == 84 ) { // T
+		/*if ( event.keyCode == 84 ) { // T
 
 			if ( scope.mode == 'translate' ) scope.space = ( scope.space == 'world' ) ? 'local' : 'world';
 			scope.mode = 'translate';
@@ -877,7 +877,7 @@ THREE.TransformControls = function ( camera, domElement, doc ) {
 
 		}
 
-/*		if ( event.keyCode == 82 ) { // R
+		if ( event.keyCode == 82 ) { // R
 
 			scope.mode = 'scale';
 			scope.space = 'local';

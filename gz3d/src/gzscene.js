@@ -1010,21 +1010,16 @@ GZ3D.Scene.prototype.setMaterial = function(obj, material)
 
 GZ3D.Scene.prototype.setManipulationMode = function(mode)
 {
-  if (mode !== this.manipulationMode)
+  if (mode === 'view')
   {
     this.killCameraControl = false;
     this.modelManipulator.detach();
     this.scene.remove(this.modelManipulator.gizmo);
   }
-
   this.manipulationMode = mode;
-
-  if (this.manipulationMode === 'view')
-  {
-    this.killCameraControl = false;
-    this.modelManipulator.detach();
-    this.scene.remove(this.modelManipulator.gizmo);
-  }
+  this.modelManipulator.mode = this.manipulationMode;
+  this.modelManipulator.setMode( this.modelManipulator.mode );
+  
 };
 
 GZ3D.Scene.prototype.showCollision = function(show)
