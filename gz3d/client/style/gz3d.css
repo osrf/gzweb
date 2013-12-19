@@ -59,6 +59,18 @@
     height: 16;
 }
 
+.ui-button .ui-icon.toolbar-rotate {
+    background-image: url(images/rotate.png);
+    width: 16;
+    height: 16;
+}
+
+.ui-button.ui-state-hover .ui-icon.toolbar-rotate {
+    background-image: url(images/rotate.png);
+    width: 16;
+    height: 16;
+}
+
 /* menu */
 .ui-menu {
     overflow: hidden;
