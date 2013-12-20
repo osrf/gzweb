@@ -1,72 +1,72 @@
 /* toolbar */
 .ui-button .ui-icon.toolbar-box {
-    background-image: url(images/box.png);
+    background-image: url(images/boxDark.png);
     width: 16;
     height: 16;
 }
 
 .ui-button.ui-state-hover .ui-icon.toolbar-box {
-    background-image: url(images/box.png);
+    background-image: url(images/boxDark.png);
     width: 16;
     height: 16;
 }
 
 .ui-button .ui-icon.toolbar-sphere {
-    background-image: url(images/sphere.png);
+    background-image: url(images/sphereDark.png);
     width: 16;
     height: 16;
 }
 
 .ui-button.ui-state-hover .ui-icon.toolbar-sphere {
-    background-image: url(images/sphere.png);
+    background-image: url(images/sphereDark.png);
     width: 16;
     height: 16;
 }
 
 .ui-button .ui-icon.toolbar-cylinder {
-    background-image: url(images/cylinder.png);
+    background-image: url(images/cylinderDark.png);
     width: 16;
     height: 16;
 }
 
 .ui-button.ui-state-hover .ui-icon.toolbar-cylinder {
-    background-image: url(images/cylinder.png);
+    background-image: url(images/cylinderDark.png);
     width: 16;
     height: 16;
 }
 
 .ui-button .ui-icon.toolbar-arrow {
-    background-image: url(images/arrow.png);
+    background-image: url(images/arrowDark.png);
     width: 16;
     height: 16;
 }
 
 .ui-button.ui-state-hover .ui-icon.toolbar-arrow {
-    background-image: url(images/arrow.png);
+    background-image: url(images/arrowDark.png);
     width: 16;
     height: 16;
 }
 
 .ui-button .ui-icon.toolbar-translate {
-    background-image: url(images/translate.png);
+    background-image: url(images/translateDark.png);
     width: 16;
     height: 16;
 }
 
 .ui-button.ui-state-hover .ui-icon.toolbar-translate {
-    background-image: url(images/translate.png);
+    background-image: url(images/translateDark.png);
     width: 16;
     height: 16;
 }
 
 .ui-button .ui-icon.toolbar-rotate {
-    background-image: url(images/rotate.png);
+    background-image: url(images/rotateDark.png);
     width: 16;
     height: 16;
 }
 
 .ui-button.ui-state-hover .ui-icon.toolbar-rotate {
-    background-image: url(images/rotate.png);
+    background-image: url(images/rotateDark.png);
     width: 16;
     height: 16;
 }
