@@ -369,14 +369,12 @@ GZ3D.GZIface.prototype.init = function()
   {
     if (!this.scene.getByName(message.name))
     {
-      console.log(message.name);
       // accept only collision visual msgs for now
       if (message.name.indexOf('COLLISION_VISUAL') < 0)
       {
         return;
       }
 
-      console.log('got ' + message.name + ' ' + message.parent_name );
       // delay the add if parent not found, this array will checked in
       // modelUpdate function
       var parent = this.scene.getByName(message.parent_name);
