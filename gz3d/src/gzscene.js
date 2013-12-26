@@ -124,6 +124,9 @@ GZ3D.Scene.prototype.onMouseDown = function(event)
     {
       // console.log('attached ' + model.name);
       this.modelManipulator.attach(model);
+      this.modelManipulator.mode = this.manipulationMode;
+      this.modelManipulator.setMode( this.modelManipulator.mode );
+
       this.selectedEntity = model;
       this.mouseEntity = this.selectedEntity;
       this.scene.add(this.modelManipulator.gizmo);
@@ -1007,14 +1010,16 @@ GZ3D.Scene.prototype.setMaterial = function(obj, material)
 
 GZ3D.Scene.prototype.setManipulationMode = function(mode)
 {
-  this.manipulationMode = mode;
-
-  if (this.manipulationMode === 'view')
+  if (mode === 'view')
   {
     this.killCameraControl = false;
     this.modelManipulator.detach();
     this.scene.remove(this.modelManipulator.gizmo);
   }
+  this.manipulationMode = mode;
+  this.modelManipulator.mode = this.manipulationMode;
+  this.modelManipulator.setMode( this.modelManipulator.mode );
+  
 };
 
 GZ3D.Scene.prototype.showCollision = function(show)

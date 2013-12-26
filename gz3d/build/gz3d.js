@@ -31,6 +31,16 @@ $(function() {
     guiEvents.emit('manipulation_mode', 'translate');
   });
 
+  $( '#rotate' ).button({
+    text: false,
+    icons: {
+      primary: 'toolbar-rotate'
+    }
+  })
+  .click(function() {
+    guiEvents.emit('manipulation_mode', 'rotate');
+  });
+
   $( '#box' ).button({
     text: false,
     icons: {
@@ -1377,27 +1387,6 @@ GZ3D.GZIface.prototype.parseMaterial = function(material)
 };
 */
 
-/*(function(global) {
-  "use strict";
-  var GZ3D.GZModelDatabase = function() {
-
-    if ( GZ3D.GZModelDatabase.prototype._singletonInstance ) {
-      return GZ3D.GZModelDatabase.prototype._singletonInstance;
-    }
-    GZ3D.GZModelDatabase.prototype._singletonInstance = this;
-
-    this.hasModel = function()
-    {
-
-    };
-  };
-
-var a = new MySingletonClass();
-var b = MySingletonClass();
-global.result = a === b;
-
-}(window))*/
-
 GZ3D.Scene = function()
 {
   this.init();
@@ -1524,6 +1513,9 @@ GZ3D.Scene.prototype.onMouseDown = function(event)
     {
       // console.log('attached ' + model.name);
       this.modelManipulator.attach(model);
+      this.modelManipulator.mode = this.manipulationMode;
+      this.modelManipulator.setMode( this.modelManipulator.mode );
+
       this.selectedEntity = model;
       this.mouseEntity = this.selectedEntity;
       this.scene.add(this.modelManipulator.gizmo);
@@ -2407,14 +2399,16 @@ GZ3D.Scene.prototype.setMaterial = function(obj, material)
 
 GZ3D.Scene.prototype.setManipulationMode = function(mode)
 {
-  this.manipulationMode = mode;
-
-  if (this.manipulationMode === 'view')
+  if (mode === 'view')
   {
     this.killCameraControl = false;
     this.modelManipulator.detach();
     this.scene.remove(this.modelManipulator.gizmo);
   }
+  this.manipulationMode = mode;
+  this.modelManipulator.mode = this.manipulationMode;
+  this.modelManipulator.setMode( this.modelManipulator.mode );
+  
 };
 
 GZ3D.Scene.prototype.showCollision = function(show)

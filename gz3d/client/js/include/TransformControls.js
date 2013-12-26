@@ -877,7 +877,7 @@ THREE.TransformControls = function ( camera, domElement, doc ) {
 
 		}
 
-/*		if ( event.keyCode == 82 ) { // R
+		/*if ( event.keyCode == 82 ) { // R
 
 			scope.mode = 'scale';
 			scope.space = 'local';

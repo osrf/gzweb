@@ -26,6 +26,16 @@ $(function() {
     guiEvents.emit('manipulation_mode', 'translate');
   });
 
+  $( '#rotate' ).button({
+    text: false,
+    icons: {
+      primary: 'toolbar-rotate'
+    }
+  })
+  .click(function() {
+    guiEvents.emit('manipulation_mode', 'rotate');
+  });
+
   $( '#box' ).button({
     text: false,
     icons: {
