@@ -1384,27 +1384,6 @@ GZ3D.GZIface.prototype.parseMaterial = function(material)
 };
 */
 
-/*(function(global) {
-  "use strict";
-  var GZ3D.GZModelDatabase = function() {
-
-    if ( GZ3D.GZModelDatabase.prototype._singletonInstance ) {
-      return GZ3D.GZModelDatabase.prototype._singletonInstance;
-    }
-    GZ3D.GZModelDatabase.prototype._singletonInstance = this;
-
-    this.hasModel = function()
-    {
-
-    };
-  };
-
-var a = new MySingletonClass();
-var b = MySingletonClass();
-global.result = a === b;
-
-}(window))*/
-
 GZ3D.Scene = function()
 {
   this.init();
