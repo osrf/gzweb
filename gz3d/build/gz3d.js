@@ -339,10 +339,12 @@ GZ3D.GZIface.prototype.init = function()
       var j = 0;
       while (i < len)
       {
-        var parent = this.visualsToAdd[j].parent_name;
-        if (parent.indexOf(modelObj.name) >=0)
+        var parentName = this.visualsToAdd[j].parent_name;
+        if (parentName.indexOf(modelObj.name) >=0)
         {
-          this.createVisualFromMsg(this.visualsToAdd[j]);
+          var parent = this.scene.getByName(parentName);
+          var visualObj = this.createVisualFromMsg(this.visualsToAdd[j]);
+          parent.add(visualObj);
           this.visualsToAdd.splice(j, 1);
         }
         else
@@ -367,21 +369,25 @@ GZ3D.GZIface.prototype.init = function()
   {
     if (!this.scene.getByName(message.name))
     {
+      console.log(message.name);
       // accept only collision visual msgs for now
       if (message.name.indexOf('COLLISION_VISUAL') < 0)
       {
         return;
       }
 
+      console.log('got ' + message.name + ' ' + message.parent_name );
       // delay the add if parent not found, this array will checked in
       // modelUpdate function
-      if (message.parent_name && !this.scene.getByName(message.parent_name))
+      var parent = this.scene.getByName(message.parent_name);
+      if (message.parent_name && !parent)
       {
         this.visualsToAdd.push(message);
       }
       else
       {
-        this.createVisualFromMsg(message);
+        var visualObj = this.createVisualFromMsg(message);
+        parent.add(visualObj);
       }
     }
   };
@@ -673,8 +679,6 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
       }
     }
 
-    // TODO disable collisions for now, somehow it affects texture mapping
-    // of certain models
     for (var l = 0; l < link.collision.length; ++l)
     {
       var collision = link.collision[l];
