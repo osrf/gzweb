@@ -964,10 +964,9 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
       // texture mapping for simple shapes and planes only,
       // not used by mesh and terrain
       this.scene.setMaterial(obj, mat);
-
-      obj.updateMatrix();
-      parent.add(obj);
     }
+    obj.updateMatrix();
+    parent.add(obj);
     loadGeom(parent);
   }
 
@@ -1384,6 +1383,27 @@ GZ3D.GZIface.prototype.parseMaterial = function(material)
   }
 };
 */
+
+/*(function(global) {
+  "use strict";
+  var GZ3D.GZModelDatabase = function() {
+
+    if ( GZ3D.GZModelDatabase.prototype._singletonInstance ) {
+      return GZ3D.GZModelDatabase.prototype._singletonInstance;
+    }
+    GZ3D.GZModelDatabase.prototype._singletonInstance = this;
+
+    this.hasModel = function()
+    {
+
+    };
+  };
+
+var a = new MySingletonClass();
+var b = MySingletonClass();
+global.result = a === b;
+
+}(window))*/
 
 GZ3D.Scene = function()
 {

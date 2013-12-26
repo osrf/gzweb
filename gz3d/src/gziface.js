@@ -763,10 +763,9 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
       // texture mapping for simple shapes and planes only,
       // not used by mesh and terrain
       this.scene.setMaterial(obj, mat);
-
-      obj.updateMatrix();
-      parent.add(obj);
     }
+    obj.updateMatrix();
+    parent.add(obj);
     loadGeom(parent);
   }
 
