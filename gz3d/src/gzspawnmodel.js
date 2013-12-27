@@ -9,10 +9,8 @@ GZ3D.SpawnModel = function(scene, domElement)
 
 GZ3D.SpawnModel.prototype.init = function()
 {
-//  this.emitter = new EventEmitter2({ verbose: true });
   this.plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
   this.projector = new THREE.Projector();
-//  this.ray = new THREE.Raycaster();
   this.ray = new THREE.Ray();
   this.obj = null;
   this.active = false;
@@ -80,7 +78,7 @@ GZ3D.SpawnModel.prototype.finish = function()
 GZ3D.SpawnModel.prototype.onMouseDown = function(event)
 {
   event.preventDefault();
-  event.stopPropagation();
+  event.stopImmediatePropagation();
 };
 
 GZ3D.SpawnModel.prototype.onMouseMove = function(event)
