@@ -31,24 +31,24 @@ if [ "$1" == "-m" ]; then  # build a local model database
     cd $TMP_DIR
 
     # If no arg given then downlaod from gazebo_models repo
-    if [ "x$2" == "x"]; then
+    if [ "x$2" == "x" ]; then
 
-    echo -n "Downloading gazebo_models..."
-    hg clone https://bitbucket.org/osrf/gazebo_models
+        echo -n "Downloading gazebo_models..."
+        hg clone https://bitbucket.org/osrf/gazebo_models
 
-    echo "Download complete"
-    cd gazebo_models
-    mkdir build
-    cd build
-    echo -n "Installing gazebo_models..."
-    cmake .. -DCMAKE_INSTALL_PREFIX=$DIR/http/client
-    make install > /dev/null 2>&1
-    echo "Install complete"
+        echo "Download complete"
+        cd gazebo_models
+        mkdir build
+        cd build
+        echo -n "Installing gazebo_models..."
+        cmake .. -DCMAKE_INSTALL_PREFIX=$DIR/http/client
+        make install > /dev/null 2>&1
+        echo "Install complete"
 
-    # Remove temp dir
-    rm -rf $TMP_DIR
-    rm -rf $DIR/http/client/assets
-    mv $DIR/http/client/models $DIR/http/client/assets 
+        # Remove temp dir
+        rm -rf $TMP_DIR
+        rm -rf $DIR/http/client/assets
+        mv $DIR/http/client/models $DIR/http/client/assets 
 
     fi
 

@@ -199,6 +199,210 @@ GZ3D.Gui.prototype.setSimTime = function(simTime)
  // console.log(simTime);
 };
 
+/*global $:false */
+
+var guiEvents = new EventEmitter2({ verbose: true });
+
+$(function() {
+  $( '#toolbar-shapes' ).buttonset();
+  $( '#toolbar-manipulate' ).buttonset();
+
+  $( '#arrow' ).button({
+    text: false,
+    icons: {
+      primary: 'toolbar-arrow'
+    }
+  })
+  .click(function() {
+    guiEvents.emit('manipulation_mode', 'view');
+  });
+
+  $( '#translate' ).button({
+    text: false,
+    icons: {
+      primary: 'toolbar-translate'
+    }
+  })
+  .click(function() {
+    guiEvents.emit('manipulation_mode', 'translate');
+  });
+
+  $( '#rotate' ).button({
+    text: false,
+    icons: {
+      primary: 'toolbar-rotate'
+    }
+  })
+  .click(function() {
+    guiEvents.emit('manipulation_mode', 'rotate');
+  });
+
+  $( '#box' ).button({
+    text: false,
+    icons: {
+      primary: 'toolbar-box'
+    }
+  })
+  .click(function() {
+    guiEvents.emit('entity_create', 'box');
+  });
+
+  $( '#sphere' ).button({
+    text: false,
+    icons: {
+      primary: 'toolbar-sphere'
+    }
+  })
+  .click(function() {
+    guiEvents.emit('entity_create', 'sphere');
+  });
+
+  $( '#cylinder' ).button({
+    text: false,
+    icons: {
+      primary: 'toolbar-cylinder'
+    }
+  })
+  .click(function() {
+    guiEvents.emit('entity_create', 'cylinder');
+  });
+
+  $( '#play' ).button({
+    text: false,
+    icons: {
+      primary: 'ui-icon-play'
+    }
+  })
+  .click(function() {
+    var options;
+    if ( $( this ).text() === 'Play' )
+    {
+      guiEvents.emit('pause', false);
+    } else
+    {
+      guiEvents.emit('pause', true);
+    }
+  });
+});
+
+$(function() {
+  $( '#menu' ).menu();
+  $( '#reset-model' )
+  .click(function() {
+    guiEvents.emit('model_reset');
+  });
+  $( '#reset-world' )
+  .click(function() {
+    guiEvents.emit('world_reset');
+  });
+  $( '#view-collisions' )
+  .click(function() {
+    guiEvents.emit('show_collision');
+  });
+  $( '#insert-bowl' )
+  .click(function() {
+    guiEvents.emit('entity_create', 'bowl');
+  });
+  $( '#insert-beer' )
+  .click(function() {
+    guiEvents.emit('entity_create', 'beer');
+  });
+});
+
+GZ3D.Gui = function(scene)
+{
+  this.scene = scene;
+  this.domElement = scene.getDomElement();
+  this.init();
+  this.emitter = new EventEmitter2({ verbose: true });
+};
+
+GZ3D.Gui.prototype.init = function()
+{
+  this.spawnModel = new GZ3D.SpawnModel(
+      this.scene, this.scene.getDomElement());
+
+  var that = this;
+  guiEvents.on('entity_create',
+      function (entity)
+      {
+        that.spawnModel.start(entity,
+            function(obj)
+            {
+              that.emitter.emit('entityCreated', obj, entity);
+            });
+      }
+  );
+
+  guiEvents.on('world_reset',
+      function ()
+      {
+        that.emitter.emit('reset', 'world');
+      }
+  );
+
+  guiEvents.on('model_reset',
+      function ()
+      {
+        that.emitter.emit('reset', 'model');
+      }
+  );
+
+  guiEvents.on('pause',
+      function (paused)
+      {
+        that.emitter.emit('pause', paused);
+      }
+  );
+
+  guiEvents.on('manipulation_mode',
+      function (mode)
+      {
+        that.scene.setManipulationMode(mode);
+      }
+  );
+
+  guiEvents.on('show_collision',
+      function ()
+      {
+        that.scene.showCollision(!that.scene.showCollisions);
+      }
+  );
+};
+
+GZ3D.Gui.prototype.setPaused = function(paused)
+{
+  var options;
+  if (paused)
+  {
+    options =
+    {
+      label: 'Play',
+      icons: { primary: 'ui-icon-play' }
+    };
+  }
+  else
+  {
+    options =
+    {
+      label: 'Pause',
+      icons: { primary: 'ui-icon-pause' }
+    };
+  }
+  $('#play').button('option', options);
+};
+
+GZ3D.Gui.prototype.setRealTime = function(realTime)
+{
+  $('#real-time-value').text(realTime);
+};
+
+GZ3D.Gui.prototype.setSimTime = function(simTime)
+{
+  $('#sim-time-value').text(simTime);
+ // console.log(simTime);
+};
+
 //var GAZEBO_MODEL_DATABASE_URI='http://gazebosim.org/models';
 
 GZ3D.GZIface = function(scene, gui)
@@ -2486,6 +2690,137 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
   }
 
   this.obj.add(mesh);
+  this.obj.position.z += 0.5;
+  this.scene.add(this.obj);
+
+  var that = this;
+  this.domElement.addEventListener( 'mousedown',
+      function(event) {that.onMouseUp(event);}, false );
+  this.domElement.addEventListener( 'mousemove',
+      function(event) {that.onMouseMove(event);}, false );
+  document.addEventListener( 'keydown',
+      function(event) {that.onKeyDown(event);}, false );
+
+  this.active = true;
+};
+
+GZ3D.SpawnModel.prototype.finish = function()
+{
+  var that = this;
+  this.domElement.removeEventListener( 'mousedown',
+      function(event) {that.onMouseUp(event);}, false );
+  this.domElement.removeEventListener( 'mousemove',
+      function(event) {that.onMouseMove(event);}, false );
+  document.removeEventListener( 'keydown',
+      function(event) {that.onKeyDown(event);}, false );
+
+  this.scene.remove(this.obj);
+  this.obj = undefined;
+  this.active = false;
+};
+
+GZ3D.SpawnModel.prototype.onMouseDown = function(event)
+{
+  event.preventDefault();
+};
+
+GZ3D.SpawnModel.prototype.onMouseMove = function(event)
+{
+  if (!this.active)
+  {
+    return;
+  }
+
+  event.preventDefault();
+
+  var vector = new THREE.Vector3( (event.clientX / window.innerWidth) * 2 - 1,
+      -(event.clientY / window.innerHeight) * 2 + 1, 0.5);
+  this.projector.unprojectVector(vector, this.scene.camera);
+  this.ray.set(this.scene.camera.position,
+      vector.sub(this.scene.camera.position).normalize());
+  var point = this.ray.intersectPlane(this.plane);
+  point.z = this.obj.position.z;
+  this.scene.setPose(this.obj, point, new THREE.Quaternion());
+};
+
+GZ3D.SpawnModel.prototype.onMouseUp = function(event)
+{
+  if (!this.active)
+  {
+    return;
+  }
+
+  this.callback(this.obj);
+  this.finish();
+};
+
+GZ3D.SpawnModel.prototype.onKeyDown = function(event)
+{
+  if ( event.keyCode === 27 ) // Esc
+  {
+    this.finish();
+  }
+};
+
+GZ3D.SpawnModel = function(scene, domElement)
+{
+  this.scene = scene;
+  this.domElement = ( domElement !== undefined ) ? domElement : document;
+  this.init();
+  this.obj = undefined;
+  this.callback = undefined;
+};
+
+GZ3D.SpawnModel.prototype.init = function()
+{
+//  this.emitter = new EventEmitter2({ verbose: true });
+  this.plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+  this.projector = new THREE.Projector();
+//  this.ray = new THREE.Raycaster();
+  this.ray = new THREE.Ray();
+  this.obj = null;
+  this.active = false;
+};
+
+GZ3D.SpawnModel.prototype.start = function(entity, callback)
+{
+  if (this.active)
+  {
+    this.finish();
+  }
+
+  this.callback = callback;
+
+  this.obj = new THREE.Object3D();
+  var mesh;
+  if (entity === 'box')
+  {
+    mesh = this.scene.createBox(1, 1, 1);
+    this.obj.name = 'unit_box_' +  (new Date()).getTime();
+    this.obj.add(mesh);
+  }
+  else if (entity === 'sphere')
+  {
+    mesh = this.scene.createSphere(0.5);
+    this.obj.name = 'unit_sphere_' + (new Date()).getTime();
+    this.obj.add(mesh);
+  }
+  else if (entity === 'cylinder')
+  {
+    mesh = this.scene.createCylinder(0.5, 1.0);
+    this.obj.name = 'unit_cylinder_' + (new Date()).getTime();
+    this.obj.add(mesh);
+  }
+  else if (entity === 'bowl')
+  {
+    var loader = new THREE.ColladaLoader();
+    loader.load('assets/bowl/meshes/bowl.dae', function (result) {
+      that.obj.add( result.scene);
+      that.obj.name = 'bowl_' + (new Date()).getTime();
+    });
+  }
+
+
   this.obj.position.z += 0.5;
   this.scene.add(this.obj);
 
