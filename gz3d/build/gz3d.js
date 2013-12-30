@@ -2557,3 +2557,4 @@ GZ3D.SpawnModel.prototype.onKeyDown = function(event)
     this.finish();
   }
 };
+
