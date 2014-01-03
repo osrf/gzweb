@@ -117,6 +117,12 @@ GZ3D.Gui.prototype.init = function()
   guiEvents.on('entity_create',
       function (entity)
       {
+        // manually trigger arrow mode
+        var arrow = $('#arrow');
+        arrow.click();
+        arrow[0].checked = true;
+        arrow.button('refresh');
+
         that.spawnModel.start(entity,
             function(obj)
             {
