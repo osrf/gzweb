@@ -230,6 +230,13 @@ void GazeboInterface::ProcessMessages()
     for (unsigned int i = 0; i < msgs.size(); ++i)
     {
       std::string msg = msgs[i];
+
+      std::string operation = get_value(msg, "op");
+      // ignore "advertise" messages (responsible for announcing the
+      // availability of topics) as we currently don't make use of them.
+      if (operation == "advertise")
+        continue;
+
       std::string topic = get_value(msg.c_str(), "topic");
 
       // Process subscribe requests
