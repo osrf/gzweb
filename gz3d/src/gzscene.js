@@ -1,8 +1,15 @@
+/**
+ * The scene is where everything is placed, from objects, to lights and cameras.
+ * @constructor
+ */
 GZ3D.Scene = function()
 {
   this.init();
 };
 
+/**
+ * Initialize scene
+ */
 GZ3D.Scene.prototype.init = function()
 {
   this.name = 'default';
@@ -16,11 +23,12 @@ GZ3D.Scene.prototype.init = function()
   this.selectedEntity = null;
   this.mouseEntity = null;
 
+  // view|translate|rotate
   this.manipulationMode = 'view';
 
   this.renderer = new THREE.WebGLRenderer({antialias: true });
   this.renderer.setClearColor(0xcccccc, 1);
-  this.renderer.setSize( window.innerWidth, window.innerHeight);
+  this.renderer.setSize( window.containerWidth, window.containerHeight);
   // this.renderer.shadowMapEnabled = true;
   // this.renderer.shadowMapSoft = true;
 
@@ -28,8 +36,9 @@ GZ3D.Scene.prototype.init = function()
   this.ambient = new THREE.AmbientLight( 0x222222 );
   this.scene.add(this.ambient);
 
+  // camera
   this.camera = new THREE.PerspectiveCamera(
-      60, window.innerWidth / window.innerHeight, 0.1, 1000 );
+      60, window.containerWidth / window.containerHeight, 0.1, 1000 );
   this.camera.position.x = 0;
   this.camera.position.y = -5;
   this.camera.position.z = 5;
@@ -37,6 +46,12 @@ GZ3D.Scene.prototype.init = function()
   this.camera.lookAt(0, 0, 0);
 
   this.showCollisions = false;
+
+  // Material for simple shapes being spawned (grey transparent)
+  this.spawnedShapeMaterial = new THREE.MeshPhongMaterial(
+      {color:0xffffff, shading: THREE.SmoothShading} );
+  this.spawnedShapeMaterial.transparent = true;
+  this.spawnedShapeMaterial.opacity = 0.5;
 
   var that = this;
   this.getDomElement().addEventListener( 'mousedown',
@@ -59,32 +74,33 @@ GZ3D.Scene.prototype.init = function()
   document.addEventListener( 'keydown',
       function(event) {that.onKeyDown(event);}, false );
 
-
+  // Handles for translating and rotating objects
   this.modelManipulator = new THREE.TransformControls(this.camera,
       this.getDomElement());
 
+  // Camera controls
   this.controls = new THREE.OrbitControls(this.camera);
 
   this.emitter = new EventEmitter2({ verbose: true });
 
-  // SSAO
-  this.effectsEnabled = false;
-  // depth
+  // Depth
   var depthShader = THREE.ShaderLib[ 'depthRGBA'];
   var depthUniforms = THREE.UniformsUtils.clone( depthShader.uniforms );
 
   this.depthMaterial = new THREE.ShaderMaterial( { fragmentShader: depthShader.fragmentShader, vertexShader: depthShader.vertexShader, uniforms: depthUniforms } );
   this.depthMaterial.blending = THREE.NoBlending;
 
-  // postprocessing
+  // Postprocessing
   this.composer = new THREE.EffectComposer(this.renderer );
   this.composer.addPass( new THREE.RenderPass(this.scene,this.camera));
 
-  this.depthTarget = new THREE.WebGLRenderTarget( window.innerWidth, window.innerHeight, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat } );
+  this.depthTarget = new THREE.WebGLRenderTarget( window.containerWidth, window.containerHeight, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat } );
 
+  // SSAO
+  this.effectsEnabled = false;
   var effect = new THREE.ShaderPass( THREE.SSAOShader );
   effect.uniforms[ 'tDepth' ].value = this.depthTarget;
-  effect.uniforms[ 'size' ].value.set( window.innerWidth, window.innerHeight );
+  effect.uniforms[ 'size' ].value.set( window.containerWidth, window.containerHeight );
   effect.uniforms[ 'cameraNear' ].value = this.camera.near;
   effect.uniforms[ 'cameraFar' ].value = this.camera.far;
   effect.renderToScreen = true;
@@ -92,14 +108,20 @@ GZ3D.Scene.prototype.init = function()
 
 };
 
+/**
+ * Window event callback
+ * @param {} event
+ */
 GZ3D.Scene.prototype.onMouseDown = function(event)
 {
   event.preventDefault();
 
   this.controls.enabled = true;
 
+  // X-Y coordinates of where mouse clicked
   var pos = new THREE.Vector2(event.clientX, event.clientY);
 
+  // See if there's a model on the direction of the click
   var intersect = new THREE.Vector3();
   var model = this.getRayCastModel(pos, intersect);
 
@@ -113,16 +135,17 @@ GZ3D.Scene.prototype.onMouseDown = function(event)
     return;
   }
 
+  // Model found
   if (model)
   {
-    // console.log('found model ' + model.name );
+    // Do nothing to the floor plane
     if (model.name === 'plane')
     {
       this.killCameraControl = false;
     }
+    // Attach manipulator to scene model
     else if (model.name !== '')
     {
-      // console.log('attached ' + model.name);
       this.modelManipulator.attach(model);
       this.modelManipulator.mode = this.manipulationMode;
       this.modelManipulator.setMode( this.modelManipulator.mode );
@@ -132,19 +155,21 @@ GZ3D.Scene.prototype.onMouseDown = function(event)
       this.scene.add(this.modelManipulator.gizmo);
       this.killCameraControl = true;
     }
+    // Manipulator pickers
     else if (this.modelManipulator.hovered)
     {
-      // console.log('hovered ' + this.modelManipulator.object.name);
       this.modelManipulator.update();
       this.modelManipulator.object.updateMatrixWorld();
       this.mouseEntity = this.selectedEntity;
       this.killCameraControl = true;
     }
+    // Sky
     else
     {
       this.killCameraControl = false;
     }
   }
+  // does this ever happen?
   else
   {
     // console.log('detached');
@@ -155,7 +180,10 @@ GZ3D.Scene.prototype.onMouseDown = function(event)
   }
 };
 
-
+/**
+ * Window event callback
+ * @param {} event
+ */
 GZ3D.Scene.prototype.onMouseUp = function(event)
 {
   event.preventDefault();
@@ -173,6 +201,10 @@ GZ3D.Scene.prototype.onMouseUp = function(event)
   this.mouseEntity = null;
 };
 
+/**
+ * Window event callback
+ * @param {} event - mousescroll event
+ */
 GZ3D.Scene.prototype.onMouseScroll = function(event)
 {
   event.preventDefault();
@@ -190,6 +222,10 @@ GZ3D.Scene.prototype.onMouseScroll = function(event)
   }
 };
 
+/**
+ * Window event callback
+ * @param {} event - keydown events
+ */
 GZ3D.Scene.prototype.onKeyDown = function(event)
 {
   if (event.shiftKey)
@@ -198,8 +234,8 @@ GZ3D.Scene.prototype.onKeyDown = function(event)
     if (event.keyCode === 187 || event.keyCode === 189)
     {
       this.controls.enabled = true;
-      var pos = new THREE.Vector2(window.innerWidth/2.0,
-          window.innerHeight/2.0);
+      var pos = new THREE.Vector2(window.containerWidth/2.0,
+          window.containerHeight/2.0);
 
       var intersect = new THREE.Vector3();
       var model = this.getRayCastModel(pos, intersect);
@@ -227,6 +263,13 @@ GZ3D.Scene.prototype.onKeyDown = function(event)
   }
 };
 
+/**
+ * Check if there's a model immediately under canvas coordinate 'pos'
+ * @param {THREE.Vector2} pos - Canvas coordinates
+ * @param {THREE.Vector3} intersect - Empty at input, contains point of intersection
+ *                                                    in 3D world coordinates at output
+ * @returns {THREE.Object3D} model - Intercepted model closest(?) to the camera
+ */
 GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
 {
   var projector = new THREE.Projector();
@@ -299,13 +342,18 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
   return model;
 };
 
-
+/**
+ * Get dom element
+ * @returns {} domElement
+ */
 GZ3D.Scene.prototype.getDomElement = function()
 {
   return this.renderer.domElement;
 };
 
-
+/**
+ * Render scene
+ */
 GZ3D.Scene.prototype.render = function()
 {
   if (!this.killCameraControl)
@@ -333,6 +381,11 @@ GZ3D.Scene.prototype.render = function()
   }
 };
 
+/**
+ * Set renderer size and camera aspect ratio
+ * @param {integer} width - Scene width in pixels
+ * @param {integer} height - Scene width in pixels
+ */
 GZ3D.Scene.prototype.setWindowSize = function(width, height)
 {
   this.camera.aspect = width / height;
@@ -342,21 +395,40 @@ GZ3D.Scene.prototype.setWindowSize = function(width, height)
   this.render();
 };
 
+/**
+ * Add a model to the scene
+ * @param {THREE.Object3D} model - 3D model
+ */
 GZ3D.Scene.prototype.add = function(model)
 {
   this.scene.add(model);
 };
 
+/**
+ * Remove a model from the scene
+ * @param {THREE.Object3D} model - 3D model
+ */
 GZ3D.Scene.prototype.remove = function(model)
 {
   this.scene.remove(model);
 };
 
+/**
+ * Return an object, given its unique name
+ * @param {string} name - Model's unique name
+ * @returns {THREE.Object3D}
+ */
 GZ3D.Scene.prototype.getByName = function(name)
 {
   return this.scene.getObjectByName(name, true);
 };
 
+/**
+ * Updates a model's pose in the scene if conditions are fulfilled (?)
+ * @param {THREE.Object3D} model - 3D model
+ * @param {THREE.Vector3} position - X,Y,Z
+ * @param {THREE.Quaternion} orientation - W,X,Y,Z
+ */
 GZ3D.Scene.prototype.updatePose = function(model, position, orientation)
 {
   if (this.modelManipulator && this.modelManipulator.object &&
@@ -368,6 +440,12 @@ GZ3D.Scene.prototype.updatePose = function(model, position, orientation)
   this.setPose(model, position, orientation);
 };
 
+/**
+ * Sets a model's pose in the scene
+ * @param {THREE.Object3D} model - 3D model
+ * @param {THREE.Vector3} position - X,Y,Z
+ * @param {THREE.Quaternion} orientation - W,X,Y,Z
+ */
 GZ3D.Scene.prototype.setPose = function(model, position, orientation)
 {
   model.position.x = position.x;
@@ -379,6 +457,9 @@ GZ3D.Scene.prototype.setPose = function(model, position, orientation)
   model.quaternion.z = orientation.z;
 };
 
+/**
+ * Add a grid to the scene (floor)
+ */
 GZ3D.Scene.prototype.createGrid = function()
 {
   var grid = new THREE.GridHelper(10, 1);
@@ -389,6 +470,13 @@ GZ3D.Scene.prototype.createGrid = function()
   this.scene.add(grid);
 };
 
+/**
+ * Create a plane mesh
+ * @param {THREE.Object3D} model - 3D model
+ * @param {THREE.Vector3} position - X,Y,Z
+ * @param {THREE.Quaternion} orientation - W,X,Y,Z
+ * @returns {THREE.Mesh}
+ */
 GZ3D.Scene.prototype.createPlane = function(normalX, normalY, normalZ,
     width, height)
 {
@@ -404,27 +492,40 @@ GZ3D.Scene.prototype.createPlane = function(normalX, normalY, normalZ,
   return mesh;
 };
 
+/**
+ * Create a sphere mesh (spawned)
+ * @param {} radius - radius
+ * @returns {THREE.Mesh}
+ */
 GZ3D.Scene.prototype.createSphere = function(radius)
 {
   var geometry = new THREE.SphereGeometry(radius, 32, 32);
-  var material =  new THREE.MeshPhongMaterial(
-      {color:0xffffff, shading: THREE.SmoothShading} );
-  var mesh = new THREE.Mesh(geometry, material);
+  var mesh = new THREE.Mesh(geometry, this.spawnedShapeMaterial);
   return mesh;
 };
 
-
+/**
+ * Create a cylinder mesh (spawned)
+ * @param {} radius - radius
+ * @param {} length - length
+ * @returns {THREE.Mesh}
+ */
 GZ3D.Scene.prototype.createCylinder = function(radius, length)
 {
   var geometry = new THREE.CylinderGeometry(radius, radius, length, 32, 1,
       false);
-  var material =  new THREE.MeshPhongMaterial(
-      {color:0xffffff, shading: THREE.SmoothShading} );
-  var mesh = new THREE.Mesh(geometry, material);
+  var mesh = new THREE.Mesh(geometry, this.spawnedShapeMaterial);
   mesh.rotation.x = Math.PI * 0.5;
   return mesh;
 };
 
+/**
+ * Create a cube (box) mesh (spawned)
+ * @param {} width - width
+ * @param {} height - height
+ * @param {} depth - depth
+ * @returns {THREE.Mesh}
+ */
 GZ3D.Scene.prototype.createBox = function(width, height, depth)
 {
   var geometry = new THREE.CubeGeometry(width, height, depth, 1, 1, 1);
@@ -462,13 +563,18 @@ GZ3D.Scene.prototype.createBox = function(width, height, depth)
   }
   geometry.uvsNeedUpdate = true;
 
-  var material =  new THREE.MeshPhongMaterial(
-      {color:0xffffff, shading: THREE.SmoothShading} );
-  var mesh = new THREE.Mesh(geometry, material);
+  var mesh = new THREE.Mesh(geometry, this.spawnedShapeMaterial);
   mesh.castShadow = true;
   return mesh;
 };
 
+/**
+ * Create roads
+ * @param {} points - points
+ * @param {} width - width
+ * @param {} texture - texture
+ * @returns {THREE.Mesh}
+ */
 GZ3D.Scene.prototype.createRoads = function(points, width, texture)
 {
   var geometry = new THREE.Geometry();
@@ -624,6 +730,19 @@ GZ3D.Scene.prototype.createRoads = function(points, width, texture)
   return mesh;
 };
 
+/**
+ * Load heightmap
+ * @param {} heights
+ * @param {} width
+ * @param {} height
+ * @param {} segmentWidth
+ * @param {} segmentHeight
+ * @param {} origin
+ * @param {} textures
+ * @param {} blends
+ * @param {} parent
+ * @returns {THREE.Mesh_or_THREE.Object3D_?}
+ */
 GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
     segmentWidth, segmentHeight, origin, textures, blends, parent)
 {
@@ -756,6 +875,13 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
   this.heightmap = parent;
 };
 
+/**
+ * Load a mesh (currently only COLLADA)
+ * @param {} uri
+ * @param {} submesh
+ * @param {} centerSubmesh
+ * @param {function} callback
+ */
 GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh,
     callback)
 {
@@ -803,7 +929,13 @@ GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh,
   }
 };
 
-// load the collada file
+/**
+ * Load a COLLADA mesh
+ * @param {} uri
+ * @param {} submesh
+ * @param {} centerSubmesh
+ * @param {function} callback
+ */
 GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
     callback)
 {
@@ -852,8 +984,14 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
   }
 };
 
-// Prepare collada by handling submesh-only loading and removing other
-// non-mesh entities such as lights
+/**
+ * Prepare COLLADA by handling submesh-only loading and removing other
+ * non-mesh entities such as lights
+ * @param {} dae
+ * @param {} submesh
+ * @param {} centerSubmesh
+ * @returns {THREE.Mesh}
+ */
 GZ3D.Scene.prototype.prepareColladaMesh = function(dae, submesh, centerSubmesh)
 {
   var mesh;
@@ -963,6 +1101,11 @@ GZ3D.Scene.prototype.prepareColladaMesh = function(dae, submesh, centerSubmesh)
   }
 };*/
 
+/**
+ * Set a model's material
+ * @param {THREE.Object3D} obj - Model
+ * @param {} material - Material
+ */
 GZ3D.Scene.prototype.setMaterial = function(obj, material)
 {
   if (obj)
@@ -1008,6 +1151,10 @@ GZ3D.Scene.prototype.setMaterial = function(obj, material)
   }
 };
 
+/**
+ * Set manipulation mode
+ * @param {string} mode - view | translate | rotate
+ */
 GZ3D.Scene.prototype.setManipulationMode = function(mode)
 {
   this.manipulationMode = mode;
@@ -1026,6 +1173,10 @@ GZ3D.Scene.prototype.setManipulationMode = function(mode)
 
 };
 
+/**
+ * Show collision visuals
+ * @param {boolean} show
+ */
 GZ3D.Scene.prototype.showCollision = function(show)
 {
   if (show === this.showCollisions)

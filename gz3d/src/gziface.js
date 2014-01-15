@@ -1,5 +1,11 @@
 //var GAZEBO_MODEL_DATABASE_URI='http://gazebosim.org/models';
 
+/**
+ * Interface between client and server
+ * @constructor
+ * @param {GZ3D.Scene} scene
+ * @param {GZ3D.Gui} gui
+ */
 GZ3D.GZIface = function(scene, gui)
 {
   this.scene = scene;
@@ -8,6 +14,9 @@ GZ3D.GZIface = function(scene, gui)
   this.visualsToAdd = [];
 };
 
+/**
+ * Initialize GZIface
+ */
 GZ3D.GZIface.prototype.init = function()
 {
   this.material = [];
@@ -373,6 +382,10 @@ GZ3D.GZIface.prototype.init = function()
   );
 };
 
+/**
+ * Update Simulation Time, Real Time and Play/Pause
+ * @param {} stats
+ */
 GZ3D.GZIface.prototype.updateStatsGuiFromMsg = function(stats)
 {
   this.gui.setPaused(stats.paused);
@@ -454,6 +467,10 @@ GZ3D.GZIface.prototype.updateStatsGuiFromMsg = function(stats)
   this.gui.setSimTime(simTimeValue);
 };
 
+/**
+ * Create model from message
+ * @param {} model
+ */
 GZ3D.GZIface.prototype.createModelFromMsg = function(model)
 {
   var modelObj = new THREE.Object3D();
@@ -503,6 +520,10 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
   return modelObj;
 };
 
+/**
+ * Create visual from message
+ * @param {} visual
+ */
 GZ3D.GZIface.prototype.createVisualFromMsg = function(visual)
 {
   if (visual.geometry)
@@ -525,6 +546,10 @@ GZ3D.GZIface.prototype.createVisualFromMsg = function(visual)
   }
 };
 
+/**
+ * Create light from message
+ * @param {} light
+ */
 GZ3D.GZIface.prototype.createLightFromMsg = function(light)
 {
   var lightObj;
@@ -589,6 +614,10 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
   return lightObj;
 };
 
+/**
+ * Create roads from message
+ * @param {} roads
+ */
 GZ3D.GZIface.prototype.createRoadsFromMsg = function(roads)
 {
   var roadObj = new THREE.Object3D();
@@ -604,6 +633,10 @@ GZ3D.GZIface.prototype.createRoadsFromMsg = function(roads)
   return roadObj;
 };
 
+/**
+ * Parse uri
+ * @param {} uri
+ */
 GZ3D.GZIface.prototype.parseUri = function(uri)
 {
   var uriPath = 'assets';
@@ -615,6 +648,12 @@ GZ3D.GZIface.prototype.parseUri = function(uri)
   return uriPath + '/' + uri.substring(idx);
 };
 
+/**
+ * Create geometry
+ * @param {} geom
+ * @param {} material
+ * @param {} parent
+ */
 GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
 {
   var obj;
@@ -804,6 +843,11 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
   }
 };
 
+/**
+ * Apply material
+ * @param {} obj
+ * @param {} mat
+ */
 GZ3D.GZIface.prototype.applyMaterial = function(obj, mat)
 {
   if (obj)
@@ -848,6 +892,10 @@ GZ3D.GZIface.prototype.applyMaterial = function(obj, mat)
   }
 };
 
+/**
+ * Parse material
+ * @param {} material
+ */
 GZ3D.GZIface.prototype.parseMaterial = function(material)
 {
   if (!material)
