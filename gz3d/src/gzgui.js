@@ -100,6 +100,10 @@ GZ3D.Gui.prototype.init = function()
   guiEvents.on('entity_create',
       function (entity)
       {
+        // manually trigger view mode
+        that.scene.setManipulationMode('view');
+        $( '#view-mode' ).click();
+        $('input[type="radio"]').checkboxradio('refresh');
         that.spawnModel.start(entity,
             function(obj)
             {

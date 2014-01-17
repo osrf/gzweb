@@ -131,14 +131,14 @@
           <div data-role="collapsible" data-inset="false">
               <h3>Edit</h3>
               <ul data-role="listview">
-                <li id='reset-world' data-icon="false"><a href="#">Reset world</a></li>
-                <li id='reset-model' data-icon="false"><a href="#">Reset model poses</a></li>
+                <li id='reset-world' data-icon="false"><a href="#">Reset World</a></li>
+                <li id='reset-model' data-icon="false"><a href="#">Reset Model Poses</a></li>
               </ul>
           </div>
           <div data-role="collapsible" data-inset="false">
               <h3>View</h3>
               <ul data-role="listview">
-                <li id='view-effects' data-icon="false" data-iconpos="right"><a href="#">SSAO effect</a></li>
+                <!--<li id='view-effects' data-icon="false" data-iconpos="right"><a href="#">SSAO effect</a></li>-->
                 <li id='view-collisions' data-icon="false" data-iconpos="right"><a href="#">Collisions</a></li>
               </ul>
           </div>
@@ -218,7 +218,7 @@
       //var visuals = {};
 
       // Container (canvas) dimensions
-      window.containerHeight = window.innerHeight-(43+50+3); // give space for header and footer
+      window.containerHeight = window.innerHeight-(43+50+4); // give space for header and footer
       window.containerWidth = window.innerWidth;
 
       init();
@@ -246,7 +246,7 @@
       function onWindowResize()
       {
         //TODO: It doesn't resize well on horizontal (landscape) -> vertical (portrait)
-        window.containerHeight = window.innerHeight-(43+50+3); // give space for header and footer
+        window.containerHeight = window.innerHeight-(43+50+4); // give space for header and footer
         window.containerWidth = window.innerWidth;
         scene.setWindowSize(window.containerWidth, window.containerHeight);
       }
