@@ -1413,13 +1413,13 @@ GZ3D.Scene.prototype.init = function()
   this.manipulationMode = 'view';
 
   this.renderer = new THREE.WebGLRenderer({antialias: true });
-  this.renderer.setClearColor(0xcccccc, 1);
+  this.renderer.setClearColor(0xb2b2b2, 1); // Sky
   this.renderer.setSize( window.innerWidth, window.innerHeight);
   // this.renderer.shadowMapEnabled = true;
   // this.renderer.shadowMapSoft = true;
 
   // lights
-  this.ambient = new THREE.AmbientLight( 0x222222 );
+  this.ambient = new THREE.AmbientLight( 0x666666 );
   this.scene.add(this.ambient);
 
   this.camera = new THREE.PerspectiveCamera(
@@ -1467,14 +1467,19 @@ GZ3D.Scene.prototype.init = function()
   var depthShader = THREE.ShaderLib[ 'depthRGBA'];
   var depthUniforms = THREE.UniformsUtils.clone( depthShader.uniforms );
 
-  this.depthMaterial = new THREE.ShaderMaterial( { fragmentShader: depthShader.fragmentShader, vertexShader: depthShader.vertexShader, uniforms: depthUniforms } );
+  this.depthMaterial = new THREE.ShaderMaterial( {
+      fragmentShader: depthShader.fragmentShader,
+      vertexShader: depthShader.vertexShader,
+      uniforms: depthUniforms } );
   this.depthMaterial.blending = THREE.NoBlending;
 
   // postprocessing
   this.composer = new THREE.EffectComposer(this.renderer );
   this.composer.addPass( new THREE.RenderPass(this.scene,this.camera));
 
-  this.depthTarget = new THREE.WebGLRenderTarget( window.innerWidth, window.innerHeight, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat } );
+  this.depthTarget = new THREE.WebGLRenderTarget( window.innerWidth,
+      window.innerHeight, { minFilter: THREE.NearestFilter,
+      magFilter: THREE.NearestFilter, format: THREE.RGBAFormat } );
 
   var effect = new THREE.ShaderPass( THREE.SSAOShader );
   effect.uniforms[ 'tDepth' ].value = this.depthTarget;
@@ -1780,6 +1785,11 @@ GZ3D.Scene.prototype.createGrid = function()
   grid.position.z = 0.05;
   grid.rotation.x = Math.PI * 0.5;
   grid.castShadow = false;
+  // Color1: Central cross, Color2: grid
+  // 0xCCCCCC = 80%,80%,80% / 0x4D4D4D = 30%,30%,30%
+  grid.setColors(new THREE.Color( 0xCCCCCC ),new THREE.Color( 0x4D4D4D ));
+  grid.material.transparent = true;
+  grid.material.opacity = 0.5;
   this.scene.add(grid);
 };
 
@@ -1788,7 +1798,7 @@ GZ3D.Scene.prototype.createPlane = function(normalX, normalY, normalZ,
 {
   var geometry = new THREE.PlaneGeometry(width, height, 1, 1);
   var material =  new THREE.MeshPhongMaterial(
-      {color:0xbbbbbb, shading: THREE.SmoothShading} );
+      {color:0xbbbbbb, shading: THREE.SmoothShading} ); // Later Gazebo/Grey
   var mesh = new THREE.Mesh(geometry, material);
   var normal = new THREE.Vector3(normalX, normalY, normalZ);
   var cross = normal.crossVectors(normal, mesh.up);
