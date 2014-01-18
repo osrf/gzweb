@@ -37,6 +37,16 @@ include (FindPkgConfig)
 if (PKG_CONFIG_FOUND)
   pkg_check_modules(GAZEBO gazebo>=1.9.0 REQUIRED)
   pkg_check_modules(JANSSON jansson REQUIRED)
+
+  # Find GNU Triangulation Surface Library
+  pkg_check_modules(GTS gts)
+  if (GTS_FOUND)
+    set (HAVE_GTS TRUE)
+  else ()
+    set (HAVE_GTS FALSE)
+    BUILD_WARNING ("GNU Triangulation Surface library not found")
+  endif ()
+
 else()
   message(FATAL_ERROR "pkg-config is required; please install it")
 endif()
@@ -46,6 +56,7 @@ find_package(Boost ${MIN_BOOST_VERSION} REQUIRED system filesystem regex thread)
 find_package(Protobuf REQUIRED)
 
 add_subdirectory(gz3d)
+add_subdirectory(tools)
 
 ########### Add uninstall target ###############
 configure_file(
