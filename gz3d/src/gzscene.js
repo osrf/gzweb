@@ -28,11 +28,7 @@ GZ3D.Scene.prototype.init = function()
 
   this.renderer = new THREE.WebGLRenderer({antialias: true });
   this.renderer.setClearColor(0xb2b2b2, 1); // Sky
-<<<<<<< local
   this.renderer.setSize( window.containerWidth, window.containerHeight);
-=======
-  this.renderer.setSize( window.innerWidth, window.innerHeight);
->>>>>>> other
   // this.renderer.shadowMapEnabled = true;
   // this.renderer.shadowMapSoft = true;
 
@@ -101,13 +97,8 @@ GZ3D.Scene.prototype.init = function()
   this.composer = new THREE.EffectComposer(this.renderer );
   this.composer.addPass( new THREE.RenderPass(this.scene,this.camera));
 
-<<<<<<< local
   this.depthTarget = new THREE.WebGLRenderTarget( window.containerWidth,
       window.containerHeight, { minFilter: THREE.NearestFilter,
-=======
-  this.depthTarget = new THREE.WebGLRenderTarget( window.innerWidth,
-      window.innerHeight, { minFilter: THREE.NearestFilter,
->>>>>>> other
       magFilter: THREE.NearestFilter, format: THREE.RGBAFormat } );
 
   // SSAO
@@ -483,10 +474,6 @@ GZ3D.Scene.prototype.createGrid = function()
   grid.rotation.x = Math.PI * 0.5;
   grid.castShadow = false;
   // Color1: Central cross, Color2: grid
-<<<<<<< local
-=======
-  // 0xCCCCCC = 80%,80%,80% / 0x4D4D4D = 30%,30%,30%
->>>>>>> other
   grid.setColors(new THREE.Color( 0xCCCCCC ),new THREE.Color( 0x4D4D4D ));
   grid.material.transparent = true;
   grid.material.opacity = 0.5;
