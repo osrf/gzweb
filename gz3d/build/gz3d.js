@@ -745,6 +745,12 @@ GZ3D.GZIface.prototype.createVisualFromMsg = function(visual)
     visualObj.castShadow = visual.cast_shadows;
     visualObj.receiveShadow = visual.receive_shadows;
 
+    // If material is not specified, use default
+    if(!visual.material)
+    {
+      visual['material'] = {script: {'uri': '__default__','name':'__default__'}};
+    }
+
     this.createGeom(geom, visual.material, visualObj);
 
     return visualObj;
