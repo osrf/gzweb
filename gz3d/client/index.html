@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="stylesheet" href="style/jquery-ui/jquery-ui.css"/>
-    <link rel="stylesheet" href="style/toolbar.css"/>
+    <link rel="stylesheet" href="style/gz3d.css"/>
     <script src="js/include/jquery-1.9.1.js"></script>
     <script src="js/include/jquery-ui.js"></script>
     <script src="js/include/three.js"></script>
@@ -16,6 +16,12 @@
     <script src="js/include/eventemitter2.js"></script>
     <script src="js/include/roslib.js"></script>
     <script src="js/include/ColladaLoader.js"></script>
+    <script src="js/include/CopyShader.js"></script>
+    <script src="js/include/SSAOShader.js"></script>
+    <script src="js/include/EffectComposer.js"></script>
+    <script src="js/include/RenderPass.js"></script>
+    <script src="js/include/MaskPass.js"></script>
+    <script src="js/include/ShaderPass.js"></script>
     <script src="gz3d.js"></script>
 
     <style>
@@ -78,6 +84,85 @@
       }
     </style>
   </head>
+  <script id="heightmapVS" type="x-shader/x-vertex">
+    varying vec2 vUv;
+    varying vec3 vPosition;
+    varying vec3 vNormal;
+
+    void main( void ) {
+      vUv = uv;
+      vPosition = position;
+      vNormal = normal;
+
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  </script>
+
+  <script id="heightmapFS" type="x-shader/x-fragment">
+
+    uniform sampler2D texture0;
+    uniform sampler2D texture1;
+    uniform sampler2D texture2;
+
+    uniform float repeat0;
+    uniform float repeat1;
+    uniform float repeat2;
+
+    uniform float minHeight1;
+    uniform float minHeight2;
+
+    uniform float fadeDist1;
+    uniform float fadeDist2;
+
+    uniform vec3 ambient;
+    uniform vec3 lightDiffuse;
+    uniform vec3 lightDir;
+
+    varying vec2 vUv;
+    varying vec3 vPosition;
+    varying vec3 vNormal;
+
+    float blend(float distance, float fadeDist) {
+      float alpha = distance / fadeDist;
+      if (alpha < 0.0) {
+        alpha = 0.0;
+      }
+      if (alpha > 1.0) {
+        alpha = 1.0;
+      }
+      return alpha;
+    }
+
+    void main()
+    {
+      // Texture loading
+      vec3 diffuse0 = texture2D( texture0, vUv*repeat0 ).rgb;
+      vec3 diffuse1 = texture2D( texture1, vUv*repeat1 ).rgb;
+      vec3 diffuse2 = texture2D( texture2, vUv*repeat2 ).rgb;
+
+      // Get base texture
+      vec3 fragcolor = diffuse0;
+
+      // texture level 1
+      fragcolor = mix(
+        fragcolor,
+        diffuse1,
+        blend(vPosition.z - minHeight1, fadeDist1)
+      );
+
+      // texture level 2
+      fragcolor = mix(
+        fragcolor,
+        diffuse2,
+        blend(vPosition.z - (minHeight1 + minHeight2), fadeDist2)
+      );
+
+      vec3 lightDirNorm = normalize(lightDir);
+      float intensity = max(dot(vNormal, lightDirNorm), 0.0);
+      vec3 vLightFactor = ambient + lightDiffuse * intensity;
+      gl_FragColor = vec4(fragcolor.rgb * vLightFactor, 1.0);
+    }
+  </script>
 
   <body>
     <div>
@@ -89,8 +174,19 @@
             <li id='reset-model'><a href='#'>Reset Model Poses</a></li>
           </ul>
         </li>
+        <li>
+          <a href='#'>View</a>
+          <ul>
+            <li id='view-collisions'><a href='#'>View Collisions</a></li>
+          </ul>
+        </li>
       </ul>
     </div>
+    <script>
+      $( "#menu" ).menu({
+          position: {at: "left bottom"}
+        });
+    </script>
 
     <div id='toolbar' class='ui-widget-content'>
       <div id="toolbar-play" >
@@ -119,7 +215,9 @@
         <input type='radio' id='arrow' name='radio' checked='checked' />
             <label for='arrow' />View Mode</label>
         <input type='radio' id='translate' name='radio'>
-            <label for='translate' />Move Mode</label>
+            <label for='translate' />Translate Mode</label>
+        <input type='radio' id='rotate' name='radio'>
+            <label for='rotate' />Rotate Mode</label>
       </div>
 
       <div class"clear"></div>

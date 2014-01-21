@@ -1,5 +1,11 @@
 {
-  "name": "gzweb",
+  "name": "gzweb-dev",
+  "description": "gzweb build environment setup",
+  "repository" :
+  {
+    "type" : "mercurial",
+    "url" : "https://bitbucket.org/osrf/gzweb"
+  },
   "devDependencies": {
     "grunt": "~0.4.1",
     "grunt-contrib-concat": "~0.1.3",

@@ -5,15 +5,12 @@ GZ3D.SpawnModel = function(scene, domElement)
   this.init();
   this.obj = undefined;
   this.callback = undefined;
-  this.counter = new Date();
 };
 
 GZ3D.SpawnModel.prototype.init = function()
 {
-//  this.emitter = new EventEmitter2({ verbose: true });
   this.plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
   this.projector = new THREE.Projector();
-//  this.ray = new THREE.Raycaster();
   this.ray = new THREE.Ray();
   this.obj = null;
   this.active = false;
@@ -33,17 +30,17 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
   if (entity === 'box')
   {
     mesh = this.scene.createBox(1, 1, 1);
-    this.obj.name = 'unit_box_' + this.counter.getTime();
+    this.obj.name = 'unit_box_' +  (new Date()).getTime();
   }
   else if (entity === 'sphere')
   {
     mesh = this.scene.createSphere(0.5);
-    this.obj.name = 'unit_sphere_' + this.counter.getTime();
+    this.obj.name = 'unit_sphere_' + (new Date()).getTime();
   }
   else if (entity === 'cylinder')
   {
     mesh = this.scene.createCylinder(0.5, 1.0);
-    this.obj.name = 'unit_cylinder_' + this.counter.getTime();
+    this.obj.name = 'unit_cylinder_' + (new Date()).getTime();
   }
 
   this.obj.add(mesh);
@@ -51,34 +48,37 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
   this.scene.add(this.obj);
 
   var that = this;
-  this.domElement.addEventListener( 'mousedown',
-      function(event) {that.onMouseUp(event);}, false );
-  this.domElement.addEventListener( 'mousemove',
-      function(event) {that.onMouseMove(event);}, false );
-  document.addEventListener( 'keydown',
-      function(event) {that.onKeyDown(event);}, false );
+
+  this.mouseDown = function(event) {that.onMouseDown(event);};
+  this.mouseUp = function(event) {that.onMouseUp(event);};
+  this.mouseMove = function(event) {that.onMouseMove(event);};
+  this.keyDown = function(event) {that.onKeyDown(event);};
+
+  this.domElement.addEventListener('mousedown', that.mouseDown, false);
+  this.domElement.addEventListener( 'mouseup', that.mouseUp, false);
+  this.domElement.addEventListener( 'mousemove', that.mouseMove, false);
+  document.addEventListener( 'keydown', that.keyDown, false);
 
   this.active = true;
 };
 
 GZ3D.SpawnModel.prototype.finish = function()
 {
-  this.active = false;
   var that = this;
-  this.domElement.removeEventListener( 'mousedown',
-      function(event) {that.onMouseUp(event);}, false );
-  this.domElement.removeEventListener( 'mousemove',
-      function(event) {that.onMouseMove(event);}, false );
-  document.removeEventListener( 'keydown',
-      function(event) {that.onKeyDown(event);}, false );
+  this.domElement.removeEventListener( 'mousedown', that.mouseDown, false);
+  this.domElement.removeEventListener( 'mouseup', that.mouseUp, false);
+  this.domElement.removeEventListener( 'mousemove', that.mouseMove, false);
+  document.removeEventListener( 'keydown', that.keyDown, false);
 
   this.scene.remove(this.obj);
   this.obj = undefined;
+  this.active = false;
 };
 
 GZ3D.SpawnModel.prototype.onMouseDown = function(event)
 {
   event.preventDefault();
+  event.stopImmediatePropagation();
 };
 
 GZ3D.SpawnModel.prototype.onMouseMove = function(event)
@@ -106,6 +106,7 @@ GZ3D.SpawnModel.prototype.onMouseUp = function(event)
   {
     return;
   }
+
   this.callback(this.obj);
   this.finish();
 };

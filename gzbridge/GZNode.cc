@@ -196,7 +196,7 @@ Handle<v8::Value> GZNode::GetPoseMsgFilterMinimumAge(const \
 
 /////////////////////////////////////////////////
 Handle<v8::Value> GZNode::SetPoseMsgFilterMinimumDistanceSquared(const \
-														 v8::Arguments& args)
+    v8::Arguments& args)
 {
   HandleScope scope;
 
@@ -210,7 +210,7 @@ Handle<v8::Value> GZNode::SetPoseMsgFilterMinimumDistanceSquared(const \
 
 /////////////////////////////////////////////////
 Handle<v8::Value> GZNode::GetPoseMsgFilterMinimumDistanceSquared(const \
-														v8::Arguments& args)
+    v8::Arguments& args)
 {
   HandleScope scope;
   GZNode* obj = ObjectWrap::Unwrap<GZNode>(args.This());
@@ -220,7 +220,7 @@ Handle<v8::Value> GZNode::GetPoseMsgFilterMinimumDistanceSquared(const \
 
 /////////////////////////////////////////////////
 Handle<v8::Value> GZNode::SetPoseMsgFilterMinimumQuaternionSquared(const \
-														v8::Arguments& args)
+    v8::Arguments& args)
 {
   HandleScope scope;
 
@@ -234,7 +234,7 @@ Handle<v8::Value> GZNode::SetPoseMsgFilterMinimumQuaternionSquared(const \
 
 /////////////////////////////////////////////////
 Handle<v8::Value> GZNode::GetPoseMsgFilterMinimumQuaternionSquared(const \
-															v8::Arguments& args)
+    v8::Arguments& args)
 {
   HandleScope scope;
   GZNode* obj = ObjectWrap::Unwrap<GZNode>(args.This());
@@ -251,7 +251,7 @@ Handle<Value> GZNode::GetMessages(const Arguments& args)
 
   std::vector<std::string> msgs = obj->gzIface->PopOutgoingMessages();
   Local<Array> arguments = Array::New(msgs.size());
-  for (unsigned int i = 0; i < msgs.size(); i++) {
+  for (unsigned int i = 0; i < msgs.size(); ++i) {
     arguments->Set(i ,String::New(msgs[i].c_str()));
   }
 

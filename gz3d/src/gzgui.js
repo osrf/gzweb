@@ -26,6 +26,16 @@ $(function() {
     guiEvents.emit('manipulation_mode', 'translate');
   });
 
+  $( '#rotate' ).button({
+    text: false,
+    icons: {
+      primary: 'toolbar-rotate'
+    }
+  })
+  .click(function() {
+    guiEvents.emit('manipulation_mode', 'rotate');
+  });
+
   $( '#box' ).button({
     text: false,
     icons: {
@@ -74,17 +84,21 @@ $(function() {
   });
 });
 
-  $(function() {
-    $( '#menu' ).menu();
-    $( '#reset-model' )
-    .click(function() {
-      guiEvents.emit('model_reset');
-    });
-    $( '#reset-world' )
-    .click(function() {
-      guiEvents.emit('world_reset');
-    });
+$(function() {
+  $( '#menu' ).menu();
+  $( '#reset-model' )
+  .click(function() {
+    guiEvents.emit('model_reset');
   });
+  $( '#reset-world' )
+  .click(function() {
+    guiEvents.emit('world_reset');
+  });
+  $( '#view-collisions' )
+  .click(function() {
+    guiEvents.emit('show_collision');
+  });
+});
 
 GZ3D.Gui = function(scene)
 {
@@ -103,6 +117,12 @@ GZ3D.Gui.prototype.init = function()
   guiEvents.on('entity_create',
       function (entity)
       {
+        // manually trigger arrow mode
+        var arrow = $('#arrow');
+        arrow.click();
+        arrow[0].checked = true;
+        arrow.button('refresh');
+
         that.spawnModel.start(entity,
             function(obj)
             {
@@ -136,6 +156,13 @@ GZ3D.Gui.prototype.init = function()
       function (mode)
       {
         that.scene.setManipulationMode(mode);
+      }
+  );
+
+  guiEvents.on('show_collision',
+      function ()
+      {
+        that.scene.showCollision(!that.scene.showCollisions);
       }
   );
 };

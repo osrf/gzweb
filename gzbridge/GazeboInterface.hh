@@ -77,19 +77,29 @@ namespace gzweb
     /// \param[in] _path Path to the material scripts.
     public: void LoadMaterialScripts(const std::string &_path);
 
-    /// \brief Pack message in a format that conforms to the client.
-    private: std::string PackOutgoingMsg(const std::string &_topic,
+    /// \brief Pack topic publish message.
+    private: std::string PackOutgoingTopicMsg(const std::string &_topic,
+        const std::string &_msg);
+
+    /// \brief Pack service response message.
+    private: std::string PackOutgoingServiceMsg(const std::string &_id,
         const std::string &_msg);
 
     /// \brief Send message through websocket server.
     /// \param[in] _msg Message to be sent.
     private: void Send(const std::string &_msg);
 
-    /// \brief Run the gazebo interace.
+    /// \brief Run the gazebo interface.
     private: void Run();
+
+    /// \brief Run the gazebo service handling loop.
+    private: void RunService();
 
     /// \brief Process the messages.
     private: void ProcessMessages();
+
+    /// \brief Process the service requests.
+    private: void ProcessServiceRequests();
 
     /// \brief Model message callback.
     /// \param[in] _msg The message data.
@@ -127,6 +137,11 @@ namespace gzweb
     /// \brief World stats message callback.
     /// \param[in] _msg The message.
     private: void OnStats(ConstWorldStatisticsPtr &_msg);
+
+    /// \brief Road message callback.
+    /// \param[in] _msg The message.
+    private: void OnRoad(ConstRoadPtr &_msg);
+
     /// \brief Response callback
     /// \param[in] _msg The message data.
     private: void OnResponse(ConstResponsePtr &_msg);
@@ -148,6 +163,9 @@ namespace gzweb
 
     /// \brief Thread to run the main loop.
     private: boost::thread *runThread;
+
+    /// \brief Thread for processing services requests.
+    private: boost::thread *serviceThread;
 
     /// \brief Gazebo transport node.
     private: gazebo::transport::NodePtr node;
@@ -179,6 +197,9 @@ namespace gzweb
     /// \brief Subscribe to joint updates.
     private: gazebo::transport::SubscriberPtr jointSub;
 
+    /// \brief Subscribe to road msgs.
+    private: gazebo::transport::SubscriberPtr roadSub;
+
     /// \brief Publish requests
     private: gazebo::transport::PublisherPtr requestPub;
 
@@ -201,7 +222,10 @@ namespace gzweb
     private: std::map<int, gazebo::msgs::Request *> requests;
 
     /// \brief Mutex to lock the various message buffers.
-    private: boost::mutex *receiveMutex;
+    private: boost::recursive_mutex *receiveMutex;
+
+    /// \brief Mutex to lock the service request buffer.
+    private: boost::recursive_mutex *serviceMutex;
 
     /// \def ModelMsgs_L
     /// \brief List of model messages.
@@ -273,11 +297,22 @@ namespace gzweb
     /// \brief List of world stats message to process.
     private: WorldStatsMsgs_L statsMsgs;
 
+    /// \def RoadMsgs_L
+    /// \brief List of road messages.
+    typedef std::list<boost::shared_ptr<gazebo::msgs::Road const> >
+        RoadMsgs_L;
+
+    /// \brief List of road message to process.
+    private: RoadMsgs_L roadMsgs;
+
     /// \def PoseMsgsFilter_M
     /// \brief Map of last pose messages used for filtering
     typedef boost::unordered_map< std::string, TimedPose> PoseMsgsFilter_M;
 
     private: PoseMsgsFilter_M poseMsgsFilterMap;
+
+    /// \brief List of service requests to process.
+    private: std::vector<std::string> serviceRequests;
 
     /// \brief True to stop the interface.
     private: bool stop;
@@ -321,6 +356,12 @@ namespace gzweb
     /// \brief A custom topic for getting mapping of materials to textures
     /// referenced by gazebo
     private: std::string materialTopic;
+
+    /// \brief Name of road topic.
+    private: std::string roadTopic;
+
+    /// \brief Name of heightmap data service.
+    private: std::string heightmapService;
 
     /// \brief Ogre material parser.
     private: OgreMaterialParser *materialParser;

@@ -5,9 +5,13 @@ GZ3D.Scene = function()
 
 GZ3D.Scene.prototype.init = function()
 {
+  this.name = 'default';
   this.scene = new THREE.Scene();
-  this.scene.name = 'scene';
+  // this.scene.name = this.name;
   this.meshes = {};
+
+  // only support one heightmap for now.
+  this.heightmap = null;
 
   this.selectedEntity = null;
   this.mouseEntity = null;
@@ -15,14 +19,14 @@ GZ3D.Scene.prototype.init = function()
   this.manipulationMode = 'view';
 
   this.renderer = new THREE.WebGLRenderer({antialias: true });
-  this.renderer.setClearColor(0xcccccc, 1);
+  this.renderer.setClearColor(0xb2b2b2, 1); // Sky
   this.renderer.setSize( window.innerWidth, window.innerHeight);
-//  this.renderer.shadowMapEnabled = true;
-//  this.renderer.shadowMapSoft = true;
+  // this.renderer.shadowMapEnabled = true;
+  // this.renderer.shadowMapSoft = true;
 
   // lights
-  var light = new THREE.AmbientLight( 0x222222 );
-  this.scene.add(light);
+  this.ambient = new THREE.AmbientLight( 0x666666 );
+  this.scene.add(this.ambient);
 
   this.camera = new THREE.PerspectiveCamera(
       60, window.innerWidth / window.innerHeight, 0.1, 1000 );
@@ -31,6 +35,8 @@ GZ3D.Scene.prototype.init = function()
   this.camera.position.z = 5;
   this.camera.up = new THREE.Vector3(0, 0, 1);
   this.camera.lookAt(0, 0, 0);
+
+  this.showCollisions = false;
 
   var that = this;
   this.getDomElement().addEventListener( 'mousedown',
@@ -60,6 +66,35 @@ GZ3D.Scene.prototype.init = function()
   this.controls = new THREE.OrbitControls(this.camera);
 
   this.emitter = new EventEmitter2({ verbose: true });
+
+  // SSAO
+  this.effectsEnabled = false;
+  // depth
+  var depthShader = THREE.ShaderLib[ 'depthRGBA'];
+  var depthUniforms = THREE.UniformsUtils.clone( depthShader.uniforms );
+
+  this.depthMaterial = new THREE.ShaderMaterial( {
+      fragmentShader: depthShader.fragmentShader,
+      vertexShader: depthShader.vertexShader,
+      uniforms: depthUniforms } );
+  this.depthMaterial.blending = THREE.NoBlending;
+
+  // postprocessing
+  this.composer = new THREE.EffectComposer(this.renderer );
+  this.composer.addPass( new THREE.RenderPass(this.scene,this.camera));
+
+  this.depthTarget = new THREE.WebGLRenderTarget( window.innerWidth,
+      window.innerHeight, { minFilter: THREE.NearestFilter,
+      magFilter: THREE.NearestFilter, format: THREE.RGBAFormat } );
+
+  var effect = new THREE.ShaderPass( THREE.SSAOShader );
+  effect.uniforms[ 'tDepth' ].value = this.depthTarget;
+  effect.uniforms[ 'size' ].value.set( window.innerWidth, window.innerHeight );
+  effect.uniforms[ 'cameraNear' ].value = this.camera.near;
+  effect.uniforms[ 'cameraFar' ].value = this.camera.far;
+  effect.renderToScreen = true;
+  this.composer.addPass( effect );
+
 };
 
 GZ3D.Scene.prototype.onMouseDown = function(event)
@@ -85,15 +120,18 @@ GZ3D.Scene.prototype.onMouseDown = function(event)
 
   if (model)
   {
+    // console.log('found model ' + model.name );
     if (model.name === 'plane')
     {
       this.killCameraControl = false;
     }
-    // console.log('found model ' + model.name + ' ' + objects.length);
     else if (model.name !== '')
     {
       // console.log('attached ' + model.name);
       this.modelManipulator.attach(model);
+      this.modelManipulator.mode = this.manipulationMode;
+      this.modelManipulator.setMode( this.modelManipulator.mode );
+
       this.selectedEntity = model;
       this.mouseEntity = this.selectedEntity;
       this.scene.add(this.modelManipulator.gizmo);
@@ -161,6 +199,7 @@ GZ3D.Scene.prototype.onKeyDown = function(event)
 {
   if (event.shiftKey)
   {
+    // + and - for zooming
     if (event.keyCode === 187 || event.keyCode === 189)
     {
       this.controls.enabled = true;
@@ -185,6 +224,12 @@ GZ3D.Scene.prototype.onKeyDown = function(event)
       }
     }
   }
+
+  // F2 for turning on effects
+  if (event.keyCode === 113)
+  {
+    this.effectsEnabled = !this.effectsEnabled;
+  }
 };
 
 GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
@@ -207,6 +252,7 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
   var point;
   if (objects.length > 0)
   {
+
     for (var i = 0; i < objects.length; ++i)
     {
       model = objects[i].object;
@@ -227,6 +273,12 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
       while (model.parent !== this.scene)
       {
         model = model.parent;
+      }
+
+      if (model.name.indexOf('COLLISION_VISUAL') >= 0)
+      {
+        model = null;
+        continue;
       }
 
       if (this.modelManipulator.hovered)
@@ -273,7 +325,17 @@ GZ3D.Scene.prototype.render = function()
 
   this.modelManipulator.update();
 
-  this.renderer.render(this.scene, this.camera);
+  if (this.effectsEnabled)
+  {
+    this.scene.overrideMaterial = this.depthMaterial;
+    this.renderer.render(this.scene, this.camera, this.depthTarget);
+    this.scene.overrideMaterial = null;
+    this.composer.render();
+  }
+  else
+  {
+    this.renderer.render(this.scene, this.camera);
+  }
 };
 
 GZ3D.Scene.prototype.setWindowSize = function(width, height)
@@ -329,6 +391,11 @@ GZ3D.Scene.prototype.createGrid = function()
   grid.position.z = 0.05;
   grid.rotation.x = Math.PI * 0.5;
   grid.castShadow = false;
+  // Color1: Central cross, Color2: grid
+  // 0xCCCCCC = 80%,80%,80% / 0x4D4D4D = 30%,30%,30%
+  grid.setColors(new THREE.Color( 0xCCCCCC ),new THREE.Color( 0x4D4D4D ));
+  grid.material.transparent = true;
+  grid.material.opacity = 0.5;
   this.scene.add(grid);
 };
 
@@ -337,7 +404,7 @@ GZ3D.Scene.prototype.createPlane = function(normalX, normalY, normalZ,
 {
   var geometry = new THREE.PlaneGeometry(width, height, 1, 1);
   var material =  new THREE.MeshPhongMaterial(
-      {color:0xbbbbbb, shading: THREE.SmoothShading} );
+      {color:0xbbbbbb, shading: THREE.SmoothShading} ); // Later Gazebo/Grey
   var mesh = new THREE.Mesh(geometry, material);
   var normal = new THREE.Vector3(normalX, normalY, normalZ);
   var cross = normal.crossVectors(normal, mesh.up);
@@ -373,33 +440,35 @@ GZ3D.Scene.prototype.createBox = function(width, height, depth)
   var geometry = new THREE.CubeGeometry(width, height, depth, 1, 1, 1);
 
   // Fix UVs so textures are mapped in a way that is consistent to gazebo
+  // Some face uvs need to be rotated clockwise, while others anticlockwise
+  // After updating to threejs rev 62, geometries changed from quads (6 faces)
+  // to triangles (12 faces).
   geometry.dynamic = true;
   var faceUVFixA = [1, 4, 5];
   var faceUVFixB = [0];
   for (var i = 0; i < faceUVFixA.length; ++i)
   {
-    var idx = faceUVFixA[i];
-    var length = geometry.faceVertexUvs[0][idx].length;
-    var uva = geometry.faceVertexUvs[0][idx][length-1];
-    for (var j = length-2; j >= 0; --j)
-    {
-      var uvb = geometry.faceVertexUvs[0][idx][j];
-      geometry.faceVertexUvs[0][idx][j] = uva;
-      uva = uvb;
-    }
-    geometry.faceVertexUvs[0][idx][length-1] = uva;
+    var idx = faceUVFixA[i]*2;
+    var uva = geometry.faceVertexUvs[0][idx][0];
+    geometry.faceVertexUvs[0][idx][0] = geometry.faceVertexUvs[0][idx][1];
+    geometry.faceVertexUvs[0][idx][1] = geometry.faceVertexUvs[0][idx+1][1];
+    geometry.faceVertexUvs[0][idx][2] = uva;
+
+    geometry.faceVertexUvs[0][idx+1][0] = geometry.faceVertexUvs[0][idx+1][1];
+    geometry.faceVertexUvs[0][idx+1][1] = geometry.faceVertexUvs[0][idx+1][2];
+    geometry.faceVertexUvs[0][idx+1][2] = geometry.faceVertexUvs[0][idx][2];
   }
   for (var ii = 0; ii < faceUVFixB.length; ++ii)
   {
-    var idxB = faceUVFixB[ii];
+    var idxB = faceUVFixB[ii]*2;
     var uvc = geometry.faceVertexUvs[0][idxB][0];
-    for (var jj = 1; jj < geometry.faceVertexUvs[0][idxB].length; ++jj)
-    {
-      var uvd = geometry.faceVertexUvs[0][idxB][jj];
-      geometry.faceVertexUvs[0][idxB][jj] = uvc;
-      uvc = uvd;
-    }
-    geometry.faceVertexUvs[0][idxB][0] = uvc;
+    geometry.faceVertexUvs[0][idxB][0] = geometry.faceVertexUvs[0][idxB][2];
+    geometry.faceVertexUvs[0][idxB][1] = uvc;
+    geometry.faceVertexUvs[0][idxB][2] =  geometry.faceVertexUvs[0][idxB+1][1];
+
+    geometry.faceVertexUvs[0][idxB+1][2] = geometry.faceVertexUvs[0][idxB][2];
+    geometry.faceVertexUvs[0][idxB+1][1] = geometry.faceVertexUvs[0][idxB+1][0];
+    geometry.faceVertexUvs[0][idxB+1][0] = geometry.faceVertexUvs[0][idxB][1];
   }
   geometry.uvsNeedUpdate = true;
 
@@ -410,8 +479,295 @@ GZ3D.Scene.prototype.createBox = function(width, height, depth)
   return mesh;
 };
 
-GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh, material,
-    normalMap, parent)
+GZ3D.Scene.prototype.createRoads = function(points, width, texture)
+{
+  var geometry = new THREE.Geometry();
+  geometry.dynamic = true;
+  var texCoord = 0.0;
+  var texMaxLen = width;
+  var factor = 1.0;
+  var curLen = 0.0;
+  var tangent = new THREE.Vector3(0,0,0);
+  var pA;
+  var pB;
+  var prevPt = new THREE.Vector3(0,0,0);
+  var prevTexCoord;
+  var texCoords = [];
+  var j = 0;
+  for (var i = 0; i < points.length; ++i)
+  {
+    var pt0 =  new THREE.Vector3(points[i].x, points[i].y,
+        points[i].z);
+    var pt1;
+    if (i !== points.length - 1)
+    {
+      pt1 =  new THREE.Vector3(points[i+1].x, points[i+1].y,
+          points[i+1].z);
+    }
+    factor = 1.0;
+    if (i > 0)
+    {
+      curLen += pt0.distanceTo(prevPt);
+    }
+    texCoord = curLen/texMaxLen;
+    if (i === 0)
+    {
+      tangent.x = pt1.x;
+      tangent.y = pt1.y;
+      tangent.z = pt1.z;
+      tangent.sub(pt0);
+      tangent.normalize();
+    }
+    else if (i === points.length - 1)
+    {
+      tangent.x = pt0.x;
+      tangent.y = pt0.y;
+      tangent.z = pt0.z;
+      tangent.sub(prevPt);
+      tangent.normalize();
+    }
+    else
+    {
+      var v0 = new THREE.Vector3(0,0,0);
+      var v1 = new THREE.Vector3(0,0,0);
+      v0.x = pt0.x;
+      v0.y = pt0.y;
+      v0.z = pt0.z;
+      v0.sub(prevPt);
+      v0.normalize();
+
+      v1.x = pt1.x;
+      v1.y = pt1.y;
+      v1.z = pt1.z;
+      v1.sub(pt0);
+      v1.normalize();
+
+      var dot = v0.dot(v1*-1);
+
+      tangent.x = pt1.x;
+      tangent.y = pt1.y;
+      tangent.z = pt1.z;
+      tangent.sub(prevPt);
+      tangent.normalize();
+
+      if (dot > -0.97 && dot < 0.97)
+      {
+        factor = 1.0 / Math.sin(Math.acos(dot) * 0.5);
+      }
+    }
+    var theta = Math.atan2(tangent.x, -tangent.y);
+    pA = new THREE.Vector3(pt0.x,pt0.y,pt0.z);
+    pB = new THREE.Vector3(pt0.x,pt0.y,pt0.z);
+    var w = (width * factor)*0.5;
+    pA.x += Math.cos(theta) * w;
+    pA.y += Math.sin(theta) * w;
+    pB.x -= Math.cos(theta) * w;
+    pB.y -= Math.sin(theta) * w;
+
+    geometry.vertices.push(pA);
+    geometry.vertices.push(pB);
+
+    texCoords.push([0, texCoord]);
+    texCoords.push([1, texCoord]);
+
+    // draw triangle strips
+    if (i > 0)
+    {
+      geometry.faces.push(new THREE.Face3(j, j+1, j+2,
+        new THREE.Vector3(0, 0, 1)));
+      geometry.faceVertexUvs[0].push(
+          [new THREE.Vector2(texCoords[j][0], texCoords[j][1]),
+           new THREE.Vector2(texCoords[j+1][0], texCoords[j+1][1]),
+           new THREE.Vector2(texCoords[j+2][0], texCoords[j+2][1])]);
+      j++;
+
+      geometry.faces.push(new THREE.Face3(j, j+2, j+1,
+        new THREE.Vector3(0, 0, 1)));
+      geometry.faceVertexUvs[0].push(
+          [new THREE.Vector2(texCoords[j][0], texCoords[j][1]),
+           new THREE.Vector2(texCoords[j+2][0], texCoords[j+2][1]),
+           new THREE.Vector2(texCoords[j+1][0], texCoords[j+1][1])]);
+      j++;
+
+    }
+
+    prevPt.x = pt0.x;
+    prevPt.y = pt0.y;
+    prevPt.z = pt0.z;
+
+    prevTexCoord = texCoord;
+  }
+
+  // geometry.computeTangents();
+  geometry.computeFaceNormals();
+
+  geometry.verticesNeedUpdate = true;
+  geometry.uvsNeedUpdate = true;
+
+
+  var material =  new THREE.MeshPhongMaterial();
+
+ /* var ambient = mat['ambient'];
+  if (ambient)
+  {
+    material.ambient.setRGB(ambient[0], ambient[1], ambient[2]);
+  }
+  var diffuse = mat['diffuse'];
+  if (diffuse)
+  {
+    material.color.setRGB(diffuse[0], diffuse[1], diffuse[2]);
+  }
+  var specular = mat['specular'];
+  if (specular)
+  {
+    material.specular.setRGB(specular[0], specular[1], specular[2]);
+  }*/
+  if (texture)
+  {
+    var tex = THREE.ImageUtils.loadTexture(texture);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    material.map = tex;
+  }
+
+  var mesh = new THREE.Mesh(geometry, material);
+  mesh.castShadow = false;
+  return mesh;
+};
+
+GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
+    segmentWidth, segmentHeight, origin, textures, blends, parent)
+{
+  if (this.heightmap)
+  {
+    return;
+  }
+  // unfortunately large heightmaps kills the fps and freeze everything so
+  // we have to scale it down
+  var scale = 1;
+  var maxHeightmapWidth = 256;
+  var maxHeightmapHeight = 256;
+
+  if ((segmentWidth-1) > maxHeightmapWidth)
+  {
+    scale = maxHeightmapWidth / (segmentWidth-1);
+  }
+
+  var geometry = new THREE.PlaneGeometry(width, height,
+      (segmentWidth-1) * scale, (segmentHeight-1) * scale);
+  geometry.dynamic = true;
+
+  // flip the heights
+  var vertices = [];
+  for (var h = segmentHeight-1; h >= 0; --h)
+  {
+    for (var w = 0; w < segmentWidth; ++w)
+    {
+      vertices[(segmentHeight-h-1)*segmentWidth  + w]
+          = heights[h*segmentWidth + w];
+    }
+  }
+
+  // sub-sample
+  var col = (segmentWidth-1) * scale;
+  var row = (segmentHeight-1) * scale;
+  for (var r = 0; r < row; ++r)
+  {
+    for (var c = 0; c < col; ++c)
+    {
+      var index = (r * col * 1/(scale*scale)) +   (c * (1/scale));
+      geometry.vertices[r*col + c].z = vertices[index];
+    }
+  }
+
+  var mesh;
+  if (textures && textures.length > 0)
+  {
+    geometry.computeFaceNormals();
+    geometry.computeVertexNormals();
+    geometry.computeTangents();
+
+    var textureLoaded = [];
+    var repeats = [];
+    for (var t = 0; t < textures.length; ++t)
+    {
+      textureLoaded[t] = THREE.ImageUtils.loadTexture(textures[t].diffuse,
+          new THREE.UVMapping());
+      textureLoaded[t].wrapS = THREE.RepeatWrapping;
+      textureLoaded[t].wrapT = THREE.RepeatWrapping;
+      repeats[t] = width/textures[t].size;
+    }
+
+    // for now, use fixed no. of textures and blends
+    // so populate the remaining ones to make the fragment shader happy
+    for (var tt = textures.length; tt< 3; ++tt)
+    {
+      textureLoaded[tt] = textureLoaded[tt-1];
+    }
+    for (var b = blends.length; tt < 2; ++b)
+    {
+      blends[b] = blends[b-1];
+    }
+    for (var rr = repeats.length; rr < 3; ++rr)
+    {
+      repeats[rr] = repeats[rr-1];
+    }
+
+    // Use the same approach as gazebo scene, grab the first directional light
+    // and use it for shading the terrain
+    var lightDir = new THREE.Vector3(0, 0, 1);
+    var lightDiffuse = new THREE.Color(0xffffff);
+    var allObjects = [];
+    this.scene.getDescendants(allObjects);
+    for (var l = 0; l < allObjects.length; ++l)
+    {
+      if (allObjects[l] instanceof THREE.DirectionalLight)
+      {
+        lightDir = allObjects[l].position;
+        lightDiffuse = allObjects[l].color;
+        break;
+      }
+    }
+
+    var material = new THREE.ShaderMaterial({
+      uniforms:
+      {
+        texture0: { type: 't', value: textureLoaded[0]},
+        texture1: { type: 't', value: textureLoaded[1]},
+        texture2: { type: 't', value: textureLoaded[2]},
+        repeat0: { type: 'f', value: repeats[0]},
+        repeat1: { type: 'f', value: repeats[1]},
+        repeat2: { type: 'f', value: repeats[2]},
+        minHeight1: { type: 'f', value: blends[0].min_height},
+        fadeDist1: { type: 'f', value: blends[0].fade_dist},
+        minHeight2: { type: 'f', value: blends[1].min_height},
+        fadeDist2: { type: 'f', value: blends[1].fade_dist},
+        ambient: { type: 'c', value: this.ambient.color},
+        lightDiffuse: { type: 'c', value: lightDiffuse},
+        lightDir: { type: 'v3', value: lightDir}
+      },
+      attributes: {},
+      vertexShader: document.getElementById( 'heightmapVS' ).innerHTML,
+      fragmentShader: document.getElementById( 'heightmapFS' ).innerHTML
+    });
+
+    mesh = new THREE.Mesh( geometry, material);
+  }
+  else
+  {
+    mesh = new THREE.Mesh( geometry,
+        new THREE.MeshPhongMaterial( { color: 0x555555 } ) );
+  }
+
+  mesh.position.x = origin.x;
+  mesh.position.y = origin.y;
+  mesh.position.z = origin.z;
+  parent.add(mesh);
+
+  this.heightmap = parent;
+};
+
+GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh,
+    callback)
 {
   var uriPath = uri.substring(0, uri.lastIndexOf('/'));
   var uriFile = uri.substring(uri.lastIndexOf('/') + 1);
@@ -419,12 +775,11 @@ GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh, material,
   // load urdf model
   if (uriFile.substr(-4).toLowerCase() === '.dae')
   {
-    return this.loadCollada(uri, submesh, centerSubmesh, material, normalMap,
-        parent);
+    return this.loadCollada(uri, submesh, centerSubmesh, callback);
   }
   else if (uriFile.substr(-5).toLowerCase() === '.urdf')
   {
-    var urdfModel = new ROSLIB.UrdfModel({
+    /*var urdfModel = new ROSLIB.UrdfModel({
       string : uri
     });
 
@@ -454,12 +809,13 @@ GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh, material,
           }
         }
       }
-    }
+    }*/
   }
 };
 
+// load the collada file
 GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
-    material, normalMap, parent)
+    callback)
 {
   var dae;
   var mesh = null;
@@ -474,7 +830,7 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
     {
       mesh = this.prepareColladaMesh(dae, null, null);
     }
-    this.setMaterial(mesh, material, normalMap);
+    callback(dae);
   }
 
   if (!mesh)
@@ -499,16 +855,15 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
       dae.updateMatrix();
       this.scene.meshes[thatURI] = dae;
       mesh = this.scene.prepareColladaMesh(dae, thatSubmesh, centerSubmesh);
-      this.scene.setMaterial(mesh, material, normalMap);
-      parent.add(dae);
+
+      dae.name = uri;
+      callback(dae);
     });
-  }
-  else
-  {
-    parent.add(dae);
   }
 };
 
+// Prepare collada by handling submesh-only loading and removing other
+// non-mesh entities such as lights
 GZ3D.Scene.prototype.prepareColladaMesh = function(dae, submesh, centerSubmesh)
 {
   var mesh;
@@ -587,25 +942,79 @@ GZ3D.Scene.prototype.prepareColladaMesh = function(dae, submesh, centerSubmesh)
   return mesh;
 };
 
-GZ3D.Scene.prototype.setMaterial = function(mesh, material, normalMap)
+/*GZ3D.Scene.prototype.setMaterial = function(mesh, texture, normalMap)
 {
   if (!mesh)
   {
     return;
   }
 
-  if (material || normalMap)
+  if (texture || normalMap)
   {
-    var mat = new THREE.MeshPhongMaterial();
-    if (material)
+    // normal map shader
+    var shader = THREE.ShaderLib['normalmap'];
+    var uniforms = THREE.UniformsUtils.clone( shader.uniforms );
+    if (texture)
     {
-      mat.map = THREE.ImageUtils.loadTexture(material);
+      uniforms['enableDiffuse'].value = true;
+      uniforms['tDiffuse'].value = THREE.ImageUtils.loadTexture(texture);
     }
     if (normalMap)
     {
-      mat.normalMap = THREE.ImageUtils.loadTexture(normalMap);
+      uniforms['tNormal'].value = THREE.ImageUtils.loadTexture(normalMap);
     }
-    mesh.material = mat;
+
+    var parameters = { fragmentShader: shader.fragmentShader,
+        vertexShader: shader.vertexShader, uniforms: uniforms,
+        lights: true, fog: false };
+    var shaderMaterial = new THREE.ShaderMaterial(parameters);
+    mesh.geometry.computeTangents();
+    mesh.material = shaderMaterial;
+  }
+};*/
+
+GZ3D.Scene.prototype.setMaterial = function(obj, material)
+{
+  if (obj)
+  {
+    if (material)
+    {
+      obj.material = new THREE.MeshPhongMaterial();
+      var ambient = material.ambient;
+      if (ambient)
+      {
+        obj.material.ambient.setRGB(ambient[0], ambient[1], ambient[2]);
+      }
+      var diffuse = material.diffuse;
+      if (diffuse)
+      {
+        obj.material.color.setRGB(diffuse[0], diffuse[1], diffuse[2]);
+      }
+      var specular = material.specular;
+      if (specular)
+      {
+        obj.material.specular.setRGB(specular[0], specular[1], specular[2]);
+      }
+      var opacity = material.opacity;
+      if (opacity)
+      {
+        if (opacity < 1)
+        {
+          obj.material.transparent = true;
+          obj.material.opacity = opacity;
+        }
+      }
+
+      if (material.texture)
+      {
+        obj.material.map = THREE.ImageUtils.loadTexture(material.texture);
+      }
+      if (material.normalMap)
+      {
+        obj.material.normalMap =
+            THREE.ImageUtils.loadTexture(material.normalMap);
+      }
+    }
   }
 };
 
@@ -613,10 +1022,45 @@ GZ3D.Scene.prototype.setManipulationMode = function(mode)
 {
   this.manipulationMode = mode;
 
-  if (this.manipulationMode === 'view')
+  if (mode === 'view')
   {
     this.killCameraControl = false;
     this.modelManipulator.detach();
     this.scene.remove(this.modelManipulator.gizmo);
   }
+  else
+  {
+    this.modelManipulator.mode = this.manipulationMode;
+    this.modelManipulator.setMode( this.modelManipulator.mode );
+  }
+
+};
+
+GZ3D.Scene.prototype.showCollision = function(show)
+{
+  if (show === this.showCollisions)
+  {
+    return;
+  }
+
+  var allObjects = [];
+  this.scene.getDescendants(allObjects);
+  for (var i = 0; i < allObjects.length; ++i)
+  {
+    if (allObjects[i] instanceof THREE.Object3D &&
+        allObjects[i].name.indexOf('COLLISION_VISUAL') >=0)
+    {
+      var allChildren = [];
+      allObjects[i].getDescendants(allChildren);
+      for (var j =0; j < allChildren.length; ++j)
+      {
+        if (allChildren[j] instanceof THREE.Mesh)
+        {
+          allChildren[j].visible = show;
+        }
+      }
+    }
+  }
+  this.showCollisions = show;
+
 };

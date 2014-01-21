@@ -1,5 +1,12 @@
 #!/usr/bin/python
 
+# To be deprecated and replaced by webify_models_v2.py
+
+# A script to update gazebo models to be web-friendly.
+# It converts all textures to png format and make sure they are
+# stored in the [model_name]/meshes/ directory alongside the
+# dae files.
+
 import os
 import subprocess
 import sys

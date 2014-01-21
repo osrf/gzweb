@@ -1,0 +1,19 @@
+{
+  "name": "gzweb",
+  "version": "1.0.0",
+  "description": "WebGL client for Gazebo",
+  "repository" :
+  {
+    "type" : "mercurial",
+    "url" : "https://bitbucket.org/osrf/gzweb"
+  },
+  "scripts":
+  {
+    "preinstall": "npm install -g http-server@0.5.5 node-gyp"
+  },
+  "dependencies":
+  {
+    "websocket": ""
+  }
+}
+

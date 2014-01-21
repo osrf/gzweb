@@ -5,11 +5,13 @@ GZ3D.GZIface = function(scene, gui)
   this.scene = scene;
   this.gui = gui;
   this.init();
+  this.visualsToAdd = [];
 };
 
 GZ3D.GZIface.prototype.init = function()
 {
   this.material = [];
+  this.entityMaterial = {};
 
   // Set up initial scene
   this.webSocket = new ROSLIB.Ros({
@@ -54,6 +56,11 @@ GZ3D.GZIface.prototype.init = function()
 
   var sceneUpdate = function(message)
   {
+    if (message.name)
+    {
+      this.scene.name = message.name;
+    }
+
     if (message.grid === true)
     {
       this.scene.createGrid();
@@ -126,11 +133,73 @@ GZ3D.GZIface.prototype.init = function()
 
   var modelUpdate = function(message)
   {
-    var modelObj = this.createModelFromMsg(message);
-    this.scene.add(modelObj);
+    if (!this.scene.getByName(message.name))
+    {
+      var modelObj = this.createModelFromMsg(message);
+      if (modelObj)
+      {
+        this.scene.add(modelObj);
+      }
+
+      // visuals may arrive out of order (before the model msg),
+      // add the visual in if we find its parent here
+      var len = this.visualsToAdd.length;
+      var i = 0;
+      var j = 0;
+      while (i < len)
+      {
+        var parentName = this.visualsToAdd[j].parent_name;
+        if (parentName.indexOf(modelObj.name) >=0)
+        {
+          var parent = this.scene.getByName(parentName);
+          var visualObj = this.createVisualFromMsg(this.visualsToAdd[j]);
+          parent.add(visualObj);
+          this.visualsToAdd.splice(j, 1);
+        }
+        else
+        {
+          j++;
+        }
+        i++;
+      }
+    }
   };
 
   modelInfoTopic.subscribe(modelUpdate.bind(this));
+
+  // Visual messages - currently just used for collision visuals
+  var visualTopic = new ROSLIB.Topic({
+    ros : this.webSocket,
+    name : '~/visual',
+    messageType : 'visual',
+  });
+
+  var visualUpdate = function(message)
+  {
+    if (!this.scene.getByName(message.name))
+    {
+      // accept only collision visual msgs for now
+      if (message.name.indexOf('COLLISION_VISUAL') < 0)
+      {
+        return;
+      }
+
+      // delay the add if parent not found, this array will checked in
+      // modelUpdate function
+      var parent = this.scene.getByName(message.parent_name);
+      if (message.parent_name && !parent)
+      {
+        this.visualsToAdd.push(message);
+      }
+      else
+      {
+        var visualObj = this.createVisualFromMsg(message);
+        parent.add(visualObj);
+      }
+    }
+  };
+
+  visualTopic.subscribe(visualUpdate.bind(this));
 
   // world stats
   var worldStatsTopic = new ROSLIB.Topic({
@@ -155,11 +224,41 @@ GZ3D.GZIface.prototype.init = function()
 
   var ligthtUpdate = function(message)
   {
-    var lightObj = this.createLightFromMsg(message);
-    this.scene.add(lightObj);
+    if (!this.scene.getByName(message.name))
+    {
+      var lightObj = this.createLightFromMsg(message);
+      this.scene.add(lightObj);
+    }
   };
 
   lightTopic.subscribe(ligthtUpdate.bind(this));
+
+
+  // heightmap
+  this.heightmapDataService = new ROSLIB.Service({
+    ros : this.webSocket,
+    name : '~/heightmap_data',
+    serviceType : 'heightmap_data'
+  });
+
+  // road
+  this.roadService = new ROSLIB.Service({
+    ros : this.webSocket,
+    name : '~/roads',
+    serviceType : 'roads'
+  });
+
+  var request = new ROSLIB.ServiceRequest({
+      name : 'roads'
+  });
+
+  // send service request and load road on response
+  this.roadService.callService(request,
+  function(result)
+  {
+    var roadsObj = that.createRoadsFromMsg(result);
+    this.scene.add(roadsObj);
+  });
 
   // Model modify messages - for modifying model pose
   this.modelModifyTopic = new ROSLIB.Topic({
@@ -380,27 +479,50 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
     for (var k = 0; k < link.visual.length; ++k)
     {
       var visual = link.visual[k];
-      if (visual.geometry)
+      var visualObj = this.createVisualFromMsg(visual);
+      if (visualObj && !visualObj.parent)
       {
-        var geom = visual.geometry;
-        var visualObj = new THREE.Object3D();
-        visualObj.name = visual.name;
-        if (visual.pose)
-        {
-          this.scene.setPose(visualObj, visual.pose.position,
-              visual.pose.orientation);
-        }
-        this.createGeom(geom, visual.material, visualObj);
-        if (visualObj.children.length > 0)
-        {
-          visualObj.children[0].castShadow = visual.cast_shadows || true;
-          visualObj.children[0].receiveShadow = true;
-        }
         linkObj.add(visualObj);
+      }
+    }
+
+    for (var l = 0; l < link.collision.length; ++l)
+    {
+      var collision = link.collision[l];
+      for (var m = 0; m < link.collision[l].visual.length; ++m)
+      {
+        var collisionVisual = link.collision[l].visual[m];
+        var collisionVisualObj = this.createVisualFromMsg(collisionVisual);
+        if (collisionVisualObj && !collisionVisualObj.parent)
+        {
+          linkObj.add(collisionVisualObj);
+        }
       }
     }
   }
   return modelObj;
+};
+
+GZ3D.GZIface.prototype.createVisualFromMsg = function(visual)
+{
+  if (visual.geometry)
+  {
+    var geom = visual.geometry;
+    var visualObj = new THREE.Object3D();
+    visualObj.name = visual.name;
+    if (visual.pose)
+    {
+      this.scene.setPose(visualObj, visual.pose.position,
+          visual.pose.orientation);
+    }
+
+    visualObj.castShadow = visual.cast_shadows;
+    visualObj.receiveShadow = visual.receive_shadows;
+
+    this.createGeom(geom, visual.material, visualObj);
+
+    return visualObj;
+  }
 };
 
 GZ3D.GZIface.prototype.createLightFromMsg = function(light)
@@ -446,25 +568,398 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
     lightObj.target.position = target;
     lightObj.shadowCameraNear = 1;
     lightObj.shadowCameraFar = 50;
-    lightObj.shadowMapWidth = 2048;
-    lightObj.shadowMapHeight = 2048;
+    lightObj.shadowMapWidth = 4094;
+    lightObj.shadowMapHeight = 4094;
     lightObj.shadowCameraVisible = false;
     lightObj.shadowCameraBottom = -100;
     lightObj.shadowCameraLeft = -100;
     lightObj.shadowCameraRight = 100;
     lightObj.shadowCameraTop = 100;
+    lightObj.shadowBias = 0.0001;
+
+    lightObj.position.set(negDir.x, negDir.y, negDir.z);
     this.scene.setPose(lightObj, light.pose.position,
         light.pose.orientation);
   }
   lightObj.intensity = light.attenuation_constant;
   lightObj.castShadow = light.cast_shadows;
-  lightObj.shadowDarkness = 0.5;
+  lightObj.shadowDarkness = 0.3;
   lightObj.name = light.name;
 
   return lightObj;
 };
 
+GZ3D.GZIface.prototype.createRoadsFromMsg = function(roads)
+{
+  var roadObj = new THREE.Object3D();
+
+  var mat = this.material['Gazebo/Road'];
+  var texture = null;
+  if (mat)
+  {
+    texture = this.parseUri('media/materials/textures/' + mat['texture']);
+  }
+  var obj = this.scene.createRoads(roads.point, roads.width, texture);
+  roadObj.add(obj);
+  return roadObj;
+};
+
+GZ3D.GZIface.prototype.parseUri = function(uri)
+{
+  var uriPath = 'assets';
+  var idx = uri.indexOf('://');
+  if (idx > 0)
+  {
+    idx +=3;
+  }
+  return uriPath + '/' + uri.substring(idx);
+};
+
 GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
+{
+  var obj;
+  var uriPath = 'assets';
+  var that = this;
+  var mat = this.parseMaterial(material);
+  if (geom.box)
+  {
+    obj = this.scene.createBox(geom.box.size.x, geom.box.size.y,
+        geom.box.size.z);
+  }
+  else if (geom.cylinder)
+  {
+    obj = this.scene.createCylinder(geom.cylinder.radius,
+        geom.cylinder.length);
+  }
+  else if (geom.sphere)
+  {
+    obj = this.scene.createSphere(geom.sphere.radius);
+  }
+  else if (geom.plane)
+  {
+    obj = this.scene.createPlane(geom.plane.normal.x, geom.plane.normal.y,
+        geom.plane.normal.z, geom.plane.size.x, geom.plane.size.y);
+  }
+  else if (geom.mesh)
+  {
+    // get model name which the mesh is in
+    var rootModel = parent;
+    while (rootModel.parent)
+    {
+      rootModel = rootModel.parent;
+    }
+
+    // find model from database, download the mesh if it exists
+    // var manifestXML;
+    // var manifestURI = GAZEBO_MODEL_DATABASE_URI + '/manifest.xml';
+    // var request = new XMLHttpRequest();
+    // request.open('GET', manifestURI, false);
+    // request.onreadystatechange = function(){
+    //   if (request.readyState === 4)
+    //   {
+    //     if (request.status === 200 || request.status === 0)
+    //     {
+    //         manifestXML = request.responseXML;
+    //     }
+    //   }
+    // };
+    // request.send();
+
+    // var uriPath;
+    // var modelAvailable = false;
+    // var modelsElem = manifestXML.getElementsByTagName('models')[0];
+    // var i;
+    // for (i = 0; i < modelsElem.getElementsByTagName('uri').length; ++i)
+    // {
+    //   var uri = modelsElem.getElementsByTagName('uri')[i];
+    //   var model = uri.substring(uri.indexOf('://') + 3);
+    //   if (model === rootModel)
+    //   {
+    //     modelAvailable = true;
+    //   }
+    // }
+
+    // if (modelAvailable)
+    {
+      var meshUri = geom.mesh.filename;
+      var submesh = geom.mesh.submesh;
+      var centerSubmesh = geom.mesh.center_submesh;
+
+      console.log(geom.mesh.filename + ' ' + submesh);
+
+      var uriType = meshUri.substring(0, meshUri.indexOf('://'));
+      if (uriType === 'file' || uriType === 'model')
+      {
+        var modelName = meshUri.substring(meshUri.indexOf('://') + 3);
+        if (geom.mesh.scale)
+        {
+          parent.scale.x = geom.mesh.scale.x;
+          parent.scale.y = geom.mesh.scale.y;
+          parent.scale.z = geom.mesh.scale.z;
+        }
+
+        var modelUri = uriPath + '/' + modelName;
+
+        var materialName = parent.name + '::' + modelUri;
+        this.entityMaterial[materialName] = mat;
+
+        this.scene.loadMesh(modelUri, submesh,
+            centerSubmesh, function(dae) {
+              if (that.entityMaterial[materialName])
+              {
+                var allChildren = [];
+                dae.getDescendants(allChildren);
+                for (var c = 0; c < allChildren.length; ++c)
+                {
+                  if (allChildren[c] instanceof THREE.Mesh)
+                  {
+                    that.scene.setMaterial(allChildren[c],
+                        that.entityMaterial[materialName]);
+                    break;
+                  }
+                }
+              }
+              parent.add(dae);
+              loadGeom(parent);
+            });
+      }
+    }
+  }
+  else if (geom.heightmap)
+  {
+    var request = new ROSLIB.ServiceRequest({
+      name : that.scene.name
+    });
+
+    // redirect the texture paths to the assets dir
+    var textures = geom.heightmap.texture;
+    for ( var k = 0; k < textures.length; ++k)
+    {
+      textures[k].diffuse = this.parseUri(textures[k].diffuse);
+      textures[k].normal = this.parseUri(textures[k].normal);
+    }
+
+    var sizes = geom.heightmap.size;
+
+    // send service request and load heightmap on response
+    this.heightmapDataService.callService(request,
+        function(result)
+        {
+          var heightmap = result.heightmap;
+          // gazebo heightmap is always square shaped,
+          // and a dimension of: 2^N + 1
+          that.scene.loadHeightmap(heightmap.heights, heightmap.size.x,
+              heightmap.size.y, heightmap.width, heightmap.height,
+              heightmap.origin, textures,
+              geom.heightmap.blend, parent);
+            //console.log('Result for service call on ' + result);
+        });
+
+    //this.scene.loadHeightmap(parent)
+  }
+
+  if (obj)
+  {
+    if (mat)
+    {
+      // texture mapping for simple shapes and planes only,
+      // not used by mesh and terrain
+      this.scene.setMaterial(obj, mat);
+    }
+    obj.updateMatrix();
+    parent.add(obj);
+    loadGeom(parent);
+  }
+
+  function loadGeom(visualObj)
+  {
+    var allChildren = [];
+    visualObj.getDescendants(allChildren);
+    for (var c = 0; c < allChildren.length; ++c)
+    {
+      if (allChildren[c] instanceof THREE.Mesh)
+      {
+        allChildren[c].castShadow = true;
+        allChildren[c].receiveShadow = true;
+
+        if (visualObj.castShadows)
+        {
+          allChildren[c].castShadow = visualObj.castShadows;
+        }
+        if (visualObj.receiveShadows)
+        {
+          allChildren[c].receiveShadow = visualObj.receiveShadows;
+        }
+
+        if (visualObj.name.indexOf('COLLISION_VISUAL') >= 0)
+        {
+          allChildren[c].castShadow = false;
+          allChildren[c].receiveShadow = false;
+
+          allChildren[c].visible = this.scene.showCollisions;
+        }
+        break;
+      }
+    }
+  }
+};
+
+GZ3D.GZIface.prototype.applyMaterial = function(obj, mat)
+{
+  if (obj)
+  {
+    if (mat)
+    {
+      obj.material = new THREE.MeshPhongMaterial();
+      var ambient = mat.ambient;
+      if (ambient)
+      {
+        obj.material.ambient.setRGB(ambient[0], ambient[1], ambient[2]);
+      }
+      var diffuse = mat.diffuse;
+      if (diffuse)
+      {
+        obj.material.color.setRGB(diffuse[0], diffuse[1], diffuse[2]);
+      }
+      var specular = mat.specular;
+      if (specular)
+      {
+        obj.material.specular.setRGB(specular[0], specular[1], specular[2]);
+      }
+      var opacity = mat.opacity;
+      if (opacity)
+      {
+        if (opacity < 1)
+        {
+          obj.material.transparent = true;
+          obj.material.opacity = opacity;
+        }
+      }
+
+      if (mat.texture)
+      {
+        obj.material.map = THREE.ImageUtils.loadTexture(mat.texture);
+      }
+      if (mat.normalMap)
+      {
+        obj.material.normalMap = THREE.ImageUtils.loadTexture(mat.normalMap);
+      }
+    }
+  }
+};
+
+GZ3D.GZIface.prototype.parseMaterial = function(material)
+{
+  if (!material)
+  {
+    return null;
+  }
+
+  var uriPath = 'assets';
+  var texture;
+  var normalMap;
+  var textureUri;
+  var ambient;
+  var diffuse;
+  var specular;
+  var opacity;
+  var mat;
+
+  // get texture from material script
+  var script  = material.script;
+  if (script)
+  {
+    if (script.uri.length > 0)
+    {
+      if (script.name)
+      {
+        mat = this.material[script.name];
+        if (mat)
+        {
+          ambient = mat['ambient'];
+          diffuse = mat['diffuse'];
+          specular = mat['specular'];
+          opacity = mat['opacity'];
+
+          var textureName = mat['texture'];
+          if (textureName)
+          {
+            for (var i = 0; i < script.uri.length; ++i)
+            {
+              var type = script.uri[i].substring(0,
+                    script.uri[i].indexOf('://'));
+
+              if (type === 'model')
+              {
+                if (script.uri[i].indexOf('textures') > 0)
+                {
+                  textureUri = script.uri[i].substring(
+                      script.uri[i].indexOf('://') + 3);
+                  break;
+                }
+              }
+              else if (type === 'file')
+              {
+                if (script.uri[i].indexOf('materials') > 0)
+                {
+                  textureUri = script.uri[i].substring(
+                      script.uri[i].indexOf('://') + 3,
+                      script.uri[i].indexOf('materials') + 9) + '/textures';
+                  break;
+                }
+              }
+            }
+            if (textureUri)
+            {
+              texture = uriPath + '/' +
+                  textureUri  + '/' + textureName;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // normal map
+  if (material.normal_map)
+  {
+    var mapUri;
+    if (material.normal_map.indexOf('://') > 0)
+    {
+      mapUri = material.normal_map.substring(
+          material.normal_map.indexOf('://') + 3,
+          material.normal_map.lastIndexOf('/'));
+    }
+    else
+    {
+      mapUri = textureUri;
+    }
+    if (mapUri)
+    {
+      var startIndex = material.normal_map.lastIndexOf('/') + 1;
+      if (startIndex < 0)
+      {
+        startIndex = 0;
+      }
+      var normalMapName = material.normal_map.substr(startIndex,
+          material.normal_map.lastIndexOf('.') - startIndex);
+      normalMap = uriPath + '/' +
+        mapUri  + '/' + normalMapName + '.png';
+    }
+  }
+
+  return {
+      texture: texture,
+      normalMap: normalMap,
+      ambient: ambient,
+      diffuse: diffuse,
+      specular: specular,
+      opacity: opacity
+  };
+};
+
+
+/*GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
 {
   var obj;
 
@@ -582,37 +1077,6 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
       rootModel = rootModel.parent;
     }
 
-    /*// find model from database, download the mesh if it exists
-    var manifestXML;
-    var manifestURI = GAZEBO_MODEL_DATABASE_URI + '/manifest.xml';
-    var request = new XMLHttpRequest();
-    request.open('GET', manifestURI, false);
-    request.onreadystatechange = function(){
-      if (request.readyState === 4)
-      {
-        if (request.status === 200 || request.status === 0)
-        {
-            manifestXML = request.responseXML;
-        }
-      }
-    };
-    request.send();
-
-    var uriPath;
-    var modelAvailable = false;
-    var modelsElem = manifestXML.getElementsByTagName('models')[0];
-    var i;
-    for (i = 0; i < modelsElem.getElementsByTagName('uri').length; ++i)
-    {
-      var uri = modelsElem.getElementsByTagName('uri')[i];
-      var model = uri.substring(uri.indexOf('://') + 3);
-      if (model === rootModel)
-      {
-        modelAvailable = true;
-      }
-    }
-
-    if (modelAvailable)*/
     {
       var meshUri = geom.mesh.filename;
       var submesh = geom.mesh.submesh;
@@ -636,9 +1100,45 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
       }
     }
   }
+  else if (geom.heightmap)
+  {
+    var that = this;
+    var request = new ROSLIB.ServiceRequest({
+      name : that.scene.name
+    });
 
+    // redirect the texture paths to the assets dir
+    var textures = geom.heightmap.texture;
+    for ( var k = 0; k < textures.length; ++k)
+    {
+      textures[k].diffuse = this.parseUri(textures[k].diffuse);
+      textures[k].normal = this.parseUri(textures[k].normal);
+    }
+
+    var sizes = geom.heightmap.size;
+
+    // send service request and load heightmap on response
+    this.heightmapDataService.callService(request,
+        function(result)
+        {
+          var heightmap = result.heightmap;
+          // gazebo heightmap is always square shaped,
+          // and a dimension of: 2^N + 1
+          that.scene.loadHeightmap(heightmap.heights, heightmap.size.x,
+              heightmap.size.y, heightmap.width, heightmap.height,
+              heightmap.origin, textures,
+              geom.heightmap.blend, parent);
+            //console.log('Result for service call on ' + result);
+        });
+
+    //this.scene.loadHeightmap(parent)
+  }
+
+  // texture mapping for simple shapes and planes only,
+  // not used by mesh and terrain
   if (obj)
   {
+
     if (mat)
     {
       obj.material = new THREE.MeshPhongMaterial();
@@ -658,6 +1158,17 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
       {
         obj.material.specular.setRGB(specular[0], specular[1], specular[2]);
       }
+      var opacity = mat['opacity'];
+      if (opacity)
+      {
+        if (opacity < 1)
+        {
+          obj.material.transparent = true;
+          obj.material.opacity = opacity;
+        }
+      }
+
+      //this.scene.setMaterial(obj, texture, normalMap);
 
       if (texture)
       {
@@ -672,3 +1183,4 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
     parent.add(obj);
   }
 };
+*/
