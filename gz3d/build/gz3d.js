@@ -12,9 +12,17 @@ $(document).delegate('.ui-content', 'touchmove', false);
 
 // Bind events to buttons
 $(function() {
- //Initialize toggle items unchecked
+  //Initialize
+  // Toggle items unchecked
   $('#view-effects').buttonMarkup({ icon: 'false' });
   $('#view-collisions').buttonMarkup({ icon: 'false' });
+
+  // Panel open for wide screens
+  if ($(window).width() / parseFloat($('body').css('font-size')) > 35)
+  {
+    // Start open
+    $( '#leftPanel' ).panel( 'open' );
+  }
 
   //Clicks/taps
   $( '#view-mode' ).click(function() {

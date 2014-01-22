@@ -35,6 +35,12 @@
       th, td {
         white-space: nowrap;
       }
+      @media (min-width:35em) {
+        /* disable "dismiss" on wide viewports */
+        .ui-panel-dismiss {
+          display: none;
+        }
+      }
     </style>
   </head>
 
