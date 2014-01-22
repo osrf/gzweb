@@ -25,30 +25,36 @@ $(function() {
   }
 
   //Clicks/taps
-  $( '#view-mode' ).click(function() {
+  $( '#view-mode' ).click(function()
+  {
     guiEvents.emit('manipulation_mode', 'view');
   });
 
-  $( '#translate-mode' ).click(function() {
+  $( '#translate-mode' ).click(function()
+  {
     guiEvents.emit('manipulation_mode', 'translate');
   });
 
-  $( '#rotate-mode' ).click(function() {
+  $( '#rotate-mode' ).click(function()
+  {
     guiEvents.emit('manipulation_mode', 'rotate');
   });
 
-  $( '#box' ).click(function() {
-    $( '#leftPanel' ).panel( 'close' );
+  $( '#box' ).click(function()
+  {
+    guiEvents.emit('close_panel');
     guiEvents.emit('entity_create', 'box');
   });
 
-  $( '#sphere' ).click(function() {
-    $( '#leftPanel' ).panel( 'close' );
+  $( '#sphere' ).click(function()
+  {
+    guiEvents.emit('close_panel');
     guiEvents.emit('entity_create', 'sphere');
   });
 
-  $( '#cylinder' ).click(function() {
-    $( '#leftPanel' ).panel( 'close' );
+  $( '#cylinder' ).click(function()
+  {
+    guiEvents.emit('close_panel');
     guiEvents.emit('entity_create', 'cylinder');
   });
 
@@ -172,6 +178,16 @@ GZ3D.Gui.prototype.init = function()
         else
         {
             $('#view-collisions').buttonMarkup({ icon: 'check' });
+        }
+      }
+  );
+
+  guiEvents.on('close_panel',
+      function ()
+      {
+        if ($(window).width() / parseFloat($('body').css('font-size')) < 35)
+        {
+          $( '#leftPanel' ).panel( 'close' );
         }
       }
   );
