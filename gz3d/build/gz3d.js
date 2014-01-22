@@ -17,10 +17,9 @@ $(function() {
   $('#view-effects').buttonMarkup({ icon: 'false' });
   $('#view-collisions').buttonMarkup({ icon: 'false' });
 
-  // Panel open for wide screens
+  // Panel starts open for wide screens
   if ($(window).width() / parseFloat($('body').css('font-size')) > 35)
   {
-    // Start open
     $( '#leftPanel' ).panel( 'open' );
   }
 

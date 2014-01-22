@@ -189,31 +189,31 @@
 
       <!-- footer -->
       <div data-role="footer" data-position="fixed" data-tap-toggle="false" style="height: 50px;">
-        <div class="ui-grid-b">
-           <div class="ui-block-a">
+        <div>
+          <div style="display: inline-block; float:right">
+            <table>
+              <tr>
+                <td>Real Time: </td>
+              </tr>
+              <tr>
+                <td id='real-time-value'>00 00:00:00</td>
+              </tr>
+            </table>
+          </div>
+          <div style="display: inline-block; float:right">
+            <table>
+              <tr>
+                <td>Sim Time: </td>
+              </tr>
+              <tr>
+                <td id='sim-time-value'>00 00:00:00</td>
+              </tr>
+            </table>
+          </div>
+          <div style="display: inline-block; float:right">
              <a href="#" data-role="button" id="play"><span id="playText"><img src="style/images/play.png"></span></a>
            </div>
-           <div class="ui-block-b">
-             <table>
-               <tr>
-                 <td>Sim Time: </td>
-               </tr>
-               <tr>
-                 <td id='sim-time-value'>00 00:00:00</td>
-               </tr>
-             </table>
-           </div>
-           <div class="ui-block-c">
-             <table>
-               <tr>
-                 <td>Real Time: </td>
-               </tr>
-               <tr>
-                 <td id='real-time-value'>00 00:00:00</td>
-               </tr>
-             </table>
-           </div>
-         </div>
+        </div>
       </div><!-- footer -->
     </div><!-- page -->
 
