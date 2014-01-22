@@ -41,6 +41,12 @@
           display: none;
         }
       }
+      .collapsible_header {
+        font-size: 15px;
+      }
+      .collapsible_item {
+        font-size: 13px;
+      }
     </style>
   </head>
 
@@ -135,25 +141,25 @@
           <li data-role="list-divider"></li>
         </ul>
         <div data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
-            <h3>Edit</h3>
+            <h3><span class="collapsible_header">Edit</span></h3>
             <ul data-role="listview">
-              <li id='reset-world' data-icon="false"><a href="#">Reset World</a></li>
-              <li id='reset-model' data-icon="false"><a href="#">Reset Model Poses</a></li>
+              <li id='reset-world' data-icon="false"><a href="#"><span class="collapsible_item">Reset World</span></a></li>
+              <li id='reset-model' data-icon="false"><a href="#"><span class="collapsible_item">Reset Model Poses</span></a></li>
             </ul>
         </div>
         <div data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
-            <h3>View</h3>
+            <h3><span class="collapsible_header">View</span></h3>
             <ul data-role="listview">
-              <!--<li id='view-effects' data-icon="false" data-iconpos="right"><a href="#">SSAO effect</a></li>-->
-              <li id='view-collisions' data-icon="false" data-iconpos="right"><a href="#">Collisions</a></li>
+              <!--<li id='view-effects' data-icon="false" data-iconpos="right"><a href="#"><span class="collapsible_item">SSAO effect</span></a></li>-->
+              <li id='view-collisions' data-icon="false" data-iconpos="right"><a href="#"><span class="collapsible_item">Collisions</span></a></li>
             </ul>
         </div>
         <div data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
-            <h3>Insert</h3>
+            <h3><span class="collapsible_header">Insert</span></h3>
             <ul data-role="listview">
-              <li id="box" data-icon="false"><a href="#">Box</a></li>
-              <li id="sphere" data-icon="false"><a href="#">Sphere</a></li>
-              <li id="cylinder" data-icon="false"><a href="#">Cylinder</a></li>
+              <li id="box" data-icon="false"><a href="#"><span class="collapsible_item">Box</span></a></li>
+              <li id="sphere" data-icon="false"><a href="#"><span class="collapsible_item">Sphere</span></a></li>
+              <li id="cylinder" data-icon="false"><a href="#"><span class="collapsible_item">Cylinder</span></a></li>
             </ul>
         </div>
       </div><!-- panel -->
