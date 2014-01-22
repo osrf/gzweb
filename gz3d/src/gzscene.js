@@ -268,7 +268,13 @@ GZ3D.Scene.prototype.onKeyDown = function(event)
     this.effectsEnabled = !this.effectsEnabled;
   }
 
-  // R/T for changing manipulation modes
+  // Esc/R/T for changing manipulation modes
+  if (event.keyCode === 27) // Esc
+  {
+    this.setManipulationMode('view');
+    $( '#view-mode' ).click();
+    $('input[type="radio"]').checkboxradio('refresh');
+  }
   if (event.keyCode === 82) // R
   {
     this.setManipulationMode('rotate');

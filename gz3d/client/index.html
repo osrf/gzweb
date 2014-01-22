@@ -134,9 +134,9 @@
     <div data-role="page" data-theme="b" data-content-theme="c">
 
       <!-- panel -->
-      <div data-role="panel" id="leftPanel" data-display="overlay">
+      <div data-role="panel" id="leftPanel" data-display="overlay" data-swipe-close="false">
         <ul data-role="listview" data-theme="b">
-          <li data-icon="delete"><a href="#" data-rel="close"></a></li>
+          <li data-icon="delete"><a href="#" data-rel="close" title="Close Menu"></a></li>
           <li data-role="list-divider">Menu</li>
           <li data-role="list-divider"></li>
         </ul>
@@ -166,19 +166,19 @@
 
       <!-- header -->
       <div id="theHeader" data-role="header" data-position="fixed" style="height: 43px;">
-        <a href="#leftPanel" class="ui-btn-left" data-icon="bars" data-iconpos="notext">Open panel</a>
+        <a href="#leftPanel" class="ui-btn-left" data-icon="bars" data-iconpos="notext" title="Menu"></a>
 
         <h1></h1>
 
         <fieldset data-role="controlgroup" data-mini="true" data-type="horizontal" class="ui-btn-right">
           <input type="radio" name="radio-mini" id="view-mode" value="choice-1" checked="checked" />
-          <label for="view-mode"><img src="style/images/arrow.png"></label>
+          <label for="view-mode"><img src="style/images/arrow.png" title="View Mode (ESC)"></label>
 
           <input type="radio" name="radio-mini" id="translate-mode" value="choice-2"  />
-          <label for="translate-mode"><img src="style/images/translate.png"></label>
+          <label for="translate-mode"><img src="style/images/translate.png" title="Translation Mode (T)"></label>
 
           <input type="radio" name="radio-mini" id="rotate-mode" value="choice-3"  />
-          <label for="rotate-mode"><img src="style/images/rotate.png"></label>
+          <label for="rotate-mode"><img src="style/images/rotate.png" title="Rotation Mode (R)"></label>
         </fieldset>
 
       </div><!-- header -->
@@ -211,7 +211,7 @@
             </table>
           </div>
           <div style="display: inline-block; float:right">
-             <a href="#" data-role="button" id="play"><span id="playText"><img src="style/images/play.png"></span></a>
+             <a href="#" data-role="button" id="play"><span id="playText"><img src="style/images/play.png" title="Play"></span></a>
            </div>
         </div>
       </div><!-- footer -->

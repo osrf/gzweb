@@ -53,7 +53,7 @@ $(function() {
   });
 
   $( '#play' ).click(function() {
-    if ( $('#playText').html() === '<img src="style/images/play.png">' )
+    if ( $('#playText').html() === '<img src="style/images/play.png" title="Play">' )
     {
       guiEvents.emit('pause', false);
     }
@@ -77,6 +77,13 @@ $(function() {
   $( '#view-effects' ).click(function() {
     guiEvents.emit('show_effects');
   });
+
+  // Disable Esc key to close panel
+  $('body').on('keyup', function(event){
+    if (event.which === 27){
+        return false;
+  }
+});
 });
 
 /**
@@ -195,11 +202,11 @@ GZ3D.Gui.prototype.setPaused = function(paused)
 {
   if (paused)
   {
-    $('#playText').html('<img src="style/images/play.png">');
+    $('#playText').html('<img src="style/images/play.png" title="Play">');
   }
   else
   {
-    $('#playText').html('<img src="style/images/pause.png">');
+    $('#playText').html('<img src="style/images/pause.png" title="Pause">');
   }
 };
 
