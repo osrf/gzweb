@@ -18,6 +18,9 @@
 #include <gts.h>
 #include <gazebo/gazebo.hh>
 
+#ifndef PI
+#define PI 3.14159265359
+#endif
 
 //////////////////////////////////////////////////
 void FillVertex(GtsPoint *_p, gpointer *_data)
@@ -143,7 +146,7 @@ void ConvertMeshToGTS(const gazebo::common::Mesh *_mesh, GtsSurface *_surface)
     }
 
     // merge duplicate vertices, otherwise gts produces undesirable results
-    //MergeVertices(vertices, 0.0001);
+    MergeVertices(vertices, 0.0001);
 
     GtsVertex **verticesData =
         reinterpret_cast<GtsVertex **>(vertices->pdata);
@@ -192,13 +195,78 @@ void ConvertMeshToGTS(const gazebo::common::Mesh *_mesh, GtsSurface *_surface)
   }
 }
 
+/////////////////////////////////////////////////
+static gboolean stop_number_verbose (gdouble cost, guint number, guint * min)
+{
+  static guint nmax = 0, nold = 0;
+  static GTimer * timer = NULL, * total_timer = NULL;
+
+  g_return_val_if_fail (min != NULL, TRUE);
+  if (timer == NULL) {
+    nmax = nold = number;
+    timer = g_timer_new ();
+    total_timer = g_timer_new ();
+    g_timer_start (total_timer);
+  }
+  /*std::cout << "number: " << number
+            << " nold: " << nold
+            << " nmax: " << nmax
+            << " *min: " << *min
+            << " timer: " << timer
+            << std::endl;
+*/
+  //usleep(100000);
+
+  if (number != nold && number % 121 == 0 &&
+      number < nmax && nmax > *min)
+  {
+    std::cout << "LILILILLIILLILILI" << std::endl;
+    gdouble total_elapsed = g_timer_elapsed (total_timer, NULL);
+    gdouble remaining;
+    gdouble hours, mins, secs;
+    gdouble hours1, mins1, secs1;
+
+    g_timer_stop (timer);
+
+    hours = floor (total_elapsed/3600.);
+    mins = floor ((total_elapsed - 3600.*hours)/60.);
+    secs = floor (total_elapsed - 3600.*hours - 60.*mins);
+
+    remaining = total_elapsed*((nmax - *min)/(gdouble) (nmax - number) - 1.);
+    hours1 = floor (remaining/3600.);
+    mins1 = floor ((remaining - 3600.*hours1)/60.);
+    secs1 = floor (remaining - 3600.*hours1 - 60.*mins1);
+
+    std::cout << "LALALLALALALALALALALLALA" << std::endl;
+    fprintf (stderr,
+	     "\rEdges: %10u %3.0f%% %6.0f edges/s "
+	     "Elapsed: %02.0f:%02.0f:%02.0f "
+	     "Remaining: %02.0f:%02.0f:%02.0f ",
+	     number,
+	     100.*(nmax - number)/(nmax - *min),
+	     (nold - number)/g_timer_elapsed (timer, NULL),
+	     hours, mins, secs,
+	     hours1, mins1, secs1);
+    fflush (stderr);
+
+    nold = number;
+    g_timer_start (timer);
+  }
+  if (number < *min) {
+    g_timer_destroy (timer);
+    g_timer_destroy (total_timer);
+    return TRUE;
+  }
+  return FALSE;
+}
 
 /////////////////////////////////////////////////
 int main(int argc, char **argv)
 {
-  if (argc != 2)
+  if (argc < 3)
   {
-    gzerr << "Missing argument. Please specify a collada file as an agument"
+    gzerr << "Missing argument. Please specify a collada file and "<<
+             "the desired minimum number of edges"
         << std::endl;
     return -1;
   }
@@ -215,7 +283,56 @@ int main(int argc, char **argv)
   // convert Gazebo Mesh to GTS format
   ConvertMeshToGTS(m1, s1);
 
+  // TODO for debugging only, remove me later
+  FILE *fpo;
+  fpo=fopen("original.gts", "w");
+  gts_surface_write (s1, fpo);
+
   /*** Do mesh simplification here ***/
+
+  // print stats
+  std::cout << "BEFORE" << std::endl;
+  gts_surface_print_stats (s1, stderr);
+  fprintf (stderr, "# volume: %g area: %g\n",
+	     gts_surface_volume (s1), gts_surface_area (s1));
+
+  // default cost function COST_OPTIMIZED
+  GtsKeyFunc cost_func = (GtsKeyFunc) gts_volume_optimized_cost;
+  GtsVolumeOptimizedParams params = { 0.5, 0.5, 0. };
+  gpointer cost_data = &params;
+
+  // default coarsen function OPTIMIZED
+  GtsCoarsenFunc coarsen_func = (GtsCoarsenFunc) gts_volume_optimized_vertex;
+  gpointer coarsen_data = &params;
+
+  // set stop to number
+  GtsStopFunc stop_func = (GtsStopFunc) stop_number_verbose;
+  guint number = atoi (argv[2]);
+  gpointer stop_data = &number;
+
+  // maximum fold angle
+  gdouble fold = PI/180.;
+
+  // coarsen
+  gts_surface_coarsen (s1,
+			 NULL, NULL,
+       coarsen_func, coarsen_data,
+			 stop_func, stop_data, fold);
+
+  // stats after coarsening
+  std::cout << "AFTER" << std::endl;
+  gts_surface_print_stats (s1, stderr);
+  fprintf (stderr, "# volume: %g area: %g\n",
+	     gts_surface_volume (s1), gts_surface_area (s1));
+
+  // TODO for debugging only, remove me later
+  FILE *fp;
+  fp=fopen("coarse.gts", "w");
+  gts_surface_write (s1, fp);
+
+
+  /*** End mesh simplification ***/
+
 
   // create output mesh
   gazebo::common::Mesh *mesh = new gazebo::common::Mesh();
