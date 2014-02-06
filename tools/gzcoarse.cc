@@ -17,6 +17,7 @@
 
 #include <gts.h>
 #include <gazebo/gazebo.hh>
+#include <tinyxml.h>
 
 #ifndef PI
 #define PI 3.14159265359
@@ -208,19 +209,10 @@ static gboolean stop_number_verbose (gdouble cost, guint number, guint * min)
     total_timer = g_timer_new ();
     g_timer_start (total_timer);
   }
-  /*std::cout << "number: " << number
-            << " nold: " << nold
-            << " nmax: " << nmax
-            << " *min: " << *min
-            << " timer: " << timer
-            << std::endl;
-*/
-  //usleep(100000);
 
   if (number != nold && number % 121 == 0 &&
       number < nmax && nmax > *min)
   {
-    std::cout << "LILILILLIILLILILI" << std::endl;
     gdouble total_elapsed = g_timer_elapsed (total_timer, NULL);
     gdouble remaining;
     gdouble hours, mins, secs;
@@ -237,7 +229,6 @@ static gboolean stop_number_verbose (gdouble cost, guint number, guint * min)
     mins1 = floor ((remaining - 3600.*hours1)/60.);
     secs1 = floor (remaining - 3600.*hours1 - 60.*mins1);
 
-    std::cout << "LALALLALALALALALALALLALA" << std::endl;
     fprintf (stderr,
 	     "\rEdges: %10u %3.0f%% %6.0f edges/s "
 	     "Elapsed: %02.0f:%02.0f:%02.0f "
@@ -260,6 +251,307 @@ static gboolean stop_number_verbose (gdouble cost, guint number, guint * min)
   return FALSE;
 }
 
+//////////////////////////////////////////////////
+void FillGeometrySources(const gazebo::common::SubMesh *_subMesh, TiXmlElement * Mesh, int type)
+{
+
+  std::ostringstream sourceID;
+  std::ostringstream sourceArrayID;
+  std::ostringstream sourceArrayIdSelector;
+  std::ostringstream fillData;
+  fillData.precision(5);
+  fillData<<std::fixed;
+  int count;
+  int stride;
+
+  if (type == 1)
+  {
+    sourceID << "mesh001-Positions";
+    count = _subMesh->GetVertexCount();
+    stride = 3;
+    gazebo::math::Vector3 vertex;
+    for(int i = 0; i < count; i++)
+    {
+      vertex = _subMesh->GetVertex(i);
+      fillData << vertex.x << " " << vertex.y << " " << vertex.z << " ";
+    }
+  }
+  if (type == 2)
+  {
+    sourceID << "mesh001-Normals";
+    count = _subMesh->GetNormalCount();
+    stride = 3;
+    gazebo::math::Vector3 normal;
+    for(int i = 0; i < count; i++)
+    {
+      normal = _subMesh->GetNormal(i);
+      fillData << normal.x << " " << normal.y << " " << normal.z << " ";
+    }
+  }
+  if (type == 3)
+  {
+    sourceID << "mesh001-UVMap";
+    count = _subMesh->GetTexCoordCount();
+    stride = 2;
+    gazebo::math::Vector2d texCoord;
+    for(int i = 0; i < count; i++)
+    {
+      texCoord = _subMesh->GetTexCoord(i);
+      fillData << texCoord.x << " " << texCoord.y << " ";
+    }
+  }
+  sourceArrayID << sourceID.str() << "-array";
+  sourceArrayIdSelector << "#" << sourceArrayID.str();
+
+  TiXmlElement * source = new TiXmlElement( "source" );
+  Mesh->LinkEndChild( source );
+  source->SetAttribute("id", sourceID.str().c_str());
+
+  TiXmlElement * childlessElement = new TiXmlElement( "float_array" );
+  childlessElement->SetAttribute("count", count*stride);
+  childlessElement->SetAttribute("id", sourceArrayID.str().c_str());
+  childlessElement->LinkEndChild( new TiXmlText( fillData.str().c_str() ));
+  source->LinkEndChild( childlessElement );
+
+  TiXmlElement * technique_common = new TiXmlElement( "technique_common" );
+  source->LinkEndChild( technique_common );
+
+  TiXmlElement * accessor = new TiXmlElement( "accessor" );
+  accessor->SetAttribute("count", count);
+  accessor->SetAttribute("source", sourceArrayIdSelector.str().c_str());
+  accessor->SetAttribute("stride", stride);
+  technique_common->LinkEndChild( accessor );
+
+  TiXmlElement * param = new TiXmlElement( "param" );
+
+  if (type == 1 || type == 2)
+  {
+    param->SetAttribute("type", "float");
+    param->SetAttribute("name", "X");
+    accessor->LinkEndChild( param );
+
+    param = new TiXmlElement( "param" );
+    param->SetAttribute("type", "float");
+    param->SetAttribute("name", "Y");
+    accessor->LinkEndChild( param );
+
+    param = new TiXmlElement( "param" );
+    param->SetAttribute("type", "float");
+    param->SetAttribute("name", "Z");
+    accessor->LinkEndChild( param );
+  }
+  if (type == 3)
+  {
+    param->SetAttribute("type", "float");
+    param->SetAttribute("name", "U");
+    accessor->LinkEndChild( param );
+
+    param = new TiXmlElement( "param" );
+    param->SetAttribute("type", "float");
+    param->SetAttribute("name", "V");
+    accessor->LinkEndChild( param );
+  }
+}
+
+//////////////////////////////////////////////////
+TiXmlDocument ConvertMeshToDae(TiXmlDocument daeIn, const gazebo::common::SubMesh *_subMesh)
+{
+
+  // Input and output collada files
+  TiXmlHandle hDaeIn(&daeIn);
+  TiXmlDocument daeOut;
+
+  // XML declaration
+  TiXmlDeclaration* decl = new TiXmlDeclaration( "1.0", "utf-8", "" );
+  daeOut.LinkEndChild( decl );
+
+  // output COLLADA element
+  TiXmlElement * collada = new TiXmlElement( "COLLADA" );
+  daeOut.LinkEndChild( collada );
+  collada->SetAttribute("version", "1.4.1");
+  collada->SetAttribute("xmlns", "http://www.collada.org/2005/11/COLLADASchema");
+
+  // output asset element
+  TiXmlElement * asset = new TiXmlElement( "asset" );
+  collada->LinkEndChild( asset );
+
+  // output contributor element
+  TiXmlElement * contributor = new TiXmlElement( "contributor" );
+  asset->LinkEndChild( contributor );
+
+  // Copy asset from input file -- TODO: make a recursive function
+  TiXmlElement* pElem;
+
+  pElem=hDaeIn.FirstChildElement().FirstChild( "asset" ).FirstChild( "contributor" ).FirstChild().Element();
+
+  TiXmlElement* pElem2;
+  for( pElem; pElem; pElem=pElem->NextSiblingElement())
+  {
+    const char *pKey=pElem->Value();
+    const char *pText=pElem->GetText();
+    if (pKey)
+    {
+      pElem2 = new TiXmlElement( pKey );
+      if (pText)
+      {
+         pElem2->LinkEndChild( new TiXmlText( pText ));
+      }
+      contributor->LinkEndChild( pElem2 );
+    }
+  }
+
+  pElem=hDaeIn.FirstChildElement().FirstChild( "asset" ).FirstChild( "contributor" ).Element();
+  pElem=pElem->NextSiblingElement(); // Skip contributor
+
+  for( pElem; pElem; pElem=pElem->NextSiblingElement())
+  {
+    const char *pKey=pElem->Value();
+    const char *pText=pElem->GetText();
+    if (pKey)
+    {
+      pElem2 = new TiXmlElement( pKey );
+      if (pText)
+      {
+         pElem2->LinkEndChild( new TiXmlText( pText ));
+      }
+      TiXmlAttribute* pAttrib=pElem->FirstAttribute();
+      while (pAttrib)
+      {
+        pElem2->SetAttribute(pAttrib->Name(), pAttrib->Value());
+        pAttrib=pAttrib->Next();
+      }
+      asset->LinkEndChild( pElem2 );
+    }
+  }
+
+
+  TiXmlElement* childlessElement;
+
+  // library_geometries
+  TiXmlElement * library_geometries = new TiXmlElement( "library_geometries" );
+  collada->LinkEndChild( library_geometries );
+
+  TiXmlElement * geometry = new TiXmlElement( "geometry" );
+  library_geometries->LinkEndChild( geometry );
+  geometry->SetAttribute("name", "mesh001");
+  geometry->SetAttribute("id", "mesh001");
+
+  TiXmlElement * Mesh = new TiXmlElement( "mesh" );
+  geometry->LinkEndChild( Mesh );
+
+  // Position
+  FillGeometrySources(_subMesh, Mesh, 1);
+  // Normals
+  FillGeometrySources(_subMesh, Mesh, 2);
+  // UV Map
+  FillGeometrySources(_subMesh, Mesh, 3);
+
+  // Vertices
+  TiXmlElement * vertices = new TiXmlElement( "vertices" );
+  Mesh->LinkEndChild( vertices );
+  vertices->SetAttribute("id", "mesh001-Vertex");
+
+  childlessElement = new TiXmlElement( "input" );
+  vertices->LinkEndChild( childlessElement );
+  childlessElement->SetAttribute("semantic", "POSITION");
+  childlessElement->SetAttribute("source", "#mesh001-Positions");
+
+  // Triangles
+  int indexCount = _subMesh->GetIndexCount();
+
+  TiXmlElement * triangles = new TiXmlElement( "triangles" );
+  Mesh->LinkEndChild( triangles );
+  triangles->SetAttribute("count", indexCount);
+
+  childlessElement = new TiXmlElement( "input" );
+  triangles->LinkEndChild( childlessElement );
+  childlessElement->SetAttribute("offset", 0);
+  childlessElement->SetAttribute("semantic", "VERTEX");
+  childlessElement->SetAttribute("source", "#mesh001-Vertex");
+
+  childlessElement = new TiXmlElement( "input" );
+  triangles->LinkEndChild( childlessElement );
+  childlessElement->SetAttribute("offset", 1);
+  childlessElement->SetAttribute("semantic", "NORMAL");
+  childlessElement->SetAttribute("source", "#mesh001-Normals");
+
+  childlessElement = new TiXmlElement( "input" );
+  triangles->LinkEndChild( childlessElement );
+  childlessElement->SetAttribute("offset", 2);
+  childlessElement->SetAttribute("semantic", "TEXCOORD");
+  childlessElement->SetAttribute("source", "#mesh001-UVMap");
+
+  std::ostringstream fillData;
+  for(int i = 0; i < indexCount; i++)
+  {
+    fillData << _subMesh->GetIndex(i) << " ";
+  }
+
+  childlessElement = new TiXmlElement( "p" );
+  triangles->LinkEndChild( childlessElement );
+  childlessElement->LinkEndChild( new TiXmlText( fillData.str().c_str() ));
+
+  // library_visual_scenes
+  TiXmlElement * library_visual_scenes = new TiXmlElement( "library_visual_scenes" );
+  collada->LinkEndChild( library_visual_scenes );
+
+  TiXmlElement * visual_scene = new TiXmlElement( "visual_scene" );
+  library_visual_scenes->LinkEndChild( visual_scene );
+  visual_scene->SetAttribute("name", "Scene");
+  visual_scene->SetAttribute("id", "Scene");
+
+  TiXmlElement * node = new TiXmlElement( "node" );
+  visual_scene->LinkEndChild( node );
+  node->SetAttribute("name", "mesh1");
+  node->SetAttribute("id", "mesh1");
+  node->SetAttribute("layer", "L1");
+
+  childlessElement = new TiXmlElement( "translate" );
+  node->LinkEndChild( childlessElement );
+  childlessElement->SetAttribute("sid", "translate");
+  childlessElement->LinkEndChild( new TiXmlText( "0.0 0.0 0.0" ));
+
+  childlessElement = new TiXmlElement( "rotate" );
+  node->LinkEndChild( childlessElement );
+  childlessElement->SetAttribute("sid", "rotateZ");
+  childlessElement->LinkEndChild( new TiXmlText( "0.0 0.0 1.0 0.0" ));
+
+  childlessElement = new TiXmlElement( "rotate" );
+  node->LinkEndChild( childlessElement );
+  childlessElement->SetAttribute("sid", "rotateY");
+  childlessElement->LinkEndChild( new TiXmlText( "0.0 1.0 0.0 0.0" ));
+
+  childlessElement = new TiXmlElement( "rotate" );
+  node->LinkEndChild( childlessElement );
+  childlessElement->SetAttribute("sid", "rotateX");
+  childlessElement->LinkEndChild( new TiXmlText( "1.0 0.0 0.0 0.0" ));
+
+  childlessElement = new TiXmlElement( "scale" );
+  node->LinkEndChild( childlessElement );
+  childlessElement->SetAttribute("sid", "scale");
+  childlessElement->LinkEndChild( new TiXmlText( "1.0 1.0 1.0" ));
+
+  TiXmlElement * instance_geometry = new TiXmlElement( "instance_geometry" );
+  node->LinkEndChild( instance_geometry );
+  instance_geometry->SetAttribute("url", "#mesh001");
+
+  TiXmlElement * bind_material = new TiXmlElement( "bind_material" );
+  instance_geometry->LinkEndChild( bind_material );
+
+  childlessElement = new TiXmlElement( "technique_common" );
+  bind_material->LinkEndChild( childlessElement );
+
+  // scene
+  TiXmlElement * scene = new TiXmlElement( "scene" );
+  collada->LinkEndChild( scene );
+
+  childlessElement = new TiXmlElement( "instance_visual_scene" );
+  scene->LinkEndChild( childlessElement );
+  childlessElement->SetAttribute("url", "#SketchUpScene");
+
+  return(daeOut);
+}
+
 /////////////////////////////////////////////////
 int main(int argc, char **argv)
 {
@@ -270,6 +562,9 @@ int main(int argc, char **argv)
         << std::endl;
     return -1;
   }
+
+  TiXmlDocument daeIn( argv[1] );
+  if (!daeIn.LoadFile()) return -1;
 
   // load collada mesh into Gazebo Mesh format
   const gazebo::common::Mesh *m1 =
@@ -282,11 +577,6 @@ int main(int argc, char **argv)
 
   // convert Gazebo Mesh to GTS format
   ConvertMeshToGTS(m1, s1);
-
-  // TODO for debugging only, remove me later
-  FILE *fpo;
-  fpo=fopen("original.gts", "w");
-  gts_surface_write (s1, fpo);
 
   /*** Do mesh simplification here ***/
 
@@ -315,9 +605,9 @@ int main(int argc, char **argv)
 
   // coarsen
   gts_surface_coarsen (s1,
-			 NULL, NULL,
-       coarsen_func, coarsen_data,
-			 stop_func, stop_data, fold);
+      cost_func, cost_data,
+      coarsen_func, coarsen_data,
+      stop_func, stop_data, fold);
 
   // stats after coarsening
   std::cout << "AFTER" << std::endl;
@@ -325,16 +615,9 @@ int main(int argc, char **argv)
   fprintf (stderr, "# volume: %g area: %g\n",
 	     gts_surface_volume (s1), gts_surface_area (s1));
 
-  // TODO for debugging only, remove me later
-  FILE *fp;
-  fp=fopen("coarse.gts", "w");
-  gts_surface_write (s1, fp);
-
-
   /*** End mesh simplification ***/
 
-
-  // create output mesh
+  // create output Gazebo mesh
   gazebo::common::Mesh *mesh = new gazebo::common::Mesh();
   gazebo::common::SubMesh *subMesh = new gazebo::common::SubMesh();
   mesh->AddSubMesh(subMesh);
@@ -353,10 +636,30 @@ int main(int argc, char **argv)
   gts_surface_foreach_face(s1, (GtsFunc)FillFace, data);
   g_hash_table_destroy(vIndex);
 
-  // calculate normals
+  // Calculate normals
+  // For some reason, RecalculateNormals only works from more than 3
+  subMesh->SetNormalCount(4);
   mesh->RecalculateNormals();
 
-  // may need to export mesh back to collada format here.
+  // Generate texture coordinates
+  gazebo::math::Vector3 center;
+  center.Set(0,0,0);
+  mesh->GenSphericalTexCoord(center);
+
+  // Primitive: triangles
+  //std::cout << "GetPrimitiveType(): " << subMesh->GetPrimitiveType() << std::endl;
+
+  /*** Export as COLLADA ***/
+
+  TiXmlDocument dae;
+  const gazebo::common::SubMesh *submesh = mesh->GetSubMesh(0);
+
+  dae = ConvertMeshToDae(daeIn,subMesh);
+
+  dae.SaveFile( "test.dae" );
+
+
+  /*** Export as COLLADA ***/
 
   // destroy surfaces
   gts_object_destroy(GTS_OBJECT(s1));
