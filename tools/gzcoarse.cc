@@ -31,6 +31,10 @@ void FillVertex(GtsPoint *_p, gpointer *_data)
       reinterpret_cast<gazebo::common::SubMesh *>(_data[0]);
   GHashTable* vIndex = reinterpret_cast<GHashTable *>(_data[2]);
   subMesh->AddVertex(GTS_POINT(_p)->x, GTS_POINT(_p)->y, GTS_POINT(_p)->z);
+
+  // add the normals, they are not correct now, but will be recalculated later.
+  subMesh->AddNormal(0, 0, 1);
+
   // fill the hash table which will later be used for adding indices to the
   // submesh in the FillFace function.
   g_hash_table_insert(vIndex, _p,
@@ -261,8 +265,8 @@ void FillGeometrySources(const gazebo::common::SubMesh *_subMesh, TiXmlElement *
   std::ostringstream fillData;
   fillData.precision(5);
   fillData<<std::fixed;
-  int count;
   int stride;
+  unsigned int count;;
 
   if (type == 1)
   {
@@ -270,7 +274,7 @@ void FillGeometrySources(const gazebo::common::SubMesh *_subMesh, TiXmlElement *
     count = _subMesh->GetVertexCount();
     stride = 3;
     gazebo::math::Vector3 vertex;
-    for(int i = 0; i < count; i++)
+    for(unsigned int i = 0; i < count; ++i)
     {
       vertex = _subMesh->GetVertex(i);
       fillData << vertex.x << " " << vertex.y << " " << vertex.z << " ";
@@ -282,7 +286,7 @@ void FillGeometrySources(const gazebo::common::SubMesh *_subMesh, TiXmlElement *
     count = _subMesh->GetNormalCount();
     stride = 3;
     gazebo::math::Vector3 normal;
-    for(int i = 0; i < count; i++)
+    for(unsigned int i = 0; i < count; ++i)
     {
       normal = _subMesh->GetNormal(i);
       fillData << normal.x << " " << normal.y << " " << normal.z << " ";
@@ -294,7 +298,7 @@ void FillGeometrySources(const gazebo::common::SubMesh *_subMesh, TiXmlElement *
     count = _subMesh->GetTexCoordCount();
     stride = 2;
     gazebo::math::Vector2d texCoord;
-    for(int i = 0; i < count; i++)
+    for(unsigned int i = 0; i < count; ++i)
     {
       texCoord = _subMesh->GetTexCoord(i);
       fillData << texCoord.x << " " << texCoord.y << " ";
@@ -457,11 +461,12 @@ TiXmlDocument ConvertMeshToDae(TiXmlDocument daeIn, const gazebo::common::SubMes
   childlessElement->SetAttribute("source", "#mesh001-Positions");
 
   // Triangles
-  int indexCount = _subMesh->GetIndexCount();
+  unsigned int indexCount = _subMesh->GetIndexCount();
 
   TiXmlElement * triangles = new TiXmlElement( "triangles" );
   Mesh->LinkEndChild( triangles );
-  triangles->SetAttribute("count", indexCount);
+  triangles->SetAttribute("count", indexCount/3);
+  triangles->SetAttribute("material", "material0");
 
   childlessElement = new TiXmlElement( "input" );
   triangles->LinkEndChild( childlessElement );
@@ -482,9 +487,10 @@ TiXmlDocument ConvertMeshToDae(TiXmlDocument daeIn, const gazebo::common::SubMes
   childlessElement->SetAttribute("source", "#mesh001-UVMap");
 
   std::ostringstream fillData;
-  for(int i = 0; i < indexCount; i++)
+  for (unsigned int i = 0; i < indexCount; ++i)
   {
-    fillData << _subMesh->GetIndex(i) << " ";
+    fillData << _subMesh->GetIndex(i) << " " << _subMesh->GetIndex(i) << " "
+        << _subMesh->GetIndex(i) << " ";
   }
 
   childlessElement = new TiXmlElement( "p" );
@@ -538,8 +544,103 @@ TiXmlDocument ConvertMeshToDae(TiXmlDocument daeIn, const gazebo::common::SubMes
   TiXmlElement * bind_material = new TiXmlElement( "bind_material" );
   instance_geometry->LinkEndChild( bind_material );
 
-  childlessElement = new TiXmlElement( "technique_common" );
-  bind_material->LinkEndChild( childlessElement );
+  TiXmlElement *techniqueCommon = new TiXmlElement( "technique_common" );
+  bind_material->LinkEndChild( techniqueCommon );
+
+  TiXmlElement *instanceMaterial = new TiXmlElement( "instance_material" );
+  techniqueCommon->LinkEndChild( instanceMaterial );
+  instanceMaterial->SetAttribute("symbol", "material");
+  instanceMaterial->SetAttribute("target", "#material0");
+
+  TiXmlElement *bindVertexInput = new TiXmlElement( "bind_vertex_input" );
+  instanceMaterial->LinkEndChild( bindVertexInput );
+  bindVertexInput->SetAttribute("semantic", "UVSET0");
+  bindVertexInput->SetAttribute("input_semantic", "TEXCOORD");
+
+  // library_images
+  TiXmlElement *libraryImages = new TiXmlElement( "library_images" );
+  collada->LinkEndChild( libraryImages );
+
+  TiXmlElement *image = new TiXmlElement( "material" );
+  libraryImages->LinkEndChild( image );
+  image->SetAttribute("id", "texture0");
+  image->SetAttribute("name", "texture0");
+
+  TiXmlElement *imageInitFrom = new TiXmlElement( "init_from" );
+  image->LinkEndChild( imageInitFrom );
+  imageInitFrom->LinkEndChild( new TiXmlText( "test.png" ));
+
+  // library_materials
+  TiXmlElement *libraryMaterials = new TiXmlElement( "library_materials" );
+  collada->LinkEndChild( libraryMaterials );
+
+  TiXmlElement *material = new TiXmlElement( "material" );
+  libraryMaterials->LinkEndChild( material );
+  material->SetAttribute("id", "material0");
+  material->SetAttribute("name", "material0");
+
+  TiXmlElement *instanceEffect = new TiXmlElement( "instance_effect" );
+  material->LinkEndChild( instanceEffect );
+  instanceEffect->SetAttribute("url", "#material0-fx");
+
+  // library_effects
+  TiXmlElement *libraryEffects = new TiXmlElement( "library_effects" );
+  collada->LinkEndChild( libraryEffects );
+
+  TiXmlElement *effect = new TiXmlElement( "effect" );
+  libraryEffects->LinkEndChild( effect );
+  effect->SetAttribute("id", "material0-fx");
+
+  TiXmlElement *profileCommon = new TiXmlElement( "profile_COMMON" );
+  effect->LinkEndChild( profileCommon );
+
+  TiXmlElement *newParam = new TiXmlElement( "newparam" );
+  profileCommon->LinkEndChild( newParam );
+  newParam->SetAttribute("sid", "texture0-surface");
+
+  TiXmlElement *surface = new TiXmlElement( "surface" );
+  newParam->LinkEndChild( surface );
+  surface->SetAttribute("type", "2D");
+
+  TiXmlElement *initFrom = new TiXmlElement( "init_from" );
+  surface->LinkEndChild( initFrom );
+  initFrom->LinkEndChild( new TiXmlText( "texture0" ));
+
+  TiXmlElement *format = new TiXmlElement( "format" );
+  surface->LinkEndChild( format );
+  format->LinkEndChild( new TiXmlText( "R8G8B8" ));
+
+  TiXmlElement *technique = new TiXmlElement( "technique" );
+  profileCommon->LinkEndChild( technique );
+  newParam->SetAttribute("sid", "common");
+
+  TiXmlElement *phong = new TiXmlElement( "phong" );
+  technique->LinkEndChild( phong );
+
+  TiXmlElement *emmision = new TiXmlElement( "emission" );
+  phong->LinkEndChild( emmision );
+  TiXmlElement *emmisionColor = new TiXmlElement( "color" );
+  emmision->LinkEndChild( emmisionColor );
+  emmisionColor->LinkEndChild( new TiXmlText( "0 0 0 1" ));
+
+  TiXmlElement *ambient = new TiXmlElement( "ambient" );
+  phong->LinkEndChild( ambient );
+  TiXmlElement *ambientColor = new TiXmlElement( "color" );
+  ambient->LinkEndChild( ambientColor );
+  ambientColor->LinkEndChild( new TiXmlText( "0 0 0 1" ));
+
+  TiXmlElement *diffuse = new TiXmlElement( "diffuse" );
+  phong->LinkEndChild( diffuse );
+  TiXmlElement *diffuseTexture = new TiXmlElement( "texture" );
+  diffuse->LinkEndChild( diffuseTexture );
+  diffuseTexture->SetAttribute("texture", "texture0");
+  diffuseTexture->SetAttribute("texcoord", "UVSET0");
+
+  TiXmlElement *specular = new TiXmlElement( "specular" );
+  phong->LinkEndChild( specular );
+  TiXmlElement *specularColor = new TiXmlElement( "color" );
+  specular->LinkEndChild( specularColor );
+  specularColor->LinkEndChild( new TiXmlText( "0.5 0.5 0.5 1" ));
 
   // scene
   TiXmlElement * scene = new TiXmlElement( "scene" );
@@ -547,7 +648,7 @@ TiXmlDocument ConvertMeshToDae(TiXmlDocument daeIn, const gazebo::common::SubMes
 
   childlessElement = new TiXmlElement( "instance_visual_scene" );
   scene->LinkEndChild( childlessElement );
-  childlessElement->SetAttribute("url", "#SketchUpScene");
+  childlessElement->SetAttribute("url", "#Scene");
 
   return(daeOut);
 }
@@ -638,7 +739,7 @@ int main(int argc, char **argv)
 
   // Calculate normals
   // For some reason, RecalculateNormals only works from more than 3
-  subMesh->SetNormalCount(4);
+//  subMesh->SetNormalCount(4);
   mesh->RecalculateNormals();
 
   // Generate texture coordinates
