@@ -776,7 +776,8 @@ GZ3D.GZIface.prototype.createVisualFromMsg = function(visual)
     visualObj.receiveShadow = visual.receive_shadows;
 
     // If material is not specified, use default
-    if(!visual.material)
+    if(!visual.material &&
+        ( geom.box || geom.cylinder || geom.phere || geom.plane))
     {
       visual['material'] = {script: {'uri': '__default__','name':'__default__'}};
     }
