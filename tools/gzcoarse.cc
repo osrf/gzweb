@@ -37,8 +37,13 @@ void FillVertex(GtsPoint *_p, gpointer *_data)
 
   // fill the hash table which will later be used for adding indices to the
   // submesh in the FillFace function.
+
+  /*std::cout << GTS_POINT(_p)->x << " " << GTS_POINT(_p)->y << " " <<
+       GTS_POINT(_p)->z << " " << (*(reinterpret_cast<guint *>(_data[1]))) << std::endl;*/
   g_hash_table_insert(vIndex, _p,
       GUINT_TO_POINTER((*(reinterpret_cast<guint *>(_data[1])))++));
+
+ //     std::cout << " done " << std::endl;
 }
 
 //////////////////////////////////////////////////
@@ -134,14 +139,15 @@ void ConvertMeshToGTS(const gazebo::common::Mesh *_mesh, GtsSurface *_surface)
     return;
   }
 
-  GPtrArray *vertices = g_ptr_array_new();
-
+    //GPtrArray *vertices = g_ptr_array_new();
   for (unsigned int i = 0; i < _mesh->GetSubMeshCount(); ++i)
   {
     const gazebo::common::SubMesh *subMesh = _mesh->GetSubMesh(i);
     unsigned int indexCount = subMesh->GetIndexCount();
     if (subMesh->GetVertexCount() <= 2)
       continue;
+
+    GPtrArray *vertices = g_ptr_array_new();
 
     for (unsigned int j = 0; j < subMesh->GetVertexCount(); ++j)
     {
@@ -150,8 +156,7 @@ void ConvertMeshToGTS(const gazebo::common::Mesh *_mesh, GtsSurface *_surface)
           vertex.y, vertex.z));
     }
 
-    // merge duplicate vertices, otherwise gts produces undesirable results
-    MergeVertices(vertices, 0.0001);
+    MergeVertices(vertices, 1e-7);
 
     GtsVertex **verticesData =
         reinterpret_cast<GtsVertex **>(vertices->pdata);
@@ -167,6 +172,7 @@ void ConvertMeshToGTS(const gazebo::common::Mesh *_mesh, GtsSurface *_surface)
       GtsEdge *e3 = GTS_EDGE(gts_vertices_are_connected(
           verticesData[subMesh->GetIndex(3*j+2)],
           verticesData[subMesh->GetIndex(3*j)]));
+
       // If vertices are different and not connected
       if (e1 == NULL && verticesData[subMesh->GetIndex(3*j)]
           != verticesData[subMesh->GetIndex(3*j+1)])
@@ -189,10 +195,65 @@ void ConvertMeshToGTS(const gazebo::common::Mesh *_mesh, GtsSurface *_surface)
             verticesData[subMesh->GetIndex(3*j+2)],
             verticesData[subMesh->GetIndex(3*j)]);
       }
+
       // If all 3 edges are defined and different
       if (e1 != NULL && e2 != NULL && e3 != NULL &&
           e1 != e2 && e2 != e3 && e1 != e3)
       {
+
+
+        if (GTS_SEGMENT (e1)->v1 == GTS_SEGMENT (e2)->v1)
+        {
+          if (!gts_segment_connect (GTS_SEGMENT (e3),
+              GTS_SEGMENT (e1)->v2,
+              GTS_SEGMENT (e2)->v2))
+            continue;
+        }
+        else if (GTS_SEGMENT (e1)->v2 == GTS_SEGMENT (e2)->v1)
+        {
+          if (!gts_segment_connect (GTS_SEGMENT (e3),
+              GTS_SEGMENT (e1)->v1,
+              GTS_SEGMENT (e2)->v2))
+            continue;
+        }
+        else if (GTS_SEGMENT (e1)->v2 == GTS_SEGMENT (e2)->v2)
+        {
+          if (!gts_segment_connect (GTS_SEGMENT (e3),
+              GTS_SEGMENT (e1)->v1,
+              GTS_SEGMENT (e2)->v1))
+            continue;
+        }
+        else if (GTS_SEGMENT (e1)->v1 == GTS_SEGMENT (e2)->v2)
+        {
+          if (!gts_segment_connect (GTS_SEGMENT (e3),
+              GTS_SEGMENT (e1)->v2,
+              GTS_SEGMENT (e2)->v1))
+            continue;
+        }
+
+      /*if (GTS_SEGMENT (e1)->v2 == GTS_SEGMENT (e2)->v2)
+        {
+          if (!gts_segment_connect (GTS_SEGMENT (e3),
+             GTS_SEGMENT (e1)->v1,
+             GTS_SEGMENT (e2)->v1))
+          {
+            std::cout << " fail " << std::endl;
+            std::cout << e1->segment.v1->p.x << " " << e1->segment.v1->p.y << " "
+                << e1->segment.v1->p.z << ", ";
+            std::cout << e1->segment.v2->p.x << " " << e1->segment.v2->p.y << " "
+                << e1->segment.v2->p.z << std::endl;
+            std::cout << e2->segment.v1->p.x << " " << e2->segment.v1->p.y << " "
+                << e2->segment.v1->p.z << ", ";
+            std::cout << e2->segment.v2->p.x << " " << e2->segment.v2->p.y << " "
+                << e2->segment.v2->p.z << std::endl;
+
+            std::cout << " e3 " << std::endl;
+            std::cout << e3->segment.v1->p.x << " " << e3->segment.v1->p.y << " "
+                << e3->segment.v1->p.z << ", ";
+            std::cout << e3->segment.v2->p.x << " " << e3->segment.v2->p.y << " "
+                << e3->segment.v2->p.z << std::endl;
+          }
+        }*/
         gts_surface_add_face(_surface, gts_face_new(_surface->face_class, e1,
             e2, e3));
       }
@@ -722,6 +783,8 @@ int main(int argc, char **argv)
   // set stop to number
   GtsStopFunc stop_func = (GtsStopFunc) stop_number_verbose;
   guint number = edgesBefore * atoi (argv[2])/100;
+//  guint number = atoi(argv[2]);
+
   gpointer stop_data = &number;
 
   // maximum fold angle
@@ -754,6 +817,7 @@ int main(int argc, char **argv)
   gpointer data[3];
   GHashTable *vIndex = g_hash_table_new(NULL, NULL);
 
+  n = 0;
   data[0] = subMesh;
   data[1] = &n;
   data[2] = vIndex;
