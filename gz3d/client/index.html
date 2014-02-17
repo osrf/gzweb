@@ -3,11 +3,10 @@
   <head>
     <title>gz3d</title>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-    <link rel="stylesheet" href="style/jquery-ui/jquery-ui.css"/>
-    <link rel="stylesheet" href="style/gz3d.css"/>
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0, initial-scale=1.0">
+    <link rel="stylesheet" href="style/jquery-mobile/jquery.mobile-1.4.0.min.css" />
     <script src="js/include/jquery-1.9.1.js"></script>
-    <script src="js/include/jquery-ui.js"></script>
+    <script src="js/include/jquery.mobile-1.4.0.min.js"></script>
     <script src="js/include/three.js"></script>
     <script src="js/include/OrbitControls.js"></script>
     <script src="js/include/TransformControls.js"></script>
@@ -25,65 +24,32 @@
     <script src="gz3d.js"></script>
 
     <style>
-      body {
-        color: #000;
-        font-family:Monospace;
-        font-size:13px;
-        text-align:center;
-        font-weight: bold;
-
-        background-color: #fff;
-        margin: 0px;
-        overflow: hidden;
-      }
-
-      #toolbar-manipulate {
-        padding: 3px;
-        display: inline-block;
-        float: right;
-      }
-      /* support: IE7 */
-      *+html #toolbar-manipulate {
-        display: inline-block;
-        float: right;
-      }
-
-      #toolbar-shapes {
-        padding: 1px;
-        display: inline-block;
-        float: right;
-      }
-      /* support: IE7 */
-      *+html #toolbar-shapes {
-        display: inline-block;
-        float: right;
-      }
-
-      #toolbar-play {
-        padding: 1px;
-        display: inline-block;
-
-      }
-      /* support: IE7 */
-      *+html #toolbar-play {
-        display: inline-block;
-      }
-
-      #menu {
-        float: left;
-        display: inline-block;
-      }
-
-      #world-stats {
-        display: inline-block;
-        vertical-align: middle;
-      }
-
       #container {
-        position: static
+        padding: 0;
+        position : absolute;
+        top: 43px;
+        bottom: 50px;
+        right: 0px;
+        left: 0px;
+      }
+      th, td {
+        white-space: nowrap;
+      }
+      @media (min-width:35em) {
+        /* disable "dismiss" on wide viewports */
+        .ui-panel-dismiss {
+          display: none;
+        }
+      }
+      .collapsible_header {
+        font-size: 15px;
+      }
+      .collapsible_item {
+        font-size: 13px;
       }
     </style>
   </head>
+
   <script id="heightmapVS" type="x-shader/x-vertex">
     varying vec2 vUv;
     varying vec3 vPosition;
@@ -165,74 +131,106 @@
   </script>
 
   <body>
-    <div>
-      <ul id='menu'>
-        <li>
-          <a href='#'>Edit</a>
-          <ul>
-            <li id='reset-world'><a href='#'>Reset World</a></li>
-            <li id='reset-model'><a href='#'>Reset Model Poses</a></li>
-          </ul>
-        </li>
-        <li>
-          <a href='#'>View</a>
-          <ul>
-            <li id='view-collisions'><a href='#'>View Collisions</a></li>
-          </ul>
-        </li>
-      </ul>
-    </div>
-    <script>
-      $( "#menu" ).menu({
-          position: {at: "left bottom"}
-        });
-    </script>
+    <div data-role="page" data-theme="b" data-content-theme="c">
 
-    <div id='toolbar' class='ui-widget-content'>
-      <div id="toolbar-play" >
-        <button id="play">Play</button>
-      </div>
+      <!-- panel -->
+      <div data-role="panel" id="leftPanel" data-display="overlay" data-swipe-close="false">
+        <ul data-role="listview" data-theme="b">
+          <li data-icon="delete"><a href="#" data-rel="close" title="Close Menu"></a></li>
+          <li data-role="list-divider">Menu</li>
+          <li data-role="list-divider"></li>
+        </ul>
+        <div data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
+            <h3><span class="collapsible_header">Edit</span></h3>
+            <ul data-role="listview">
+              <li id='reset-world' data-icon="false"><a href="#"><span class="collapsible_item">Reset World</span></a></li>
+              <li id='reset-model' data-icon="false"><a href="#"><span class="collapsible_item">Reset Model Poses</span></a></li>
+            </ul>
+        </div>
+        <div data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
+            <h3><span class="collapsible_header">View</span></h3>
+            <ul data-role="listview">
+              <!--<li id='view-effects' data-icon="false" data-iconpos="right"><a href="#"><span class="collapsible_item">SSAO effect</span></a></li>-->
+              <li id='view-collisions' data-icon="false" data-iconpos="right"><a href="#"><span class="collapsible_item">Collisions</span></a></li>
+            </ul>
+        </div>
+        <div data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
+            <h3><span class="collapsible_header">Insert</span></h3>
+            <ul data-role="listview">
+              <li id="box" data-icon="false"><a href="#"><span class="collapsible_item">Box</span></a></li>
+              <li id="sphere" data-icon="false"><a href="#"><span class="collapsible_item">Sphere</span></a></li>
+              <li id="cylinder" data-icon="false"><a href="#"><span class="collapsible_item">Cylinder</span></a></li>
+            </ul>
+        </div>
+      </div><!-- panel -->
 
-      <div id='world-stats'>
-        <table>
-          <tr>
-            <td>Sim Time: </td>
-            <td id='sim-time-value'>00 00:00:00</td>
-            <td>&nbsp;</td>
-            <td>Real Time: </td>
-            <td id='real-time-value'>00 00:00:00</td>
-          </tr>
-        </table>
-      </div>
+      <!-- header -->
+      <div id="theHeader" data-role="header" data-position="fixed" style="height: 43px;">
+        <a href="#leftPanel" class="ui-btn-left" data-icon="bars" data-iconpos="notext" title="Menu"></a>
 
-      <div id='toolbar-shapes'>
-        <button id="box">Add Box</button>
-        <button id="sphere">Add Sphere</button>
-        <button id="cylinder">Add Cylinder</button>
-      </div>
+        <h1></h1>
 
-      <div id='toolbar-manipulate'>
-        <input type='radio' id='arrow' name='radio' checked='checked' />
-            <label for='arrow' />View Mode</label>
-        <input type='radio' id='translate' name='radio'>
-            <label for='translate' />Translate Mode</label>
-        <input type='radio' id='rotate' name='radio'>
-            <label for='rotate' />Rotate Mode</label>
-      </div>
+        <fieldset data-role="controlgroup" data-mini="true" data-type="horizontal" class="ui-btn-right">
+          <input type="radio" name="radio-mini" id="view-mode" value="choice-1" checked="checked" />
+          <label for="view-mode"><img src="style/images/arrow.png" title="View Mode (ESC)"></label>
 
-      <div class"clear"></div>
-    </div>
-    <div id="container"></div>
+          <input type="radio" name="radio-mini" id="translate-mode" value="choice-2"  />
+          <label for="translate-mode"><img src="style/images/translate.png" title="Translation Mode (T)"></label>
 
+          <input type="radio" name="radio-mini" id="rotate-mode" value="choice-3"  />
+          <label for="rotate-mode"><img src="style/images/rotate.png" title="Rotation Mode (R)"></label>
+        </fieldset>
 
+      </div><!-- header -->
+
+      <!-- content -->
+      <div data-role="content" id="container">
+      </div><!-- content -->
+
+      <!-- footer -->
+      <div data-role="footer" data-position="fixed" data-tap-toggle="false" style="height: 50px;">
+        <div>
+          <div style="display: inline-block; float:right">
+            <table>
+              <tr>
+                <td>Real Time: </td>
+              </tr>
+              <tr>
+                <td id='real-time-value'>00 00:00:00</td>
+              </tr>
+            </table>
+          </div>
+          <div style="display: inline-block; float:right">
+            <table>
+              <tr>
+                <td>Sim Time: </td>
+              </tr>
+              <tr>
+                <td id='sim-time-value'>00 00:00:00</td>
+              </tr>
+            </table>
+          </div>
+          <div style="display: inline-block; float:right">
+             <a href="#" data-role="button" id="play"><span id="playText"><img src="style/images/play.png" title="Play"></span></a>
+           </div>
+        </div>
+      </div><!-- footer -->
+    </div><!-- page -->
+
+    <!-- WebGL -->
     <script>
       if (!Detector.webgl)
         Detector.addGetWebGLMessage();
 
       var container, stats;
       var scene;
-      var cross;
-      var visuals = {};
+      // Are these necessary?
+      //var cross;
+      //var visuals = {};
+
+      // Container (canvas) dimensions
+      window.containerHeight = window.innerHeight-(43+50+4); // give space for header and footer
+      window.containerWidth = window.innerWidth;
 
       init();
       animate();
@@ -246,9 +244,10 @@
         container = document.getElementById( 'container' );
         container.appendChild(scene.getDomElement());
 
+        // FPS indicator
         stats = new Stats();
         stats.domElement.style.position = 'absolute';
-        stats.domElement.style.bottom = '0px';
+        stats.domElement.style.top = '0px';
         stats.domElement.style.zIndex = 100;
         container.appendChild( stats.domElement );
 
@@ -257,7 +256,10 @@
 
       function onWindowResize()
       {
-        scene.setWindowSize(window.innerWidth, window.innerHeight);
+        //TODO: It doesn't resize well on horizontal (landscape) -> vertical (portrait)
+        window.containerHeight = window.innerHeight-(43+50+4); // give space for header and footer
+        window.containerWidth = window.innerWidth;
+        scene.setWindowSize(window.containerWidth, window.containerHeight);
       }
 
       function animate()

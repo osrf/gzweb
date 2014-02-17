@@ -1,3 +1,7 @@
+/**
+ * Spawn a model into the scene
+ * @constructor
+ */
 GZ3D.SpawnModel = function(scene, domElement)
 {
   this.scene = scene;
@@ -7,6 +11,9 @@ GZ3D.SpawnModel = function(scene, domElement)
   this.callback = undefined;
 };
 
+/**
+ * Initialize SpawnModel
+ */
 GZ3D.SpawnModel.prototype.init = function()
 {
   this.plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
@@ -16,6 +23,12 @@ GZ3D.SpawnModel.prototype.init = function()
   this.active = false;
 };
 
+/**
+ * Start spawning an entity. Only simple shapes supported so far.
+ * Adds a temp object to the scene which is not registered on the server.
+ * @param {string} entity
+ * @param {function} callback
+ */
 GZ3D.SpawnModel.prototype.start = function(entity, callback)
 {
   if (this.active)
@@ -62,6 +75,10 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
   this.active = true;
 };
 
+/**
+ * Finish spawning an entity: re-enable camera controls,
+ * remove listeners, remove temp object
+ */
 GZ3D.SpawnModel.prototype.finish = function()
 {
   var that = this;
@@ -75,12 +92,20 @@ GZ3D.SpawnModel.prototype.finish = function()
   this.active = false;
 };
 
+/**
+ * Window event callback
+ * @param {} event - not yet
+ */
 GZ3D.SpawnModel.prototype.onMouseDown = function(event)
 {
   event.preventDefault();
   event.stopImmediatePropagation();
 };
 
+/**
+ * Window event callback
+ * @param {} event - mousemove events
+ */
 GZ3D.SpawnModel.prototype.onMouseMove = function(event)
 {
   if (!this.active)
@@ -90,16 +115,13 @@ GZ3D.SpawnModel.prototype.onMouseMove = function(event)
 
   event.preventDefault();
 
-  var vector = new THREE.Vector3( (event.clientX / window.innerWidth) * 2 - 1,
-      -(event.clientY / window.innerHeight) * 2 + 1, 0.5);
-  this.projector.unprojectVector(vector, this.scene.camera);
-  this.ray.set(this.scene.camera.position,
-      vector.sub(this.scene.camera.position).normalize());
-  var point = this.ray.intersectPlane(this.plane);
-  point.z = this.obj.position.z;
-  this.scene.setPose(this.obj, point, new THREE.Quaternion());
+  this.moveSpawnedModel(event.clientX,event.clientY);
 };
 
+/**
+ * Window event callback
+ * @param {} event - mousedown events
+ */
 GZ3D.SpawnModel.prototype.onMouseUp = function(event)
 {
   if (!this.active)
@@ -111,10 +133,31 @@ GZ3D.SpawnModel.prototype.onMouseUp = function(event)
   this.finish();
 };
 
+/**
+ * Window event callback
+ * @param {} event - keydown events
+ */
 GZ3D.SpawnModel.prototype.onKeyDown = function(event)
 {
   if ( event.keyCode === 27 ) // Esc
   {
     this.finish();
   }
+};
+
+/**
+ * Move temp spawned model
+ * @param {integer} positionX - Horizontal position on the canvas
+ * @param {integer} positionY - Vertical position on the canvas
+ */
+GZ3D.SpawnModel.prototype.moveSpawnedModel = function(positionX,positionY)
+{
+  var vector = new THREE.Vector3( (positionX / window.containerWidth) * 2 - 1,
+        -(positionY / window.containerHeight) * 2 + 1, 0.5);
+  this.projector.unprojectVector(vector, this.scene.camera);
+  this.ray.set(this.scene.camera.position,
+      vector.sub(this.scene.camera.position).normalize());
+  var point = this.ray.intersectPlane(this.plane);
+  point.z = this.obj.position.z;
+  this.scene.setPose(this.obj, point, new THREE.Quaternion());
 };
