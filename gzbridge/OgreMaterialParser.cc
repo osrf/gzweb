@@ -159,6 +159,26 @@ std::string OgreMaterialParser::GetMaterialAsJson() const
 
             jsonStr += "\"texture\":\"" + textureStr + "\"";
           }
+          /*ConfigNode *scaleNode = textureUnitNode->findChild("scale");
+          if (scaleNode)
+          {
+            std::stringstream ss;
+            std::vector<std::string> values = scaleNode->getValues();
+            if (values.size() == 1)
+              ss << "\"";
+            for (unsigned int i = 0; i < values.size(); ++i)
+            {
+              std::string value = scaleNode->getValue(i);
+              if (value[0] == '.')
+                value = '0' + value;
+              ss << value;
+              if (i != values.size() - 1)
+                ss << ",";
+            }
+            if (values.size() == 1)
+              ss << "\"";
+            jsonStr += "\"scale\":[" + ss.str() + "],";
+          }*/
 
           ConfigNode *alphaOpNode = textureUnitNode->findChild("alpha_op_ex");
           if (alphaOpNode)
