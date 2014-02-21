@@ -1010,6 +1010,7 @@ GZ3D.Scene.prototype.setMaterial = function(obj, material)
         var texture = THREE.ImageUtils.loadTexture(material.texture);
         if (material.scale)
         {
+          texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
           texture.repeat.x = 1.0 / material.scale[0];
           texture.repeat.y = 1.0 / material.scale[1];
         }
