@@ -159,7 +159,7 @@ std::string OgreMaterialParser::GetMaterialAsJson() const
 
             jsonStr += "\"texture\":\"" + textureStr + "\"";
           }
-          /*ConfigNode *scaleNode = textureUnitNode->findChild("scale");
+          ConfigNode *scaleNode = textureUnitNode->findChild("scale");
           if (scaleNode)
           {
             std::stringstream ss;
@@ -178,8 +178,7 @@ std::string OgreMaterialParser::GetMaterialAsJson() const
             if (values.size() == 1)
               ss << "\"";
             jsonStr += "\"scale\":[" + ss.str() + "],";
-          }*/
-
+          }
           ConfigNode *alphaOpNode = textureUnitNode->findChild("alpha_op_ex");
           if (alphaOpNode)
           {

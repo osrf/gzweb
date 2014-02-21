@@ -1008,11 +1008,11 @@ GZ3D.Scene.prototype.setMaterial = function(obj, material)
       if (material.texture)
       {
         var texture = THREE.ImageUtils.loadTexture(material.texture);
-        /*if (material.scale)
+        if (material.scale)
         {
           texture.repeat.x = 1.0 / material.scale[0];
           texture.repeat.y = 1.0 / material.scale[1];
-        }*/
+        }
         obj.material.map = texture;
       }
       if (material.normalMap)
