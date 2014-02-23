@@ -387,7 +387,7 @@ void FillTextureSource(const gazebo::common::Mesh *_outGz,
   std::cout << "Calculating texture map..." << std::endl;
 
   // Fill the point cloud with vertices from the original mesh
-  PointCloud<double> cloud;
+  /*PointCloud<double> cloud;
   cloud.pts.resize(inCount);
   gazebo::math::Vector3 inVertex;
   for(long unsigned int i = 0; i < inCount; ++i)
@@ -430,8 +430,17 @@ void FillTextureSource(const gazebo::common::Mesh *_outGz,
     // WRONG ORDER?
     fillData << U << " " << -V << " ";
 
+  }*/
+
+  for(long unsigned int i = 0; i < outCount; ++i)
+  {
+    double U = inSubMesh->GetTexCoord(i).x;
+    double V = inSubMesh->GetTexCoord(i).y;
+
+    fillData << U << " " << (1.0-V) << " ";
   }
-  std::cout << "Texture map calculation complete. Max texture dislocation: " << max_dist << std::endl;
+
+//  std::cout << "Texture map calculation complete. Max texture dislocation: " << max_dist << std::endl;
 
   sourceID << meshID << "-UVMap";
   sourceArrayID << sourceID.str() << "-array";
@@ -673,7 +682,7 @@ TiXmlDocument ConvertMeshToDae(TiXmlDocument _inDae,
       .FirstChild( "geometry" ).FirstChild( "mesh" )
       .FirstChild( "polylist" ).Element();
   }
-  const char *triangleMaterialID = inElem->Attribute("id");
+  const char *triangleMaterialID = inElem->Attribute("material");
   if (triangleMaterialID)
   {
     triangles->SetAttribute("material", inElem->Attribute("material"));
@@ -690,7 +699,7 @@ TiXmlDocument ConvertMeshToDae(TiXmlDocument _inDae,
 
   input = new TiXmlElement( "input" );
   triangles->LinkEndChild( input );
-  input->SetAttribute("offset", 0);
+  input->SetAttribute("offset", 1);
   input->SetAttribute("semantic", "NORMAL");
   strcpy(attributeValue,"#");
   strcat(attributeValue,meshID);
@@ -699,7 +708,7 @@ TiXmlDocument ConvertMeshToDae(TiXmlDocument _inDae,
 
   input = new TiXmlElement( "input" );
   triangles->LinkEndChild( input );
-  input->SetAttribute("offset", 0);
+  input->SetAttribute("offset", 2);
   input->SetAttribute("semantic", "TEXCOORD");
   strcpy(attributeValue,"#");
   strcat(attributeValue,meshID);
@@ -709,7 +718,9 @@ TiXmlDocument ConvertMeshToDae(TiXmlDocument _inDae,
   std::ostringstream fillData;
   for (unsigned int i = 0; i < indexCount; ++i)
   {
-    fillData << _subMesh->GetIndex(i) << " ";
+    fillData << _subMesh->GetIndex(i) << " "
+             << _subMesh->GetIndex(i) << " "
+             << _subMesh->GetIndex(i) << " ";
   }
 
   TiXmlElement *p = new TiXmlElement( "p" );
@@ -828,7 +839,7 @@ TiXmlDocument ConvertMeshToDae(TiXmlDocument _inDae,
   {
     TiXmlElement *instanceMaterial = new TiXmlElement( "instance_material" );
     techniqueCommon->LinkEndChild( instanceMaterial );
-    instanceMaterial->SetAttribute("symbol", "material");
+    instanceMaterial->SetAttribute("symbol", materialID);
     strcpy(attributeValue,"#");
     strcat(attributeValue,materialID);
     instanceMaterial->SetAttribute("target", attributeValue);
@@ -887,6 +898,7 @@ int main(int argc, char **argv)
   exportInDae = ConvertMeshToDae(inDae,inGz,inGz);
   exportInDae.SaveFile( filename+"_original.dae" );
 
+  return 0;
 
   GtsSurface *in_out_Gts;
   GNode *tree1;
