@@ -778,7 +778,7 @@ TiXmlDocument ConvertMeshToDae(TiXmlDocument _inDae,
       .FirstChild( "geometry" ).FirstChild( "mesh" )
       .FirstChild( "polylist" ).Element();
   }
-  const char *triangleMaterialID = inElem->Attribute("id");
+  const char *triangleMaterialID = inElem->Attribute("material");
   if (triangleMaterialID)
   {
     triangles->SetAttribute("material", inElem->Attribute("material"));
@@ -818,7 +818,7 @@ TiXmlDocument ConvertMeshToDae(TiXmlDocument _inDae,
   {
     fillData << _subMesh->GetIndex(i) << " "
              << _subMesh->GetIndex(i) << " "
-             << i << " ";
+             << _subMesh->GetIndex(i) << " ";
   }
 
   TiXmlElement *p = new TiXmlElement( "p" );
@@ -937,7 +937,7 @@ TiXmlDocument ConvertMeshToDae(TiXmlDocument _inDae,
   {
     TiXmlElement *instanceMaterial = new TiXmlElement( "instance_material" );
     techniqueCommon->LinkEndChild( instanceMaterial );
-    instanceMaterial->SetAttribute("symbol", "material");
+    instanceMaterial->SetAttribute("symbol", materialID);
     strcpy(attributeValue,"#");
     strcat(attributeValue,materialID);
     instanceMaterial->SetAttribute("target", attributeValue);
@@ -991,13 +991,13 @@ int main(int argc, char **argv)
   const gazebo::common::Mesh *inGz =
       gazebo::common::MeshManager::Instance()->Load(argv[1]);
 
-/*  // export original Gz mesh to Dae
+  // export original Gz mesh to Dae
   TiXmlDocument exportInDae;
   exportInDae = ConvertMeshToDae(inDae,inGz,inGz);
   exportInDae.SaveFile( filename+"_original.dae" );
 
   //return 0;
-*/
+
   GtsSurface *in_out_Gts;
   GNode *tree1;
   in_out_Gts = gts_surface_new(gts_surface_class(), gts_face_class(), gts_edge_class(),
