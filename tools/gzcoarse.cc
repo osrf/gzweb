@@ -387,15 +387,16 @@ void FillTextureSource(const gazebo::common::Mesh *_outGz,
   std::cout << "Calculating texture map..." << std::endl;
 
   // Fill the point cloud with vertices from the original mesh
-  /*PointCloud<double> cloud;
+  //assert(inCount%3 == 0);
+  PointCloud<double> cloud;
   cloud.pts.resize(inCount);
   gazebo::math::Vector3 inVertex;
   for(long unsigned int i = 0; i < inCount; ++i)
   {
-    inVertex = inSubMesh->GetVertex(i);
-    cloud.pts[i].x = inVertex.x;
-    cloud.pts[i].y = inVertex.y;
-    cloud.pts[i].z = inVertex.z;
+      inVertex = inSubMesh->GetVertex(i);
+      cloud.pts[i].x = inVertex.x;
+      cloud.pts[i].y = inVertex.y;
+      cloud.pts[i].z = inVertex.z;
   }
 
   // construct a kd-tree index:
@@ -408,39 +409,134 @@ void FillTextureSource(const gazebo::common::Mesh *_outGz,
   my_kd_tree_t cloudIndex(3, cloud, nanoflann::KDTreeSingleIndexAdaptorParams(10));
   cloudIndex.buildIndex();
 
-  // Search for nearest neighbour
-  gazebo::math::Vector3 outVertex;
-  const long unsigned int num_results = 1; // only the 1st neighbour
+  // For each vertex of each triangle
+  unsigned int outTriIndexCount = outSubMesh->GetIndexCount();
+  const long unsigned int num_results = 30;
   std::vector<long unsigned int> result_index(num_results);
   std::vector<double> out_dist_sqr(num_results);
-  double max_dist = 0;
-  for(long unsigned int i = 0; i < outCount; ++i)
+  static const int offset[] = {1,2,-1,1,-2,-1};
+  for (int i = 0; i < outTriIndexCount; i++)
   {
-    outVertex = outSubMesh->GetVertex(i);
+    unsigned int outIndex = outSubMesh->GetIndex(i);
+    gazebo::math::Vector3 outVertex = outSubMesh->GetVertex(outIndex);
+
     const double query_pt[3] = { outVertex.x, outVertex.y, outVertex.z};
+    // Get nearest num_results
     cloudIndex.knnSearch(&query_pt[0], num_results, &result_index[0],
         &out_dist_sqr[0]);
 
-    double U = inSubMesh->GetTexCoord(result_index[0]).x;
-    double V = inSubMesh->GetTexCoord(result_index[0]).y;
+    std::vector<long unsigned int> closestIndices;
+    double closestDistance = 1000;
+    for (int j = 0; j < num_results; j++)
+    {
+      inVertex = inSubMesh->GetVertex(result_index[j]);
 
-    // Euclidean distance between outVertex[i] and inVertex[result_index], checked
-    max_dist = max_dist > sqrt(out_dist_sqr[0]) ? max_dist : sqrt(out_dist_sqr[0]);
+      double distance = inVertex.Distance(outVertex);
+      // closer vertex
+      if ( distance <  closestDistance)
+      {
+        closestDistance = distance;
+        closestIndices.clear();
+        closestIndices.push_back(result_index[j]);
+      }
+      // overlapping vertex
+      else if ( distance == closestDistance )
+      {
+        closestIndices.push_back(result_index[j]);
+      }
+    }
 
-    // WRONG ORDER?
-    fillData << U << " " << -V << " ";
+    // Choose best UV among overlapping closestIndices
 
-  }*/
+    // index%3 == 0: beginning of a triangle
+    // triangle 1: i == 0,1,2; triangle 2: i == 3,4,5 and so on
+    gazebo::math::Vector2d outOffset(i+offset[(i % 3)*2],
+                                     i+offset[(i % 3)*2+1]);
+    // Get other vertices in the same triangle
+    unsigned int outIndex_1 = outSubMesh->GetIndex(outOffset.x);
+    unsigned int outIndex_2 = outSubMesh->GetIndex(outOffset.y);
+    gazebo::math::Vector3 outVertex_1 = outSubMesh->GetVertex(outIndex_1);
+    gazebo::math::Vector3 outVertex_2 = outSubMesh->GetVertex(outIndex_2);
 
-  for(long unsigned int i = 0; i < outCount; ++i)
-  {
-    double U = inSubMesh->GetTexCoord(i).x;
-    double V = inSubMesh->GetTexCoord(i).y;
+    // Get directions
+    gazebo::math::Vector3 outDir_1 = (outVertex_1-outVertex).Normalize();
+    gazebo::math::Vector3 outDir_2 = (outVertex_2-outVertex).Normalize();
 
-    fillData << U << " " << (1.0-V) << " ";
+    // Initialize closestVertex
+    long unsigned int closestIndex = closestIndices[0];
+    gazebo::math::Vector2d closestOffset(closestIndex+offset[(closestIndex % 3)*2],
+                                         closestIndex+offset[(closestIndex % 3)*2+1]);
+
+    gazebo::math::Vector3 closestVertex = inSubMesh->GetVertex(closestIndex);
+    gazebo::math::Vector3 closestVertex_1 = inSubMesh->GetVertex(closestOffset.x);
+    gazebo::math::Vector3 closestVertex_2 = inSubMesh->GetVertex(closestOffset.y);
+
+    gazebo::math::Vector3 closestDir_1 = (closestVertex_1-closestVertex).Normalize();
+    gazebo::math::Vector3 closestDir_2 = (closestVertex_2-closestVertex).Normalize();
+
+    // Initialize sum of closest directions
+    double closestSum;
+    if ( outDir_1.Distance(closestDir_1) < outDir_1.Distance(closestDir_2) )
+    {
+      closestSum = outDir_1.Distance(closestDir_1) + outDir_2.Distance(closestDir_2);
+    }
+    else
+    {
+      closestSum = outDir_2.Distance(closestDir_1) + outDir_1.Distance(closestDir_2);
+    }
+
+    // Find the closest direction among all triangles containing overlapping vertices
+    for (int k = 1; k < closestIndices.size(); k++)
+    {
+      // Current vertex
+      long unsigned int currentIndex = closestIndices[k];
+      gazebo::math::Vector2d currentOffset(currentIndex+offset[(currentIndex % 3)*2],
+                                           currentIndex+offset[(currentIndex % 3)*2+1]);
+
+      gazebo::math::Vector3 currentVertex = inSubMesh->GetVertex(currentIndex);
+      gazebo::math::Vector3 currentVertex_1 = inSubMesh->GetVertex(currentOffset.x);
+      gazebo::math::Vector3 currentVertex_2 = inSubMesh->GetVertex(currentOffset.y);
+
+      gazebo::math::Vector3 currentDir_1 = (currentVertex_1-currentVertex).Normalize();
+      gazebo::math::Vector3 currentDir_2 = (currentVertex_2-currentVertex).Normalize();
+
+      double currentSum;
+      if ( outDir_1.Distance(currentDir_1) < outDir_1.Distance(currentDir_2) )
+      {
+        currentSum = outDir_1.Distance(currentDir_1) + outDir_2.Distance(currentDir_2);
+      }
+      else
+      {
+        currentSum = outDir_2.Distance(currentDir_1) + outDir_1.Distance(currentDir_2);
+      }
+
+      if (currentSum < closestSum)
+      {
+        closestSum = currentSum;
+        closestIndex = currentIndex;
+        closestDir_1 = currentDir_1;
+        closestDir_2 = currentDir_2;
+        closestVertex = currentVertex;
+      }
+    }
+
+    // Get UV coordinates
+    double U = inSubMesh->GetTexCoord(closestIndex).x;
+    double V = inSubMesh->GetTexCoord(closestIndex).y;
+
+    fillData << U << " " << 1.0-V << " ";
   }
 
-//  std::cout << "Texture map calculation complete. Max texture dislocation: " << max_dist << std::endl;
+/*
+  gazebo::math::Vector2d inTexCoord;
+  for(long unsigned int i = 0; i < inCount; ++i)
+  {
+    inTexCoord = inSubMesh->GetTexCoord(i);
+    fillData << inTexCoord.x << " " << 1-inTexCoord.y << " ";
+  }
+*/
+
+  std::cout << "Texture map calculation complete." << std::endl;
 
   sourceID << meshID << "-UVMap";
   sourceArrayID << sourceID.str() << "-array";
@@ -682,7 +778,7 @@ TiXmlDocument ConvertMeshToDae(TiXmlDocument _inDae,
       .FirstChild( "geometry" ).FirstChild( "mesh" )
       .FirstChild( "polylist" ).Element();
   }
-  const char *triangleMaterialID = inElem->Attribute("material");
+  const char *triangleMaterialID = inElem->Attribute("id");
   if (triangleMaterialID)
   {
     triangles->SetAttribute("material", inElem->Attribute("material"));
@@ -716,11 +812,13 @@ TiXmlDocument ConvertMeshToDae(TiXmlDocument _inDae,
   input->SetAttribute("source", attributeValue);
 
   std::ostringstream fillData;
+  // Putting all offset = 0 and writing the index only once
+  // doesn't work for meshlab but does for gzweb
   for (unsigned int i = 0; i < indexCount; ++i)
   {
     fillData << _subMesh->GetIndex(i) << " "
              << _subMesh->GetIndex(i) << " "
-             << _subMesh->GetIndex(i) << " ";
+             << i << " ";
   }
 
   TiXmlElement *p = new TiXmlElement( "p" );
@@ -839,7 +937,7 @@ TiXmlDocument ConvertMeshToDae(TiXmlDocument _inDae,
   {
     TiXmlElement *instanceMaterial = new TiXmlElement( "instance_material" );
     techniqueCommon->LinkEndChild( instanceMaterial );
-    instanceMaterial->SetAttribute("symbol", materialID);
+    instanceMaterial->SetAttribute("symbol", "material");
     strcpy(attributeValue,"#");
     strcat(attributeValue,materialID);
     instanceMaterial->SetAttribute("target", attributeValue);
@@ -893,13 +991,13 @@ int main(int argc, char **argv)
   const gazebo::common::Mesh *inGz =
       gazebo::common::MeshManager::Instance()->Load(argv[1]);
 
-  // export original Gz mesh to Dae
+/*  // export original Gz mesh to Dae
   TiXmlDocument exportInDae;
   exportInDae = ConvertMeshToDae(inDae,inGz,inGz);
   exportInDae.SaveFile( filename+"_original.dae" );
 
-  return 0;
-
+  //return 0;
+*/
   GtsSurface *in_out_Gts;
   GNode *tree1;
   in_out_Gts = gts_surface_new(gts_surface_class(), gts_face_class(), gts_edge_class(),
@@ -937,7 +1035,6 @@ int main(int argc, char **argv)
   // set stop to number
   GtsStopFunc stop_func = (GtsStopFunc) stop_number_verbose;
   guint number = edgesBefore * atoi (argv[2])/100;
-//  guint number = atoi(argv[2]);
 
   gpointer stop_data = &number;
 
@@ -991,7 +1088,6 @@ int main(int argc, char **argv)
   outDae = ConvertMeshToDae(inDae,outGz,inGz);
 
   outDae.SaveFile( filename+"_coarse.dae" );
-
 
   /*** End export as COLLADA ***/
 
