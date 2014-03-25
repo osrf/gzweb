@@ -863,6 +863,7 @@ GZ3D.GZIface.prototype.parseMaterial = function(material)
   var diffuse;
   var specular;
   var opacity;
+  var scale;
   var mat;
 
   // get texture from material script
@@ -880,6 +881,7 @@ GZ3D.GZIface.prototype.parseMaterial = function(material)
           diffuse = mat['diffuse'];
           specular = mat['specular'];
           opacity = mat['opacity'];
+          scale = mat['scale'];
 
           var textureName = mat['texture'];
           if (textureName)
@@ -954,7 +956,8 @@ GZ3D.GZIface.prototype.parseMaterial = function(material)
       ambient: ambient,
       diffuse: diffuse,
       specular: specular,
-      opacity: opacity
+      opacity: opacity,
+      scale: scale
   };
 };
 
