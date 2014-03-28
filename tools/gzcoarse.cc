@@ -25,6 +25,37 @@
 #define PI 3.14159265359
 #endif
 
+void build_list (gpointer * data, GSList ** list)
+{
+  /* always use O(1) g_slist_prepend instead of O(n) g_slist_append */
+  *list = g_slist_prepend (*list, data);
+}
+
+void triangle_cleanup (GtsSurface * s)
+{
+  GSList * triangles = NULL;
+  GSList * i;
+
+  g_return_if_fail (s != NULL);
+
+  /* build list of triangles */
+  gts_surface_foreach_face (s, (GtsFunc) build_list, &triangles);
+
+  /* remove duplicate triangles */
+  i = triangles;
+  while (i) {
+    GtsTriangle * t = (GtsTriangle*)i->data;
+    if (gts_triangle_is_duplicate (t))
+      /* destroy t, its edges (if not used by any other triangle)
+	 and its corners (if not used by any other edge) */
+      gts_object_destroy (GTS_OBJECT (t));
+    i = i->next;
+  }
+
+  /* free list of triangles */
+  g_slist_free (triangles);
+}
+
 //////////////////////////////////////////////////
 // Custom data set for nanoflann
 template <typename T>
@@ -175,7 +206,31 @@ void MergeVertices(GPtrArray * _vertices, double _epsilon)
 }
 
 //////////////////////////////////////////////////
-void ConvertMeshToGTS(const gazebo::common::Mesh *_mesh, GtsSurface *_surface)
+void ConvertGtsToGz(GtsSurface *_surface, gazebo::common::Mesh *_mesh)
+{
+  gazebo::common::SubMesh *subMesh = new gazebo::common::SubMesh();
+  _mesh->AddSubMesh(subMesh);
+
+  unsigned int n;
+  gpointer data[3];
+  GHashTable *vIndex = g_hash_table_new(NULL, NULL);
+
+  n = 0;
+  data[0] = subMesh;
+  data[1] = &n;
+  data[2] = vIndex;
+  n = 0;
+  gts_surface_foreach_vertex(_surface, (GtsFunc)FillVertex, data);
+  n = 0;
+  gts_surface_foreach_face(_surface, (GtsFunc)FillFace, data);
+  g_hash_table_destroy(vIndex);
+
+  // Calculate normals
+  _mesh->RecalculateNormals();
+}
+
+//////////////////////////////////////////////////
+void ConvertGzToGts(const gazebo::common::Mesh *_mesh, GtsSurface *_surface)
 {
   if (!_surface)
   {
@@ -307,6 +362,8 @@ void ConvertMeshToGTS(const gazebo::common::Mesh *_mesh, GtsSurface *_surface)
       }
     }
   }
+  // Destroy duplicate triangles
+  triangle_cleanup(_surface);
 }
 
 /////////////////////////////////////////////////
@@ -668,30 +725,46 @@ void CopyElement(TiXmlElement *inElem, TiXmlElement *outElem)
     const char *elementText=inSubElem->GetText();
     if (elementValue)
     {
-      outSubElem = new TiXmlElement( elementValue );
-      if (elementText)
+      if ( strcmp(elementValue,"unit") == 0)
       {
-         outSubElem->LinkEndChild( new TiXmlText( elementText ));
+        outSubElem = new TiXmlElement( "unit" );
+        outSubElem->SetAttribute("meter", "1");
+        outSubElem->SetAttribute("name", "meter");
       }
-      TiXmlAttribute* inAttribute=inSubElem->FirstAttribute();
-      while (inAttribute)
+      else
       {
-        outSubElem->SetAttribute(inAttribute->Name(), inAttribute->Value());
-        inAttribute=inAttribute->Next();
+        outSubElem = new TiXmlElement( elementValue );
+        if (elementText)
+        {
+           outSubElem->LinkEndChild( new TiXmlText( elementText ));
+        }
+        TiXmlAttribute* inAttribute=inSubElem->FirstAttribute();
+        while (inAttribute)
+        {
+          outSubElem->SetAttribute(inAttribute->Name(), inAttribute->Value());
+          inAttribute=inAttribute->Next();
+        }
+        CopyElement(inSubElem,outSubElem);
       }
-      CopyElement(inSubElem,outSubElem);
       outElem->LinkEndChild( outSubElem );
     }
   }
 }
 
 //////////////////////////////////////////////////
-TiXmlDocument ConvertMeshToDae(TiXmlDocument _inDae,
+TiXmlDocument ConvertGzToDae(TiXmlDocument _inDae,
     const gazebo::common::Mesh *_outGz,
     const gazebo::common::Mesh *_inGz)
 {
   TiXmlElement *inElem;
   char attributeValue[100];
+  bool hasTexture = true;
+
+  if (_inGz->GetSubMesh(0)->GetTexCoordCount() == 0)
+  {
+    hasTexture = false;
+    std::cout << "The model doesn't have textures." << std::endl;
+  }
 
   const gazebo::common::SubMesh *_subMesh = _outGz->GetSubMesh(0);
 
@@ -734,7 +807,6 @@ TiXmlDocument ConvertMeshToDae(TiXmlDocument _inDae,
     meshID = "mesh0";
   }
 
-  geometry->SetAttribute("name", inElem->Attribute("name"));
   geometry->SetAttribute("id", meshID);
 
   TiXmlElement *Mesh = new TiXmlElement( "mesh" );
@@ -745,7 +817,10 @@ TiXmlDocument ConvertMeshToDae(TiXmlDocument _inDae,
   // Normals
   FillGeometrySources(_subMesh, Mesh, 2, meshID);
   // UV Map
-  FillTextureSource(_outGz, _inGz, Mesh, meshID);
+  if (hasTexture)
+  {
+    FillTextureSource(_outGz, _inGz, Mesh, meshID);
+  }
 
   // Vertices
   TiXmlElement *vertices = new TiXmlElement( "vertices" );
@@ -802,14 +877,17 @@ TiXmlDocument ConvertMeshToDae(TiXmlDocument _inDae,
   strcat(attributeValue,"-Normals");
   input->SetAttribute("source", attributeValue);
 
-  input = new TiXmlElement( "input" );
-  triangles->LinkEndChild( input );
-  input->SetAttribute("offset", 2);
-  input->SetAttribute("semantic", "TEXCOORD");
-  strcpy(attributeValue,"#");
-  strcat(attributeValue,meshID);
-  strcat(attributeValue,"-UVMap");
-  input->SetAttribute("source", attributeValue);
+  if (hasTexture)
+  {
+    input = new TiXmlElement( "input" );
+    triangles->LinkEndChild( input );
+    input->SetAttribute("offset", 2);
+    input->SetAttribute("semantic", "TEXCOORD");
+    strcpy(attributeValue,"#");
+    strcat(attributeValue,meshID);
+    strcat(attributeValue,"-UVMap");
+    input->SetAttribute("source", attributeValue);
+  }
 
   std::ostringstream fillData;
   // Putting all offset = 0 and writing the index only once
@@ -817,8 +895,11 @@ TiXmlDocument ConvertMeshToDae(TiXmlDocument _inDae,
   for (unsigned int i = 0; i < indexCount; ++i)
   {
     fillData << _subMesh->GetIndex(i) << " "
-             << _subMesh->GetIndex(i) << " "
              << _subMesh->GetIndex(i) << " ";
+    if (hasTexture)
+    {
+      fillData << i << " ";
+    }
   }
 
   TiXmlElement *p = new TiXmlElement( "p" );
@@ -892,34 +973,8 @@ TiXmlDocument ConvertMeshToDae(TiXmlDocument _inDae,
 
   TiXmlElement *node = new TiXmlElement( "node" );
   visual_scene->LinkEndChild( node );
-  node->SetAttribute("name", "mesh1");
-  node->SetAttribute("id", "mesh1");
-  node->SetAttribute("layer", "L1");
-
-  TiXmlElement *translate = new TiXmlElement( "translate" );
-  node->LinkEndChild( translate );
-  translate->SetAttribute("sid", "translate");
-  translate->LinkEndChild( new TiXmlText( "0.0 0.0 0.0" ));
-
-  TiXmlElement *rotate = new TiXmlElement( "rotate" );
-  node->LinkEndChild( rotate );
-  rotate->SetAttribute("sid", "rotateZ");
-  rotate->LinkEndChild( new TiXmlText( "0.0 0.0 1.0 0.0" ));
-
-  rotate = new TiXmlElement( "rotate" );
-  node->LinkEndChild( rotate );
-  rotate->SetAttribute("sid", "rotateY");
-  rotate->LinkEndChild( new TiXmlText( "0.0 1.0 0.0 0.0" ));
-
-  rotate = new TiXmlElement( "rotate" );
-  node->LinkEndChild( rotate );
-  rotate->SetAttribute("sid", "rotateX");
-  rotate->LinkEndChild( new TiXmlText( "1.0 0.0 0.0 0.0" ));
-
-  TiXmlElement *scale = new TiXmlElement( "scale" );
-  node->LinkEndChild( scale );
-  scale->SetAttribute("sid", "scale");
-  scale->LinkEndChild( new TiXmlText( "1.0 1.0 1.0" ));
+  node->SetAttribute("name", "node");
+  node->SetAttribute("id", "node");
 
   TiXmlElement *instance_geometry = new TiXmlElement( "instance_geometry" );
   node->LinkEndChild( instance_geometry );
@@ -990,21 +1045,21 @@ int main(int argc, char **argv)
   // load collada mesh into Gazebo Mesh format
   const gazebo::common::Mesh *inGz =
       gazebo::common::MeshManager::Instance()->Load(argv[1]);
-
+/*
   // export original Gz mesh to Dae
   TiXmlDocument exportInDae;
-  exportInDae = ConvertMeshToDae(inDae,inGz,inGz);
+  exportInDae = ConvertGzToDae(inDae,inGz,inGz);
   exportInDae.SaveFile( filename+"_original.dae" );
 
   //return 0;
-
+*/
   GtsSurface *in_out_Gts;
   GNode *tree1;
   in_out_Gts = gts_surface_new(gts_surface_class(), gts_face_class(), gts_edge_class(),
       gts_vertex_class());
 
   // convert Gazebo Mesh to GTS format
-  ConvertMeshToGTS(inGz, in_out_Gts);
+  ConvertGzToGts(inGz, in_out_Gts);
 
   /*** Do mesh simplification here ***/
 
@@ -1034,7 +1089,8 @@ int main(int argc, char **argv)
 
   // set stop to number
   GtsStopFunc stop_func = (GtsStopFunc) stop_number_verbose;
-  guint number = edgesBefore * atoi (argv[2])/100;
+  double desiredPercentage = atoi (argv[2]);
+  guint number = edgesBefore * desiredPercentage/100;
 
   gpointer stop_data = &number;
 
@@ -1049,7 +1105,14 @@ int main(int argc, char **argv)
 
   // Number of edges
   guint edgesAfter = gts_surface_edge_number(in_out_Gts);
-  std::cout << std::endl << "Edges after: " << edgesAfter << std::endl;
+  double obtainedPercentage = (double)100*edgesAfter/edgesBefore;
+  std::cout << std::endl << "Edges after: " << edgesAfter << " (" << obtainedPercentage << "%)" << std::endl;
+
+  if (obtainedPercentage > desiredPercentage*1.5)
+  {
+    std::cout << "It wasn't possible to significantly reduce the mesh. Not simplifying." << std::endl;
+    return 0;
+  }
 
   // stats after coarsening
   /*gts_surface_print_stats (in_out_Gts, stderr);
@@ -1058,34 +1121,15 @@ int main(int argc, char **argv)
 
   /*** End mesh simplification ***/
 
-  // create output Gazebo mesh
+  // Output Gazebo mesh
   gazebo::common::Mesh *outGz = new gazebo::common::Mesh();
-  gazebo::common::SubMesh *subMesh = new gazebo::common::SubMesh();
-  outGz->AddSubMesh(subMesh);
-
-  // fill the submesh with data generated by GTS
-  unsigned int n;
-  gpointer data[3];
-  GHashTable *vIndex = g_hash_table_new(NULL, NULL);
-
-  n = 0;
-  data[0] = subMesh;
-  data[1] = &n;
-  data[2] = vIndex;
-  n = 0;
-  gts_surface_foreach_vertex(in_out_Gts, (GtsFunc)FillVertex, data);
-  n = 0;
-  gts_surface_foreach_face(in_out_Gts, (GtsFunc)FillFace, data);
-  g_hash_table_destroy(vIndex);
-
-  // Calculate normals
-  outGz->RecalculateNormals();
+  ConvertGtsToGz(in_out_Gts,outGz);
 
   /*** Export as COLLADA ***/
 
   TiXmlDocument outDae;
 
-  outDae = ConvertMeshToDae(inDae,outGz,inGz);
+  outDae = ConvertGzToDae(inDae,outGz,inGz);
 
   outDae.SaveFile( filename+"_coarse.dae" );
 
