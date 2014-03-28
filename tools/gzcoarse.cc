@@ -371,76 +371,8 @@ void ConvertGzToGts(const gazebo::common::Mesh *_mesh, GtsSurface *_surface)
     subSurfaces.push_back(subSurface);
   }
 
-  if (subSurfaces.size() == 1)
-  {
-     gts_surface_merge(_surface, subSurfaces[0]);
-     return;
-  }
-
-  // if there are more than one sub-surfaces, find and remove duplicates
-  // Create a tree with sub-surface centroids
-  PointCloud<double> cloud;
-  cloud.pts.resize(subSurfaces.size());
-  for (int i = 0; i < subSurfaces.size(); ++i)
-  {
-    GtsVector cm;
-    gts_surface_center_of_area(subSurfaces[i], cm);
-
-    cloud.pts[i].x = cm[0];
-    cloud.pts[i].y = cm[1];
-    cloud.pts[i].z = cm[2];
-  }
-  typedef nanoflann::KDTreeSingleIndexAdaptor<
-      nanoflann::L2_Simple_Adaptor<double, PointCloud<double> > ,
-      PointCloud<double>,
-      3
-      > my_kd_tree_t;
-
-  my_kd_tree_t cloudIndex(3, cloud,
-      nanoflann::KDTreeSingleIndexAdaptorParams(10));
-  cloudIndex.buildIndex();
-
-  std::set<int> removed;
-  for (unsigned int i = subSurfaces.size()-1; i >= 0; --i)
-  {
-    if (removed.find(i) != removed.end())
-      continue;
-
+  for (unsigned int i = 0; i < subSurfaces.size(); ++i)
     gts_surface_merge(_surface, subSurfaces[i]);
-
-    const long unsigned int numResults = 2;
-    std::vector<long unsigned int> resultIndex(numResults);
-    std::vector<double> outDistSqr(numResults);
-    const double queryPt[3] =
-        {cloud.pts[i].x, cloud.pts[i].y, cloud.pts[i].z};
-    cloudIndex.knnSearch(&queryPt[0], numResults, &resultIndex[0],
-        &outDistSqr[0]);
-
-    if (numResults == 1)
-    {
-      continue;
-    }
-
-    for (int j = 0; j < numResults; ++j)
-    {
-      if (i == resultIndex[j])
-        continue;
-
-      if (outDistSqr[j] < 1e-10 &&
-          removed.find(resultIndex[j]) == removed.end())
-      {
-        double area0 = gts_surface_area(subSurfaces[i]);
-        double area1 = gts_surface_area(subSurfaces[resultIndex[j]]);
-        unsigned int vn0 = gts_surface_vertex_number(subSurfaces[i]);
-        unsigned int vn1 =
-            gts_surface_vertex_number(subSurfaces[resultIndex[j]]);
-        if (gazebo::math::equal(area0, area1) && vn0 == vn1)
-        {
-          removed.insert(resultIndex[j]);
-        }
-      }
-    }
-  }
 
   gts_surface_print_stats (_surface, stderr);
   // Destroy duplicate triangles
