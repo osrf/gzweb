@@ -33,7 +33,9 @@ GZNode::GZNode()
 
   this->gzIface = new GazeboInterface();
   this->gzIface->Init();
-  this->gzIface->RunThread();
+//  this->gzIface->RunThread();
+
+  connected = false;
 };
 
 /////////////////////////////////////////////////
@@ -88,6 +90,9 @@ void GZNode::Init(Handle<Object> exports)
 		  String::NewSymbol("setPoseMsgFilterMinimumQuaternionSquared"),
       FunctionTemplate::New(
     	  SetPoseMsgFilterMinimumQuaternionSquared)->GetFunction());
+
+  tpl->PrototypeTemplate()->Set(String::NewSymbol("setIsConnected"), FunctionTemplate::New(
+    	  SetIsConnected)->GetFunction());
 
     Persistent<Function> constructor =
       Persistent<Function>::New(tpl->GetFunction());
@@ -228,6 +233,19 @@ Handle<v8::Value> GZNode::SetPoseMsgFilterMinimumQuaternionSquared(const \
   Local<Number> v = Local<Number>::Cast(args[0]);
   double value = v->Value();
   obj->gzIface->SetPoseFilterMinimumQuaternionSquared(value);
+
+  return scope.Close(Undefined());
+}
+
+Handle<v8::Value> GZNode::SetIsConnected(const \
+    v8::Arguments& args)
+{
+  HandleScope scope;
+
+  GZNode* obj = ObjectWrap::Unwrap<GZNode>(args.This());
+  Local<Number> v = Local<Number>::Cast(args[0]);
+  double value = v->Value();
+  obj->gzIface->SetIsConnected(value);
 
   return scope.Close(Undefined());
 }

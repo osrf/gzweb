@@ -23,6 +23,7 @@
 #include <boost/unordered/unordered_map.hpp>
 
 #include <gazebo/gazebo.hh>
+#include <iostream>
 
 namespace boost
 {
@@ -385,6 +386,8 @@ namespace gzweb
     private: int messageWindowSize;
     private: int messageCount;
 
+    private: bool isConnected;
+
     public: inline void SetPoseFilterMinimumDistanceSquared(double m)
     {
       this->minimumDistanceSquared = m;
@@ -412,6 +415,38 @@ namespace gzweb
     public: inline double GetPoseFilterMinimumMsgAge()
     {
       return this->minimumMsgAge;
+    }
+
+    public: inline void SetIsConnected(double connected)
+    {
+    	//TODO: clear message buffers
+    	if (connected == 0) {
+    		isConnected = false;
+    	} else if (connected > 0) {
+    		isConnected = true;
+    	} else {
+    		isConnected = false;
+    	}
+
+    	// activate or deactivate threads
+    	if (!isConnected) {
+    		this->runThread->join();
+    		this->serviceThread->join();
+    		delete this->runThread;
+    		delete this->serviceThread;
+
+    		this->runThread = NULL;
+    		this->serviceThread = NULL;
+
+    		std::cout << "end message threads" << std::endl;
+
+    	} else {
+    		if (this->runThread == NULL && this->serviceThread == NULL) {
+    			this->RunThread();
+    			std::cout << "run message threads" << std::endl;
+    		}
+    	}
+
     }
   };
 }

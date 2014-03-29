@@ -4,7 +4,7 @@ var WebSocketServer = require('websocket').server;
 var http = require('http');
 
 var connections = [];
-var addon = require('./build/Debug/gzbridge');
+var addon = require('./build/Release/gzbridge');
 var gzconnection = new addon.GZNode();
 gzconnection.loadMaterialScripts('../http/client/assets');
 
@@ -19,6 +19,8 @@ console.log('  minimum XYZ distance squared between successive messages: ' +
     gzconnection.getPoseMsgFilterMinimumDistanceSquared());
 console.log('  minimum Quartenion distance squared between successive messages:'
     + ' ' + gzconnection.getPoseMsgFilterMinimumQuaternionSquared());
+
+var isConnected = false; 
 
 
 var server = http.createServer(function(request, response) {
@@ -57,9 +59,15 @@ wsServer.on('request', function(request) {
     var connection = request.accept(null, request.origin);
 
     connections.push(connection);
+    
+    if (!isConnected) {
+    	gzconnection.setIsConnected(1);
+    	isConnected = true;
+    }
 
     console.log((new Date()) + ' Connection accepted.');
     connection.on('message', function(message) {
+    	
         if (message.type === 'utf8') {
             console.log('Received Message: ' + message.utf8Data + ' from ' +
                 request.origin + ' ' + connection.remoteAddress);
@@ -74,7 +82,11 @@ wsServer.on('request', function(request) {
     connection.on('close', function(reasonCode, description) {
         console.log((new Date()) + ' Peer ' + connection.remoteAddress +
             ' disconnected.');
-        // gzlient.remove_connection();
+        
+        gzconnection.setIsConnected(0);
+        isConnected = false;
+        
+//        gzlient.remove_connection();
     });
 });
 
@@ -82,12 +94,16 @@ setInterval(update, 10);
 
 function update()
 {
-  var msgs = gzconnection.getMessages();
-  for (var i = 0; i < connections.length; ++i)
-  {
-    for (var j = 0; j < msgs.length; ++j)
-    {
-      connections[i].sendUTF(msgs[j]);
-    }
- }
+	var msgs;
+	if (connections.length > 0) {
+		msgs = gzconnection.getMessages();
+	}
+
+	for (var i = 0; i < connections.length; ++i)
+	{
+		for (var j = 0; j < msgs.length; ++j)
+		{
+			connections[i].sendUTF(msgs[j]);
+		}
+	}
 }

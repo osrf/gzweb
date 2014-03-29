@@ -137,6 +137,12 @@ GazeboInterface::GazeboInterface()
   this->skippedMsgCount = 0;
   this->messageWindowSize = 10000;
   this->messageCount = 0;
+
+  this->isConnected = false;
+
+  // initialize thread variables
+  this->runThread = NULL;
+  this->serviceThread = NULL;
 }
 
 /////////////////////////////////////////////////
@@ -188,7 +194,11 @@ void GazeboInterface::Run()
 {
   while (!this->stop)
   {
-    this->ProcessMessages();
+	  if (isConnected) {
+		  this->ProcessMessages();
+	  } else {
+		  return;
+	  }
   }
 }
 
@@ -197,7 +207,11 @@ void GazeboInterface::RunService()
 {
   while (!this->stop)
   {
-    this->ProcessServiceRequests();
+	  if (isConnected) {
+		  this->ProcessServiceRequests();
+	  } else {
+		  return;
+	  }
   }
 }
 
