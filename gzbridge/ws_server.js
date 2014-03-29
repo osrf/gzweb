@@ -83,10 +83,16 @@ wsServer.on('request', function(request) {
         console.log((new Date()) + ' Peer ' + connection.remoteAddress +
             ' disconnected.');
         
-        gzconnection.setIsConnected(0);
-        isConnected = false;
+        // remove connection from array
+        var conIndex = connections.indexOf(connection);
+        connections.splice(conIndex, 1);
         
-//        gzlient.remove_connection();
+        // if there is no connection notify server that there is no connected client
+        if (connections.length == 0) {
+	        gzconnection.setIsConnected(0);
+	        isConnected = false;
+	    }
+        
     });
 });
 
