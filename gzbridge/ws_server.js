@@ -61,8 +61,8 @@ wsServer.on('request', function(request) {
     connections.push(connection);
     
     if (!isConnected) {
-    	gzconnection.setIsConnected(1);
     	isConnected = true;
+    	gzconnection.setIsConnected(isConnected);
     }
 
     console.log((new Date()) + ' Connection accepted.');
@@ -89,8 +89,8 @@ wsServer.on('request', function(request) {
         
         // if there is no connection notify server that there is no connected client
         if (connections.length == 0) {
-	        gzconnection.setIsConnected(0);
-	        isConnected = false;
+        	isConnected = false;
+	        gzconnection.setIsConnected(isConnected);
 	    }
         
     });

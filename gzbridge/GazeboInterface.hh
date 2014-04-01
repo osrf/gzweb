@@ -417,16 +417,11 @@ namespace gzweb
       return this->minimumMsgAge;
     }
 
-    public: inline void SetIsConnected(double connected)
+    public: inline void SetIsConnected(bool connected)
     {
-    	//TODO: clear message buffers
-    	if (connected == 0) {
-    		isConnected = false;
-    	} else if (connected > 0) {
-    		isConnected = true;
-    	} else {
-    		isConnected = false;
-    	}
+    	//TODO: clear message buffers, or do wee need to clen them
+
+    	isConnected = connected;
 
     	// activate or deactivate threads
     	if (!isConnected) {

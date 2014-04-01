@@ -243,8 +243,8 @@ Handle<v8::Value> GZNode::SetIsConnected(const \
   HandleScope scope;
 
   GZNode* obj = ObjectWrap::Unwrap<GZNode>(args.This());
-  Local<Number> v = Local<Number>::Cast(args[0]);
-  double value = v->Value();
+//  Handle<Boolean> v = Handle<Boolean>::Cast(args[0]);
+  bool value = args[0]->BooleanValue();
   obj->gzIface->SetIsConnected(value);
 
   return scope.Close(Undefined());
