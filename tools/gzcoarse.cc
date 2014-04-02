@@ -25,6 +25,12 @@
 #define PI 3.14159265359
 #endif
 
+// workaround for converting a Gazebo mesh with duplicate faces
+// to a GTS mesh. The duplicateFound flag tells the collada exporter to
+// side the geometry to double sided otherwise the resulting dae mesh will have
+// faces that are oriented the wrong way.
+static bool duplicateFound = false;
+
 void build_list (gpointer * data, GSList ** list)
 {
   /* always use O(1) g_slist_prepend instead of O(n) g_slist_append */
@@ -238,7 +244,25 @@ void ConvertGzToGts(const gazebo::common::Mesh *_mesh, GtsSurface *_surface)
     return;
   }
 
+  GPtrArray *vertices = g_ptr_array_new();
+  for (unsigned int i = 0; i < _mesh->GetSubMeshCount(); ++i)
+  {
+    const gazebo::common::SubMesh *subMesh = _mesh->GetSubMesh(i);
+    unsigned int indexCount = subMesh->GetIndexCount();
+    if (subMesh->GetVertexCount() <= 2)
+      continue;
+
+    for (unsigned int j = 0; j < subMesh->GetVertexCount(); ++j)
+    {
+      gazebo::math::Vector3 vertex = subMesh->GetVertex(j);
+      g_ptr_array_add(vertices, gts_vertex_new(gts_vertex_class(), vertex.x,
+          vertex.y, vertex.z));
+    }
+  }
+  MergeVertices(vertices, 1e-7);
+
   std::vector<GtsSurface *> subSurfaces;
+  int baseIndex = 0;
   for (unsigned int i = 0; i < _mesh->GetSubMeshCount(); ++i)
   {
     GtsSurface *subSurface = gts_surface_new(
@@ -250,53 +274,43 @@ void ConvertGzToGts(const gazebo::common::Mesh *_mesh, GtsSurface *_surface)
     if (subMesh->GetVertexCount() <= 2)
       continue;
 
-    GPtrArray *vertices = g_ptr_array_new();
-    for (unsigned int j = 0; j < subMesh->GetVertexCount(); ++j)
-    {
-      gazebo::math::Vector3 vertex = subMesh->GetVertex(j);
-      g_ptr_array_add(vertices, gts_vertex_new(gts_vertex_class(), vertex.x,
-          vertex.y, vertex.z));
-    }
-
-    MergeVertices(vertices, 1e-7);
-
     GtsVertex **verticesData =
         reinterpret_cast<GtsVertex **>(vertices->pdata);
     for (unsigned int j = 0; j < indexCount/3; ++j)
     {
       // if vertices on the same GtsSegment, this segment. Else, NULL.
       GtsEdge *e1 = GTS_EDGE(gts_vertices_are_connected(
-          verticesData[subMesh->GetIndex(3*j)],
-          verticesData[subMesh->GetIndex(3*j+1)]));
+          verticesData[baseIndex + subMesh->GetIndex(3*j)],
+          verticesData[baseIndex + subMesh->GetIndex(3*j+1)]));
       GtsEdge *e2 = GTS_EDGE(gts_vertices_are_connected(
-          verticesData[subMesh->GetIndex(3*j+1)],
-          verticesData[subMesh->GetIndex(3*j+2)]));
+          verticesData[baseIndex + subMesh->GetIndex(3*j+1)],
+          verticesData[baseIndex + subMesh->GetIndex(3*j+2)]));
       GtsEdge *e3 = GTS_EDGE(gts_vertices_are_connected(
-          verticesData[subMesh->GetIndex(3*j+2)],
-          verticesData[subMesh->GetIndex(3*j)]));
+          verticesData[baseIndex + subMesh->GetIndex(3*j+2)],
+          verticesData[baseIndex + subMesh->GetIndex(3*j)]));
 
       // If vertices are different and not connected
-      if (e1 == NULL && verticesData[subMesh->GetIndex(3*j)]
-          != verticesData[subMesh->GetIndex(3*j+1)])
+      if (e1 == NULL && verticesData[baseIndex + subMesh->GetIndex(3*j)]
+          != verticesData[baseIndex + subMesh->GetIndex(3*j+1)])
       {
 
         e1 = gts_edge_new(subSurface->edge_class,
-            verticesData[subMesh->GetIndex(3*j)],
-            verticesData[subMesh->GetIndex(3*j+1)]);
+            verticesData[baseIndex + subMesh->GetIndex(3*j)],
+            verticesData[baseIndex + subMesh->GetIndex(3*j+1)]);
       }
-      if (e2 == NULL && verticesData[subMesh->GetIndex(3*j+1)]
-          != verticesData[subMesh->GetIndex(3*j+2)])
+      if (e2 == NULL && verticesData[baseIndex + subMesh->GetIndex(3*j+1)]
+          != verticesData[baseIndex + subMesh->GetIndex(3*j+2)])
       {
         e2 = gts_edge_new(subSurface->edge_class,
-            verticesData[subMesh->GetIndex(3*j+1)],
-            verticesData[subMesh->GetIndex(3*j+2)]);
+            verticesData[baseIndex + subMesh->GetIndex(3*j+1)],
+            verticesData[baseIndex + subMesh->GetIndex(3*j+2)]);
       }
-      if (e3 == NULL && verticesData[subMesh->GetIndex(3*j+2)]
-          != verticesData[subMesh->GetIndex(3*j)])
+      if (e3 == NULL && verticesData[baseIndex + subMesh->GetIndex(3*j+2)]
+          != verticesData[baseIndex + subMesh->GetIndex(3*j)])
       {
         e3 = gts_edge_new(subSurface->edge_class,
-            verticesData[subMesh->GetIndex(3*j+2)],
-            verticesData[subMesh->GetIndex(3*j)]);
+            verticesData[baseIndex + subMesh->GetIndex(3*j+2)],
+            verticesData[baseIndex + subMesh->GetIndex(3*j)]);
       }
 
       // If all 3 edges are defined and different
@@ -334,33 +348,15 @@ void ConvertGzToGts(const gazebo::common::Mesh *_mesh, GtsSurface *_surface)
             continue;
         }
 
-      /*if (GTS_SEGMENT (e1)->v2 == GTS_SEGMENT (e2)->v2)
-        {
-          if (!gts_segment_connect (GTS_SEGMENT (e3),
-             GTS_SEGMENT (e1)->v1,
-             GTS_SEGMENT (e2)->v1))
-          {
-            std::cout << " fail " << std::endl;
-            std::cout << e1->segment.v1->p.x << " " << e1->segment.v1->p.y << " "
-                << e1->segment.v1->p.z << ", ";
-            std::cout << e1->segment.v2->p.x << " " << e1->segment.v2->p.y << " "
-                << e1->segment.v2->p.z << std::endl;
-            std::cout << e2->segment.v1->p.x << " " << e2->segment.v1->p.y << " "
-                << e2->segment.v1->p.z << ", ";
-            std::cout << e2->segment.v2->p.x << " " << e2->segment.v2->p.y << " "
-                << e2->segment.v2->p.z << std::endl;
-
-            std::cout << " e3 " << std::endl;
-            std::cout << e3->segment.v1->p.x << " " << e3->segment.v1->p.y << " "
-                << e3->segment.v1->p.z << ", ";
-            std::cout << e3->segment.v2->p.x << " " << e3->segment.v2->p.y << " "
-                << e3->segment.v2->p.z << std::endl;
-          }
-        }*/
-
         GtsFace *face = gts_face_new(subSurface->face_class, e1, e2, e3);
         if (!gts_triangle_is_duplicate(&face->triangle))
+        {
           gts_surface_add_face(subSurface, face);
+        }
+        else
+        {
+          duplicateFound = true;
+        }
 
       }
       else
@@ -368,13 +364,14 @@ void ConvertGzToGts(const gazebo::common::Mesh *_mesh, GtsSurface *_surface)
         gzwarn << _mesh->GetName() << ": Ignoring degenerate facet!\n";
       }
     }
+    baseIndex += indexCount;
     subSurfaces.push_back(subSurface);
   }
 
   for (unsigned int i = 0; i < subSurfaces.size(); ++i)
     gts_surface_merge(_surface, subSurfaces[i]);
 
-  gts_surface_print_stats (_surface, stderr);
+  //gts_surface_print_stats (_surface, stderr);
   // Destroy duplicate triangles
   //triangle_cleanup(_surface);
 }
@@ -932,6 +929,28 @@ TiXmlDocument ConvertGzToDae(TiXmlDocument _inDae,
     CopyElement(inElem,extra);
   }
 
+  // set the geometry to double sided if duplicate triangles are found.
+  if (duplicateFound)
+  {
+    TiXmlElement *extraElem = geometry->FirstChildElement("extra");
+    if (!extraElem)
+    {
+      extraElem = new TiXmlElement( "extra" );
+      geometry->LinkEndChild(extraElem);
+    }
+    TiXmlElement *techniqueElem = extraElem->FirstChildElement("technique");
+    if (!techniqueElem)
+    {
+      techniqueElem = new TiXmlElement("technique");
+      techniqueElem->SetAttribute("profile", "COMMON");
+      extraElem->LinkEndChild(techniqueElem);
+    }
+    TiXmlElement *doubleSidedElem = new TiXmlElement( "double_sided");
+    TiXmlText *doubleSidedText = new TiXmlText( "1" );
+    doubleSidedElem->LinkEndChild(doubleSidedText);
+    techniqueElem->LinkEndChild(doubleSidedElem);
+  }
+
   // library_images
   // input library_images element
   inElem=h_inDae.FirstChildElement().FirstChild( "library_images" ).Element();
@@ -1110,6 +1129,7 @@ int main(int argc, char **argv)
   // maximum fold angle
   gdouble fold = PI/180.;
 
+
   // coarsen
   gts_surface_coarsen (in_out_Gts,
       cost_func, cost_data,
@@ -1136,6 +1156,7 @@ int main(int argc, char **argv)
 
   // Output Gazebo mesh
   gazebo::common::Mesh *outGz = new gazebo::common::Mesh();
+  outGz->SetName(inGz->GetName());
   ConvertGtsToGz(in_out_Gts,outGz);
 
   /*** Export as COLLADA ***/
