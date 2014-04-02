@@ -237,13 +237,11 @@ Handle<v8::Value> GZNode::SetPoseMsgFilterMinimumQuaternionSquared(const \
   return scope.Close(Undefined());
 }
 
-Handle<v8::Value> GZNode::SetIsConnected(const \
-    v8::Arguments& args)
+Handle<v8::Value> GZNode::SetIsConnected(const v8::Arguments& args)
 {
   HandleScope scope;
 
   GZNode* obj = ObjectWrap::Unwrap<GZNode>(args.This());
-//  Handle<Boolean> v = Handle<Boolean>::Cast(args[0]);
   bool value = args[0]->BooleanValue();
   obj->gzIface->SetIsConnected(value);
 

@@ -58,9 +58,7 @@ namespace gzweb
       static v8::Handle<v8::Value> SetPoseMsgFilterMinimumQuaternionSquared(\
       const v8::Arguments& args);
 
-    private:
-      static v8::Handle<v8::Value> SetIsConnected(\
-    		  const v8::Arguments& args);
+    private: static v8::Handle<v8::Value> SetIsConnected(const v8::Arguments& args);
 
     private:
       static v8::Handle<v8::Value> GetPoseMsgFilterMinimumQuaternionSquared(\

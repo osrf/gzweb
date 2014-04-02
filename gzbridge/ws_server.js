@@ -100,16 +100,15 @@ setInterval(update, 10);
 
 function update()
 {
-	var msgs;
 	if (connections.length > 0) {
-		msgs = gzconnection.getMessages();
-	}
-
-	for (var i = 0; i < connections.length; ++i)
-	{
-		for (var j = 0; j < msgs.length; ++j)
+		var msgs = gzconnection.getMessages();
+		
+		for (var i = 0; i < connections.length; ++i)
 		{
-			connections[i].sendUTF(msgs[j]);
+			for (var j = 0; j < msgs.length; ++j)
+			{
+				connections[i].sendUTF(msgs[j]);
+			}
 		}
 	}
 }
