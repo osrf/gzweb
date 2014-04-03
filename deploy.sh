@@ -5,9 +5,6 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $DIR
 
-hg pull
-hg up
-
 #
 # build the c++ server component
 #
