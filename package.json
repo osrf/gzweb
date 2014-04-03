@@ -9,11 +9,13 @@
   },
   "scripts":
   {
-    "preinstall": "npm install -g http-server@0.5.5 node-gyp"
   },
   "dependencies":
   {
-    "websocket": ""
+    "websocket": "",
+    "grunt-cli": "",
+    "http-server": "",
+    "node-gyp":""
   }
 }
 

@@ -22,6 +22,11 @@
           ]
         }],
         ['OS=="mac"', {
+          'cflags_cc+': ['-frtti', '-fexceptions'],
+          'libraries': [
+            '-lboost_thread-mt',
+            '<!@(pkg-config --libs-only-l gazebo jansson protobuf)'
+          ],
           'xcode_settings' : {
             'GCC_ENABLE_CPP_RTTI': 'YES',
             'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',

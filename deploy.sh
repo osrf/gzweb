@@ -16,8 +16,8 @@ cmake ..
 make -j 8
 
 cd ../gzbridge
-node-gyp configure
-node-gyp build -d
+$DIR/node_modules/.bin/node-gyp configure
+$DIR/node_modules/.bin/node-gyp build -d
 
 cd $DIR
 
