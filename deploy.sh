@@ -54,7 +54,7 @@ if [ "$1" == "-m" ]; then  # build a local model database
     echo "gather all models on the local machine"
 
     ./get_local_models.py $DIR/http/client/assets
-    ./webify_models.py $DIR/http/client/assets
+    ./webify_models_v2.py $DIR/http/client/assets
 
 
 else

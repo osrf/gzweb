@@ -22,9 +22,7 @@
           ]
         }],
         ['OS=="mac"', {
-          'cflags_cc+': ['-frtti', '-fexceptions'],
           'libraries': [
-            '-lboost_thread-mt',
             '<!@(pkg-config --libs-only-l gazebo jansson protobuf)'
           ],
           'xcode_settings' : {
