@@ -13,6 +13,11 @@ import subprocess
 import sys
 import shutil
 
+# explicitly set encoding in osx otherwise sometimes sed throws
+# an illegal byte sequence error
+if sys.platform == 'darwin':
+  os.environ['LANG'] = 'C'
+
 path = sys.argv[1]
 
 files = os.listdir(path)
@@ -42,7 +47,8 @@ for file in files:
 
       # make sure texture files only exist in materials/textures dir
       texture_dir = path
-      if (texture_dir.find('materials/textures') == -1):
+      if (texture_dir.find('materials/textures') == -1 and
+          texture_dir.find('meshes') != -1):
         model_path, other = texture_dir.split('meshes')
         texture_dir = os.path.join(model_path, 'materials/textures')
         cmd = ['mkdir', '-p', texture_dir]
