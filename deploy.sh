@@ -5,6 +5,9 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $DIR
 
+# Install node modules
+npm install
+
 #
 # build the c++ server component
 #

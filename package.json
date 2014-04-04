@@ -13,7 +13,6 @@
   "dependencies":
   {
     "websocket": "",
-    "grunt-cli": "",
     "http-server": "",
     "node-gyp":""
   }
