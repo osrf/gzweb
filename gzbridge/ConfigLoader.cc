@@ -11,15 +11,22 @@ using namespace gzweb;
 
 void ConfigLoader::loadAllFiles(ConfigLoader* c, const std::string& path)
 {
-	for ( boost::filesystem::recursive_directory_iterator end, dir(path); dir != end; ++dir )
-	{
-		boost::filesystem::path p(*dir);
-		if(p.extension() == c->m_fileEnding)
-		{
-			std::ifstream in((*dir).path().string().c_str(), std::ios::binary);
-			c->parseScript(in);
-		}
-	}
+  try
+  {
+  	for ( boost::filesystem::recursive_directory_iterator end, dir(path); dir != end; ++dir )
+  	{
+  		boost::filesystem::path p(*dir);
+  		if(p.extension() == c->m_fileEnding)
+  		{
+  			std::ifstream in((*dir).path().string().c_str(), std::ios::binary);
+  			c->parseScript(in);
+  		}
+  	}
+  }
+  catch (boost::filesystem::filesystem_error &e)
+  {
+    std::cerr << e.what() << std::endl;
+  }
 }
 
 ConfigLoader::ConfigLoader(const std::string& fileEnding)
