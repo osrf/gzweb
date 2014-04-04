@@ -7,6 +7,13 @@ cd $DIR
 
 ./stop_gzweb.sh
 
+if [ ! -d http/client ]
+then
+  echo "gzweb not initialized, have you run ./deploy.sh yet?"
+  exit
+fi
+
+
 ./node_modules/.bin/http-server http/client &
 
 cd gzbridge
