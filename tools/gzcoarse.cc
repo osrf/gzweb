@@ -212,38 +212,37 @@ void MergeVertices(GPtrArray * _vertices, double _epsilon)
 }
 
 //////////////////////////////////////////////////
-void ConvertGtsToGz(GtsSurface *_surface, gazebo::common::Mesh *_mesh)
+void ConvertGtsToGz(std::vector<GtsSurface *> _gtsSurfaces,
+    gazebo::common::Mesh *_mesh)
 {
-  gazebo::common::SubMesh *subMesh = new gazebo::common::SubMesh();
-  _mesh->AddSubMesh(subMesh);
+  for (unsigned int i = 0; i < _gtsSurfaces.size(); ++i)
+  {
+    GtsSurface *surface = _gtsSurfaces[i];
+    gazebo::common::SubMesh *subMesh = new gazebo::common::SubMesh();
+    _mesh->AddSubMesh(subMesh);
 
-  unsigned int n;
-  gpointer data[3];
-  GHashTable *vIndex = g_hash_table_new(NULL, NULL);
+    unsigned int n;
+    gpointer data[3];
+    GHashTable *vIndex = g_hash_table_new(NULL, NULL);
 
-  n = 0;
-  data[0] = subMesh;
-  data[1] = &n;
-  data[2] = vIndex;
-  n = 0;
-  gts_surface_foreach_vertex(_surface, (GtsFunc)FillVertex, data);
-  n = 0;
-  gts_surface_foreach_face(_surface, (GtsFunc)FillFace, data);
-  g_hash_table_destroy(vIndex);
-
+    n = 0;
+    data[0] = subMesh;
+    data[1] = &n;
+    data[2] = vIndex;
+    n = 0;
+    gts_surface_foreach_vertex(surface, (GtsFunc)FillVertex, data);
+    n = 0;
+    gts_surface_foreach_face(surface, (GtsFunc)FillFace, data);
+    g_hash_table_destroy(vIndex);
+  }
   // Calculate normals
   _mesh->RecalculateNormals();
 }
 
 //////////////////////////////////////////////////
-void ConvertGzToGts(const gazebo::common::Mesh *_mesh, GtsSurface *_surface)
+void ConvertGzToGts(const gazebo::common::Mesh *_mesh,
+    std::vector<GtsSurface *> &_gtsSurfaces)
 {
-  if (!_surface)
-  {
-    gzerr << _mesh->GetName() << ": Surface is NULL\n";
-    return;
-  }
-
   GPtrArray *vertices = g_ptr_array_new();
   for (unsigned int i = 0; i < _mesh->GetSubMeshCount(); ++i)
   {
@@ -261,7 +260,6 @@ void ConvertGzToGts(const gazebo::common::Mesh *_mesh, GtsSurface *_surface)
   }
   MergeVertices(vertices, 1e-7);
 
-  std::vector<GtsSurface *> subSurfaces;
   int baseIndex = 0;
   for (unsigned int i = 0; i < _mesh->GetSubMeshCount(); ++i)
   {
@@ -365,11 +363,11 @@ void ConvertGzToGts(const gazebo::common::Mesh *_mesh, GtsSurface *_surface)
       }
     }
     baseIndex += indexCount;
-    subSurfaces.push_back(subSurface);
+    _gtsSurfaces.push_back(subSurface);
   }
 
-  for (unsigned int i = 0; i < subSurfaces.size(); ++i)
-    gts_surface_merge(_surface, subSurfaces[i]);
+  //for (unsigned int i = 0; i < subSurfaces.size(); ++i)
+  //  gts_surface_merge(_surface, subSurfaces[i]);
 
   //gts_surface_print_stats (_surface, stderr);
   // Destroy duplicate triangles
@@ -409,7 +407,7 @@ static gboolean stop_number_verbose (gdouble cost, guint number, guint * min)
     mins1 = floor ((remaining - 3600.*hours1)/60.);
     secs1 = floor (remaining - 3600.*hours1 - 60.*mins1);
 
-    fprintf (stderr,
+    printf (
 	     "\rEdges: %10u %3.0f%% %6.0f edges/s "
 	     "Elapsed: %02.0f:%02.0f:%02.0f "
 	     "Remaining: %02.0f:%02.0f:%02.0f ",
@@ -1085,79 +1083,99 @@ int main(int argc, char **argv)
 
   //return 0;
 */
-  GtsSurface *in_out_Gts;
-  GNode *tree1;
-  in_out_Gts = gts_surface_new(gts_surface_class(), gts_face_class(), gts_edge_class(),
-      gts_vertex_class());
+  //GtsSurface *in_out_Gts;
+  //GNode *tree1;
+  //in_out_Gts = gts_surface_new(gts_surface_class(), gts_face_class(), gts_edge_class(),
+  //    gts_vertex_class());
+
+  std::vector<GtsSurface *> gtsSurfaces;
 
   // convert Gazebo Mesh to GTS format
-  ConvertGzToGts(inGz, in_out_Gts);
+  ConvertGzToGts(inGz, gtsSurfaces);
+
+  /// for testing
+  //FILE *file = fopen("raw.gts", "wt");
+  //gts_surface_write(in_out_Gts, file);
 
   /*** Do mesh simplification here ***/
 
-  // Number of edges
-  guint edgesBefore = gts_surface_edge_number(in_out_Gts);
-  std::cout << "Edges before: " << edgesBefore << std::endl;
-
-  if (edgesBefore < 300)
+  std::cout << "Simplifying " << inGz->GetName() << std::endl;
+  for (unsigned int i = 0; i < gtsSurfaces.size(); ++i)
   {
-    gzwarn << "There are less than 300 edges. Not simplifying.\n";
-    return -1;
+    GtsSurface *gtsSurface = gtsSurfaces[i];
+
+    // Number of edges
+    guint edgesBefore = gts_surface_edge_number(gtsSurface);
+    std::cout << " Subsurface " << i << ": Edges before: "
+        << edgesBefore << std::endl;
+
+    if (edgesBefore < 300)
+    {
+      std::cout << " Subsurface " << i << " has less than 300 edges. " <<
+          "Not simplifying." << std::endl;
+      continue;
+    }
+
+    // print stats
+    /*gts_surface_print_stats (in_out_Gts, stderr);
+    fprintf (stderr, "# volume: %g area: %g\n",
+    	     gts_surface_volume (in_out_Gts), gts_surface_area (in_out_Gts));*/
+
+    // default cost function COST_OPTIMIZED
+    GtsKeyFunc cost_func = (GtsKeyFunc) gts_volume_optimized_cost;
+    GtsVolumeOptimizedParams params = { 0.5, 0.5, 0. };
+    gpointer cost_data = &params;
+
+    // default coarsen function OPTIMIZED
+    GtsCoarsenFunc coarsen_func = (GtsCoarsenFunc) gts_volume_optimized_vertex;
+    gpointer coarsen_data = &params;
+
+    // set stop to number
+    GtsStopFunc stop_func = (GtsStopFunc) stop_number_verbose;
+    double desiredPercentage = atoi (argv[2]);
+    guint number = edgesBefore * desiredPercentage/100;
+
+    gpointer stop_data = &number;
+
+    // maximum fold angle
+    gdouble fold = PI/180.;
+
+    // coarsen
+    gts_surface_coarsen (gtsSurface,
+        cost_func, cost_data,
+        coarsen_func, coarsen_data,
+        stop_func, stop_data, fold);
+
+    // Number of edges
+    guint edgesAfter = gts_surface_edge_number(gtsSurface);
+    double obtainedPercentage = (double)100*edgesAfter/edgesBefore;
+    std::cout << " Subsurface " << i << ": Edges after: " << edgesAfter <<
+        " (" << obtainedPercentage << "%)" << std::endl;
+
+    if (obtainedPercentage > desiredPercentage*1.5)
+    {
+      std::cout << " Subsurface " << i << " could not be significantly " <<
+        " simplified. Not simplifying." << std::endl;
+    }
+    // stats after coarsening
+    // gts_surface_print_stats (in_out_Gts, stderr);
+    // fprintf (stderr, "# volume: %g area: %g\n",
+    // gts_surface_volume (in_out_Gts), gts_surface_area (in_out_Gts));
+
   }
-
-  // print stats
-  /*gts_surface_print_stats (in_out_Gts, stderr);
-  fprintf (stderr, "# volume: %g area: %g\n",
-  	     gts_surface_volume (in_out_Gts), gts_surface_area (in_out_Gts));*/
-
-  // default cost function COST_OPTIMIZED
-  GtsKeyFunc cost_func = (GtsKeyFunc) gts_volume_optimized_cost;
-  GtsVolumeOptimizedParams params = { 0.5, 0.5, 0. };
-  gpointer cost_data = &params;
-
-  // default coarsen function OPTIMIZED
-  GtsCoarsenFunc coarsen_func = (GtsCoarsenFunc) gts_volume_optimized_vertex;
-  gpointer coarsen_data = &params;
-
-  // set stop to number
-  GtsStopFunc stop_func = (GtsStopFunc) stop_number_verbose;
-  double desiredPercentage = atoi (argv[2]);
-  guint number = edgesBefore * desiredPercentage/100;
-
-  gpointer stop_data = &number;
-
-  // maximum fold angle
-  gdouble fold = PI/180.;
-
-
-  // coarsen
-  gts_surface_coarsen (in_out_Gts,
-      cost_func, cost_data,
-      coarsen_func, coarsen_data,
-      stop_func, stop_data, fold);
-
-  // Number of edges
-  guint edgesAfter = gts_surface_edge_number(in_out_Gts);
-  double obtainedPercentage = (double)100*edgesAfter/edgesBefore;
-  std::cout << std::endl << "Edges after: " << edgesAfter << " (" << obtainedPercentage << "%)" << std::endl;
-
-  if (obtainedPercentage > desiredPercentage*1.5)
-  {
-    std::cout << "It wasn't possible to significantly reduce the mesh. Not simplifying." << std::endl;
-    return 0;
-  }
-
-  // stats after coarsening
-  /*gts_surface_print_stats (in_out_Gts, stderr);
-  fprintf (stderr, "# volume: %g area: %g\n",
-	     gts_surface_volume (in_out_Gts), gts_surface_area (in_out_Gts));*/
 
   /*** End mesh simplification ***/
 
   // Output Gazebo mesh
   gazebo::common::Mesh *outGz = new gazebo::common::Mesh();
   outGz->SetName(inGz->GetName());
-  ConvertGtsToGz(in_out_Gts,outGz);
+  ConvertGtsToGz(gtsSurfaces,outGz);
+
+
+  /// for testing
+  //FILE *file2 = fopen("simplified.gts", "wt");
+  //gts_surface_write(in_out_Gts, file2);
+
 
   /*** Export as COLLADA ***/
 
@@ -1170,7 +1188,8 @@ int main(int argc, char **argv)
   /*** End export as COLLADA ***/
 
   // destroy surfaces
-  gts_object_destroy(GTS_OBJECT(in_out_Gts));
+  for (unsigned int i= 0; i < gtsSurfaces.size(); ++i)
+    gts_object_destroy(GTS_OBJECT(gtsSurfaces[i]));
 
   return 0;
 }
