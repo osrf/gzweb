@@ -403,7 +403,7 @@ namespace gzweb
     private: int messageWindowSize;
     private: int messageCount;
 
-    /// \brief True if there is are client connections
+    /// \brief True if there is a client connection.
     private: bool isConnected;
 
     public: inline void SetPoseFilterMinimumDistanceSquared(double m)
