@@ -179,7 +179,7 @@ GazeboInterface::~GazeboInterface()
     this->runThread->join();
     delete this->runThread;
   }
-  if (this->runThread)
+  if (this->serviceThread)
   {
     this->serviceThread->join();
     delete this->serviceThread;
