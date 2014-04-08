@@ -23,7 +23,6 @@
 #include <boost/unordered/unordered_map.hpp>
 
 #include <gazebo/gazebo.hh>
-#include <iostream>
 
 namespace boost
 {
@@ -77,6 +76,14 @@ namespace gzweb
     /// \brief Load material scripts.
     /// \param[in] _path Path to the material scripts.
     public: void LoadMaterialScripts(const std::string &_path);
+
+    /// \brief Set the connected state
+    /// \param[in] _connected True if there are client connections.
+    public: void SetConnected(bool _connected);
+
+    /// \brief Get the connected state
+    /// \return True if there are client connections.
+    public: bool IsConnected() const;
 
     /// \brief Pack topic publish message.
     private: std::string PackOutgoingTopicMsg(const std::string &_topic,
@@ -147,6 +154,9 @@ namespace gzweb
     /// \param[in] _msg The message data.
     private: void OnResponse(ConstResponsePtr &_msg);
 
+    /// \brief Block if there are no connections.
+    private: void WaitForConnection() const;
+
     /// \brief a pose at a specific time
     typedef std::pair<gazebo::common::Time, gazebo::math::Pose > TimedPose;
 
@@ -154,7 +164,8 @@ namespace gzweb
     /// too old, or too similar
     /// \param[in] _previous The previous pose
     /// \param[in] _current The latest pose
-    bool FilterPoses(const TimedPose &_previous, const TimedPose &_current);
+    private: bool FilterPoses(const TimedPose &_previous,
+        const TimedPose &_current);
 
     /// \brief Incoming messages.
     public: static std::vector<std::string> incoming;
@@ -227,6 +238,12 @@ namespace gzweb
 
     /// \brief Mutex to lock the service request buffer.
     private: boost::recursive_mutex *serviceMutex;
+
+    /// \brief Mutex to protect the isConnected variable.
+    private: boost::mutex *connectionMutex;
+
+    /// \brief The condition to notify when connection state changes.
+    public: boost::condition_variable *connectionCondition;
 
     /// \def ModelMsgs_L
     /// \brief List of model messages.
@@ -386,6 +403,7 @@ namespace gzweb
     private: int messageWindowSize;
     private: int messageCount;
 
+   /// \brief True is there is a client connection
     private: bool isConnected;
 
     public: inline void SetPoseFilterMinimumDistanceSquared(double m)
@@ -415,33 +433,6 @@ namespace gzweb
     public: inline double GetPoseFilterMinimumMsgAge()
     {
       return this->minimumMsgAge;
-    }
-
-    public: inline void SetIsConnected(bool connected)
-    {
-    	//TODO: clear message buffers, or do wee need to clen them
-
-    	isConnected = connected;
-
-    	// activate or deactivate threads
-    	if (!isConnected) {
-    		this->runThread->join();
-    		this->serviceThread->join();
-    		delete this->runThread;
-    		delete this->serviceThread;
-
-    		this->runThread = NULL;
-    		this->serviceThread = NULL;
-
-    		std::cout << "end message threads" << std::endl;
-
-    	} else {
-    		if (this->runThread == NULL && this->serviceThread == NULL) {
-    			this->RunThread();
-    			std::cout << "run message threads" << std::endl;
-    		}
-    	}
-
     }
   };
 }

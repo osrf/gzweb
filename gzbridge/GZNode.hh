@@ -34,35 +34,30 @@ namespace gzweb
 
     private: static v8::Handle<v8::Value> New(const v8::Arguments& args);
 
-    //private: static v8::Handle<v8::Value> PlusOne(const v8::Arguments& args);
-
     private: static v8::Handle<v8::Value> Callback(const v8::Arguments& args);
 
     private: static v8::Handle<v8::Value> Request(const v8::Arguments& args);
 
-    private: static v8::Handle<v8::Value> SetPoseMsgFilterMinimumAge(const \
+    private: static v8::Handle<v8::Value> SetPoseMsgFilterMinimumAge(const
       v8::Arguments& args);
 
-    private: static v8::Handle<v8::Value> GetPoseMsgFilterMinimumAge(const \
+    private: static v8::Handle<v8::Value> GetPoseMsgFilterMinimumAge(const
       v8::Arguments& args);
 
-    private:
-      static v8::Handle<v8::Value> SetPoseMsgFilterMinimumDistanceSquared(\
-      const v8::Arguments& args);
+    private: static v8::Handle<v8::Value>
+        SetPoseMsgFilterMinimumDistanceSquared(const v8::Arguments& args);
 
-    private:
-      static v8::Handle<v8::Value> GetPoseMsgFilterMinimumDistanceSquared(\
-      const v8::Arguments& args);
+    private: static v8::Handle<v8::Value>
+        GetPoseMsgFilterMinimumDistanceSquared(const v8::Arguments& args);
 
-    private:
-      static v8::Handle<v8::Value> SetPoseMsgFilterMinimumQuaternionSquared(\
-      const v8::Arguments& args);
+    private: static v8::Handle<v8::Value>
+        SetPoseMsgFilterMinimumQuaternionSquared(const v8::Arguments& args);
 
-    private: static v8::Handle<v8::Value> SetIsConnected(const v8::Arguments& args);
+    private: static v8::Handle<v8::Value>
+        SetConnected(const v8::Arguments& args);
 
-    private:
-      static v8::Handle<v8::Value> GetPoseMsgFilterMinimumQuaternionSquared(\
-      const v8::Arguments& args);
+    private: static v8::Handle<v8::Value>
+        GetPoseMsgFilterMinimumQuaternionSquared(const v8::Arguments& args);
 
     private: static v8::Handle<v8::Value>
         GetMessages(const v8::Arguments& args);
@@ -70,13 +65,7 @@ namespace gzweb
     private: static v8::Handle<v8::Value>
         LoadMaterialScripts(const v8::Arguments& args);
 
-    //private: double counter_;
-
     private: GazeboInterface* gzIface;
-
-    private: bool connected;
-
-
   };
 }
 

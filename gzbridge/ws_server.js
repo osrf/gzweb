@@ -4,7 +4,7 @@ var WebSocketServer = require('websocket').server;
 var http = require('http');
 
 var connections = [];
-var addon = require('./build/Release/gzbridge');
+var addon = require('./build/Debug/gzbridge');
 var gzconnection = new addon.GZNode();
 gzconnection.loadMaterialScripts('../http/client/assets');
 
@@ -20,7 +20,7 @@ console.log('  minimum XYZ distance squared between successive messages: ' +
 console.log('  minimum Quartenion distance squared between successive messages:'
     + ' ' + gzconnection.getPoseMsgFilterMinimumQuaternionSquared());
 
-var isConnected = false; 
+var isConnected = false;
 
 
 var server = http.createServer(function(request, response) {
@@ -59,40 +59,39 @@ wsServer.on('request', function(request) {
     var connection = request.accept(null, request.origin);
 
     connections.push(connection);
-    
-    if (!isConnected) {
-    	isConnected = true;
-    	gzconnection.setIsConnected(isConnected);
+
+    if (!isConnected)
+    {
+      isConnected = true;
+      gzconnection.setConnected(isConnected);
     }
 
     console.log((new Date()) + ' Connection accepted.');
     connection.on('message', function(message) {
-    	
-        if (message.type === 'utf8') {
-            console.log('Received Message: ' + message.utf8Data + ' from ' +
-                request.origin + ' ' + connection.remoteAddress);
-            gzconnection.request(message.utf8Data);
-        }
-        else if (message.type === 'binary') {
-            console.log('Received Binary Message of ' +
-                message.binaryData.length + ' bytes');
-            connection.sendBytes(message.binaryData);
-        }
+      if (message.type === 'utf8') {
+        console.log('Received Message: ' + message.utf8Data + ' from ' +
+            request.origin + ' ' + connection.remoteAddress);
+        gzconnection.request(message.utf8Data);
+      }
+      else if (message.type === 'binary') {
+        console.log('Received Binary Message of ' +
+            message.binaryData.length + ' bytes');
+        connection.sendBytes(message.binaryData);
+      }
     });
     connection.on('close', function(reasonCode, description) {
         console.log((new Date()) + ' Peer ' + connection.remoteAddress +
             ' disconnected.');
-        
-        // remove connection from array
-        var conIndex = connections.indexOf(connection);
-        connections.splice(conIndex, 1);
-        
-        // if there is no connection notify server that there is no connected client
-        if (connections.length == 0) {
-        	isConnected = false;
-	        gzconnection.setIsConnected(isConnected);
-	    }
-        
+
+      // remove connection from array
+      var conIndex = connections.indexOf(connection);
+      connections.splice(conIndex, 1);
+
+      // if there is no connection notify server that there is no connected client
+      if (connections.length == 0) {
+        isConnected = false;
+        gzconnection.setConnected(isConnected);
+      }
     });
 });
 
@@ -100,15 +99,15 @@ setInterval(update, 10);
 
 function update()
 {
-	if (connections.length > 0) {
-		var msgs = gzconnection.getMessages();
-		
-		for (var i = 0; i < connections.length; ++i)
-		{
-			for (var j = 0; j < msgs.length; ++j)
-			{
-				connections[i].sendUTF(msgs[j]);
-			}
-		}
-	}
+  if (connections.length > 0) {
+    var msgs = gzconnection.getMessages();
+
+    for (var i = 0; i < connections.length; ++i)
+    {
+      for (var j = 0; j < msgs.length; ++j)
+      {
+        connections[i].sendUTF(msgs[j]);
+      }
+    }
+  }
 }
