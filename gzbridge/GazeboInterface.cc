@@ -150,6 +150,7 @@ GazeboInterface::GazeboInterface()
 /////////////////////////////////////////////////
 GazeboInterface::~GazeboInterface()
 {
+  this->Fini();
   this->node->Fini();
 
   this->modelMsgs.clear();
@@ -172,6 +173,17 @@ GazeboInterface::~GazeboInterface()
   this->lightPub.reset();
   this->responseSub.reset();
   this->node.reset();
+
+  if (this->runThread)
+  {
+    this->runThread->join();
+    delete this->runThread;
+  }
+  if (this->runThread)
+  {
+    this->serviceThread->join();
+    delete this->serviceThread;
+  }
 
   delete this->receiveMutex;
   delete this->serviceMutex;
