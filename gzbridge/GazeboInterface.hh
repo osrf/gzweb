@@ -77,6 +77,14 @@ namespace gzweb
     /// \param[in] _path Path to the material scripts.
     public: void LoadMaterialScripts(const std::string &_path);
 
+    /// \brief Set the connected state
+    /// \param[in] _connected True if there are client connections.
+    public: void SetConnected(bool _connected);
+
+    /// \brief Get the connected state
+    /// \return True if there are client connections.
+    public: bool IsConnected() const;
+
     /// \brief Pack topic publish message.
     private: std::string PackOutgoingTopicMsg(const std::string &_topic,
         const std::string &_msg);
@@ -146,6 +154,9 @@ namespace gzweb
     /// \param[in] _msg The message data.
     private: void OnResponse(ConstResponsePtr &_msg);
 
+    /// \brief Block if there are no connections.
+    private: void WaitForConnection() const;
+
     /// \brief a pose at a specific time
     typedef std::pair<gazebo::common::Time, gazebo::math::Pose > TimedPose;
 
@@ -153,7 +164,8 @@ namespace gzweb
     /// too old, or too similar
     /// \param[in] _previous The previous pose
     /// \param[in] _current The latest pose
-    bool FilterPoses(const TimedPose &_previous, const TimedPose &_current);
+    private: bool FilterPoses(const TimedPose &_previous,
+        const TimedPose &_current);
 
     /// \brief Incoming messages.
     public: static std::vector<std::string> incoming;
@@ -226,6 +238,12 @@ namespace gzweb
 
     /// \brief Mutex to lock the service request buffer.
     private: boost::recursive_mutex *serviceMutex;
+
+    /// \brief Mutex to protect the isConnected variable.
+    private: boost::mutex *connectionMutex;
+
+    /// \brief The condition to notify when connection state changes.
+    public: boost::condition_variable *connectionCondition;
 
     /// \def ModelMsgs_L
     /// \brief List of model messages.
@@ -384,6 +402,9 @@ namespace gzweb
     private: int skippedMsgCount;
     private: int messageWindowSize;
     private: int messageCount;
+
+    /// \brief True if there is are client connections
+    private: bool isConnected;
 
     public: inline void SetPoseFilterMinimumDistanceSquared(double m)
     {

@@ -75,22 +75,27 @@ void GZNode::Init(Handle<Object> exports)
     		  GetPoseMsgFilterMinimumDistanceSquared)->GetFunction());
 
   tpl->PrototypeTemplate()->Set(
-		  String::NewSymbol("setPoseMsgFilterMinimumDistanceSquared"),
+      String::NewSymbol("setPoseMsgFilterMinimumDistanceSquared"),
       FunctionTemplate::New(
-    		  SetPoseMsgFilterMinimumDistanceSquared)->GetFunction());
+          SetPoseMsgFilterMinimumDistanceSquared)->GetFunction());
 
   tpl->PrototypeTemplate()->Set(
-		  String::NewSymbol("getPoseMsgFilterMinimumQuaternionSquared"),
+      String::NewSymbol("getPoseMsgFilterMinimumQuaternionSquared"),
       FunctionTemplate::New(
-    	  GetPoseMsgFilterMinimumQuaternionSquared)->GetFunction());
+          GetPoseMsgFilterMinimumQuaternionSquared)->GetFunction());
 
   tpl->PrototypeTemplate()->Set(
-		  String::NewSymbol("setPoseMsgFilterMinimumQuaternionSquared"),
+      String::NewSymbol("setPoseMsgFilterMinimumQuaternionSquared"),
       FunctionTemplate::New(
-    	  SetPoseMsgFilterMinimumQuaternionSquared)->GetFunction());
+          SetPoseMsgFilterMinimumQuaternionSquared)->GetFunction());
 
-    Persistent<Function> constructor =
+  tpl->PrototypeTemplate()->Set(String::NewSymbol("setConnected"),
+      FunctionTemplate::New(
+          SetConnected)->GetFunction());
+
+  Persistent<Function> constructor =
       Persistent<Function>::New(tpl->GetFunction());
+
   exports->Set(String::NewSymbol("GZNode"), constructor);
 }
 
@@ -195,7 +200,7 @@ Handle<v8::Value> GZNode::GetPoseMsgFilterMinimumAge(const \
 }
 
 /////////////////////////////////////////////////
-Handle<v8::Value> GZNode::SetPoseMsgFilterMinimumDistanceSquared(const \
+Handle<v8::Value> GZNode::SetPoseMsgFilterMinimumDistanceSquared(const
     v8::Arguments& args)
 {
   HandleScope scope;
@@ -209,7 +214,7 @@ Handle<v8::Value> GZNode::SetPoseMsgFilterMinimumDistanceSquared(const \
 }
 
 /////////////////////////////////////////////////
-Handle<v8::Value> GZNode::GetPoseMsgFilterMinimumDistanceSquared(const \
+Handle<v8::Value> GZNode::GetPoseMsgFilterMinimumDistanceSquared(const
     v8::Arguments& args)
 {
   HandleScope scope;
@@ -219,7 +224,7 @@ Handle<v8::Value> GZNode::GetPoseMsgFilterMinimumDistanceSquared(const \
 }
 
 /////////////////////////////////////////////////
-Handle<v8::Value> GZNode::SetPoseMsgFilterMinimumQuaternionSquared(const \
+Handle<v8::Value> GZNode::SetPoseMsgFilterMinimumQuaternionSquared(const
     v8::Arguments& args)
 {
   HandleScope scope;
@@ -233,7 +238,19 @@ Handle<v8::Value> GZNode::SetPoseMsgFilterMinimumQuaternionSquared(const \
 }
 
 /////////////////////////////////////////////////
-Handle<v8::Value> GZNode::GetPoseMsgFilterMinimumQuaternionSquared(const \
+Handle<v8::Value> GZNode::SetConnected(const v8::Arguments& args)
+{
+  HandleScope scope;
+
+  GZNode *obj = ObjectWrap::Unwrap<GZNode>(args.This());
+  bool value = args[0]->BooleanValue();
+  obj->gzIface->SetConnected(value);
+
+  return scope.Close(Undefined());
+}
+
+/////////////////////////////////////////////////
+Handle<v8::Value> GZNode::GetPoseMsgFilterMinimumQuaternionSquared(const
     v8::Arguments& args)
 {
   HandleScope scope;
