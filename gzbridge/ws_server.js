@@ -20,6 +20,8 @@ console.log('  minimum XYZ distance squared between successive messages: ' +
 console.log('  minimum Quartenion distance squared between successive messages:'
     + ' ' + gzconnection.getPoseMsgFilterMinimumQuaternionSquared());
 
+var isConnected = false;
+
 
 var server = http.createServer(function(request, response) {
     console.log((new Date()) + ' Received request for ' + request.url);
@@ -58,23 +60,38 @@ wsServer.on('request', function(request) {
 
     connections.push(connection);
 
+    if (!isConnected)
+    {
+      isConnected = true;
+      gzconnection.setConnected(isConnected);
+    }
+
     console.log((new Date()) + ' Connection accepted.');
     connection.on('message', function(message) {
-        if (message.type === 'utf8') {
-            console.log('Received Message: ' + message.utf8Data + ' from ' +
-                request.origin + ' ' + connection.remoteAddress);
-            gzconnection.request(message.utf8Data);
-        }
-        else if (message.type === 'binary') {
-            console.log('Received Binary Message of ' +
-                message.binaryData.length + ' bytes');
-            connection.sendBytes(message.binaryData);
-        }
+      if (message.type === 'utf8') {
+        console.log('Received Message: ' + message.utf8Data + ' from ' +
+            request.origin + ' ' + connection.remoteAddress);
+        gzconnection.request(message.utf8Data);
+      }
+      else if (message.type === 'binary') {
+        console.log('Received Binary Message of ' +
+            message.binaryData.length + ' bytes');
+        connection.sendBytes(message.binaryData);
+      }
     });
     connection.on('close', function(reasonCode, description) {
         console.log((new Date()) + ' Peer ' + connection.remoteAddress +
             ' disconnected.');
-        // gzlient.remove_connection();
+
+      // remove connection from array
+      var conIndex = connections.indexOf(connection);
+      connections.splice(conIndex, 1);
+
+      // if there is no connection notify server that there is no connected client
+      if (connections.length == 0) {
+        isConnected = false;
+        gzconnection.setConnected(isConnected);
+      }
     });
 });
 
@@ -82,12 +99,15 @@ setInterval(update, 10);
 
 function update()
 {
-  var msgs = gzconnection.getMessages();
-  for (var i = 0; i < connections.length; ++i)
-  {
-    for (var j = 0; j < msgs.length; ++j)
+  if (connections.length > 0) {
+    var msgs = gzconnection.getMessages();
+
+    for (var i = 0; i < connections.length; ++i)
     {
-      connections[i].sendUTF(msgs[j]);
+      for (var j = 0; j < msgs.length; ++j)
+      {
+        connections[i].sendUTF(msgs[j]);
+      }
     }
- }
+  }
 }
