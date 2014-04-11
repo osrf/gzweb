@@ -12,6 +12,11 @@ import subprocess
 import sys
 import shutil
 
+print "**************************************"
+print "* 'webify_models.py' is deprecated.  *"
+print "* Use 'webify_models_v2.py' instead. *"
+print "**************************************"
+
 path = sys.argv[1]
 
 files = os.listdir(path)

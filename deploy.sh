@@ -5,8 +5,8 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $DIR
 
-hg pull
-hg up
+# Install node modules
+npm install
 
 #
 # build the c++ server component
@@ -19,8 +19,8 @@ cmake ..
 make -j 8
 
 cd ../gzbridge
-node-gyp configure
-node-gyp build -d
+$DIR/node_modules/.bin/node-gyp configure
+$DIR/node_modules/.bin/node-gyp build -d
 
 cd $DIR
 
@@ -57,7 +57,7 @@ if [ "$1" == "-m" ]; then  # build a local model database
     echo "gather all models on the local machine"
 
     ./get_local_models.py $DIR/http/client/assets
-    ./webify_models.py $DIR/http/client/assets
+    ./webify_models_v2.py $DIR/http/client/assets
 
 
 else

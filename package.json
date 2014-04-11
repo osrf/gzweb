@@ -9,11 +9,12 @@
   },
   "scripts":
   {
-    "preinstall": "npm install -g http-server@0.5.5 node-gyp"
   },
   "dependencies":
   {
-    "websocket": ""
+    "websocket": "",
+    "http-server": "",
+    "node-gyp":""
   }
 }
 
