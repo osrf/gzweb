@@ -692,6 +692,8 @@ THREE.OrbitControls = function ( object, domElement ) {
         if ( scope.enabled === false ) { return; }
 
         state = STATE.NONE;
+        scope.noPan = false;
+        scope.noZoom = false;
     }
 
     this.domElement.addEventListener( 'contextmenu', function ( event ) { event.preventDefault(); }, false );
