@@ -230,6 +230,26 @@ GZ3D.Scene.prototype.onKeyDown = function(event)
   {
     this.effectsEnabled = !this.effectsEnabled;
   }
+
+  // Esc/R/T for changing manipulation modes
+  if (event.keyCode === 27) // Esc
+  {
+    this.setManipulationMode('view');
+    $( '#view-mode' ).click();
+    $('input[type="radio"]').checkboxradio('refresh');
+  }
+  if (event.keyCode === 82) // R
+  {
+    this.setManipulationMode('rotate');
+    $( '#rotate-mode' ).click();
+    $('input[type="radio"]').checkboxradio('refresh');
+  }
+  if (event.keyCode === 84) // T
+  {
+    this.setManipulationMode('translate');
+    $( '#translate-mode' ).click();
+    $('input[type="radio"]').checkboxradio('refresh');
+  }
 };
 
 GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)

@@ -3,11 +3,10 @@
   <head>
     <title>gz3d</title>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-    <link rel="stylesheet" href="style/jquery-ui/jquery-ui.css"/>
-    <link rel="stylesheet" href="style/gz3d.css"/>
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0, initial-scale=1.0">
+    <link rel="stylesheet" href="style/jquery-mobile/jquery.mobile-1.4.0.css" />
     <script src="js/include/jquery-1.9.1.js"></script>
-    <script src="js/include/jquery-ui.js"></script>
+    <script src="js/include/jquery.mobile-1.4.0.min.js"></script>
     <script src="js/include/three.js"></script>
     <script src="js/include/OrbitControls.js"></script>
     <script src="js/include/TransformControls.js"></script>
@@ -25,65 +24,40 @@
     <script src="gz3d.js"></script>
 
     <style>
-      body {
-        color: #000;
-        font-family:Monospace;
-        font-size:13px;
-        text-align:center;
-        font-weight: bold;
-
-        background-color: #fff;
-        margin: 0px;
-        overflow: hidden;
+      .ui-content{
+        overflow:hidden;
       }
-
-      #toolbar-manipulate {
-        padding: 3px;
-        display: inline-block;
-        float: right;
-      }
-      /* support: IE7 */
-      *+html #toolbar-manipulate {
-        display: inline-block;
-        float: right;
-      }
-
-      #toolbar-shapes {
-        padding: 1px;
-        display: inline-block;
-        float: right;
-      }
-      /* support: IE7 */
-      *+html #toolbar-shapes {
-        display: inline-block;
-        float: right;
-      }
-
-      #toolbar-play {
-        padding: 1px;
-        display: inline-block;
-
-      }
-      /* support: IE7 */
-      *+html #toolbar-play {
-        display: inline-block;
-      }
-
-      #menu {
-        float: left;
-        display: inline-block;
-      }
-
-      #world-stats {
-        display: inline-block;
-        vertical-align: middle;
-      }
-
       #container {
-        position: static
+        padding: 0px;
+        position : absolute;
+        top: 0px;
+        bottom: 0px;
+        right: 0px;
+        left: 0px;
+      }
+      .insertItem {
+        line-height: 40px;
+        border-style:solid;
+        border-width:1px;
+        border-color:#242424;
+        background-color:#333333;
+        font-size:13px;
+      }
+      @media (min-width:35em) {
+        /* disable "dismiss" on wide viewports */
+        .ui-panel-dismiss {
+          display: none;
+        }
+      }
+      .collapsible_header {
+        font-size: 15px;
+      }
+      .collapsible_item {
+        font-size: 13px;
       }
     </style>
   </head>
+
   <script id="heightmapVS" type="x-shader/x-vertex">
     varying vec2 vUv;
     varying vec3 vPosition;
@@ -165,74 +139,93 @@
   </script>
 
   <body>
-    <div>
-      <ul id='menu'>
-        <li>
-          <a href='#'>Edit</a>
-          <ul>
-            <li id='reset-world'><a href='#'>Reset World</a></li>
-            <li id='reset-model'><a href='#'>Reset Model Poses</a></li>
-          </ul>
-        </li>
-        <li>
-          <a href='#'>View</a>
-          <ul>
-            <li id='view-collisions'><a href='#'>View Collisions</a></li>
-          </ul>
-        </li>
-      </ul>
+    <div data-role="page" data-theme="b" data-content-theme="c">
+
+      <!-- panel -->
+      <div data-role="panel" id="leftPanel" data-display="overlay" data-swipe-close="false">
+        <ul data-role="listview" data-theme="b">
+          <li data-icon="delete"><a href="#" data-rel="close" title="Close Menu"></a></li>
+          <li data-role="list-divider">Menu</li>
+          <li data-role="list-divider"></li>
+        </ul>
+        <div data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
+            <h3><span class="collapsible_header">Edit</span></h3>
+            <ul data-role="listview">
+              <li id='reset-world' data-icon="false"><a href="#"><span class="collapsible_item">Reset World</span></a></li>
+              <li id='reset-model' data-icon="false"><a href="#"><span class="collapsible_item">Reset Model Poses</span></a></li>
+            </ul>
+        </div>
+        <div data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
+            <h3><span class="collapsible_header">View</span></h3>
+            <ul data-role="listview">
+              <li id='view-collisions' data-icon="false" data-iconpos="right" style="border: none !important;"><a href="#"><span class="collapsible_item">Collisions</span></a></li>
+            </ul>
+        </div>
+        <div data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
+            <h3><span class="collapsible_header">Insert</span></h3>
+            <ul data-role="listview">
+              <li id="box" data-icon="false" class="insertItem"><a href="#"><span class="collapsible_item">Box</span></a></li>
+              <li id="sphere" data-icon="false" class="insertItem" style="border: none !important;"><a href="#"><span class="collapsible_item">Sphere</span></a></li>
+              <li id="cylinder" data-icon="false" class="insertItem"><a href="#"><span class="collapsible_item">Cylinder</span></a></li>
+            </ul>
+        </div>
+      </div>
+      <!-- panel -->
+
+      <!-- header -->
+      <fieldset style="position:absolute;left:0.5em;top:0em;z-index:1000;">
+        <a href="#leftPanel" data-role="button" style="height:1.45em;padding:0.65em;"><img style="height:1.45em" src="style/images/bars.png" title="Menu"></a>
+      </fieldset>
+
+      <fieldset style="position:absolute;right:32.4em;top:0em;z-index:1000;">
+        <a href="#" data-role="button" style="float:left;height:1.45em;padding:0.65em;" id="play"><span id="playText"><img style="height:1.45em" src="style/images/play.png" title="Play"></span></a>
+      </fieldset>
+
+      <fieldset id="clock-popup" style="position:absolute;right:19.5em;top:0.5em;z-index:100;width:12em;height:2.5em;background-color:#333333;padding:3px;border-radius: 5px;">
+        &nbsp;Real Time: <span id='real-time-value'>00 00:00:00</span><br>
+        &nbsp;&nbsp;Sim Time: <span id='sim-time-value'>00 00:00:00</span>
+      </fieldset>
+
+      <fieldset data-role="controlgroup" data-mini="true" data-type="horizontal" style="position:absolute;right:12.6em;top:0.15em;z-index:1000;">
+        <input type="radio" name="radio-mini" id="view-mode" value="choice-1" checked="checked" />
+        <label for="view-mode"><img style="height:1.8em" src="style/images/arrow.png" title="View Mode (ESC)"></label>
+
+        <input type="radio" name="radio-mini" id="translate-mode" value="choice-2"  />
+        <label for="translate-mode"><img style="height:1.8em" src="style/images/translate.png" title="Translation Mode (T)"></label>
+
+        <input type="radio" name="radio-mini" id="rotate-mode" value="choice-3"  />
+        <label for="rotate-mode"><img style="height:1.8em" src="style/images/rotate.png" title="Rotation Mode (R)"></label>
+      </fieldset>
+
+      <fieldset style="position:absolute;right:6.5em;top:0em;z-index:1000;">
+        <a href="#" data-role="button" style="float:left;height:1.45em;padding:0.65em;" id="box-header"><span><img style="height:1.45em;" src="style/images/box.png" title="Insert box"></span></a>
+      </fieldset>
+      <fieldset style="position:absolute;right:3.5em;top:0em;z-index:1000;">
+        <a href="#" data-role="button" style="float:left;height:1.45em;padding:0.65em;" id="sphere-header"><span><img style="height:1.45em" src="style/images/sphere.png" title="Insert sphere"></span></a>
+      </fieldset>
+      <fieldset style="position:absolute;right:0.5em;top:0em;z-index:1000;">
+        <a href="#" data-role="button" style="float:left;height:1.45em;padding:0.65em;" id="cylinder-header"><span><img style="height:1.45em" src="style/images/cylinder.png" title="Insert cylinder"></span></a>
+      </fieldset>
+      <!-- header -->
+
+      <!-- content -->
+      <div data-role="content" id="container">
+      </div>
+      <!-- content -->
     </div>
-    <script>
-      $( "#menu" ).menu({
-          position: {at: "left bottom"}
-        });
-    </script>
+    <!-- page -->
 
-    <div id='toolbar' class='ui-widget-content'>
-      <div id="toolbar-play" >
-        <button id="play">Play</button>
-      </div>
-
-      <div id='world-stats'>
-        <table>
-          <tr>
-            <td>Sim Time: </td>
-            <td id='sim-time-value'>00 00:00:00</td>
-            <td>&nbsp;</td>
-            <td>Real Time: </td>
-            <td id='real-time-value'>00 00:00:00</td>
-          </tr>
-        </table>
-      </div>
-
-      <div id='toolbar-shapes'>
-        <button id="box">Add Box</button>
-        <button id="sphere">Add Sphere</button>
-        <button id="cylinder">Add Cylinder</button>
-      </div>
-
-      <div id='toolbar-manipulate'>
-        <input type='radio' id='arrow' name='radio' checked='checked' />
-            <label for='arrow' />View Mode</label>
-        <input type='radio' id='translate' name='radio'>
-            <label for='translate' />Translate Mode</label>
-        <input type='radio' id='rotate' name='radio'>
-            <label for='rotate' />Rotate Mode</label>
-      </div>
-
-      <div class"clear"></div>
-    </div>
-    <div id="container"></div>
-
-
+    <!-- WebGL -->
     <script>
       if (!Detector.webgl)
         Detector.addGetWebGLMessage();
 
       var container, stats;
       var scene;
-      var cross;
-      var visuals = {};
+
+      // Container dimensions
+      window.containerHeight = window.innerHeight;
+      window.containerWidth = window.innerWidth;
 
       init();
       animate();
@@ -246,18 +239,21 @@
         container = document.getElementById( 'container' );
         container.appendChild(scene.getDomElement());
 
+        // FPS indicator
         stats = new Stats();
         stats.domElement.style.position = 'absolute';
-        stats.domElement.style.bottom = '0px';
+        stats.domElement.style.top = '0px';
         stats.domElement.style.zIndex = 100;
-        container.appendChild( stats.domElement );
+        //container.appendChild( stats.domElement );
 
         window.addEventListener( 'resize', onWindowResize, false);
       }
 
       function onWindowResize()
       {
-        scene.setWindowSize(window.innerWidth, window.innerHeight);
+        window.containerHeight = window.innerHeight;
+        window.containerWidth = window.innerWidth;
+        scene.setWindowSize(window.containerWidth, window.containerHeight);
       }
 
       function animate()
@@ -269,7 +265,7 @@
       function render()
       {
         scene.render();
-        stats.update();
+        //stats.update();
       }
     </script>
 

@@ -7,202 +7,222 @@ var GZ3D = GZ3D || {
 
 var guiEvents = new EventEmitter2({ verbose: true });
 
-$(function() {
-  $( '#toolbar-shapes' ).buttonset();
-  $( '#toolbar-manipulate' ).buttonset();
+// Bind events to buttons
+$(function()
+{
+  //Initialize
+  // Toggle items unchecked
+  $('#view-collisions').buttonMarkup({icon: 'false'});
 
-  $( '#arrow' ).button({
-    text: false,
-    icons: {
-      primary: 'toolbar-arrow'
-    }
-  })
-  .click(function() {
-    guiEvents.emit('manipulation_mode', 'view');
-  });
+  // Panel starts open for wide screens
+  if ($(window).width() / parseFloat($('body').css('font-size')) > 35)
+  {
+    $('#leftPanel').panel('open');
+  }
 
-  $( '#translate' ).button({
-    text: false,
-    icons: {
-      primary: 'toolbar-translate'
-    }
-  })
-  .click(function() {
-    guiEvents.emit('manipulation_mode', 'translate');
-  });
-
-  $( '#rotate' ).button({
-    text: false,
-    icons: {
-      primary: 'toolbar-rotate'
-    }
-  })
-  .click(function() {
-    guiEvents.emit('manipulation_mode', 'rotate');
-  });
-
-  $( '#box' ).button({
-    text: false,
-    icons: {
-      primary: 'toolbar-box'
-    }
-  })
-  .click(function() {
-    guiEvents.emit('entity_create', 'box');
-  });
-
-  $( '#sphere' ).button({
-    text: false,
-    icons: {
-      primary: 'toolbar-sphere'
-    }
-  })
-  .click(function() {
-    guiEvents.emit('entity_create', 'sphere');
-  });
-
-  $( '#cylinder' ).button({
-    text: false,
-    icons: {
-      primary: 'toolbar-cylinder'
-    }
-  })
-  .click(function() {
-    guiEvents.emit('entity_create', 'cylinder');
-  });
-
-  $( '#play' ).button({
-    text: false,
-    icons: {
-      primary: 'ui-icon-play'
-    }
-  })
-  .click(function() {
-    var options;
-    if ( $( this ).text() === 'Play' )
-    {
-      guiEvents.emit('pause', false);
-    } else
-    {
-      guiEvents.emit('pause', true);
-    }
-  });
+  // Clicks/taps
+  $('#view-mode').click(function()
+      {
+        guiEvents.emit('manipulation_mode', 'view');
+      });
+  $('#translate-mode').click(function()
+      {
+        guiEvents.emit('manipulation_mode', 'translate');
+      });
+  $('#rotate-mode').click(function()
+      {
+        guiEvents.emit('manipulation_mode', 'rotate');
+      });
+  $('#box').click(function()
+      {
+        guiEvents.emit('close_panel');
+        guiEvents.emit('spawn_entity_start', 'box');
+      });
+  $('#sphere').click(function()
+      {
+        guiEvents.emit('close_panel');
+        guiEvents.emit('spawn_entity_start', 'sphere');
+      });
+  $('#cylinder').click(function()
+      {
+        guiEvents.emit('close_panel');
+        guiEvents.emit('spawn_entity_start', 'cylinder');
+      });
+  $('#box-header').click(function()
+      {
+        guiEvents.emit('close_panel');
+        guiEvents.emit('spawn_entity_start', 'box');
+      });
+  $('#sphere-header').click(function()
+      {
+        guiEvents.emit('close_panel');
+        guiEvents.emit('spawn_entity_start', 'sphere');
+      });
+  $('#cylinder-header').click(function()
+      {
+        guiEvents.emit('close_panel');
+        guiEvents.emit('spawn_entity_start', 'cylinder');
+      });
+  $('#play').click(function()
+      {
+        if ( $('#playText').html().indexOf('Play') !== -1 )
+        {
+          guiEvents.emit('pause', false);
+        }
+        else
+        {
+          guiEvents.emit('pause', true);
+        }
+      });
+  $('#reset-model').click(function()
+      {
+        guiEvents.emit('model_reset');
+        guiEvents.emit('close_panel');
+      });
+  $('#reset-world').click(function()
+      {
+        guiEvents.emit('world_reset');
+        guiEvents.emit('close_panel');
+      });
+  $('#view-collisions').click(function()
+      {
+        guiEvents.emit('show_collision');
+        guiEvents.emit('close_panel');
+      });
+  // Disable Esc key to close panel
+  $('body').on('keyup', function(event)
+      {
+        if (event.which === 27)
+        {
+          return false;
+        }
+      });
 });
 
-$(function() {
-  $( '#menu' ).menu();
-  $( '#reset-model' )
-  .click(function() {
-    guiEvents.emit('model_reset');
-  });
-  $( '#reset-world' )
-  .click(function() {
-    guiEvents.emit('world_reset');
-  });
-  $( '#view-collisions' )
-  .click(function() {
-    guiEvents.emit('show_collision');
-  });
-});
-
+/**
+ * Graphical user interface
+ * @constructor
+ * @param {GZ3D.Scene} scene - A scene to connect to
+ */
 GZ3D.Gui = function(scene)
 {
   this.scene = scene;
   this.domElement = scene.getDomElement();
   this.init();
-  this.emitter = new EventEmitter2({ verbose: true });
+  this.emitter = new EventEmitter2({verbose: true});
 };
 
+/**
+ * Initialize GUI
+ */
 GZ3D.Gui.prototype.init = function()
 {
   this.spawnModel = new GZ3D.SpawnModel(
       this.scene, this.scene.getDomElement());
+  this.spawnState = null;
 
   var that = this;
-  guiEvents.on('entity_create',
-      function (entity)
-      {
-        // manually trigger arrow mode
-        var arrow = $('#arrow');
-        arrow.click();
-        arrow[0].checked = true;
-        arrow.button('refresh');
 
-        that.spawnModel.start(entity,
-            function(obj)
+  // On guiEvents, emitter events
+  guiEvents.on('manipulation_mode',
+      function(mode)
+      {
+        that.scene.setManipulationMode(mode);
+      }
+  );
+
+  // Create temp model
+  guiEvents.on('spawn_entity_start',
+      function(entity)
+      {
+        // manually trigger view mode
+        that.scene.setManipulationMode('view');
+        $('#view-mode').prop('checked', true);
+        $('input[type="radio"]').checkboxradio('refresh');
+        that.spawnState = 'START';
+        that.spawnModel.start(entity,function(obj)
             {
               that.emitter.emit('entityCreated', obj, entity);
             });
       }
   );
 
-  guiEvents.on('world_reset',
-      function ()
+  guiEvents.on('world_reset', function()
       {
         that.emitter.emit('reset', 'world');
       }
   );
 
-  guiEvents.on('model_reset',
-      function ()
+  guiEvents.on('model_reset', function()
       {
         that.emitter.emit('reset', 'model');
       }
   );
 
-  guiEvents.on('pause',
-      function (paused)
+  guiEvents.on('pause', function(paused)
       {
         that.emitter.emit('pause', paused);
       }
   );
 
-  guiEvents.on('manipulation_mode',
-      function (mode)
+  guiEvents.on('show_collision', function()
       {
-        that.scene.setManipulationMode(mode);
+        that.scene.showCollision(!that.scene.showCollisions);
+        if(!that.scene.showCollisions)
+        {
+          $('#view-collisions').buttonMarkup({icon: 'false'});
+        }
+        else
+        {
+          $('#view-collisions').buttonMarkup({icon: 'check'});
+        }
       }
   );
 
-  guiEvents.on('show_collision',
-      function ()
+  guiEvents.on('close_panel', function()
       {
-        that.scene.showCollision(!that.scene.showCollisions);
+        if ($(window).width() / parseFloat($('body').css('font-size')) < 35)
+        {
+          $('#leftPanel').panel('close');
+        }
       }
   );
 };
 
+/**
+ * Play/pause simulation
+ * @param {boolean} paused
+ */
 GZ3D.Gui.prototype.setPaused = function(paused)
 {
-  var options;
   if (paused)
   {
-    options =
-    {
-      label: 'Play',
-      icons: { primary: 'ui-icon-play' }
-    };
+    $('#playText').html(
+        '<img style="height:1.2em" src="style/images/play.png" title="Play">');
   }
   else
   {
-    options =
-    {
-      label: 'Pause',
-      icons: { primary: 'ui-icon-pause' }
-    };
+    $('#playText').html(
+        '<img style="height:1.2em" src="style/images/pause.png" title="Pause">');
   }
-  $('#play').button('option', options);
 };
 
+/**
+ * Update displayed real time
+ * @param {string} realTime
+ */
 GZ3D.Gui.prototype.setRealTime = function(realTime)
 {
   $('#real-time-value').text(realTime);
 };
 
+/**
+ * Update displayed simulation time
+ * @param {string} simTime
+ */
 GZ3D.Gui.prototype.setSimTime = function(simTime)
 {
   $('#sim-time-value').text(simTime);
- // console.log(simTime);
 };
 
 //var GAZEBO_MODEL_DATABASE_URI='http://gazebosim.org/models';
@@ -1626,6 +1646,26 @@ GZ3D.Scene.prototype.onKeyDown = function(event)
   if (event.keyCode === 113)
   {
     this.effectsEnabled = !this.effectsEnabled;
+  }
+
+  // Esc/R/T for changing manipulation modes
+  if (event.keyCode === 27) // Esc
+  {
+    this.setManipulationMode('view');
+    $( '#view-mode' ).click();
+    $('input[type="radio"]').checkboxradio('refresh');
+  }
+  if (event.keyCode === 82) // R
+  {
+    this.setManipulationMode('rotate');
+    $( '#rotate-mode' ).click();
+    $('input[type="radio"]').checkboxradio('refresh');
+  }
+  if (event.keyCode === 84) // T
+  {
+    this.setManipulationMode('translate');
+    $( '#translate-mode' ).click();
+    $('input[type="radio"]').checkboxradio('refresh');
   }
 };
 
