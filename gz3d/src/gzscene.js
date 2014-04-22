@@ -77,8 +77,17 @@ GZ3D.Scene.prototype.init = function()
   this.getDomElement().addEventListener( 'touchend',
       function(event) {that.onPointerUp(event);}, false );
 
-  this.modelManipulator = new THREE.TransformControls(this.camera,
+  // Handles for translating and rotating objects
+  if (this.isTouchDevice)
+  {
+    this.modelManipulator = new GZ3D.Manipulator(this.camera,
       this.getDomElement());
+  }
+  else
+  {
+    this.modelManipulator = new THREE.TransformControls(this.camera,
+      this.getDomElement());
+  }
 
   this.controls = new THREE.OrbitControls(this.camera);
 
@@ -381,14 +390,14 @@ GZ3D.Scene.prototype.render = function()
   // Kill camera control when:
   // -spawning
   // -manipulating
-  if (!this.killCameraControl)
+  if (this.killCameraControl || this.modelManipulator.hovered)
   {
-    this.controls.enabled = true;
+    this.controls.enabled = false;
     this.controls.update();
   }
   else
   {
-    this.controls.enabled = false;
+    this.controls.enabled = true;
     this.controls.update();
   }
 
