@@ -1585,17 +1585,27 @@ GZ3D.GZIface.prototype.parseMaterial = function(material)
 };
 */
 
+/**
+ * The scene is where everything is placed, from objects, to lights and cameras.
+ * @constructor
+ */
 GZ3D.Scene = function()
 {
   this.init();
 };
 
+/**
+ * Initialize scene
+ */
 GZ3D.Scene.prototype.init = function()
 {
   this.name = 'default';
   this.scene = new THREE.Scene();
   // this.scene.name = this.name;
   this.meshes = {};
+
+  this.isTouchDevice = 'ontouchstart' in window // works on most browsers
+      || 'onmsgesturechange' in window; // works on ie10
 
   // only support one heightmap for now.
   this.heightmap = null;
@@ -1628,16 +1638,14 @@ GZ3D.Scene.prototype.init = function()
   this.showCollisions = false;
 
   var that = this;
-  this.getDomElement().addEventListener( 'mousedown',
-      function(event) {that.onMouseDown(event);}, false );
 
   // Need to use `document` instead of getDomElement in order to get events
   // outside the webgl div element.
   document.addEventListener( 'mouseup',
-      function(event) {that.onMouseUp(event);}, false );
+      function(event) {that.onPointerUp(event);}, false );
 
   this.getDomElement().addEventListener( 'mouseup',
-      function(event) {that.onMouseUp(event);}, false );
+      function(event) {that.onPointerUp(event);}, false );
 
   this.getDomElement().addEventListener( 'DOMMouseScroll',
       function(event) {that.onMouseScroll(event);}, false ); //firefox
@@ -1648,6 +1656,13 @@ GZ3D.Scene.prototype.init = function()
   document.addEventListener( 'keydown',
       function(event) {that.onKeyDown(event);}, false );
 
+  this.getDomElement().addEventListener( 'mousedown',
+      function(event) {that.onPointerDown(event);}, false );
+  this.getDomElement().addEventListener( 'touchstart',
+      function(event) {that.onPointerDown(event);}, false );
+
+  this.getDomElement().addEventListener( 'touchend',
+      function(event) {that.onPointerUp(event);}, false );
 
   this.modelManipulator = new THREE.TransformControls(this.camera,
       this.getDomElement());
@@ -1686,7 +1701,11 @@ GZ3D.Scene.prototype.init = function()
 
 };
 
-GZ3D.Scene.prototype.onMouseDown = function(event)
+/**
+ * Window event callback
+ * @param {} event - click or tap events (select/deselect models and manipulators)
+ */
+GZ3D.Scene.prototype.onPointerDown = function(event)
 {
   event.preventDefault();
 
@@ -1767,8 +1786,11 @@ GZ3D.Scene.prototype.onMouseDown = function(event)
   }
 };
 
-
-GZ3D.Scene.prototype.onMouseUp = function(event)
+/**
+ * Window event callback
+ * @param {} event - mouseup or touchend events
+ */
+GZ3D.Scene.prototype.onPointerUp = function(event)
 {
   event.preventDefault();
 
@@ -1776,11 +1798,13 @@ GZ3D.Scene.prototype.onMouseUp = function(event)
   this.mouseEntity = null;
 };
 
+/**
+ * Window event callback
+ * @param {} event - mousescroll event
+ */
 GZ3D.Scene.prototype.onMouseScroll = function(event)
 {
   event.preventDefault();
-
-  this.controls.enabled = true;
 
   var pos = new THREE.Vector2(event.clientX, event.clientY);
 
@@ -1793,6 +1817,10 @@ GZ3D.Scene.prototype.onMouseScroll = function(event)
   }
 };
 
+/**
+ * Window event callback
+ * @param {} event - keydown events
+ */
 GZ3D.Scene.prototype.onKeyDown = function(event)
 {
   if (event.shiftKey)
@@ -1800,7 +1828,6 @@ GZ3D.Scene.prototype.onKeyDown = function(event)
     // + and - for zooming
     if (event.keyCode === 187 || event.keyCode === 189)
     {
-      this.controls.enabled = true;
       var pos = new THREE.Vector2(window.innerWidth/2.0,
           window.innerHeight/2.0);
 
@@ -1850,6 +1877,13 @@ GZ3D.Scene.prototype.onKeyDown = function(event)
   }
 };
 
+/**
+ * Check if there's a model immediately under canvas coordinate 'pos'
+ * @param {THREE.Vector2} pos - Canvas coordinates
+ * @param {THREE.Vector3} intersect - Empty at input,
+ * contains point of intersection in 3D world coordinates at output
+ * @returns {THREE.Object3D} model - Intercepted model closest to the camera
+ */
 GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
 {
   var projector = new THREE.Projector();
@@ -2654,6 +2688,10 @@ GZ3D.Scene.prototype.setManipulationMode = function(mode)
   if (mode === 'view')
   {
     this.killCameraControl = false;
+    if (this.modelManipulator.object)
+    {
+      this.emitter.emit('poseChanged', this.modelManipulator.object);
+    }
     this.modelManipulator.detach();
     this.scene.remove(this.modelManipulator.gizmo);
   }
@@ -2661,6 +2699,7 @@ GZ3D.Scene.prototype.setManipulationMode = function(mode)
   {
     this.modelManipulator.mode = this.manipulationMode;
     this.modelManipulator.setMode( this.modelManipulator.mode );
+    this.killCameraControl = false;
   }
 
 };
@@ -2699,10 +2738,6 @@ GZ3D.Scene.prototype.attachManipulator = function(model,mode)
   if (this.modelManipulator.object)
   {
     this.emitter.emit('poseChanged', this.modelManipulator.object);
-  }
-  if (this.modelManipulator.object !== model)
-  {
-    this.hideBoundingBox();
   }
 
   this.modelManipulator.attach(model);

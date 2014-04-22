@@ -408,7 +408,12 @@ THREE.OrbitControls = function ( object, domElement ) {
 
     function onMouseMove( event ) {
 
-        if ( scope.enabled === false ) return;
+        if ( scope.enabled === false )
+        {
+          scope.domElement.removeEventListener( 'mousemove', onMouseMove, false );
+          scope.domElement.removeEventListener( 'mouseup', onMouseUp, false );
+          return;
+        }
 
         event.preventDefault();
 
