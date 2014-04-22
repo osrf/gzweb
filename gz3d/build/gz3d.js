@@ -14,13 +14,166 @@ $(function()
   // Toggle items unchecked
   $('#view-collisions').buttonMarkup({icon: 'false'});
 
+  $( '#clock-touch' ).popup('option', 'arrow', 't');
+
   // Panel starts open for wide screens
   if ($(window).width() / parseFloat($('body').css('font-size')) > 35)
   {
     $('#leftPanel').panel('open');
   }
 
-  // Clicks/taps
+  // Clicks/taps// Touch devices
+  if ('ontouchstart' in window || 'onmsgesturechange' in window)
+  {
+    // swipe icon
+    $('#box').html('<b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Box</b><div style="float: right;">'+
+        '<img src="style/images/box.png" style="vertical-align:middle;">'+
+        '<img src="style/images/swipe.png" style="vertical-align:middle; margin-left:1em;"></div>');
+    $('#sphere').html('<b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sphere</b><div style="float: right;">'+
+        '<img src="style/images/sphere.png" style="vertical-align:middle;">'+
+        '<img src="style/images/swipe.png" style="vertical-align:middle; margin-left:1em;"></div>');
+    $('#cylinder').html('<b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Cylinder</b><div style="float: right;">'+
+        '<img src="style/images/cylinder.png" style="vertical-align:middle;">'+
+        '<img src="style/images/swipe.png" style="vertical-align:middle; margin-left:1em;"></div>');
+
+    // touchstart
+    $( '#box' ).bind('touchstart',function(event) {
+      guiEvents.emit('close_panel');
+      guiEvents.emit('spawn_entity_start', 'box');
+      event.stopPropagation();
+    });
+    $( '#sphere' ).bind('touchstart',function(event) {
+      guiEvents.emit('close_panel');
+      guiEvents.emit('spawn_entity_start', 'sphere');
+      event.stopPropagation();
+    });
+    $( '#cylinder' ).bind('touchstart',function(event) {
+      guiEvents.emit('close_panel');
+      guiEvents.emit('spawn_entity_start', 'cylinder');
+      event.stopPropagation();
+    });
+    // touchmove
+    $( '#box' ).bind('touchmove',function(event) {
+      guiEvents.emit('spawn_entity_move', event);
+      event.stopPropagation();
+    });
+    $( '#sphere' ).bind('touchmove',function(event) {
+      guiEvents.emit('spawn_entity_move', event);
+      event.stopPropagation();
+    });
+    $( '#cylinder' ).bind('touchmove',function(event) {
+      guiEvents.emit('spawn_entity_move', event);
+      event.stopPropagation();
+    });
+    // touchend
+    $( '#box' ).bind('touchend',function() {
+      guiEvents.emit('spawn_entity_end');
+    });
+    $( '#sphere' ).bind('touchend',function() {
+      guiEvents.emit('spawn_entity_end');
+    });
+    $( '#cylinder' ).bind('touchend',function() {
+      guiEvents.emit('spawn_entity_end');
+    });
+
+    $('#play-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '13.2em')
+        .css('top', '0em')
+        .css('z-index', '1000');
+
+    $('#clock-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '9.9em')
+        .css('top', '0em')
+        .css('z-index', '1000');
+
+    $('#clock-mouse')
+        .css('visibility','hidden');
+
+    $('#mode-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '0.5em')
+        .css('top', '0.15em')
+        .css('z-index', '1000');
+
+    $('#box-header-fieldset')
+        .css('visibility','hidden');
+
+    $('#sphere-header-fieldset')
+        .css('visibility','hidden');
+
+    $('#cylinder-header-fieldset')
+        .css('visibility','hidden');
+  }
+  // Mouse devices
+  else
+  {
+    $( '#box' ).click(function() {
+      guiEvents.emit('close_panel');
+      guiEvents.emit('spawn_entity_start', 'box');
+    });
+
+    $( '#sphere' ).click(function() {
+      guiEvents.emit('close_panel');
+      guiEvents.emit('spawn_entity_start', 'sphere');
+    });
+
+    $( '#cylinder' ).click(function() {
+      guiEvents.emit('close_panel');
+      guiEvents.emit('spawn_entity_start', 'cylinder');
+    });
+
+    $('#clock-header-fieldset')
+        .css('visibility','hidden');
+
+    $('#play-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '32.4em')
+        .css('top', '0em')
+        .css('z-index', '1000');
+
+    $('#clock-mouse')
+        .css('position', 'absolute')
+        .css('right', '19.5em')
+        .css('top', '0.5em')
+        .css('z-index', '100')
+        .css('width', '12em')
+        .css('height', '2.5em')
+        .css('background-color', '#333333')
+        .css('padding', '3px')
+        .css('border-radius', '5px');
+
+    $('#mode-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '12.6em')
+        .css('top', '0.15em')
+        .css('z-index', '1000');
+
+    $('#box-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '6.5em')
+        .css('top', '0em')
+        .css('z-index', '1000');
+
+    $('#sphere-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '3.5em')
+        .css('top', '0em')
+        .css('z-index', '1000');
+
+    $('#cylinder-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '0.5em')
+        .css('top', '0em')
+        .css('z-index', '1000');
+  }
+
+  $('.header-button')
+      .css('float', 'left')
+      .css('height', '1.45em')
+      .css('padding', '0.65em');
+
   $('#view-mode').click(function()
       {
         guiEvents.emit('manipulation_mode', 'view');
@@ -32,21 +185,6 @@ $(function()
   $('#rotate-mode').click(function()
       {
         guiEvents.emit('manipulation_mode', 'rotate');
-      });
-  $('#box').click(function()
-      {
-        guiEvents.emit('close_panel');
-        guiEvents.emit('spawn_entity_start', 'box');
-      });
-  $('#sphere').click(function()
-      {
-        guiEvents.emit('close_panel');
-        guiEvents.emit('spawn_entity_start', 'sphere');
-      });
-  $('#cylinder').click(function()
-      {
-        guiEvents.emit('close_panel');
-        guiEvents.emit('spawn_entity_start', 'cylinder');
       });
   $('#box-header').click(function()
       {
@@ -74,6 +212,21 @@ $(function()
           guiEvents.emit('pause', true);
         }
       });
+  $('#clock').click(function()
+      {
+        if ($.mobile.activePage.find('#clock-touch').parent().hasClass('ui-popup-active'))
+        {
+          $( '#clock-touch' ).popup('close');
+        }
+        else
+        {
+          var position = $('#clock').offset();
+          $('#clock-touch').popup('open', {
+              x:position.left+1.6*parseFloat($('body').css('font-size')),
+              y:4*parseFloat($('body').css('font-size'))});
+        }
+      });
+
   $('#reset-model').click(function()
       {
         guiEvents.emit('model_reset');
@@ -132,8 +285,7 @@ GZ3D.Gui.prototype.init = function()
   );
 
   // Create temp model
-  guiEvents.on('spawn_entity_start',
-      function(entity)
+  guiEvents.on('spawn_entity_start', function(entity)
       {
         // manually trigger view mode
         that.scene.setManipulationMode('view');
@@ -144,6 +296,24 @@ GZ3D.Gui.prototype.init = function()
             {
               that.emitter.emit('entityCreated', obj, entity);
             });
+      }
+  );
+
+  // Move temp model by touch
+  guiEvents.on('spawn_entity_move', function(event)
+      {
+        that.spawnState = 'MOVE';
+        that.spawnModel.onTouchMove(event,false);
+      }
+  );
+  // Place temp model by touch
+  guiEvents.on('spawn_entity_end', function()
+      {
+        if (that.spawnState === 'MOVE')
+        {
+          that.spawnModel.onTouchEnd();
+        }
+        that.spawnState = null;
       }
   );
 
@@ -213,7 +383,7 @@ GZ3D.Gui.prototype.setPaused = function(paused)
  */
 GZ3D.Gui.prototype.setRealTime = function(realTime)
 {
-  $('#real-time-value').text(realTime);
+  $('.real-time-value').text(realTime);
 };
 
 /**
@@ -222,7 +392,7 @@ GZ3D.Gui.prototype.setRealTime = function(realTime)
  */
 GZ3D.Gui.prototype.setSimTime = function(simTime)
 {
-  $('#sim-time-value').text(simTime);
+  $('.sim-time-value').text(simTime);
 };
 
 //var GAZEBO_MODEL_DATABASE_URI='http://gazebosim.org/models';
@@ -1445,6 +1615,7 @@ GZ3D.Scene.prototype.init = function()
   this.ambient = new THREE.AmbientLight( 0x666666 );
   this.scene.add(this.ambient);
 
+  // camera
   this.camera = new THREE.PerspectiveCamera(
       60, window.innerWidth / window.innerHeight, 0.1, 1000 );
   this.camera.position.x = 0;
@@ -1452,6 +1623,7 @@ GZ3D.Scene.prototype.init = function()
   this.camera.position.z = 5;
   this.camera.up = new THREE.Vector3(0, 0, 1);
   this.camera.lookAt(0, 0, 0);
+  this.killCameraControl = false;
 
   this.showCollisions = false;
 
@@ -1518,10 +1690,25 @@ GZ3D.Scene.prototype.onMouseDown = function(event)
 {
   event.preventDefault();
 
-  this.controls.enabled = true;
+  var pointer;
+  if (event.touches)
+  {
+    // Cancel in case of multitouch
+    if (event.touches.length !== 1)
+    {
+      return;
+    }
+    pointer = event.touches[ 0 ];
+  }
+  else
+  {
+    pointer = event;
+  }
 
-  var pos = new THREE.Vector2(event.clientX, event.clientY);
+  // X-Y coordinates of where mouse clicked
+  var pos = new THREE.Vector2(pointer.clientX, pointer.clientY);
 
+  // See if there's a model on the direction of the click
   var intersect = new THREE.Vector3();
   var model = this.getRayCastModel(pos, intersect);
 
@@ -1530,50 +1717,53 @@ GZ3D.Scene.prototype.onMouseDown = function(event)
     this.controls.target = intersect;
   }
 
+  // View mode
   if (this.manipulationMode === 'view')
   {
+    this.killCameraControl = false;
     return;
   }
 
+  // Manipulation modes
+  // Model found
   if (model)
   {
-    // console.log('found model ' + model.name );
+    // Do nothing to the floor plane
     if (model.name === 'plane')
     {
       this.killCameraControl = false;
     }
+    // Do not attach manipulator to itself
+    else if (this.modelManipulator.pickerNames.indexOf(model.name) >= 0)
+    {
+      this.killCameraControl = false;
+    }
+    // Attach manipulator to model
     else if (model.name !== '')
     {
-      // console.log('attached ' + model.name);
-      this.modelManipulator.attach(model);
-      this.modelManipulator.mode = this.manipulationMode;
-      this.modelManipulator.setMode( this.modelManipulator.mode );
-
-      this.selectedEntity = model;
-      this.mouseEntity = this.selectedEntity;
-      this.scene.add(this.modelManipulator.gizmo);
-      this.killCameraControl = true;
+      if (model.parent === this.scene)
+      {
+        this.attachManipulator(model, this.manipulationMode);
+      }
     }
+    // Manipulator pickers, for mouse
     else if (this.modelManipulator.hovered)
     {
-      // console.log('hovered ' + this.modelManipulator.object.name);
       this.modelManipulator.update();
       this.modelManipulator.object.updateMatrixWorld();
       this.mouseEntity = this.selectedEntity;
       this.killCameraControl = true;
     }
+    // Sky
     else
     {
       this.killCameraControl = false;
     }
   }
+  // Plane from below, for example
   else
   {
-    // console.log('detached');
-    this.modelManipulator.detach();
-    this.scene.remove(this.modelManipulator.gizmo);
     this.killCameraControl = false;
-    this.selectedEntity = null;
   }
 };
 
@@ -1582,16 +1772,7 @@ GZ3D.Scene.prototype.onMouseUp = function(event)
 {
   event.preventDefault();
 
-  this.controls.enabled = true;
-
-  if (this.modelManipulator.hovered && this.selectedEntity)
-  {
-    this.emitter.emit('poseChanged', this.modelManipulator.object);
-  }
-  else if (this.killCameraControl)
-  {
-    this.killCameraControl = false;
-  }
+  // The mouse is not holding anything
   this.mouseEntity = null;
 };
 
@@ -1750,6 +1931,9 @@ GZ3D.Scene.prototype.getDomElement = function()
 
 GZ3D.Scene.prototype.render = function()
 {
+  // Kill camera control when:
+  // -spawning
+  // -manipulating
   if (!this.killCameraControl)
   {
     this.controls.enabled = true;
@@ -1758,6 +1942,7 @@ GZ3D.Scene.prototype.render = function()
   else
   {
     this.controls.enabled = false;
+    this.controls.update();
   }
 
   this.modelManipulator.update();
@@ -2509,6 +2694,31 @@ GZ3D.Scene.prototype.showCollision = function(show)
 
 };
 
+GZ3D.Scene.prototype.attachManipulator = function(model,mode)
+{
+  if (this.modelManipulator.object)
+  {
+    this.emitter.emit('poseChanged', this.modelManipulator.object);
+  }
+  if (this.modelManipulator.object !== model)
+  {
+    this.hideBoundingBox();
+  }
+
+  this.modelManipulator.attach(model);
+  this.modelManipulator.mode = mode;
+  this.modelManipulator.setMode( this.modelManipulator.mode );
+
+  this.selectedEntity = model;
+  this.mouseEntity = this.selectedEntity;
+  this.scene.add(this.modelManipulator.gizmo);
+  this.killCameraControl = false;
+};
+
+/**
+ * Spawn a model into the scene
+ * @constructor
+ */
 GZ3D.SpawnModel = function(scene, domElement)
 {
   this.scene = scene;
@@ -2518,6 +2728,9 @@ GZ3D.SpawnModel = function(scene, domElement)
   this.callback = undefined;
 };
 
+/**
+ * Initialize SpawnModel
+ */
 GZ3D.SpawnModel.prototype.init = function()
 {
   this.plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
@@ -2527,12 +2740,21 @@ GZ3D.SpawnModel.prototype.init = function()
   this.active = false;
 };
 
+/**
+ * Start spawning an entity. Only simple shapes supported so far.
+ * Adds a temp object to the scene which is not registered on the server.
+ * @param {string} entity
+ * @param {function} callback
+ */
 GZ3D.SpawnModel.prototype.start = function(entity, callback)
 {
   if (this.active)
   {
     this.finish();
   }
+
+  // Kill camera controls
+  this.scene.killCameraControl  = true;
 
   this.callback = callback;
 
@@ -2554,7 +2776,14 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
     this.obj.name = 'unit_cylinder_' + (new Date()).getTime();
   }
 
+  // temp model appears within current view
+  var pos = new THREE.Vector2(window.window.innerWidth/2, window.innerHeight/2);
+  var intersect = new THREE.Vector3();
+  this.scene.getRayCastModel(pos, intersect);
+
   this.obj.add(mesh);
+  this.obj.position.x = intersect.x;
+  this.obj.position.y = intersect.y;
   this.obj.position.z += 0.5;
   this.scene.add(this.obj);
 
@@ -2564,18 +2793,31 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
   this.mouseUp = function(event) {that.onMouseUp(event);};
   this.mouseMove = function(event) {that.onMouseMove(event);};
   this.keyDown = function(event) {that.onKeyDown(event);};
+  this.touchMove = function(event) {that.onTouchMove(event,true);};
+  this.touchEnd = function(event) {that.onTouchEnd(event);};
 
   this.domElement.addEventListener('mousedown', that.mouseDown, false);
   this.domElement.addEventListener( 'mouseup', that.mouseUp, false);
   this.domElement.addEventListener( 'mousemove', that.mouseMove, false);
   document.addEventListener( 'keydown', that.keyDown, false);
 
+  this.domElement.addEventListener( 'touchmove', that.touchMove, false);
+  this.domElement.addEventListener( 'touchend', that.touchEnd, false);
+
   this.active = true;
+
 };
 
+/**
+ * Finish spawning an entity: re-enable camera controls,
+ * remove listeners, remove temp object
+ */
 GZ3D.SpawnModel.prototype.finish = function()
 {
+  // Re-enable camera controls
+  this.scene.killCameraControl = false;
   var that = this;
+
   this.domElement.removeEventListener( 'mousedown', that.mouseDown, false);
   this.domElement.removeEventListener( 'mouseup', that.mouseUp, false);
   this.domElement.removeEventListener( 'mousemove', that.mouseMove, false);
@@ -2586,12 +2828,23 @@ GZ3D.SpawnModel.prototype.finish = function()
   this.active = false;
 };
 
+/**
+ * Window event callback
+ * @param {} event - not yet
+ */
 GZ3D.SpawnModel.prototype.onMouseDown = function(event)
 {
+  // Does this ever get called?
+  // Change like this:
+  // https://bitbucket.org/osrf/gzweb/pull-request/14/switch-to-arrow-mode-when-spawning-models/diff
   event.preventDefault();
   event.stopImmediatePropagation();
 };
 
+/**
+ * Window event callback
+ * @param {} event - mousemove events
+ */
 GZ3D.SpawnModel.prototype.onMouseMove = function(event)
 {
   if (!this.active)
@@ -2601,16 +2854,57 @@ GZ3D.SpawnModel.prototype.onMouseMove = function(event)
 
   event.preventDefault();
 
-  var vector = new THREE.Vector3( (event.clientX / window.innerWidth) * 2 - 1,
-      -(event.clientY / window.innerHeight) * 2 + 1, 0.5);
-  this.projector.unprojectVector(vector, this.scene.camera);
-  this.ray.set(this.scene.camera.position,
-      vector.sub(this.scene.camera.position).normalize());
-  var point = this.ray.intersectPlane(this.plane);
-  point.z = this.obj.position.z;
-  this.scene.setPose(this.obj, point, new THREE.Quaternion());
+  this.moveSpawnedModel(event.clientX,event.clientY);
 };
 
+/**
+ * Window event callback
+ * @param {} event - touchmove events
+ */
+GZ3D.SpawnModel.prototype.onTouchMove = function(event,originalEvent)
+{
+  if (!this.active)
+  {
+    return;
+  }
+
+  var e;
+
+  if (originalEvent)
+  {
+    e = event;
+  }
+  else
+  {
+    e = event.originalEvent;
+  }
+  e.preventDefault();
+
+  if (e.touches.length === 1)
+  {
+    this.moveSpawnedModel(e.touches[ 0 ].pageX,e.touches[ 0 ].pageY);
+  }
+};
+
+/**
+ * Window event callback
+ * @param {} event - touchend events
+ */
+GZ3D.SpawnModel.prototype.onTouchEnd = function()
+{
+  if (!this.active)
+  {
+    return;
+  }
+
+  this.callback(this.obj);
+  this.finish();
+};
+
+/**
+ * Window event callback
+ * @param {} event - mousedown events
+ */
 GZ3D.SpawnModel.prototype.onMouseUp = function(event)
 {
   if (!this.active)
@@ -2622,10 +2916,31 @@ GZ3D.SpawnModel.prototype.onMouseUp = function(event)
   this.finish();
 };
 
+/**
+ * Window event callback
+ * @param {} event - keydown events
+ */
 GZ3D.SpawnModel.prototype.onKeyDown = function(event)
 {
   if ( event.keyCode === 27 ) // Esc
   {
     this.finish();
   }
+};
+
+/**
+ * Move temp spawned model
+ * @param {integer} positionX - Horizontal position on the canvas
+ * @param {integer} positionY - Vertical position on the canvas
+ */
+GZ3D.SpawnModel.prototype.moveSpawnedModel = function(positionX,positionY)
+{
+  var vector = new THREE.Vector3( (positionX / window.containerWidth) * 2 - 1,
+        -(positionY / window.containerHeight) * 2 + 1, 0.5);
+  this.projector.unprojectVector(vector, this.scene.camera);
+  this.ray.set(this.scene.camera.position,
+      vector.sub(this.scene.camera.position).normalize());
+  var point = this.ray.intersectPlane(this.plane);
+  point.z = this.obj.position.z;
+  this.scene.setPose(this.obj, point, new THREE.Quaternion());
 };

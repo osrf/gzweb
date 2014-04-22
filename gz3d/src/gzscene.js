@@ -28,6 +28,7 @@ GZ3D.Scene.prototype.init = function()
   this.ambient = new THREE.AmbientLight( 0x666666 );
   this.scene.add(this.ambient);
 
+  // camera
   this.camera = new THREE.PerspectiveCamera(
       60, window.innerWidth / window.innerHeight, 0.1, 1000 );
   this.camera.position.x = 0;
@@ -35,6 +36,7 @@ GZ3D.Scene.prototype.init = function()
   this.camera.position.z = 5;
   this.camera.up = new THREE.Vector3(0, 0, 1);
   this.camera.lookAt(0, 0, 0);
+  this.killCameraControl = false;
 
   this.showCollisions = false;
 
@@ -101,10 +103,25 @@ GZ3D.Scene.prototype.onMouseDown = function(event)
 {
   event.preventDefault();
 
-  this.controls.enabled = true;
+  var pointer;
+  if (event.touches)
+  {
+    // Cancel in case of multitouch
+    if (event.touches.length !== 1)
+    {
+      return;
+    }
+    pointer = event.touches[ 0 ];
+  }
+  else
+  {
+    pointer = event;
+  }
 
-  var pos = new THREE.Vector2(event.clientX, event.clientY);
+  // X-Y coordinates of where mouse clicked
+  var pos = new THREE.Vector2(pointer.clientX, pointer.clientY);
 
+  // See if there's a model on the direction of the click
   var intersect = new THREE.Vector3();
   var model = this.getRayCastModel(pos, intersect);
 
@@ -113,50 +130,53 @@ GZ3D.Scene.prototype.onMouseDown = function(event)
     this.controls.target = intersect;
   }
 
+  // View mode
   if (this.manipulationMode === 'view')
   {
+    this.killCameraControl = false;
     return;
   }
 
+  // Manipulation modes
+  // Model found
   if (model)
   {
-    // console.log('found model ' + model.name );
+    // Do nothing to the floor plane
     if (model.name === 'plane')
     {
       this.killCameraControl = false;
     }
+    // Do not attach manipulator to itself
+    else if (this.modelManipulator.pickerNames.indexOf(model.name) >= 0)
+    {
+      this.killCameraControl = false;
+    }
+    // Attach manipulator to model
     else if (model.name !== '')
     {
-      // console.log('attached ' + model.name);
-      this.modelManipulator.attach(model);
-      this.modelManipulator.mode = this.manipulationMode;
-      this.modelManipulator.setMode( this.modelManipulator.mode );
-
-      this.selectedEntity = model;
-      this.mouseEntity = this.selectedEntity;
-      this.scene.add(this.modelManipulator.gizmo);
-      this.killCameraControl = true;
+      if (model.parent === this.scene)
+      {
+        this.attachManipulator(model, this.manipulationMode);
+      }
     }
+    // Manipulator pickers, for mouse
     else if (this.modelManipulator.hovered)
     {
-      // console.log('hovered ' + this.modelManipulator.object.name);
       this.modelManipulator.update();
       this.modelManipulator.object.updateMatrixWorld();
       this.mouseEntity = this.selectedEntity;
       this.killCameraControl = true;
     }
+    // Sky
     else
     {
       this.killCameraControl = false;
     }
   }
+  // Plane from below, for example
   else
   {
-    // console.log('detached');
-    this.modelManipulator.detach();
-    this.scene.remove(this.modelManipulator.gizmo);
     this.killCameraControl = false;
-    this.selectedEntity = null;
   }
 };
 
@@ -165,16 +185,7 @@ GZ3D.Scene.prototype.onMouseUp = function(event)
 {
   event.preventDefault();
 
-  this.controls.enabled = true;
-
-  if (this.modelManipulator.hovered && this.selectedEntity)
-  {
-    this.emitter.emit('poseChanged', this.modelManipulator.object);
-  }
-  else if (this.killCameraControl)
-  {
-    this.killCameraControl = false;
-  }
+  // The mouse is not holding anything
   this.mouseEntity = null;
 };
 
@@ -333,6 +344,9 @@ GZ3D.Scene.prototype.getDomElement = function()
 
 GZ3D.Scene.prototype.render = function()
 {
+  // Kill camera control when:
+  // -spawning
+  // -manipulating
   if (!this.killCameraControl)
   {
     this.controls.enabled = true;
@@ -341,6 +355,7 @@ GZ3D.Scene.prototype.render = function()
   else
   {
     this.controls.enabled = false;
+    this.controls.update();
   }
 
   this.modelManipulator.update();
@@ -1090,4 +1105,25 @@ GZ3D.Scene.prototype.showCollision = function(show)
   }
   this.showCollisions = show;
 
+};
+
+GZ3D.Scene.prototype.attachManipulator = function(model,mode)
+{
+  if (this.modelManipulator.object)
+  {
+    this.emitter.emit('poseChanged', this.modelManipulator.object);
+  }
+  if (this.modelManipulator.object !== model)
+  {
+    this.hideBoundingBox();
+  }
+
+  this.modelManipulator.attach(model);
+  this.modelManipulator.mode = mode;
+  this.modelManipulator.setMode( this.modelManipulator.mode );
+
+  this.selectedEntity = model;
+  this.mouseEntity = this.selectedEntity;
+  this.scene.add(this.modelManipulator.gizmo);
+  this.killCameraControl = false;
 };
