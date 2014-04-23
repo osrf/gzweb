@@ -78,16 +78,16 @@ GZ3D.Scene.prototype.init = function()
       function(event) {that.onPointerUp(event);}, false );
 
   // Handles for translating and rotating objects
-  //if (this.isTouchDevice)
+  if (this.isTouchDevice)
   {
-    this.modelManipulator = new GZ3D.Manipulator(this.camera,
+    this.modelManipulator = new GZ3D.Manipulator(this.camera, true,
       this.getDomElement());
   }
-  /*else
+  else
   {
-    this.modelManipulator = new THREE.TransformControls(this.camera,
+    this.modelManipulator = new GZ3D.Manipulator(this.camera, false,
       this.getDomElement());
-  }*/
+  }
 
   this.controls = new THREE.OrbitControls(this.camera);
 
