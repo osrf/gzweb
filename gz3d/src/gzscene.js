@@ -80,12 +80,12 @@ GZ3D.Scene.prototype.init = function()
   // Handles for translating and rotating objects
   if (this.isTouchDevice)
   {
-    this.modelManipulator = new GZ3D.Manipulator(this.camera,
+    this.modelManipulator = new GZ3D.Manipulator(this.camera, true,
       this.getDomElement());
   }
   else
   {
-    this.modelManipulator = new THREE.TransformControls(this.camera,
+    this.modelManipulator = new GZ3D.Manipulator(this.camera, false,
       this.getDomElement());
   }
 
