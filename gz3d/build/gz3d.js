@@ -1595,7 +1595,7 @@ GZ3D.GZIface.prototype.parseMaterial = function(material)
  * Manipulator to perform translate and rotate transforms on objects within the scene.
  * @constructor
  */
-GZ3D.Manipulator = function ( camera, domElement, doc )
+GZ3D.Manipulator = function ( camera, domElement, doc, mobile )
 {
   // Needs camera for perspective
   this.camera = camera;
@@ -1603,6 +1603,9 @@ GZ3D.Manipulator = function ( camera, domElement, doc )
   // For mouse/key/touch events
   this.domElement = ( domElement !== undefined ) ? domElement : document;
   this.document = ( doc !== undefined ) ? doc : document;
+
+  // Mobile / desktop
+  this.mobile = ( mobile !== undefined ) ? mobile : false;
 
   // Object to be manipulated
   this.object = undefined;
@@ -1649,113 +1652,130 @@ GZ3D.Manipulator = function ( camera, domElement, doc )
   var unitY = new THREE.Vector3( 0, 1, 0 );
   var unitZ = new THREE.Vector3( 0, 0, 1 );
 
-    var quaternionXYZ = new THREE.Quaternion();
-    var quaternionX = new THREE.Quaternion();
-    var quaternionY = new THREE.Quaternion();
-    var quaternionZ = new THREE.Quaternion();
+  var quaternionXYZ = new THREE.Quaternion();
+  var quaternionX = new THREE.Quaternion();
+  var quaternionY = new THREE.Quaternion();
+  var quaternionZ = new THREE.Quaternion();
 
-    var oldPosition = new THREE.Vector3();
-    var oldRotationMatrix = new THREE.Matrix4();
+  var oldPosition = new THREE.Vector3();
+  var oldRotationMatrix = new THREE.Matrix4();
 
-    var parentRotationMatrix  = new THREE.Matrix4();
-    var parentScale = new THREE.Vector3();
+  var parentRotationMatrix  = new THREE.Matrix4();
+  var parentScale = new THREE.Vector3();
 
-    var worldPosition = new THREE.Vector3();
-    var worldRotation = new THREE.Vector3();
-    var worldRotationMatrix  = new THREE.Matrix4();
-    var camPosition = new THREE.Vector3();
+  var worldPosition = new THREE.Vector3();
+  var worldRotation = new THREE.Vector3();
+  var worldRotationMatrix  = new THREE.Matrix4();
+  var camPosition = new THREE.Vector3();
 
-    var hovered = null;
-    var hoveredColor = new THREE.Color();
+  var hovered = null;
+  var hoveredColor = new THREE.Color();
 
-    // Picker currently selected (highlighted)
-    var selectedPicker = null;
-    var selectedColor = new THREE.Color();
+  // Picker currently selected (highlighted)
+  var selectedPicker = null;
+  var selectedColor = new THREE.Color();
 
-    // Intersection planes
+  // Intersection planes
+  var intersectionPlanes = {};
+  var intersectionPlaneList = ['XY','YZ','XZ'];
+  var currentPlane = 'XY';
 
-    var intersectionPlanes = {};
-    var intersectionPlaneList = ['XY','YZ','XZ'];
-    var currentPlane = 'XY';
+  var planes = new THREE.Object3D();
+  this.gizmo.add(planes);
 
-    var planes = new THREE.Object3D();
-    this.gizmo.add(planes);
+  for ( var i in intersectionPlaneList )
+  {
+    intersectionPlanes[intersectionPlaneList[i]] = new THREE.Mesh( new THREE.PlaneGeometry( 500, 500 ) );
+    intersectionPlanes[intersectionPlaneList[i]].material.side = THREE.DoubleSide;
+    intersectionPlanes[intersectionPlaneList[i]].visible = false;
+    planes.add(intersectionPlanes[intersectionPlaneList[i]]);
+  }
 
-    for ( var i in intersectionPlaneList )
+  intersectionPlanes['YZ'].rotation.set( 0, Math.PI/2, 0 );
+  intersectionPlanes['XZ'].rotation.set( -Math.PI/2, 0, 0 );
+  bakeTransformations(intersectionPlanes['YZ']);
+  bakeTransformations(intersectionPlanes['XZ']);
+
+  // PICKERS
+
+  var pickerAxes = {};
+  var displayAxes = {};
+
+  var HandleMaterial = function ( color, over, opacity )
+  {
+    var material = new THREE.MeshBasicMaterial();
+    material.color = color;
+    if (over)
     {
-        intersectionPlanes[intersectionPlaneList[i]] = new THREE.Mesh( new THREE.PlaneGeometry( 500, 500 ) );
-        intersectionPlanes[intersectionPlaneList[i]].material.side = THREE.DoubleSide;
-        intersectionPlanes[intersectionPlaneList[i]].visible = false;
-        planes.add(intersectionPlanes[intersectionPlaneList[i]]);
+      material.side = THREE.DoubleSide;
+      material.depthTest = false;
+      material.depthWrite = false;
     }
+    material.opacity = opacity !== undefined ? opacity : 0.5;
+    material.transparent = true;
+    return material;
+  };
 
-    intersectionPlanes['YZ'].rotation.set( 0, Math.PI/2, 0 );
-    intersectionPlanes['XZ'].rotation.set( -Math.PI/2, 0, 0 );
-    bakeTransformations(intersectionPlanes['YZ']);
-    bakeTransformations(intersectionPlanes['XZ']);
+  var LineMaterial = function ( color, opacity )
+  {
+    var material = new THREE.LineBasicMaterial();
+    material.color = color;
+    material.depthTest = false;
+    material.depthWrite = false;
+    material.opacity = opacity !== undefined ? opacity : 1;
+    material.transparent = true;
+    return material;
+  };
 
-    // PICKERS
+  // Colors
+  var white = new THREE.Color( 0xffffff );
+  var gray = new THREE.Color( 0x808080 );
+  var red = new THREE.Color( 0xff0000 );
+  var green = new THREE.Color( 0x00ff00 );
+  var blue = new THREE.Color( 0x0000ff );
+  var cyan = new THREE.Color( 0x00ffff );
+  var magenta = new THREE.Color( 0xff00ff );
+  var yellow = new THREE.Color( 0xffff00 );
 
-    var pickerAxes = {};
-    var displayAxes = {};
+  var geometry, mesh;
 
-    var HandleMaterial = function ( color, over, opacity )
-    {
-        var material = new THREE.MeshBasicMaterial();
-        material.color = color;
-        if (over)
-        {
-            material.side = THREE.DoubleSide;
-            material.depthTest = false;
-            material.depthWrite = false;
-        }
-        material.opacity = opacity !== undefined ? opacity : 0.5;
-        material.transparent = true;
-        return material;
-    };
+  // Translate
 
-    // Colors
-    var red = new THREE.Color( 0xff0000 );
-    var green = new THREE.Color( 0x00ff00 );
-    var blue = new THREE.Color( 0x0000ff );
+  pickerAxes['translate'] = new THREE.Object3D();
+  displayAxes['translate'] = new THREE.Object3D();
+  this.gizmo.add( pickerAxes['translate'] );
+  this.gizmo.add( displayAxes['translate'] );
 
-    var geometry, mesh;
+  // TX, TY, TZ
 
-    // Translate
+  // Picker cylinder
+  geometry = new THREE.CylinderGeometry( 0.5, 0.01, 1.4, 10, 1, false );
 
-    pickerAxes['translate'] = new THREE.Object3D();
-    displayAxes['translate'] = new THREE.Object3D();
-    this.gizmo.add( pickerAxes['translate'] );
-    this.gizmo.add( displayAxes['translate'] );
+  mesh = new THREE.Mesh( geometry, new HandleMaterial( red, true ) );
+  mesh.position.x = 0.7;
+  mesh.rotation.z = -Math.PI/2;
+  bakeTransformations( mesh );
+  mesh.name = 'TX';
+  pickerAxes['translate'].add( mesh );
+  this.pickerNames.push(mesh.name);
 
-    // TX, TY, TZ
+  mesh = new THREE.Mesh( geometry, new HandleMaterial( green, true ) );
+  mesh.position.y = 0.7;
+  bakeTransformations( mesh );
+  mesh.name = 'TY';
+  pickerAxes['translate'].add( mesh );
+  this.pickerNames.push(mesh.name);
 
-    // Picker cylinder
-    geometry = new THREE.CylinderGeometry( 0.5, 0.01, 1.4, 10, 1, false );
+  mesh = new THREE.Mesh( geometry, new HandleMaterial( blue, true ) );
+  mesh.position.z = 0.7;
+  mesh.rotation.x = Math.PI/2;
+  bakeTransformations( mesh );
+  mesh.name = 'TZ';
+  pickerAxes['translate'].add( mesh );
+  this.pickerNames.push(mesh.name);
 
-    mesh = new THREE.Mesh( geometry, new HandleMaterial( red, true ) );
-    mesh.position.x = 0.7;
-    mesh.rotation.z = -Math.PI/2;
-    bakeTransformations( mesh );
-    mesh.name = 'TX';
-    pickerAxes['translate'].add( mesh );
-    this.pickerNames.push(mesh.name);
-
-    mesh = new THREE.Mesh( geometry, new HandleMaterial( green, true ) );
-    mesh.position.y = 0.7;
-    bakeTransformations( mesh );
-    mesh.name = 'TY';
-    pickerAxes['translate'].add( mesh );
-    this.pickerNames.push(mesh.name);
-
-    mesh = new THREE.Mesh( geometry, new HandleMaterial( blue, true ) );
-    mesh.position.z = 0.7;
-    mesh.rotation.x = Math.PI/2;
-    bakeTransformations( mesh );
-    mesh.name = 'TZ';
-    pickerAxes['translate'].add( mesh );
-    this.pickerNames.push(mesh.name);
-
+  if(this.mobile)
+  {
     // Display cylinder
     geometry = new THREE.CylinderGeometry( 0.1, 0.1, 1, 10, 1, false );
 
@@ -1779,7 +1799,7 @@ GZ3D.Manipulator = function ( camera, domElement, doc )
     mesh.name = 'TZ';
     displayAxes['translate'].add( mesh );
 
-    // cone
+    // Display cone (arrow tip)
     geometry = new THREE.CylinderGeometry( 0, 0.15, 0.4, 10, 1, false );
 
     mesh = new THREE.Mesh( geometry, new HandleMaterial( red, true ) );
@@ -1801,15 +1821,66 @@ GZ3D.Manipulator = function ( camera, domElement, doc )
     bakeTransformations( mesh );
     mesh.name = 'TZ';
     displayAxes['translate'].add( mesh );
+  }
+  else
+  {
+    // Display lines
+    geometry = new THREE.Geometry();
+    geometry.vertices.push(
+        new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 1, 0, 0 ),
+        new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 1, 0 ),
+        new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 0, 1 )
+    );
+    geometry.colors.push(
+        red, red, green, green, blue, blue
+    );
+    var material = new THREE.LineBasicMaterial( {
+        vertexColors: THREE.VertexColors,
+        depthTest: false,
+        depthWrite: false,
+        transparent: true
+    });
+    mesh = new THREE.Line( geometry, material, THREE.LinePieces );
+    displayAxes['translate'].add( mesh );
 
-    // Rotate
+    // Display cone (arrow tip)
+    geometry = new THREE.CylinderGeometry( 0, 0.05, 0.2, 4, 1, true );
 
-    // RX, RY, RZ
-    pickerAxes['rotate'] = new THREE.Object3D();
-    displayAxes['rotate'] = new THREE.Object3D();
-    this.gizmo.add( pickerAxes['rotate'] );
-    this.gizmo.add( displayAxes['rotate'] );
+    mesh = new THREE.Mesh( geometry, new HandleMaterial( red, true, 1 ) );
+    mesh.position.x = 1.1;
+    mesh.rotation.z = -Math.PI/2;
+    bakeTransformations( mesh );
+    mesh.name = 'TX';
+    this.pickerNames.push(mesh.name);
+    displayAxes['translate'].add( mesh );
 
+    mesh = new THREE.Mesh( geometry, new HandleMaterial( green, true, 1 ) );
+    mesh.position.y = 1.1;
+    bakeTransformations( mesh );
+    mesh.name = 'TY';
+    this.pickerNames.push(mesh.name);
+    displayAxes['translate'].add( mesh );
+
+    mesh = new THREE.Mesh( geometry, new HandleMaterial( blue, true, 1 ) );
+    mesh.position.z = 1.1;
+    mesh.rotation.x = Math.PI/2;
+    bakeTransformations( mesh );
+    mesh.name = 'TZ';
+    this.pickerNames.push(mesh.name);
+    displayAxes['translate'].add( mesh );
+  }
+
+  // Rotate
+
+  pickerAxes['rotate'] = new THREE.Object3D();
+  displayAxes['rotate'] = new THREE.Object3D();
+  this.gizmo.add( pickerAxes['rotate'] );
+  this.gizmo.add( displayAxes['rotate'] );
+
+  // RX, RY, RZ
+
+  if(this.mobile)
+  {
     // Picker torus
     geometry = new THREE.TorusGeometry( 1, 0.3, 4, 36, 2*Math.PI );
 
@@ -1860,6 +1931,52 @@ GZ3D.Manipulator = function ( camera, domElement, doc )
     displayAxes['rotate'].add( mesh );
 
     mesh = null;
+  }
+  else
+  {
+    var Circle = function ( radius, facing, arc )
+    {
+      geometry = new THREE.Geometry();
+      arc = arc ? arc : 1;
+      for ( var i = 0; i <= 64 * arc; ++i )
+      {
+        if ( facing === 'x' )
+        {
+          geometry.vertices.push( new THREE.Vector3(
+              0, Math.cos( i / 32 * Math.PI ), Math.sin( i / 32 * Math.PI ) )
+              .multiplyScalar(radius) );
+        }
+        if ( facing === 'y' )
+        {
+          geometry.vertices.push( new THREE.Vector3(
+              Math.cos( i / 32 * Math.PI ), 0, Math.sin( i / 32 * Math.PI ) )
+              .multiplyScalar(radius) );
+        }
+        if ( facing === 'z' )
+        {
+          geometry.vertices.push( new THREE.Vector3(
+              Math.sin( i / 32 * Math.PI ), Math.cos( i / 32 * Math.PI ), 0 )
+              .multiplyScalar(radius) );
+        }
+      }
+      return geometry;
+    };
+
+    mesh = new THREE.Line( new Circle( 1, 'x', 0.5 ), new LineMaterial( red ) );
+    mesh.name = 'RX';
+    this.pickerNames.push(mesh.name);
+    displayAxes['rotate'].add( mesh );
+
+    mesh = new THREE.Line( new Circle( 1, 'y', 0.5 ), new LineMaterial( green ) );
+    mesh.name = 'RY';
+    this.pickerNames.push(mesh.name);
+    displayAxes['rotate'].add( mesh );
+
+    mesh = new THREE.Line( new Circle( 1, 'z', 0.5 ), new LineMaterial( blue ) );
+    mesh.name = 'RZ';
+    this.pickerNames.push(mesh.name);
+    displayAxes['rotate'].add( mesh );
+  }
 
     /**
      * Attach gizmo to an object
@@ -1873,6 +1990,9 @@ GZ3D.Manipulator = function ( camera, domElement, doc )
         this.domElement.addEventListener( 'touchstart', onTouchStart, false );
         this.domElement.addEventListener( 'touchmove', onTouchMove, false );
         this.domElement.addEventListener( 'touchend', onTouchEnd, false );
+
+        this.domElement.addEventListener( 'mousedown', onMouseDown, false );
+        this.domElement.addEventListener( 'mousemove', onMouseHover, false );
 
     };
 
@@ -1890,6 +2010,9 @@ GZ3D.Manipulator = function ( camera, domElement, doc )
         this.domElement.removeEventListener( 'touchstart', onTouchStart, false );
         this.domElement.removeEventListener( 'touchmove', onTouchMove, false );
         this.domElement.removeEventListener( 'touchend', onTouchEnd, false );
+
+        this.domElement.removeEventListener( 'mousedown', onMouseDown, false );
+        this.domElement.removeEventListener( 'mousemove', onMouseHover, false );
 
     };
 
@@ -2183,9 +2306,18 @@ GZ3D.Manipulator = function ( camera, domElement, doc )
           quaternionZ.setFromAxisAngle( unitZ, rotation.z - offsetRotation.z );
           quaternionXYZ.setFromRotationMatrix( worldRotationMatrix );
 
-          if ( scope.selected === 'RX' ) {tempQuaternion.multiplyQuaternions( tempQuaternion, quaternionX );}
-          if ( scope.selected === 'RY' ) {tempQuaternion.multiplyQuaternions( tempQuaternion, quaternionY );}
-          if ( scope.selected === 'RZ' ) {tempQuaternion.multiplyQuaternions( tempQuaternion, quaternionZ );}
+          if ( scope.selected === 'RX' )
+          {
+            tempQuaternion.multiplyQuaternions( tempQuaternion, quaternionX );
+          }
+          if ( scope.selected === 'RY' )
+          {
+            tempQuaternion.multiplyQuaternions( tempQuaternion, quaternionY );
+          }
+          if ( scope.selected === 'RZ' )
+          {
+            tempQuaternion.multiplyQuaternions( tempQuaternion, quaternionZ );
+          }
 
           tempQuaternion.multiplyQuaternions( tempQuaternion, quaternionXYZ );
 
@@ -2195,6 +2327,265 @@ GZ3D.Manipulator = function ( camera, domElement, doc )
 
         scope.update();
         scope.dispatchEvent( changeEvent );
+    }
+
+    function onMouseHover( event ) {
+
+        event.preventDefault();
+
+        if ( event.button === 0 && scope.selected === 'null' )
+        {
+            var intersect = intersectObjects( event, pickerAxes[scope.mode].children );
+
+            // If one of the current pickers was touched
+            if ( intersect )
+            {
+                if ( selectedPicker !== intersect.object )
+                {
+                    // Back to original color
+                    if ( selectedPicker !== null )
+                    {
+                        selectedPicker.material.color.copy( selectedColor );
+                    }
+
+                    selectedPicker = intersect.object;
+
+                    // Save color for when it's deselected
+                    selectedColor.copy( selectedPicker.material.color );
+
+                    // Darken color
+                    selectedPicker.material.color.offsetHSL( 0, 0, -0.3 );
+
+                    scope.dispatchEvent( changeEvent );
+                }
+
+                scope.selected = selectedPicker.name;
+                scope.hovered = true;
+                scope.update();
+                scope.setIntersectionPlane();
+
+                var planeIntersect = intersectObjects( event, [intersectionPlanes[currentPlane]] );
+
+                if ( planeIntersect ) {
+
+                    oldPosition.copy( scope.object.position );
+
+                    oldRotationMatrix.extractRotation( scope.object.matrix );
+                    worldRotationMatrix.extractRotation( scope.object.matrixWorld );
+
+                    parentRotationMatrix.extractRotation( scope.object.parent.matrixWorld );
+                    parentScale.getScaleFromMatrix( tempMatrix.getInverse( scope.object.parent.matrixWorld ) );
+
+                    offset.copy( planeIntersect.point );
+
+                }
+
+        }
+        }
+        scope.document.addEventListener( 'mousemove', onMouseMove, false );
+        scope.document.addEventListener( 'mouseup', onMouseUp, false );
+    }
+
+    function onMouseDown( event )
+    {
+        event.preventDefault();
+
+        if ( event.button === 0 )
+        {
+            var intersect = intersectObjects( event, pickerAxes[scope.mode].children );
+
+            if ( intersect )
+            {
+                scope.selected = selectedPicker.name;
+
+                scope.update();
+                scope.setIntersectionPlane();
+
+                var planeIntersect = intersectObjects( event, [intersectionPlanes[currentPlane]] );
+
+                if ( planeIntersect )
+                {
+                    oldPosition.copy( scope.object.position );
+
+                    oldRotationMatrix.extractRotation( scope.object.matrix );
+                    worldRotationMatrix.extractRotation( scope.object.matrixWorld );
+
+                    parentRotationMatrix.extractRotation( scope.object.parent.matrixWorld );
+                    parentScale.getScaleFromMatrix( tempMatrix.getInverse( scope.object.parent.matrixWorld ) );
+
+                    offset.copy( planeIntersect.point );
+                }
+            }
+        }
+
+        scope.document.addEventListener( 'mousemove', onMouseMove, false );
+        scope.document.addEventListener( 'mouseup', onMouseUp, false );
+    }
+
+    function onMouseMove( event )
+    {
+      if (scope.selected === 'null')
+      {
+        return;
+      }
+
+            var planeIntersect = intersectObjects( event, [intersectionPlanes[currentPlane]] );
+
+            if ( planeIntersect )
+            {
+                point.copy( planeIntersect.point );
+
+                if ( ( scope.mode === 'translate' ) && isSelected('T') )
+                {
+                    point.sub( offset );
+                    point.multiply(parentScale);
+
+                    if ( scope.space === 'local' )
+                    {
+                        point.applyMatrix4( tempMatrix.getInverse( worldRotationMatrix ) );
+
+                        if ( !(isSelected('X')) || scope.modifierAxis.x !== 1 )
+                        {
+                          point.x = 0;
+                        }
+                        if ( !(isSelected('Y')) || scope.modifierAxis.y !== 1 )
+                        {
+                          point.y = 0;
+                        }
+                        if ( !(isSelected('Z')) || scope.modifierAxis.z !== 1 )
+                        {
+                          point.z = 0;
+                        }
+                        if ( isSelected('XYZ') )
+                        {
+                          point.set( 0, 0, 0 );
+                        }
+
+                        point.applyMatrix4( oldRotationMatrix );
+
+                        scope.object.position.copy( oldPosition );
+                        scope.object.position.add( point );
+                    }
+
+                    if ( scope.space === 'world' || isSelected('XYZ') )
+                    {
+                        if ( !(isSelected('X')) || scope.modifierAxis.x !== 1 )
+                        {
+                          point.x = 0;
+                        }
+                        if ( !(isSelected('Y')) || scope.modifierAxis.y !== 1 )
+                        {
+                          point.y = 0;
+                        }
+                        if ( !(isSelected('Z')) || scope.modifierAxis.z !== 1 )
+                        {
+                          point.z = 0;
+                        }
+
+                        point.applyMatrix4( tempMatrix.getInverse( parentRotationMatrix ) );
+
+                        scope.object.position.copy( oldPosition );
+                        scope.object.position.add( point );
+
+                        if ( scope.snapDist )
+                        {
+                            if ( isSelected('X') )
+                            {
+                              scope.object.position.x = Math.round(
+                                  scope.object.position.x / scope.snapDist ) * scope.snapDist;
+                            }
+                            if ( isSelected('Y') )
+                            {
+                              scope.object.position.y = Math.round(
+                                  scope.object.position.y / scope.snapDist ) * scope.snapDist;
+                            }
+                            if ( isSelected('Z') )
+                            {
+                              scope.object.position.z = Math.round(
+                                  scope.object.position.z / scope.snapDist ) * scope.snapDist;
+                            }
+                        }
+                    }
+                }
+                else if ( ( scope.mode === 'rotate' ) && isSelected('R') )
+                {
+                    point.sub( worldPosition );
+                    point.multiply(parentScale);
+                    tempVector.copy(offset).sub( worldPosition );
+                    tempVector.multiply(parentScale);
+
+                    if ( scope.space === 'local' )
+                    {
+                        point.applyMatrix4( tempMatrix.getInverse( worldRotationMatrix ) );
+
+                        tempVector.applyMatrix4( tempMatrix.getInverse( worldRotationMatrix ) );
+
+                        rotation.set( Math.atan2( point.z, point.y ), Math.atan2( point.x, point.z ), Math.atan2( point.y, point.x ) );
+                        offsetRotation.set( Math.atan2( tempVector.z, tempVector.y ), Math.atan2( tempVector.x, tempVector.z ), Math.atan2( tempVector.y, tempVector.x ) );
+
+                        quaternionXYZ.setFromRotationMatrix( oldRotationMatrix );
+                        quaternionX.setFromAxisAngle( unitX, rotation.x - offsetRotation.x );
+                        quaternionY.setFromAxisAngle( unitY, rotation.y - offsetRotation.y );
+                        quaternionZ.setFromAxisAngle( unitZ, rotation.z - offsetRotation.z );
+
+                        if ( scope.selected === 'RX' )
+                        {
+                          quaternionXYZ.multiplyQuaternions( quaternionXYZ, quaternionX );
+                        }
+                        if ( scope.selected === 'RY' )
+                        {
+                          quaternionXYZ.multiplyQuaternions( quaternionXYZ, quaternionY );
+                        }
+                        if ( scope.selected === 'RZ' )
+                        {
+                          quaternionXYZ.multiplyQuaternions( quaternionXYZ, quaternionZ );
+                        }
+
+                        scope.object.quaternion.copy( quaternionXYZ );
+
+                    }
+                    else if ( scope.space === 'world' )
+                    {
+                        rotation.set( Math.atan2( point.z, point.y ), Math.atan2( point.x, point.z ), Math.atan2( point.y, point.x ) );
+                        offsetRotation.set( Math.atan2( tempVector.z, tempVector.y ), Math.atan2( tempVector.x, tempVector.z ), Math.atan2( tempVector.y, tempVector.x ) );
+
+                        tempQuaternion.setFromRotationMatrix( tempMatrix.getInverse( parentRotationMatrix ) );
+
+                        quaternionX.setFromAxisAngle( unitX, rotation.x - offsetRotation.x );
+                        quaternionY.setFromAxisAngle( unitY, rotation.y - offsetRotation.y );
+                        quaternionZ.setFromAxisAngle( unitZ, rotation.z - offsetRotation.z );
+                        quaternionXYZ.setFromRotationMatrix( worldRotationMatrix );
+
+                        if ( scope.selected === 'RX' )
+                        {
+                          tempQuaternion.multiplyQuaternions( tempQuaternion, quaternionX );
+                        }
+                        if ( scope.selected === 'RY' )
+                        {
+                          tempQuaternion.multiplyQuaternions( tempQuaternion, quaternionY );
+                        }
+                        if ( scope.selected === 'RZ' )
+                        {
+                          tempQuaternion.multiplyQuaternions( tempQuaternion, quaternionZ );
+                        }
+
+                        tempQuaternion.multiplyQuaternions( tempQuaternion, quaternionXYZ );
+
+                        scope.object.quaternion.copy( tempQuaternion );
+                    }
+                }
+            }
+
+            scope.update();
+            scope.dispatchEvent( changeEvent );
+    }
+
+    function onMouseUp( event )
+    {
+        scope.selected = 'null';
+
+        scope.document.removeEventListener( 'mousemove', onMouseMove, false );
+        scope.document.removeEventListener( 'mouseup', onMouseUp, false );
     }
 
 /**
@@ -2223,7 +2614,7 @@ GZ3D.Manipulator = function ( camera, domElement, doc )
 
     function isSelected( name )
     {
-
+console.log(scope.selected+ ' ' + name);
         if ( scope.selected.search( name ) !== -1 )
         {
             return true;
@@ -2331,16 +2722,16 @@ GZ3D.Scene.prototype.init = function()
       function(event) {that.onPointerUp(event);}, false );
 
   // Handles for translating and rotating objects
-  if (this.isTouchDevice)
+  //if (this.isTouchDevice)
   {
     this.modelManipulator = new GZ3D.Manipulator(this.camera,
       this.getDomElement());
   }
-  else
+  /*else
   {
     this.modelManipulator = new THREE.TransformControls(this.camera,
       this.getDomElement());
-  }
+  }*/
 
   this.controls = new THREE.OrbitControls(this.camera);
 
