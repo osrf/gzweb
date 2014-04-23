@@ -25,7 +25,6 @@ THREE.TransformControls = function ( camera, domElement, doc ) {
     this.snapDist = null;
     this.modifierAxis = new THREE.Vector3( 1, 1, 1 );
     this.gizmo = new THREE.Object3D();
-    this.pickerNames = [];
 
     var scope = this;
 
@@ -178,7 +177,6 @@ THREE.TransformControls = function ( camera, domElement, doc ) {
 
         mesh = new THREE.Mesh( new THREE.OctahedronGeometry( 0.1, 0 ), HandleMaterial( white, 0.25 ) );
         mesh.name = 'TXYZ';
-        this.pickerNames.push(mesh.name);
         displayAxes['translate'].add( mesh );
         pickerAxes['translate'].add( mesh.clone() );
 
@@ -188,7 +186,6 @@ THREE.TransformControls = function ( camera, domElement, doc ) {
         mesh.position.set( 0.15, 0.15, 0 );
         bakeTransformations( mesh );
         mesh.name = 'TXY';
-        this.pickerNames.push(mesh.name);
         displayAxes['translate'].add( mesh );
         pickerAxes['translate'].add( mesh.clone() );
 
@@ -197,7 +194,6 @@ THREE.TransformControls = function ( camera, domElement, doc ) {
         mesh.rotation.y = Math.PI/2;
         bakeTransformations( mesh );
         mesh.name = 'TYZ';
-        this.pickerNames.push(mesh.name);
         displayAxes['translate'].add( mesh );
         pickerAxes['translate'].add( mesh.clone() );
 
@@ -206,7 +202,6 @@ THREE.TransformControls = function ( camera, domElement, doc ) {
         mesh.rotation.x = Math.PI/2;
         bakeTransformations( mesh );
         mesh.name = 'TXZ';
-        this.pickerNames.push(mesh.name);
         displayAxes['translate'].add( mesh );
         pickerAxes['translate'].add( mesh.clone() );
 
@@ -217,14 +212,12 @@ THREE.TransformControls = function ( camera, domElement, doc ) {
         mesh.rotation.z = -Math.PI/2;
         bakeTransformations( mesh );
         mesh.name = 'TX';
-        this.pickerNames.push(mesh.name);
         displayAxes['translate'].add( mesh );
 
         mesh = new THREE.Mesh( geometry, HandleMaterial( green ) );
         mesh.position.y = 1.1;
         bakeTransformations( mesh );
         mesh.name = 'TY';
-        this.pickerNames.push(mesh.name);
         displayAxes['translate'].add( mesh );
 
         mesh = new THREE.Mesh( geometry, HandleMaterial( blue ) );
@@ -232,7 +225,6 @@ THREE.TransformControls = function ( camera, domElement, doc ) {
         mesh.rotation.x = Math.PI/2;
         bakeTransformations( mesh );
         mesh.name = 'TZ';
-        this.pickerNames.push(mesh.name);
         displayAxes['translate'].add( mesh );
 
         geometry = new THREE.CylinderGeometry( 0.2, 0.1, 0.8, 4, 1, false );
@@ -263,7 +255,6 @@ THREE.TransformControls = function ( camera, domElement, doc ) {
 
         mesh = new THREE.Mesh( geometry, HandleMaterial( white, 0.25 ) );
         mesh.name = 'SXYZ';
-        this.pickerNames.push(mesh.name);
         displayAxes['scale'].add( mesh );
         pickerAxes['scale'].add( mesh.clone() );
 
@@ -271,7 +262,6 @@ THREE.TransformControls = function ( camera, domElement, doc ) {
         mesh.position.set( 1.05, 0, 0 );
         bakeTransformations( mesh );
         mesh.name = 'SX';
-        this.pickerNames.push(mesh.name);
         displayAxes['scale'].add( mesh );
         pickerAxes['scale'].add( mesh.clone() );
 
@@ -279,7 +269,6 @@ THREE.TransformControls = function ( camera, domElement, doc ) {
         mesh.position.set( 0, 1.05, 0 );
         bakeTransformations( mesh );
         mesh.name = 'SY';
-        this.pickerNames.push(mesh.name);
         displayAxes['scale'].add( mesh );
         pickerAxes['scale'].add( mesh.clone() );
 
@@ -287,7 +276,6 @@ THREE.TransformControls = function ( camera, domElement, doc ) {
         mesh.position.set( 0, 0, 1.05 );
         bakeTransformations( mesh );
         mesh.name = 'SZ';
-        this.pickerNames.push(mesh.name);
         displayAxes['scale'].add( mesh );
         pickerAxes['scale'].add( mesh.clone() );
 
@@ -308,27 +296,22 @@ THREE.TransformControls = function ( camera, domElement, doc ) {
 
         mesh = new THREE.Line( Circle( 1, 'x', 0.5 ), LineMaterial( red ) );
         mesh.name = 'RX';
-        this.pickerNames.push(mesh.name);
         displayAxes['rotate'].add( mesh );
 
         mesh = new THREE.Line( Circle( 1, 'y', 0.5 ), LineMaterial( green ) );
         mesh.name = 'RY';
-        this.pickerNames.push(mesh.name);
         displayAxes['rotate'].add( mesh );
 
         mesh = new THREE.Line( Circle( 1, 'z', 0.5 ), LineMaterial( blue ) );
         mesh.name = 'RZ';
-        this.pickerNames.push(mesh.name);
         displayAxes['rotate'].add( mesh );
 
         mesh = new THREE.Line( Circle( 1, 'z' ), LineMaterial( gray ) );
         mesh.name = 'RXYZE';
-        this.pickerNames.push(mesh.name);
         displayAxes['rotate'].add( mesh );
 
         mesh = new THREE.Line( Circle( 1.25, 'z' ), LineMaterial( yellow, 0.25 ) );
         mesh.name = 'RE';
-        this.pickerNames.push(mesh.name);
         displayAxes['rotate'].add( mesh );
 
         geometry = new THREE.TorusGeometry( 1, 0.15, 4, 6, Math.PI );
@@ -532,21 +515,21 @@ THREE.TransformControls = function ( camera, domElement, doc ) {
 
         if ( isActive("X") ) {
 
-            if ( Math.abs(eye.y) > Math.abs(eye.z) ) currentPlane = 'XZ';
+            if ( eye.y > eye.z ) currentPlane = 'XZ';
             else currentPlane = 'XY';
 
         }
 
         if ( isActive("Y") ) {
 
-            if ( Math.abs(eye.x) > Math.abs(eye.z) ) currentPlane = 'YZ';
+            if ( eye.x > eye.z ) currentPlane = 'YZ';
             else currentPlane = 'XY';
 
         }
 
         if ( isActive("Z") ) {
 
-            if ( Math.abs(eye.x) > Math.abs(eye.y) ) currentPlane = 'YZ';
+            if ( eye.x > eye.y ) currentPlane = 'YZ';
             else currentPlane = 'XZ';
 
         }
@@ -860,6 +843,7 @@ THREE.TransformControls = function ( camera, domElement, doc ) {
 
             scope.update();
             scope.dispatchEvent( changeEvent );
+
         }
 
     }
