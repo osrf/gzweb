@@ -378,13 +378,18 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
   return model;
 };
 
-
+/**
+ * Get dom element
+ * @returns {domElement}
+ */
 GZ3D.Scene.prototype.getDomElement = function()
 {
   return this.renderer.domElement;
 };
 
-
+/**
+ * Render scene
+ */
 GZ3D.Scene.prototype.render = function()
 {
   // Kill camera control when:
@@ -416,6 +421,11 @@ GZ3D.Scene.prototype.render = function()
   }
 };
 
+/**
+ * Set window size
+ * @param {double} width
+ * @param {double} height
+ */
 GZ3D.Scene.prototype.setWindowSize = function(width, height)
 {
   this.camera.aspect = width / height;
@@ -425,21 +435,40 @@ GZ3D.Scene.prototype.setWindowSize = function(width, height)
   this.render();
 };
 
+/**
+ * Add object to the scene
+ * @param {THREE.Object3D} model
+ */
 GZ3D.Scene.prototype.add = function(model)
 {
   this.scene.add(model);
 };
 
+/**
+ * Remove object from the scene
+ * @param {THREE.Object3D} model
+ */
 GZ3D.Scene.prototype.remove = function(model)
 {
   this.scene.remove(model);
 };
 
+/**
+ * Returns the object which has the given name
+ * @param {string} name
+ * @returns {THREE.Object3D} model
+ */
 GZ3D.Scene.prototype.getByName = function(name)
 {
   return this.scene.getObjectByName(name, true);
 };
 
+/**
+ * Update a model's pose
+ * @param {THREE.Object3D} model
+ * @param {} position
+ * @param {} orientation
+ */
 GZ3D.Scene.prototype.updatePose = function(model, position, orientation)
 {
   if (this.modelManipulator && this.modelManipulator.object &&
@@ -451,6 +480,12 @@ GZ3D.Scene.prototype.updatePose = function(model, position, orientation)
   this.setPose(model, position, orientation);
 };
 
+/**
+ * Set a model's pose
+ * @param {THREE.Object3D} model
+ * @param {} position
+ * @param {} orientation
+ */
 GZ3D.Scene.prototype.setPose = function(model, position, orientation)
 {
   model.position.x = position.x;
@@ -462,6 +497,9 @@ GZ3D.Scene.prototype.setPose = function(model, position, orientation)
   model.quaternion.z = orientation.z;
 };
 
+/**
+ * Create grid and add it to the scene
+ */
 GZ3D.Scene.prototype.createGrid = function()
 {
   var grid = new THREE.GridHelper(10, 1);
@@ -477,6 +515,15 @@ GZ3D.Scene.prototype.createGrid = function()
   this.scene.add(grid);
 };
 
+/**
+ * Create plane
+ * @param {double} normalX
+ * @param {double} normalY
+ * @param {double} normalZ
+ * @param {double} width
+ * @param {double} height
+ * @returns {THREE.Mesh}
+ */
 GZ3D.Scene.prototype.createPlane = function(normalX, normalY, normalZ,
     width, height)
 {
@@ -492,6 +539,11 @@ GZ3D.Scene.prototype.createPlane = function(normalX, normalY, normalZ,
   return mesh;
 };
 
+/**
+ * Create sphere
+ * @param {double} radius
+ * @returns {THREE.Mesh}
+ */
 GZ3D.Scene.prototype.createSphere = function(radius)
 {
   var geometry = new THREE.SphereGeometry(radius, 32, 32);
@@ -501,7 +553,12 @@ GZ3D.Scene.prototype.createSphere = function(radius)
   return mesh;
 };
 
-
+/**
+ * Create cylinder
+ * @param {double} radius
+ * @param {double} length
+ * @returns {THREE.Mesh}
+ */
 GZ3D.Scene.prototype.createCylinder = function(radius, length)
 {
   var geometry = new THREE.CylinderGeometry(radius, radius, length, 32, 1,
@@ -513,6 +570,13 @@ GZ3D.Scene.prototype.createCylinder = function(radius, length)
   return mesh;
 };
 
+/**
+ * Create box
+ * @param {double} width
+ * @param {double} height
+ * @param {double} depth
+ * @returns {THREE.Mesh}
+ */
 GZ3D.Scene.prototype.createBox = function(width, height, depth)
 {
   var geometry = new THREE.CubeGeometry(width, height, depth, 1, 1, 1);
@@ -557,6 +621,13 @@ GZ3D.Scene.prototype.createBox = function(width, height, depth)
   return mesh;
 };
 
+/**
+ * Create roads
+ * @param {} points
+ * @param {} width
+ * @param {} texture
+ * @returns {THREE.Mesh}
+ */
 GZ3D.Scene.prototype.createRoads = function(points, width, texture)
 {
   var geometry = new THREE.Geometry();
@@ -712,6 +783,17 @@ GZ3D.Scene.prototype.createRoads = function(points, width, texture)
   return mesh;
 };
 
+/**
+ * Load heightmap
+ * @param {} heights
+ * @param {} width
+ * @param {} height
+ * @param {} segmentWidth
+ * @param {} segmentHeight
+ * @param {} textures
+ * @param {} blends
+ * @param {} parent
+ */
 GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
     segmentWidth, segmentHeight, origin, textures, blends, parent)
 {
@@ -844,6 +926,13 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
   this.heightmap = parent;
 };
 
+/**
+ * Load mesh
+ * @param {string} uri
+ * @param {} submesh
+ * @param {} centerSubmesh
+ * @param {function} callback
+ */
 GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh,
     callback)
 {
@@ -891,7 +980,13 @@ GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh,
   }
 };
 
-// load the collada file
+/**
+ * Load collada file
+ * @param {string} uri
+ * @param {} submesh
+ * @param {} centerSubmesh
+ * @param {function} callback
+ */
 GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
     callback)
 {
@@ -940,8 +1035,14 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
   }
 };
 
-// Prepare collada by handling submesh-only loading and removing other
-// non-mesh entities such as lights
+/**
+ * Prepare collada by handling submesh-only loading and removing other
+ * non-mesh entities such as lights
+ * @param {} dae
+ * @param {} submesh
+ * @param {} centerSubmesh
+ * @returns {THREE.Mesh} mesh
+ */
 GZ3D.Scene.prototype.prepareColladaMesh = function(dae, submesh, centerSubmesh)
 {
   var mesh;
@@ -1051,6 +1152,11 @@ GZ3D.Scene.prototype.prepareColladaMesh = function(dae, submesh, centerSubmesh)
   }
 };*/
 
+/**
+ * Set material for an object
+ * @param {} obj
+ * @param {} material
+ */
 GZ3D.Scene.prototype.setMaterial = function(obj, material)
 {
   if (obj)
@@ -1103,6 +1209,10 @@ GZ3D.Scene.prototype.setMaterial = function(obj, material)
   }
 };
 
+/**
+ * Set manipulation mode (view/translate/rotate)
+ * @param {string} mode
+ */
 GZ3D.Scene.prototype.setManipulationMode = function(mode)
 {
   this.manipulationMode = mode;
@@ -1126,6 +1236,10 @@ GZ3D.Scene.prototype.setManipulationMode = function(mode)
 
 };
 
+/**
+ * Show collision visuals
+ * @param {boolean} show
+ */
 GZ3D.Scene.prototype.showCollision = function(show)
 {
   if (show === this.showCollisions)
@@ -1155,6 +1269,11 @@ GZ3D.Scene.prototype.showCollision = function(show)
 
 };
 
+/**
+ * Attach manipulator to an object
+ * @param {THREE.Object3D} model
+ * @param {string} mode (translate/rotate)
+ */
 GZ3D.Scene.prototype.attachManipulator = function(model,mode)
 {
   if (this.modelManipulator.object)

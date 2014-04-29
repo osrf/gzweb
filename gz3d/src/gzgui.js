@@ -10,6 +10,7 @@ $(function()
   $('#view-collisions').buttonMarkup({icon: 'false'});
 
   $( '#clock-touch' ).popup('option', 'arrow', 't');
+  $.mobile.activeBtnClass = 'unused';
 
   // Panel starts open for wide screens
   if ($(window).width() / parseFloat($('body').css('font-size')) > 35)
@@ -21,15 +22,24 @@ $(function()
   if ('ontouchstart' in window || 'onmsgesturechange' in window)
   {
     // swipe icon
-    $('#box').html('<b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Box</b><div style="float: right;">'+
-        '<img src="style/images/box.png" style="vertical-align:middle;">'+
-        '<img src="style/images/swipe.png" style="vertical-align:middle; margin-left:1em;"></div>');
-    $('#sphere').html('<b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sphere</b><div style="float: right;">'+
-        '<img src="style/images/sphere.png" style="vertical-align:middle;">'+
-        '<img src="style/images/swipe.png" style="vertical-align:middle; margin-left:1em;"></div>');
-    $('#cylinder').html('<b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Cylinder</b><div style="float: right;">'+
-        '<img src="style/images/cylinder.png" style="vertical-align:middle;">'+
-        '<img src="style/images/swipe.png" style="vertical-align:middle; margin-left:1em;"></div>');
+    $('#box').html('<b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Box</b>'+
+        '<div style="float: right;">'+
+        '<img src="style/images/box.png" '+
+        'style="vertical-align:middle;height:1.4em;">'+
+        '<img src="style/images/swipe.png" '+
+        'style="vertical-align:middle;margin-left:1em;"></div>');
+    $('#sphere').html('<b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sphere</b>'+
+        '<div style="float: right;">'+
+        '<img src="style/images/sphere.png" '+
+        'style="vertical-align:middle;;height:1.4em;">'+
+        '<img src="style/images/swipe.png" '+
+        'style="vertical-align:middle; margin-left:1em;"></div>');
+    $('#cylinder').html('<b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Cylinder</b>'+
+        '<div style="float: right;">'+
+        '<img src="style/images/cylinder.png" '+
+        'style="vertical-align:middle;;height:1.4em;">'+
+        '<img src="style/images/swipe.png" '+
+        'style="vertical-align:middle; margin-left:1em;"></div>');
 
     // touchstart
     $( '#box' ).bind('touchstart',function(event) {

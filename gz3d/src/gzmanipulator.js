@@ -1,8 +1,5 @@
-/**
- * @author arodic / https://github.com/arodic
- */
-
 // Based on TransformControls.js
+// original author: arodic / https://github.com/arodic
 
 /**
  * Manipulator to perform translate and rotate transforms on objects
