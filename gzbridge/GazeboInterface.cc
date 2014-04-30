@@ -62,6 +62,7 @@ GazeboInterface::GazeboInterface()
   this->statsTopic = "~/world_stats";
   this->roadTopic = "~/roads";
   this->heightmapService = "~/heightmap_data";
+  this->deleteTopic = "~/delete";
 
   // material topic
   this->materialTopic = "~/material";
@@ -85,7 +86,7 @@ GazeboInterface::GazeboInterface()
   this->poseSub = this->node->Subscribe(this->poseTopic,
       &GazeboInterface::OnPoseMsg, this);
 
-  // For entity delete
+  // For entity delete coming from the server side
   this->requestSub = this->node->Subscribe(this->requestTopic,
       &GazeboInterface::OnRequest, this);
 
@@ -424,6 +425,11 @@ void GazeboInterface::ProcessMessages()
                 this->materialParser->GetMaterialAsJson());
             this->Send(msg);
           }
+        }
+        else if (topic == this->deleteTopic)
+        {
+            std::string name = get_value(msg, "msg:name");
+            gazebo::transport::requestNoReply(this->node, "entity_delete", name);
         }
       }
       else

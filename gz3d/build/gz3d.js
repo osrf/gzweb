@@ -256,6 +256,7 @@ $(function()
         guiEvents.emit('show_collision');
         guiEvents.emit('close_panel');
       });
+
   // Disable Esc key to close panel
   $('body').on('keyup', function(event)
       {
@@ -264,6 +265,24 @@ $(function()
           return false;
         }
       });
+
+  // long press on canvas
+  var press_time = 400;
+  $('#container')
+    .on('touchstart', function (event) {
+      var $this = $(this);
+      $(this).data('checkdown', setTimeout(function () {
+        guiEvents.emit('longpress_start',event);
+      }, press_time));
+    })
+    .on('touchend', function (event) {
+      clearTimeout($(this).data('checkdown'));
+      guiEvents.emit('longpress_end',event,false);
+    })
+    .on('touchmove', function (event) {
+      clearTimeout($(this).data('checkdown'));
+      guiEvents.emit('longpress_move',event);
+    });
 });
 
 /**
@@ -287,6 +306,7 @@ GZ3D.Gui.prototype.init = function()
   this.spawnModel = new GZ3D.SpawnModel(
       this.scene, this.scene.getDomElement());
   this.spawnState = null;
+  this.longPressState = null;
 
   var that = this;
 
@@ -368,6 +388,92 @@ GZ3D.Gui.prototype.init = function()
         if ($(window).width() / parseFloat($('body').css('font-size')) < 35)
         {
           $('#leftPanel').panel('close');
+        }
+      }
+  );
+
+  guiEvents.on('longpress_start',
+      function (event)
+      {
+        if (event.originalEvent.touches.length !== 1 ||
+            that.scene.modelManipulator.hovered)
+        {
+          guiEvents.emit('longpress_end', event.originalEvent,true);
+        }
+        else
+        {
+          that.scene.killCameraControl = true;
+          that.scene.showRadialMenu(event);
+          that.longPressState = 'START';
+        }
+      }
+  );
+
+  guiEvents.on('longpress_end', function(event,cancel)
+      {
+        if (that.longPressState !== 'START')
+        {
+          that.longPressState = 'END';
+          return;
+        }
+        that.longPressState = 'END';
+        that.scene.killCameraControl = false;
+        if (that.scene.radialMenu.showing)
+        {
+          if (cancel)
+          {
+            that.scene.radialMenu.hide(event);
+          }
+          else
+          {
+          that.scene.radialMenu.hide(event, function(type,entity)
+              {
+                if (type === 'delete')
+                {
+                  that.emitter.emit('deleteEntity',entity);
+                  that.scene.setManipulationMode('view');
+                  $( '#view-mode' ).prop('checked', true);
+                  $('input[type="radio"]').checkboxradio('refresh');
+                }
+                else if (type === 'translate')
+                {
+                  $('#translate-mode').click();
+                  $('input[type="radio"]').checkboxradio('refresh');
+                  that.scene.attachManipulator(entity,type);
+                }
+                else if (type === 'rotate')
+                {
+                  $( '#rotate-mode' ).click();
+                  $('input[type="radio"]').checkboxradio('refresh');
+                  that.scene.attachManipulator(entity,type);
+                }
+              });
+          }
+        }
+      }
+  );
+
+  guiEvents.on('longpress_move', function(event)
+      {
+        if (event.originalEvent.touches.length !== 1)
+        {
+          guiEvents.emit('longpress_end',event.originalEvent,true);
+        }
+        else
+        {
+          if (that.longPressState !== 'START')
+          {
+            return;
+          }
+          // Cancel long press in case of drag before it shows
+          if (!that.scene.radialMenu.showing)
+          {
+            that.scene.killCameraControl = false;
+          }
+          else
+          {
+            that.scene.radialMenu.onLongPressMove(event);
+          }
         }
       }
   );
@@ -743,6 +849,30 @@ GZ3D.GZIface.prototype.init = function()
     };
     that.factoryTopic.publish(modelMsg);
   };
+
+  // For deleting models
+  this.deleteTopic = new ROSLIB.Topic({
+    ros : this.webSocket,
+    name : '~/delete', // request? factory? model/modify?
+    messageType : 'delete', // request? factory? model/modify?
+  });
+
+  var publishDeleteEntity = function(entity)
+  {
+    var modelMsg =
+    {
+      name: entity.name
+    };
+
+    that.deleteTopic.publish(modelMsg);
+  };
+
+  this.gui.emitter.on('deleteEntity',
+      function(entity)
+      {
+        publishDeleteEntity(entity);
+      }
+  );
 
   // World control messages - for resetting world/models
   this.worldControlTopic = new ROSLIB.Topic({
@@ -2734,6 +2864,311 @@ GZ3D.Manipulator.prototype = Object.create(THREE.EventDispatcher.prototype);
 
 
 /**
+ * Radial menu for an object
+ * @constructor
+ */
+GZ3D.RadialMenu = function(domElement)
+{
+  this.domElement = ( domElement !== undefined ) ? domElement : document;
+
+  this.init();
+};
+
+/**
+ * Initialize radial menu
+ */
+GZ3D.RadialMenu.prototype.init = function()
+{
+  // Distance from starting point
+  this.radius = 70;
+  // Speed to spread the menu
+  this.speed = 10;
+  // Icon size
+  this.bgSize = 40;
+  this.bgSizeSelected = 70;
+  this.iconProportion = 0.6;
+  this.bgShape = THREE.ImageUtils.loadTexture(
+      'style/images/icon_background.png' );
+
+  // For the opening motion
+  this.moving = false;
+  this.startPosition = null;
+
+  // Either moving or already stopped
+  this.showing = false;
+
+  // Colors
+  this.selectedColor = new THREE.Color( 0x22aadd );
+  this.plainColor = new THREE.Color( 0x333333 );
+
+  // Selected item
+  this.selected = null;
+
+  // Selected model
+  this.model = null;
+
+  // Object containing all items
+  this.menu = new THREE.Object3D();
+
+  // Add items to the menu
+  this.addItem('delete','style/images/trash.png');
+  this.addItem('translate','style/images/translate.png');
+  this.addItem('rotate','style/images/rotate.png');
+
+  this.numberOfItems = this.menu.children.length;
+  this.offset = this.numberOfItems - 1 - Math.floor(this.numberOfItems/2);
+
+  // Start hidden
+  this.hide();
+};
+
+/**
+ * Hide radial menu
+ * @param {} event - event which triggered hide
+ * @param {function} callback
+ */
+GZ3D.RadialMenu.prototype.hide = function(event,callback)
+{
+  for ( var i in this.menu.children )
+  {
+    this.menu.children[i].children[0].visible = false;
+    this.menu.children[i].children[1].visible = false;
+    this.menu.children[i].children[1].material.color = this.plainColor;
+    this.menu.children[i].children[0].scale.set(
+        this.bgSize*this.iconProportion,
+        this.bgSize*this.iconProportion, 1.0 );
+    this.menu.children[i].children[1].scale.set(
+        this.bgSize,
+        this.bgSize, 1.0 );
+  }
+
+  this.showing = false;
+  this.moving = false;
+  this.startPosition = null;
+
+  if (callback && this.model)
+  {
+    if ( this.selected )
+    {
+      callback(this.selected,this.model);
+      this.model = null;
+    }
+  }
+  this.selected = null;
+
+};
+
+/**
+ * Show radial menu
+ * @param {} event - event which triggered show
+ * @param {THREE.Object3D} model - model to which the menu will be attached
+ */
+GZ3D.RadialMenu.prototype.show = function(event,model)
+{
+  this.model = model;
+  var pointer = this.getPointer(event);
+  this.startPosition = pointer;
+
+  for ( var i in this.menu.children )
+  {
+    this.menu.children[i].children[0].visible = true;
+    this.menu.children[i].children[1].visible = true;
+    this.menu.children[i].children[0].position.set(pointer.x,pointer.y,0);
+    this.menu.children[i].children[1].position.set(pointer.x,pointer.y,0);
+  }
+
+  this.moving = true;
+  this.showing = true;
+};
+
+/**
+ * Update radial menu
+ */
+GZ3D.RadialMenu.prototype.update = function()
+{
+  if (!this.moving)
+  {
+    return;
+  }
+
+  // Move outwards
+  for ( var i in this.menu.children )
+  {
+    var X = this.menu.children[i].children[0].position.x -
+        this.startPosition.x;
+    var Y = this.menu.children[i].children[0].position.y -
+        this.startPosition.y;
+
+    var d = Math.sqrt(Math.pow(X,2) + Math.pow(Y,2));
+
+    if ( d !== this.radius)
+    {
+      X = X - ( this.speed * Math.sin( ( this.offset - i ) * Math.PI/4 ) );
+      Y = Y - ( this.speed * Math.cos( ( this.offset - i ) * Math.PI/4 ) );
+    }
+    else
+    {
+      this.moving = false;
+    }
+
+    this.menu.children[i].children[0].position.x = X + this.startPosition.x;
+    this.menu.children[i].children[0].position.y = Y + this.startPosition.y;
+    this.menu.children[i].children[1].position.x = X + this.startPosition.x;
+    this.menu.children[i].children[1].position.y = Y + this.startPosition.y;
+
+  }
+
+};
+
+/**
+ * Get pointer (mouse or touch) coordinates inside the canvas
+ * @param {} event
+ */
+GZ3D.RadialMenu.prototype.getPointer = function(event)
+{
+  if (event.originalEvent)
+  {
+    event = event.originalEvent;
+  }
+  var pointer = event.touches ? event.touches[ 0 ] : event;
+  var rect = this.domElement.getBoundingClientRect();
+  var posX = (pointer.clientX - rect.left);
+  var posY = (pointer.clientY - rect.top);
+
+  return {x: posX, y:posY};
+};
+
+/**
+ * Movement after long press to select items on menu
+ * @param {} event
+ */
+GZ3D.RadialMenu.prototype.onLongPressMove = function(event)
+{
+  var pointer = this.getPointer(event);
+  var pointerX = pointer.x - this.startPosition.x;
+  var pointerY = pointer.y - this.startPosition.y;
+
+  var angle = Math.atan2(pointerY,pointerX);
+
+  // Check angle region
+  var region = null;
+  // bottom-left
+  if (angle > 5*Math.PI/8 && angle < 7*Math.PI/8)
+  {
+    region = 1;
+  }
+  // left
+  else if ( (angle > -8*Math.PI/8 && angle < -7*Math.PI/8) ||
+      (angle > 7*Math.PI/8 && angle < 8*Math.PI/8) )
+  {
+    region = 2;
+  }
+  // top-left
+  else if (angle > -7*Math.PI/8 && angle < -5*Math.PI/8)
+  {
+    region = 3;
+  }
+  // top
+  else if (angle > -5*Math.PI/8 && angle < -3*Math.PI/8)
+  {
+    region = 4;
+  }
+  // top-right
+  else if (angle > -3*Math.PI/8 && angle < -1*Math.PI/8)
+  {
+    region = 5;
+  }
+  // right
+  else if (angle > -1*Math.PI/8 && angle < 1*Math.PI/8)
+  {
+    region = 6;
+  }
+  // bottom-right
+  else if (angle > 1*Math.PI/8 && angle < 3*Math.PI/8)
+  {
+    region = 7;
+  }
+  // bottom
+  else if (angle > 3*Math.PI/8 && angle < 5*Math.PI/8)
+  {
+    region = 8;
+  }
+
+  // Check if any existing item is in the region
+  var Selected = region - 4 + this.offset;
+
+  if (Selected >= this.numberOfItems || Selected < 0)
+  {
+    this.selected = null;
+    Selected = null;
+  }
+
+  var counter = 0;
+  for ( var i in this.menu.children )
+  {
+    if (counter === Selected)
+    {
+      this.menu.children[i].children[1].material.color = this.selectedColor;
+      this.menu.children[i].children[0].scale.set(
+          this.bgSizeSelected*this.iconProportion,
+          this.bgSizeSelected*this.iconProportion, 1.0 );
+      this.menu.children[i].children[1].scale.set(
+          this.bgSizeSelected,
+          this.bgSizeSelected, 1.0 );
+      this.selected = this.menu.children[i].children[0].name;
+    }
+    else
+    {
+      this.menu.children[i].children[1].material.color = this.plainColor;
+      this.menu.children[i].children[0].scale.set(
+          this.bgSize*this.iconProportion,
+          this.bgSize*this.iconProportion, 1.0 );
+      this.menu.children[i].children[1].scale.set(
+          this.bgSize, this.bgSize, 1.0 );
+    }
+    counter++;
+  }
+};
+
+/**
+ * Create an item and add it to the menu.
+ * Create them in order
+ * @param {string} type - delete/translate/rotate
+ * @param {string} itemTexture - icon's uri
+ */
+GZ3D.RadialMenu.prototype.addItem = function(type,itemTexture)
+{
+  // Load icon
+  itemTexture = THREE.ImageUtils.loadTexture( itemTexture );
+
+  var itemMaterial = new THREE.SpriteMaterial( { useScreenCoordinates: true,
+      alignment: THREE.SpriteAlignment.center } );
+  itemMaterial.map = itemTexture;
+
+  var iconItem = new THREE.Sprite( itemMaterial );
+  iconItem.scale.set( this.bgSize*this.iconProportion,
+      this.bgSize*this.iconProportion, 1.0 );
+  iconItem.name = type;
+
+  // Icon background
+  var bgMaterial = new THREE.SpriteMaterial( {
+      map: this.bgShape,
+      useScreenCoordinates: true,
+      alignment: THREE.SpriteAlignment.center,
+      color: this.plainColor } );
+
+  var bgItem = new THREE.Sprite( bgMaterial );
+  bgItem.scale.set( this.bgSize, this.bgSize, 1.0 );
+
+  var item = new THREE.Object3D();
+  item.add(iconItem);
+  item.add(bgItem);
+
+  this.menu.add(item);
+};
+
+
+/**
  * The scene is where everything is placed, from objects, to lights and cameras.
  * @constructor
  */
@@ -2856,6 +3291,9 @@ GZ3D.Scene.prototype.init = function()
   effect.renderToScreen = true;
   this.composer.addPass( effect );
 
+  // Radial menu (only triggered by touch)
+  this.radialMenu = new GZ3D.RadialMenu(this.getDomElement());
+  this.scene.add(this.radialMenu.menu);
 };
 
 /**
@@ -3084,6 +3522,11 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
         model = model.parent;
       }
 
+      if (model === this.radialMenu.menu)
+      {
+        continue;
+      }
+
       if (model.name.indexOf('COLLISION_VISUAL') >= 0)
       {
         model = null;
@@ -3130,6 +3573,7 @@ GZ3D.Scene.prototype.render = function()
   // Kill camera control when:
   // -spawning
   // -manipulating
+  // -using radial menu
   if (this.killCameraControl || this.modelManipulator.hovered)
   {
     this.controls.enabled = false;
@@ -3142,6 +3586,7 @@ GZ3D.Scene.prototype.render = function()
   }
 
   this.modelManipulator.update();
+  this.radialMenu.update();
 
   if (this.effectsEnabled)
   {
@@ -4024,6 +4469,27 @@ GZ3D.Scene.prototype.attachManipulator = function(model,mode)
   this.mouseEntity = this.selectedEntity;
   this.scene.add(this.modelManipulator.gizmo);
   this.killCameraControl = false;
+};
+
+/**
+ * Show radial menu
+ * @param {} event
+ */
+GZ3D.Scene.prototype.showRadialMenu = function(e)
+{
+  var event = e.originalEvent;
+
+  var pointer = event.touches ? event.touches[ 0 ] : event;
+  var pos = new THREE.Vector2(pointer.clientX, pointer.clientY);
+
+  var intersect = new THREE.Vector3();
+  var model = this.getRayCastModel(pos, intersect);
+
+  if (model && model.name !== '' && model.name !== 'plane'
+      && this.modelManipulator.pickerNames.indexOf(model.name) === -1)
+  {
+    this.radialMenu.show(event,model);
+  }
 };
 
 /**
