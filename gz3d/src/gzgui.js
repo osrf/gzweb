@@ -10,7 +10,6 @@ $(function()
   $('#view-collisions').buttonMarkup({icon: 'false'});
 
   $( '#clock-touch' ).popup('option', 'arrow', 't');
-  $.mobile.activeBtnClass = 'unused';
 
   // Panel starts open for wide screens
   if ($(window).width() / parseFloat($('body').css('font-size')) > 35)
@@ -178,6 +177,11 @@ $(function()
       .css('float', 'left')
       .css('height', '1.45em')
       .css('padding', '0.65em');
+
+  $( '#leftPanel' ).on('panelclose', function()
+      {
+        $('#panelButton').removeClass('ui-btn-active');
+      });
 
   $('#view-mode').click(function()
       {
