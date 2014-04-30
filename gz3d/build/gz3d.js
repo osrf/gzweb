@@ -2823,6 +2823,7 @@ GZ3D.Scene.prototype.init = function()
     this.modelManipulator = new GZ3D.Manipulator(this.camera, false,
       this.getDomElement());
   }
+  this.timeDown = null;
 
   this.controls = new THREE.OrbitControls(this.camera);
 
@@ -2908,6 +2909,7 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
     if (model.name === 'plane')
     {
       this.killCameraControl = false;
+      this.timeDown = new Date().getTime();
     }
     // Do not attach manipulator to itself
     else if (this.modelManipulator.pickerNames.indexOf(model.name) >= 0)
@@ -2934,12 +2936,14 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
     else
     {
       this.killCameraControl = false;
+      this.timeDown = new Date().getTime();
     }
   }
   // Plane from below, for example
   else
   {
     this.killCameraControl = false;
+    this.timeDown = new Date().getTime();
   }
 };
 
@@ -2953,6 +2957,16 @@ GZ3D.Scene.prototype.onPointerUp = function(event)
 
   // The mouse is not holding anything
   this.mouseEntity = null;
+
+  // Clicks (<100ms) outside any models trigger view mode
+  var milisecs = new Date().getTime();
+  if (milisecs - this.timeDown < 100)
+  {
+    this.setManipulationMode('view');
+    $( '#view-mode' ).click();
+    $('input[type="radio"]').checkboxradio('refresh');
+  }
+  this.timeDown = null;
 };
 
 /**
