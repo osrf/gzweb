@@ -9,13 +9,180 @@ $(function()
   // Toggle items unchecked
   $('#view-collisions').buttonMarkup({icon: 'false'});
 
+  $( '#clock-touch' ).popup('option', 'arrow', 't');
+
   // Panel starts open for wide screens
   if ($(window).width() / parseFloat($('body').css('font-size')) > 35)
   {
     $('#leftPanel').panel('open');
   }
 
-  // Clicks/taps
+  // Clicks/taps// Touch devices
+  if ('ontouchstart' in window || 'onmsgesturechange' in window)
+  {
+    // swipe icon
+    $('#box').html('<b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Box</b>'+
+        '<div style="float: right;">'+
+        '<img src="style/images/box.png" '+
+        'style="vertical-align:middle;height:1.4em;">'+
+        '<img src="style/images/swipe.png" '+
+        'style="vertical-align:middle;margin-left:1em;"></div>');
+    $('#sphere').html('<b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sphere</b>'+
+        '<div style="float: right;">'+
+        '<img src="style/images/sphere.png" '+
+        'style="vertical-align:middle;;height:1.4em;">'+
+        '<img src="style/images/swipe.png" '+
+        'style="vertical-align:middle; margin-left:1em;"></div>');
+    $('#cylinder').html('<b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Cylinder</b>'+
+        '<div style="float: right;">'+
+        '<img src="style/images/cylinder.png" '+
+        'style="vertical-align:middle;;height:1.4em;">'+
+        '<img src="style/images/swipe.png" '+
+        'style="vertical-align:middle; margin-left:1em;"></div>');
+
+    // touchstart
+    $( '#box' ).bind('touchstart',function(event) {
+      guiEvents.emit('close_panel');
+      guiEvents.emit('spawn_entity_start', 'box');
+      event.stopPropagation();
+    });
+    $( '#sphere' ).bind('touchstart',function(event) {
+      guiEvents.emit('close_panel');
+      guiEvents.emit('spawn_entity_start', 'sphere');
+      event.stopPropagation();
+    });
+    $( '#cylinder' ).bind('touchstart',function(event) {
+      guiEvents.emit('close_panel');
+      guiEvents.emit('spawn_entity_start', 'cylinder');
+      event.stopPropagation();
+    });
+    // touchmove
+    $( '#box' ).bind('touchmove',function(event) {
+      guiEvents.emit('spawn_entity_move', event);
+      event.stopPropagation();
+    });
+    $( '#sphere' ).bind('touchmove',function(event) {
+      guiEvents.emit('spawn_entity_move', event);
+      event.stopPropagation();
+    });
+    $( '#cylinder' ).bind('touchmove',function(event) {
+      guiEvents.emit('spawn_entity_move', event);
+      event.stopPropagation();
+    });
+    // touchend
+    $( '#box' ).bind('touchend',function() {
+      guiEvents.emit('spawn_entity_end');
+    });
+    $( '#sphere' ).bind('touchend',function() {
+      guiEvents.emit('spawn_entity_end');
+    });
+    $( '#cylinder' ).bind('touchend',function() {
+      guiEvents.emit('spawn_entity_end');
+    });
+
+    $('#play-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '13.2em')
+        .css('top', '0em')
+        .css('z-index', '1000');
+
+    $('#clock-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '9.9em')
+        .css('top', '0em')
+        .css('z-index', '1000');
+
+    $('#clock-mouse')
+        .css('visibility','hidden');
+
+    $('#mode-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '0.5em')
+        .css('top', '0.15em')
+        .css('z-index', '1000');
+
+    $('#box-header-fieldset')
+        .css('visibility','hidden');
+
+    $('#sphere-header-fieldset')
+        .css('visibility','hidden');
+
+    $('#cylinder-header-fieldset')
+        .css('visibility','hidden');
+  }
+  // Mouse devices
+  else
+  {
+    $( '#box' ).click(function() {
+      guiEvents.emit('close_panel');
+      guiEvents.emit('spawn_entity_start', 'box');
+    });
+
+    $( '#sphere' ).click(function() {
+      guiEvents.emit('close_panel');
+      guiEvents.emit('spawn_entity_start', 'sphere');
+    });
+
+    $( '#cylinder' ).click(function() {
+      guiEvents.emit('close_panel');
+      guiEvents.emit('spawn_entity_start', 'cylinder');
+    });
+
+    $('#clock-header-fieldset')
+        .css('visibility','hidden');
+
+    $('#play-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '32.4em')
+        .css('top', '0em')
+        .css('z-index', '1000');
+
+    $('#clock-mouse')
+        .css('position', 'absolute')
+        .css('right', '19.5em')
+        .css('top', '0.5em')
+        .css('z-index', '100')
+        .css('width', '12em')
+        .css('height', '2.5em')
+        .css('background-color', '#333333')
+        .css('padding', '3px')
+        .css('border-radius', '5px');
+
+    $('#mode-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '12.6em')
+        .css('top', '0.15em')
+        .css('z-index', '1000');
+
+    $('#box-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '6.5em')
+        .css('top', '0em')
+        .css('z-index', '1000');
+
+    $('#sphere-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '3.5em')
+        .css('top', '0em')
+        .css('z-index', '1000');
+
+    $('#cylinder-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '0.5em')
+        .css('top', '0em')
+        .css('z-index', '1000');
+  }
+
+  $('.header-button')
+      .css('float', 'left')
+      .css('height', '1.45em')
+      .css('padding', '0.65em');
+
+  $( '#leftPanel' ).on('panelclose', function()
+      {
+        $('#panelButton').removeClass('ui-btn-active');
+      });
+
   $('#view-mode').click(function()
       {
         guiEvents.emit('manipulation_mode', 'view');
@@ -27,21 +194,6 @@ $(function()
   $('#rotate-mode').click(function()
       {
         guiEvents.emit('manipulation_mode', 'rotate');
-      });
-  $('#box').click(function()
-      {
-        guiEvents.emit('close_panel');
-        guiEvents.emit('spawn_entity_start', 'box');
-      });
-  $('#sphere').click(function()
-      {
-        guiEvents.emit('close_panel');
-        guiEvents.emit('spawn_entity_start', 'sphere');
-      });
-  $('#cylinder').click(function()
-      {
-        guiEvents.emit('close_panel');
-        guiEvents.emit('spawn_entity_start', 'cylinder');
       });
   $('#box-header').click(function()
       {
@@ -69,6 +221,21 @@ $(function()
           guiEvents.emit('pause', true);
         }
       });
+  $('#clock').click(function()
+      {
+        if ($.mobile.activePage.find('#clock-touch').parent().hasClass('ui-popup-active'))
+        {
+          $( '#clock-touch' ).popup('close');
+        }
+        else
+        {
+          var position = $('#clock').offset();
+          $('#clock-touch').popup('open', {
+              x:position.left+1.6*parseFloat($('body').css('font-size')),
+              y:4*parseFloat($('body').css('font-size'))});
+        }
+      });
+
   $('#reset-model').click(function()
       {
         guiEvents.emit('model_reset');
@@ -127,8 +294,7 @@ GZ3D.Gui.prototype.init = function()
   );
 
   // Create temp model
-  guiEvents.on('spawn_entity_start',
-      function(entity)
+  guiEvents.on('spawn_entity_start', function(entity)
       {
         // manually trigger view mode
         that.scene.setManipulationMode('view');
@@ -139,6 +305,24 @@ GZ3D.Gui.prototype.init = function()
             {
               that.emitter.emit('entityCreated', obj, entity);
             });
+      }
+  );
+
+  // Move temp model by touch
+  guiEvents.on('spawn_entity_move', function(event)
+      {
+        that.spawnState = 'MOVE';
+        that.spawnModel.onTouchMove(event,false);
+      }
+  );
+  // Place temp model by touch
+  guiEvents.on('spawn_entity_end', function()
+      {
+        if (that.spawnState === 'MOVE')
+        {
+          that.spawnModel.onTouchEnd();
+        }
+        that.spawnState = null;
       }
   );
 
@@ -208,7 +392,7 @@ GZ3D.Gui.prototype.setPaused = function(paused)
  */
 GZ3D.Gui.prototype.setRealTime = function(realTime)
 {
-  $('#real-time-value').text(realTime);
+  $('.real-time-value').text(realTime);
 };
 
 /**
@@ -217,5 +401,5 @@ GZ3D.Gui.prototype.setRealTime = function(realTime)
  */
 GZ3D.Gui.prototype.setSimTime = function(simTime)
 {
-  $('#sim-time-value').text(simTime);
+  $('.sim-time-value').text(simTime);
 };

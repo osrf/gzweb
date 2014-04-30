@@ -943,3 +943,4 @@ THREE.TransformControls = function ( camera, domElement, doc ) {
 };
 
 THREE.TransformControls.prototype = Object.create( THREE.EventDispatcher.prototype );
+
