@@ -251,6 +251,11 @@ $(function()
         guiEvents.emit('world_reset');
         guiEvents.emit('close_panel');
       });
+  $('#reset-view').click(function()
+      {
+        guiEvents.emit('view_reset');
+        guiEvents.emit('close_panel');
+      });
   $('#view-collisions').click(function()
       {
         guiEvents.emit('show_collision');
@@ -340,6 +345,12 @@ GZ3D.Gui.prototype.init = function()
   guiEvents.on('model_reset', function()
       {
         that.emitter.emit('reset', 'model');
+      }
+  );
+
+  guiEvents.on('view_reset', function()
+      {
+        that.scene.resetView();
       }
   );
 
@@ -2776,11 +2787,7 @@ GZ3D.Scene.prototype.init = function()
   // camera
   this.camera = new THREE.PerspectiveCamera(
       60, window.innerWidth / window.innerHeight, 0.1, 1000 );
-  this.camera.position.x = 0;
-  this.camera.position.y = -5;
-  this.camera.position.z = 5;
-  this.camera.up = new THREE.Vector3(0, 0, 1);
-  this.camera.lookAt(0, 0, 0);
+  this.resetView();
   this.killCameraControl = false;
 
   this.showCollisions = false;
@@ -4024,6 +4031,19 @@ GZ3D.Scene.prototype.attachManipulator = function(model,mode)
   this.mouseEntity = this.selectedEntity;
   this.scene.add(this.modelManipulator.gizmo);
   this.killCameraControl = false;
+};
+
+/**
+ * Reset view
+ */
+GZ3D.Scene.prototype.resetView = function()
+{
+  this.camera.position.x = 0;
+  this.camera.position.y = -5;
+  this.camera.position.z = 5;
+  this.camera.up = new THREE.Vector3(0, 0, 1);
+  this.camera.lookAt(new THREE.Vector3( 0, 0, 0 ));
+  this.camera.updateMatrix();
 };
 
 /**
