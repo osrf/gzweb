@@ -125,6 +125,9 @@ GZ3D.Scene.prototype.init = function()
   effect.renderToScreen = true;
   this.composer.addPass( effect );
 
+  // Radial menu (only triggered by touch)
+  this.radialMenu = new GZ3D.RadialMenu(this.getDomElement());
+  this.scene.add(this.radialMenu.menu);
 };
 
 /**
@@ -366,6 +369,11 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
         model = model.parent;
       }
 
+      if (model === this.radialMenu.menu)
+      {
+        continue;
+      }
+
       if (model.name.indexOf('COLLISION_VISUAL') >= 0)
       {
         model = null;
@@ -412,6 +420,7 @@ GZ3D.Scene.prototype.render = function()
   // Kill camera control when:
   // -spawning
   // -manipulating
+  // -using radial menu
   if (this.killCameraControl || this.modelManipulator.hovered)
   {
     this.controls.enabled = false;
@@ -424,6 +433,7 @@ GZ3D.Scene.prototype.render = function()
   }
 
   this.modelManipulator.update();
+  this.radialMenu.update();
 
   if (this.effectsEnabled)
   {
@@ -1311,4 +1321,25 @@ GZ3D.Scene.prototype.resetView = function()
   this.camera.up = new THREE.Vector3(0, 0, 1);
   this.camera.lookAt(new THREE.Vector3( 0, 0, 0 ));
   this.camera.updateMatrix();
+};
+
+/**
+ * Show radial menu
+ * @param {} event
+ */
+GZ3D.Scene.prototype.showRadialMenu = function(e)
+{
+  var event = e.originalEvent;
+
+  var pointer = event.touches ? event.touches[ 0 ] : event;
+  var pos = new THREE.Vector2(pointer.clientX, pointer.clientY);
+
+  var intersect = new THREE.Vector3();
+  var model = this.getRayCastModel(pos, intersect);
+
+  if (model && model.name !== '' && model.name !== 'plane'
+      && this.modelManipulator.pickerNames.indexOf(model.name) === -1)
+  {
+    this.radialMenu.show(event,model);
+  }
 };
