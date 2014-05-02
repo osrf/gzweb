@@ -2785,6 +2785,12 @@ GZ3D.Scene.prototype.init = function()
 
   this.showCollisions = false;
 
+  // Material for simple shapes being spawned (grey transparent)
+  this.spawnedShapeMaterial = new THREE.MeshPhongMaterial(
+      {color:0xffffff, shading: THREE.SmoothShading} );
+  this.spawnedShapeMaterial.transparent = true;
+  this.spawnedShapeMaterial.opacity = 0.5;
+
   var that = this;
 
   // Need to use `document` instead of getDomElement in order to get events
@@ -3282,9 +3288,7 @@ GZ3D.Scene.prototype.createPlane = function(normalX, normalY, normalZ,
 GZ3D.Scene.prototype.createSphere = function(radius)
 {
   var geometry = new THREE.SphereGeometry(radius, 32, 32);
-  var material =  new THREE.MeshPhongMaterial(
-      {color:0xffffff, shading: THREE.SmoothShading} );
-  var mesh = new THREE.Mesh(geometry, material);
+  var mesh = new THREE.Mesh(geometry, this.spawnedShapeMaterial);
   return mesh;
 };
 
@@ -3298,9 +3302,7 @@ GZ3D.Scene.prototype.createCylinder = function(radius, length)
 {
   var geometry = new THREE.CylinderGeometry(radius, radius, length, 32, 1,
       false);
-  var material =  new THREE.MeshPhongMaterial(
-      {color:0xffffff, shading: THREE.SmoothShading} );
-  var mesh = new THREE.Mesh(geometry, material);
+  var mesh = new THREE.Mesh(geometry, this.spawnedShapeMaterial);
   mesh.rotation.x = Math.PI * 0.5;
   return mesh;
 };
@@ -3349,9 +3351,7 @@ GZ3D.Scene.prototype.createBox = function(width, height, depth)
   }
   geometry.uvsNeedUpdate = true;
 
-  var material =  new THREE.MeshPhongMaterial(
-      {color:0xffffff, shading: THREE.SmoothShading} );
-  var mesh = new THREE.Mesh(geometry, material);
+  var mesh = new THREE.Mesh(geometry, this.spawnedShapeMaterial);
   mesh.castShadow = true;
   return mesh;
 };
