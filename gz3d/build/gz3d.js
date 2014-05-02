@@ -2787,6 +2787,7 @@ GZ3D.Scene.prototype.init = function()
   // camera
   this.camera = new THREE.PerspectiveCamera(
       60, window.innerWidth / window.innerHeight, 0.1, 1000 );
+  this.defaultCameraPosition = new THREE.Vector3(0, -5, 5);
   this.resetView();
   this.killCameraControl = false;
 
@@ -4038,9 +4039,7 @@ GZ3D.Scene.prototype.attachManipulator = function(model,mode)
  */
 GZ3D.Scene.prototype.resetView = function()
 {
-  this.camera.position.x = 0;
-  this.camera.position.y = -5;
-  this.camera.position.z = 5;
+  this.camera.position.copy(this.defaultCameraPosition);
   this.camera.up = new THREE.Vector3(0, 0, 1);
   this.camera.lookAt(new THREE.Vector3( 0, 0, 0 ));
   this.camera.updateMatrix();
