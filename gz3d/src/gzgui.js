@@ -246,6 +246,11 @@ $(function()
         guiEvents.emit('world_reset');
         guiEvents.emit('close_panel');
       });
+  $('#reset-view').click(function()
+      {
+        guiEvents.emit('view_reset');
+        guiEvents.emit('close_panel');
+      });
   $('#view-collisions').click(function()
       {
         guiEvents.emit('show_collision');
@@ -335,6 +340,12 @@ GZ3D.Gui.prototype.init = function()
   guiEvents.on('model_reset', function()
       {
         that.emitter.emit('reset', 'model');
+      }
+  );
+
+  guiEvents.on('view_reset', function()
+      {
+        that.scene.resetView();
       }
   );
 
