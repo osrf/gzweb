@@ -4474,6 +4474,17 @@ GZ3D.Scene.prototype.attachManipulator = function(model,mode)
 };
 
 /**
+ * Reset view
+ */
+GZ3D.Scene.prototype.resetView = function()
+{
+  this.camera.position.copy(this.defaultCameraPosition);
+  this.camera.up = new THREE.Vector3(0, 0, 1);
+  this.camera.lookAt(new THREE.Vector3( 0, 0, 0 ));
+  this.camera.updateMatrix();
+};
+
+/**
  * Show radial menu
  * @param {} event
  */
