@@ -141,6 +141,8 @@ GZ3D.GZIface.prototype.init = function()
         this.scene.add(modelObj);
       }
 
+      // TODOin: consider this
+
       // visuals may arrive out of order (before the model msg),
       // add the visual in if we find its parent here
       var len = this.visualsToAdd.length;
@@ -454,6 +456,7 @@ GZ3D.GZIface.prototype.updateStatsGuiFromMsg = function(stats)
   this.gui.setSimTime(simTimeValue);
 };
 
+// TODOin: something like this in gzspawn
 GZ3D.GZIface.prototype.createModelFromMsg = function(model)
 {
   var modelObj = new THREE.Object3D();

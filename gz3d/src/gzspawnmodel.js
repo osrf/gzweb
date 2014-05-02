@@ -29,6 +29,8 @@ GZ3D.SpawnModel.prototype.init = function()
  * @param {string} entity
  * @param {function} callback
  */
+
+ // TODOin: entity: still take name and then check against db
 GZ3D.SpawnModel.prototype.start = function(entity, callback)
 {
   if (this.active)
@@ -42,6 +44,7 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
   this.callback = callback;
 
   this.obj = new THREE.Object3D();
+
   var mesh;
   if (entity === 'box')
   {
@@ -58,13 +61,15 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
     mesh = this.scene.createCylinder(0.5, 1.0);
     this.obj.name = 'unit_cylinder_' + (new Date()).getTime();
   }
+  this.obj.add(mesh);
+
+  // TODOin: add all meshes like GZIface.createModelFromMsg
 
   // temp model appears within current view
   var pos = new THREE.Vector2(window.window.innerWidth/2, window.innerHeight/2);
   var intersect = new THREE.Vector3();
   this.scene.getRayCastModel(pos, intersect);
 
-  this.obj.add(mesh);
   this.obj.position.x = intersect.x;
   this.obj.position.y = intersect.y;
   this.obj.position.z += 0.5;

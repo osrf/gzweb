@@ -57,6 +57,11 @@
       .ui-popup-screen {
         z-index: 999;
       }
+      #footer {
+          width: 100%;
+          position: absolute;
+          bottom: 0;
+      }
     </style>
   </head>
 
@@ -179,6 +184,10 @@
         <a href="#leftPanel" data-role="button" class="header-button" id="panelButton"><img style="height:1.45em" src="style/images/bars.png" title="Menu"></a>
       </fieldset>
 
+      <fieldset id="insert-header-fieldset">
+        <a href="#" data-role="button" class="header-button" id="insertButton"><span><img style="height:1.45em" src="style/images/insert.png" title="Insert"></span></a>
+      </fieldset>
+
       <fieldset id="play-header-fieldset">
         <a href="#" data-role="button" class="header-button" id="play"><span id="playText"><img style="height:1.45em" src="style/images/play.png" title="Play"></span></a>
       </fieldset>
@@ -223,6 +232,14 @@
       <div data-role="content" id="container">
       </div>
       <!-- content -->
+
+      <!-- insert menu -->
+      <div id="footer">
+        <div id="insert-menu">
+          Insert
+        </div>
+      </div>
+      <!-- insert menu -->
     </div>
     <!-- page -->
 

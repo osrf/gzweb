@@ -136,6 +136,12 @@ $(function()
     $('#clock-header-fieldset')
         .css('visibility','hidden');
 
+    $('#insert-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '40.4em')
+        .css('top', '0em')
+        .css('z-index', '1000');
+
     $('#play-header-fieldset')
         .css('position', 'absolute')
         .css('right', '32.4em')
@@ -176,12 +182,24 @@ $(function()
         .css('right', '0.5em')
         .css('top', '0em')
         .css('z-index', '1000');
+
+    $('#insert-menu')
+        .css('display', 'none')
+        .css('background-color', '#2a2a2a')
+        .css('padding', '10px')
+        .css('z-index', '1000')
+        .css('width', '100%');
   }
 
   $('.header-button')
       .css('float', 'left')
       .css('height', '1.45em')
       .css('padding', '0.65em');
+
+  $('#insertButton').click(function(){
+        $('#leftPanel').panel('close');
+        $('#insert-menu').slideToggle('fast');
+    });
 
   $( '#leftPanel' ).on('panelclose', function()
       {
