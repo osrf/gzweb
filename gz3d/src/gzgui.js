@@ -265,7 +265,6 @@ $(function()
   var press_time = 400;
   $('#container')
     .on('touchstart', function (event) {
-      var $this = $(this);
       $(this).data('checkdown', setTimeout(function () {
         guiEvents.emit('longpress_start',event);
       }, press_time));
@@ -276,6 +275,9 @@ $(function()
     })
     .on('touchmove', function (event) {
       clearTimeout($(this).data('checkdown'));
+      $(this).data('checkdown', setTimeout(function () {
+        guiEvents.emit('longpress_start',event);
+      }, press_time));
       guiEvents.emit('longpress_move',event);
     });
 });

@@ -336,8 +336,8 @@ GZ3D.GZIface.prototype.init = function()
   // For deleting models
   this.deleteTopic = new ROSLIB.Topic({
     ros : this.webSocket,
-    name : '~/delete', // request? factory? model/modify?
-    messageType : 'delete', // request? factory? model/modify?
+    name : '~/entity_delete',
+    messageType : 'entity_delete',
   });
 
   var publishDeleteEntity = function(entity)

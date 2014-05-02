@@ -62,7 +62,7 @@ GazeboInterface::GazeboInterface()
   this->statsTopic = "~/world_stats";
   this->roadTopic = "~/roads";
   this->heightmapService = "~/heightmap_data";
-  this->deleteTopic = "~/delete";
+  this->deleteTopic = "~/entity_delete";
 
   // material topic
   this->materialTopic = "~/material";

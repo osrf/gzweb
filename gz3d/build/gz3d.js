@@ -270,7 +270,6 @@ $(function()
   var press_time = 400;
   $('#container')
     .on('touchstart', function (event) {
-      var $this = $(this);
       $(this).data('checkdown', setTimeout(function () {
         guiEvents.emit('longpress_start',event);
       }, press_time));
@@ -281,6 +280,9 @@ $(function()
     })
     .on('touchmove', function (event) {
       clearTimeout($(this).data('checkdown'));
+      $(this).data('checkdown', setTimeout(function () {
+        guiEvents.emit('longpress_start',event);
+      }, press_time));
       guiEvents.emit('longpress_move',event);
     });
 });
@@ -853,8 +855,8 @@ GZ3D.GZIface.prototype.init = function()
   // For deleting models
   this.deleteTopic = new ROSLIB.Topic({
     ros : this.webSocket,
-    name : '~/delete', // request? factory? model/modify?
-    messageType : 'delete', // request? factory? model/modify?
+    name : '~/entity_delete',
+    messageType : 'entity_delete',
   });
 
   var publishDeleteEntity = function(entity)
