@@ -224,8 +224,8 @@ GZ3D.Scene.prototype.onPointerUp = function(event)
   this.mouseEntity = null;
 
   // Clicks (<100ms) outside any models trigger view mode
-  var milisecs = new Date().getTime();
-  if (milisecs - this.timeDown < 100)
+  var millisecs = new Date().getTime();
+  if (millisecs - this.timeDown < 100)
   {
     this.setManipulationMode('view');
     $( '#view-mode' ).click();
