@@ -251,6 +251,11 @@ $(function()
         guiEvents.emit('world_reset');
         guiEvents.emit('close_panel');
       });
+  $('#reset-view').click(function()
+      {
+        guiEvents.emit('view_reset');
+        guiEvents.emit('close_panel');
+      });
   $('#view-collisions').click(function()
       {
         guiEvents.emit('show_collision');
@@ -362,6 +367,12 @@ GZ3D.Gui.prototype.init = function()
   guiEvents.on('model_reset', function()
       {
         that.emitter.emit('reset', 'model');
+      }
+  );
+
+  guiEvents.on('view_reset', function()
+      {
+        that.scene.resetView();
       }
   );
 
@@ -3213,14 +3224,17 @@ GZ3D.Scene.prototype.init = function()
   // camera
   this.camera = new THREE.PerspectiveCamera(
       60, window.innerWidth / window.innerHeight, 0.1, 1000 );
-  this.camera.position.x = 0;
-  this.camera.position.y = -5;
-  this.camera.position.z = 5;
-  this.camera.up = new THREE.Vector3(0, 0, 1);
-  this.camera.lookAt(0, 0, 0);
+  this.defaultCameraPosition = new THREE.Vector3(0, -5, 5);
+  this.resetView();
   this.killCameraControl = false;
 
   this.showCollisions = false;
+
+  // Material for simple shapes being spawned (grey transparent)
+  this.spawnedShapeMaterial = new THREE.MeshPhongMaterial(
+      {color:0xffffff, shading: THREE.SmoothShading} );
+  this.spawnedShapeMaterial.transparent = true;
+  this.spawnedShapeMaterial.opacity = 0.5;
 
   var that = this;
 
@@ -3260,6 +3274,7 @@ GZ3D.Scene.prototype.init = function()
     this.modelManipulator = new GZ3D.Manipulator(this.camera, false,
       this.getDomElement());
   }
+  this.timeDown = null;
 
   this.controls = new THREE.OrbitControls(this.camera);
 
@@ -3348,6 +3363,7 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
     if (model.name === 'plane')
     {
       this.killCameraControl = false;
+      this.timeDown = new Date().getTime();
     }
     // Do not attach manipulator to itself
     else if (this.modelManipulator.pickerNames.indexOf(model.name) >= 0)
@@ -3374,12 +3390,14 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
     else
     {
       this.killCameraControl = false;
+      this.timeDown = new Date().getTime();
     }
   }
   // Plane from below, for example
   else
   {
     this.killCameraControl = false;
+    this.timeDown = new Date().getTime();
   }
 };
 
@@ -3393,6 +3411,16 @@ GZ3D.Scene.prototype.onPointerUp = function(event)
 
   // The mouse is not holding anything
   this.mouseEntity = null;
+
+  // Clicks (<100ms) outside any models trigger view mode
+  var millisecs = new Date().getTime();
+  if (millisecs - this.timeDown < 100)
+  {
+    this.setManipulationMode('view');
+    $( '#view-mode' ).click();
+    $('input[type="radio"]').checkboxradio('refresh');
+  }
+  this.timeDown = null;
 };
 
 /**
@@ -3729,9 +3757,7 @@ GZ3D.Scene.prototype.createPlane = function(normalX, normalY, normalZ,
 GZ3D.Scene.prototype.createSphere = function(radius)
 {
   var geometry = new THREE.SphereGeometry(radius, 32, 32);
-  var material =  new THREE.MeshPhongMaterial(
-      {color:0xffffff, shading: THREE.SmoothShading} );
-  var mesh = new THREE.Mesh(geometry, material);
+  var mesh = new THREE.Mesh(geometry, this.spawnedShapeMaterial);
   return mesh;
 };
 
@@ -3745,9 +3771,7 @@ GZ3D.Scene.prototype.createCylinder = function(radius, length)
 {
   var geometry = new THREE.CylinderGeometry(radius, radius, length, 32, 1,
       false);
-  var material =  new THREE.MeshPhongMaterial(
-      {color:0xffffff, shading: THREE.SmoothShading} );
-  var mesh = new THREE.Mesh(geometry, material);
+  var mesh = new THREE.Mesh(geometry, this.spawnedShapeMaterial);
   mesh.rotation.x = Math.PI * 0.5;
   return mesh;
 };
@@ -3796,9 +3820,7 @@ GZ3D.Scene.prototype.createBox = function(width, height, depth)
   }
   geometry.uvsNeedUpdate = true;
 
-  var material =  new THREE.MeshPhongMaterial(
-      {color:0xffffff, shading: THREE.SmoothShading} );
-  var mesh = new THREE.Mesh(geometry, material);
+  var mesh = new THREE.Mesh(geometry, this.spawnedShapeMaterial);
   mesh.castShadow = true;
   return mesh;
 };
