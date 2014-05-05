@@ -16,6 +16,7 @@
 */
 
 #include <boost/thread.hpp>
+#include <unistd.h>
 
 #include "pb2json.hh"
 //#include "WebSocketServer.hh"
@@ -320,72 +321,105 @@ void GazeboInterface::ProcessMessages()
         else if (topic == this->factoryTopic)
         {
           gazebo::msgs::Factory factoryMsg;
-          std::string name = get_value(msg, "msg:name");
-          std::string type = get_value(msg, "msg:type");
-          gazebo::math::Vector3 pos(
-            atof(get_value(msg, "msg:position:x").c_str()),
-            atof(get_value(msg, "msg:position:y").c_str()),
-            atof(get_value(msg, "msg:position:z").c_str()));
-          gazebo::math::Quaternion quat(
-            atof(get_value(msg, "msg:orientation:w").c_str()),
-            atof(get_value(msg, "msg:orientation:x").c_str()),
-            atof(get_value(msg, "msg:orientation:y").c_str()),
-            atof(get_value(msg, "msg:orientation:z").c_str()));
-
-          gazebo::math::Vector3 rpy = quat.GetAsEuler();
-
-          std::stringstream geom;
-          if (type == "box")
-          {
-            geom  << "<box>"
-                  <<   "<size>1.0 1.0 1.0</size>"
-                  << "</box>";
-          }
-          else if (type == "sphere")
-          {
-            geom  << "<sphere>"
-                  <<   "<radius>0.5</radius>"
-                  << "</sphere>";
-          }
-          else if (type == "cylinder")
-          {
-            geom  << "<cylinder>"
-                  <<   "<radius>0.5</radius>"
-                  <<   "<length>1.0</length>"
-                  << "</cylinder>";
-          }
-
           std::stringstream newModelStr;
-          newModelStr << "<sdf version ='" << SDF_VERSION << "'>"
-            << "<model name='" << name << "'>"
-            << "<pose>" << pos.x << " " << pos.y << " " << pos.z << " "
-                        << rpy.x << " " << rpy.y << " " << rpy.z << "</pose>"
-            << "<link name ='link'>"
-            <<   "<inertial><mass>1.0</mass></inertial>"
-            <<   "<collision name ='collision'>"
-            <<     "<geometry>"
-            <<        geom.str()
-            <<     "</geometry>"
-            << "</collision>"
-            << "<visual name ='visual'>"
-            <<     "<geometry>"
-            <<        geom.str()
-            <<     "</geometry>"
-            <<     "<material>"
-            <<       "<script>"
-            <<         "<uri>file://media/materials/scripts/gazebo.material"
-            <<         "</uri>"
-            <<         "<name>Gazebo/Grey</name>"
-            <<       "</script>"
-            <<     "</material>"
-            <<   "</visual>"
-            << "</link>"
-            << "</model>"
-            << "</sdf>";
 
-            // Spawn the model in the physics server
-            factoryMsg.set_sdf(newModelStr.str());
-            this->factoryPub->Publish(factoryMsg);
+          std::string type = get_value(msg, "msg:type");
+
+          if(type == "box" || type == "sphere" || type == "cylinder")
+          {
+            std::string name = get_value(msg, "msg:name");
+            gazebo::math::Vector3 pos(
+                atof(get_value(msg, "msg:position:x").c_str()),
+                atof(get_value(msg, "msg:position:y").c_str()),
+                atof(get_value(msg, "msg:position:z").c_str()));
+            gazebo::math::Quaternion quat(
+                atof(get_value(msg, "msg:orientation:w").c_str()),
+                atof(get_value(msg, "msg:orientation:x").c_str()),
+                atof(get_value(msg, "msg:orientation:y").c_str()),
+                atof(get_value(msg, "msg:orientation:z").c_str()));
+
+            gazebo::math::Vector3 rpy = quat.GetAsEuler();
+
+            std::stringstream geom;
+            if (type == "box")
+            {
+              geom  << "<box>"
+                    <<   "<size>1.0 1.0 1.0</size>"
+                    << "</box>";
+            }
+            else if (type == "sphere")
+            {
+              geom  << "<sphere>"
+                    <<   "<radius>0.5</radius>"
+                    << "</sphere>";
+            }
+            else if (type == "cylinder")
+            {
+              geom  << "<cylinder>"
+                    <<   "<radius>0.5</radius>"
+                    <<   "<length>1.0</length>"
+                    << "</cylinder>";
+            }
+
+            newModelStr << "<sdf version ='" << SDF_VERSION << "'>"
+                << "<model name='" << name << "'>"
+                << "<pose>" << pos.x << " " << pos.y << " " << pos.z << " "
+                            << rpy.x << " " << rpy.y << " " << rpy.z << "</pose>"
+                << "<link name ='link'>"
+                <<   "<inertial><mass>1.0</mass></inertial>"
+                <<   "<collision name ='collision'>"
+                <<     "<geometry>"
+                <<        geom.str()
+                <<     "</geometry>"
+                << "</collision>"
+                << "<visual name ='visual'>"
+                <<     "<geometry>"
+                <<        geom.str()
+                <<     "</geometry>"
+                <<     "<material>"
+                <<       "<script>"
+                <<         "<uri>file://media/materials/scripts/gazebo.material"
+                <<         "</uri>"
+                <<         "<name>Gazebo/Grey</name>"
+                <<       "</script>"
+                <<     "</material>"
+                <<   "</visual>"
+                << "</link>"
+                << "</model>"
+                << "</sdf>";
+          }
+          else
+          {
+            std::string path = std::string("../http/client/assets/") + type + "/model.sdf";
+
+            std::ifstream file(path.c_str());
+
+            if (file)
+            {
+              file.seekg(0,std::ios::end);
+              std::streampos length = file.tellg();
+              file.seekg(0,std::ios::beg);
+
+              std::vector<char> buffer(length);
+              file.read(&buffer[0],length);
+
+              std::stringstream modelXML;
+              modelXML.rdbuf()->pubsetbuf(&buffer[0],length);
+
+              std::string modelSDF = modelXML.str().substr(modelXML.str().find("<sdf"));
+
+              newModelStr << modelSDF;
+
+              file.close();
+            }
+
+          }
+
+std::cout << newModelStr.str() << std::endl;
+
+          // Spawn the model in the physics server
+          factoryMsg.set_sdf(newModelStr.str());
+          this->factoryPub->Publish(factoryMsg);
         }
         else if (topic == this->worldControlTopic)
         {

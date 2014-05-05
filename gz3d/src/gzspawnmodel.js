@@ -61,6 +61,16 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
     mesh = this.scene.createCylinder(0.5, 1.0);
     this.obj.name = 'unit_cylinder_' + (new Date()).getTime();
   }
+  else
+  {
+    // TODOin: find entity in database
+    console.log('insert '+entity);
+
+    mesh = this.scene.createBox(1, 1, 1);
+    this.obj.name = entity + '_' + (new Date()).getTime();
+
+  }
+
   this.obj.add(mesh);
 
   // TODOin: add all meshes like GZIface.createModelFromMsg

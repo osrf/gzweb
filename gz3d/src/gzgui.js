@@ -128,6 +128,11 @@ $(function()
       guiEvents.emit('spawn_entity_start', 'cylinder');
     });
 
+    $( '#insert-bowl' ).click(function() {
+      guiEvents.emit('close_panel');
+      guiEvents.emit('spawn_entity_start', 'bowl');
+    });
+
     $('#clock-header-fieldset')
         .css('visibility','hidden');
 
