@@ -8,6 +8,7 @@ $(function()
   //Initialize
   // Toggle items unchecked
   $('#view-collisions').buttonMarkup({icon: 'false'});
+  $('#snap-to-grid').buttonMarkup({icon: 'false'});
 
   $( '#clock-touch' ).popup('option', 'arrow', 't');
 
@@ -256,6 +257,10 @@ $(function()
         guiEvents.emit('show_collision');
         guiEvents.emit('close_panel');
       });
+  $( '#snap-to-grid' ).click(function() {
+    guiEvents.emit('snap_to_grid');
+    guiEvents.emit('close_panel');
+  });
 
   // Disable Esc key to close panel
   $('body').on('keyup', function(event)
@@ -387,6 +392,24 @@ GZ3D.Gui.prototype.init = function()
         else
         {
           $('#view-collisions').buttonMarkup({icon: 'check'});
+        }
+      }
+  );
+
+  guiEvents.on('snap_to_grid',
+      function ()
+      {
+        if(that.scene.modelManipulator.snapDist === null)
+        {
+          $('#snap-to-grid').buttonMarkup({icon: 'check'});
+          that.scene.modelManipulator.snapDist = 0.5;
+          that.spawnModel.snapDist = that.scene.modelManipulator.snapDist;
+        }
+        else
+        {
+          $('#snap-to-grid').buttonMarkup({icon: 'false'});
+          that.scene.modelManipulator.snapDist = null;
+          that.spawnModel.snapDist = null;
         }
       }
   );

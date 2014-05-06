@@ -13,6 +13,7 @@ $(function()
   //Initialize
   // Toggle items unchecked
   $('#view-collisions').buttonMarkup({icon: 'false'});
+  $('#snap-to-grid').buttonMarkup({icon: 'false'});
 
   $( '#clock-touch' ).popup('option', 'arrow', 't');
 
@@ -261,6 +262,10 @@ $(function()
         guiEvents.emit('show_collision');
         guiEvents.emit('close_panel');
       });
+  $( '#snap-to-grid' ).click(function() {
+    guiEvents.emit('snap_to_grid');
+    guiEvents.emit('close_panel');
+  });
 
   // Disable Esc key to close panel
   $('body').on('keyup', function(event)
@@ -392,6 +397,24 @@ GZ3D.Gui.prototype.init = function()
         else
         {
           $('#view-collisions').buttonMarkup({icon: 'check'});
+        }
+      }
+  );
+
+  guiEvents.on('snap_to_grid',
+      function ()
+      {
+        if(that.scene.modelManipulator.snapDist === null)
+        {
+          $('#snap-to-grid').buttonMarkup({icon: 'check'});
+          that.scene.modelManipulator.snapDist = 0.5;
+          that.spawnModel.snapDist = that.scene.modelManipulator.snapDist;
+        }
+        else
+        {
+          $('#snap-to-grid').buttonMarkup({icon: 'false'});
+          that.scene.modelManipulator.snapDist = null;
+          that.spawnModel.snapDist = null;
         }
       }
   );
@@ -4550,6 +4573,7 @@ GZ3D.SpawnModel.prototype.init = function()
   this.ray = new THREE.Ray();
   this.obj = null;
   this.active = false;
+  this.snapDist = null;
 };
 
 /**
@@ -4745,7 +4769,7 @@ GZ3D.SpawnModel.prototype.onKeyDown = function(event)
  * @param {integer} positionX - Horizontal position on the canvas
  * @param {integer} positionY - Vertical position on the canvas
  */
-GZ3D.SpawnModel.prototype.moveSpawnedModel = function(positionX,positionY)
+GZ3D.SpawnModel.prototype.moveSpawnedModel = function(positionX, positionY)
 {
   var vector = new THREE.Vector3( (positionX / window.containerWidth) * 2 - 1,
         -(positionY / window.containerHeight) * 2 + 1, 0.5);
@@ -4754,5 +4778,12 @@ GZ3D.SpawnModel.prototype.moveSpawnedModel = function(positionX,positionY)
       vector.sub(this.scene.camera.position).normalize());
   var point = this.ray.intersectPlane(this.plane);
   point.z = this.obj.position.z;
+
+  if(this.snapDist)
+  {
+    point.x = Math.round(point.x / this.snapDist) * this.snapDist;
+    point.y = Math.round(point.y / this.snapDist) * this.snapDist;
+  }
+
   this.scene.setPose(this.obj, point, new THREE.Quaternion());
 };
