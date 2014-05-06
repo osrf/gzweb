@@ -403,6 +403,7 @@ GZ3D.Gui.prototype.init = function()
         {
           $('#snap-to-grid').buttonMarkup({icon: 'check'});
           that.scene.modelManipulator.snapDist = 0.5;
+          that.spawnModel.snapDist = that.scene.modelManipulator.snapDist;
         }
         else
         {
