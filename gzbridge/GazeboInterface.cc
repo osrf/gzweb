@@ -323,12 +323,10 @@ void GazeboInterface::ProcessMessages()
           gazebo::msgs::Factory factoryMsg;
           std::stringstream newModelStr;
 
+          std::string name = get_value(msg, "msg:name");
           std::string type = get_value(msg, "msg:type");
 
-          if(type == "box" || type == "sphere" || type == "cylinder")
-          {
-            std::string name = get_value(msg, "msg:name");
-            gazebo::math::Vector3 pos(
+          gazebo::math::Vector3 pos(
                 atof(get_value(msg, "msg:position:x").c_str()),
                 atof(get_value(msg, "msg:position:y").c_str()),
                 atof(get_value(msg, "msg:position:z").c_str()));
@@ -337,9 +335,10 @@ void GazeboInterface::ProcessMessages()
                 atof(get_value(msg, "msg:orientation:x").c_str()),
                 atof(get_value(msg, "msg:orientation:y").c_str()),
                 atof(get_value(msg, "msg:orientation:z").c_str()));
-
             gazebo::math::Vector3 rpy = quat.GetAsEuler();
 
+          if(type == "box" || type == "sphere" || type == "cylinder")
+          {
             std::stringstream geom;
             if (type == "box")
             {
@@ -406,8 +405,27 @@ void GazeboInterface::ProcessMessages()
               std::stringstream modelXML;
               modelXML.rdbuf()->pubsetbuf(&buffer[0],length);
 
-              std::string modelSDF = modelXML.str().substr(modelXML.str().find("<sdf"));
+              // <sdf> and <model>
+              std::size_t begin = modelXML.str().find("<sdf");
+              std::size_t end = modelXML.str().find("\"",modelXML.str().find("model"))+1;
 
+              std::string headerSDF = modelXML.str().substr(begin, end-begin);
+
+              headerSDF += name + "\">";
+
+              // <pose>
+              std::stringstream poseSDF;
+              poseSDF << "    <pose>" << pos.x << " " << pos.y << " "
+                                      << pos.z << " " << rpy.x << " "
+                                      << rpy.y << " " << rpy.z << "</pose>";
+
+              // the rest
+              begin = modelXML.str().find(">",modelXML.str().find("model"))+1;
+
+              std::string modelSDF = modelXML.str().substr(begin);
+
+              newModelStr << headerSDF << std::endl;
+              newModelStr << poseSDF.str();
               newModelStr << modelSDF;
 
               file.close();
