@@ -224,7 +224,8 @@ $(function()
       });
   $('#clock').click(function()
       {
-        if ($.mobile.activePage.find('#clock-touch').parent().hasClass('ui-popup-active'))
+        if ($.mobile.activePage.find('#clock-touch').parent().
+            hasClass('ui-popup-active'))
         {
           $( '#clock-touch' ).popup('close');
         }
@@ -442,6 +443,10 @@ GZ3D.Gui.prototype.init = function()
 
   guiEvents.on('longpress_end', function(event,cancel)
       {
+        if (that.scene.modelManipulator.object === undefined)
+        {
+          that.scene.hideBoundingBox();
+        }
         if (that.longPressState !== 'START')
         {
           that.longPressState = 'END';
@@ -524,7 +529,8 @@ GZ3D.Gui.prototype.setPaused = function(paused)
   else
   {
     $('#playText').html(
-        '<img style="height:1.2em" src="style/images/pause.png" title="Pause">');
+        '<img style="height:1.2em" src="style/images/pause.png" title="Pause">'
+        );
   }
 };
 
