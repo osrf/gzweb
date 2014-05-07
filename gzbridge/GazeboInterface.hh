@@ -381,6 +381,9 @@ namespace gzweb
     /// \brief Name of heightmap data service.
     private: std::string heightmapService;
 
+    /// \brief Name of delete topic.
+    private: std::string deleteTopic;
+
     /// \brief Ogre material parser.
     private: OgreMaterialParser *materialParser;
 

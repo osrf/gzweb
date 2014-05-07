@@ -335,6 +335,30 @@ GZ3D.GZIface.prototype.init = function()
     that.factoryTopic.publish(modelMsg);
   };
 
+  // For deleting models
+  this.deleteTopic = new ROSLIB.Topic({
+    ros : this.webSocket,
+    name : '~/entity_delete',
+    messageType : 'entity_delete',
+  });
+
+  var publishDeleteEntity = function(entity)
+  {
+    var modelMsg =
+    {
+      name: entity.name
+    };
+
+    that.deleteTopic.publish(modelMsg);
+  };
+
+  this.gui.emitter.on('deleteEntity',
+      function(entity)
+      {
+        publishDeleteEntity(entity);
+      }
+  );
+
   // World control messages - for resetting world/models
   this.worldControlTopic = new ROSLIB.Topic({
     ros : this.webSocket,

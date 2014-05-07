@@ -41,14 +41,17 @@ GZ3D.Scene.prototype.init = function()
   // camera
   this.camera = new THREE.PerspectiveCamera(
       60, window.innerWidth / window.innerHeight, 0.1, 1000 );
-  this.camera.position.x = 0;
-  this.camera.position.y = -5;
-  this.camera.position.z = 5;
-  this.camera.up = new THREE.Vector3(0, 0, 1);
-  this.camera.lookAt(0, 0, 0);
+  this.defaultCameraPosition = new THREE.Vector3(0, -5, 5);
+  this.resetView();
   this.killCameraControl = false;
 
   this.showCollisions = false;
+
+  // Material for simple shapes being spawned (grey transparent)
+  this.spawnedShapeMaterial = new THREE.MeshPhongMaterial(
+      {color:0xffffff, shading: THREE.SmoothShading} );
+  this.spawnedShapeMaterial.transparent = true;
+  this.spawnedShapeMaterial.opacity = 0.5;
 
   var that = this;
 
@@ -88,6 +91,7 @@ GZ3D.Scene.prototype.init = function()
     this.modelManipulator = new GZ3D.Manipulator(this.camera, false,
       this.getDomElement());
   }
+  this.timeDown = null;
 
   this.controls = new THREE.OrbitControls(this.camera);
 
@@ -121,6 +125,43 @@ GZ3D.Scene.prototype.init = function()
   effect.renderToScreen = true;
   this.composer.addPass( effect );
 
+  // Radial menu (only triggered by touch)
+  this.radialMenu = new GZ3D.RadialMenu(this.getDomElement());
+  this.scene.add(this.radialMenu.menu);
+
+  // Bounding Box
+  var vertices = [
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(0, 0, 0),
+
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(0, 0, 0)
+  ];
+  var boxGeometry = new THREE.Geometry();
+  boxGeometry.vertices.push(
+    vertices[0], vertices[1],
+    vertices[1], vertices[2],
+    vertices[2], vertices[3],
+    vertices[3], vertices[0],
+
+    vertices[4], vertices[5],
+    vertices[5], vertices[6],
+    vertices[6], vertices[7],
+    vertices[7], vertices[4],
+
+    vertices[0], vertices[4],
+    vertices[1], vertices[5],
+    vertices[2], vertices[6],
+    vertices[3], vertices[7]
+  );
+  this.boundingBox = new THREE.Line(boxGeometry,
+      new THREE.LineBasicMaterial({color: 0xffffff}),
+      THREE.LinePieces);
+  this.boundingBox.visible = false;
 };
 
 /**
@@ -173,6 +214,7 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
     if (model.name === 'plane')
     {
       this.killCameraControl = false;
+      this.timeDown = new Date().getTime();
     }
     // Do not attach manipulator to itself
     else if (this.modelManipulator.pickerNames.indexOf(model.name) >= 0)
@@ -199,12 +241,14 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
     else
     {
       this.killCameraControl = false;
+      this.timeDown = new Date().getTime();
     }
   }
   // Plane from below, for example
   else
   {
     this.killCameraControl = false;
+    this.timeDown = new Date().getTime();
   }
 };
 
@@ -218,6 +262,16 @@ GZ3D.Scene.prototype.onPointerUp = function(event)
 
   // The mouse is not holding anything
   this.mouseEntity = null;
+
+  // Clicks (<100ms) outside any models trigger view mode
+  var millisecs = new Date().getTime();
+  if (millisecs - this.timeDown < 100)
+  {
+    this.setManipulationMode('view');
+    $( '#view-mode' ).click();
+    $('input[type="radio"]').checkboxradio('refresh');
+  }
+  this.timeDown = null;
 };
 
 /**
@@ -349,6 +403,11 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
         model = model.parent;
       }
 
+      if (model === this.radialMenu.menu)
+      {
+        continue;
+      }
+
       if (model.name.indexOf('COLLISION_VISUAL') >= 0)
       {
         model = null;
@@ -395,6 +454,7 @@ GZ3D.Scene.prototype.render = function()
   // Kill camera control when:
   // -spawning
   // -manipulating
+  // -using radial menu
   if (this.killCameraControl || this.modelManipulator.hovered)
   {
     this.controls.enabled = false;
@@ -407,6 +467,7 @@ GZ3D.Scene.prototype.render = function()
   }
 
   this.modelManipulator.update();
+  this.radialMenu.update();
 
   if (this.effectsEnabled)
   {
@@ -547,9 +608,7 @@ GZ3D.Scene.prototype.createPlane = function(normalX, normalY, normalZ,
 GZ3D.Scene.prototype.createSphere = function(radius)
 {
   var geometry = new THREE.SphereGeometry(radius, 32, 32);
-  var material =  new THREE.MeshPhongMaterial(
-      {color:0xffffff, shading: THREE.SmoothShading} );
-  var mesh = new THREE.Mesh(geometry, material);
+  var mesh = new THREE.Mesh(geometry, this.spawnedShapeMaterial);
   return mesh;
 };
 
@@ -563,9 +622,7 @@ GZ3D.Scene.prototype.createCylinder = function(radius, length)
 {
   var geometry = new THREE.CylinderGeometry(radius, radius, length, 32, 1,
       false);
-  var material =  new THREE.MeshPhongMaterial(
-      {color:0xffffff, shading: THREE.SmoothShading} );
-  var mesh = new THREE.Mesh(geometry, material);
+  var mesh = new THREE.Mesh(geometry, this.spawnedShapeMaterial);
   mesh.rotation.x = Math.PI * 0.5;
   return mesh;
 };
@@ -614,9 +671,7 @@ GZ3D.Scene.prototype.createBox = function(width, height, depth)
   }
   geometry.uvsNeedUpdate = true;
 
-  var material =  new THREE.MeshPhongMaterial(
-      {color:0xffffff, shading: THREE.SmoothShading} );
-  var mesh = new THREE.Mesh(geometry, material);
+  var mesh = new THREE.Mesh(geometry, this.spawnedShapeMaterial);
   mesh.castShadow = true;
   return mesh;
 };
@@ -1224,6 +1279,7 @@ GZ3D.Scene.prototype.setManipulationMode = function(mode)
     {
       this.emitter.emit('poseChanged', this.modelManipulator.object);
     }
+    this.hideBoundingBox();
     this.modelManipulator.detach();
     this.scene.remove(this.modelManipulator.gizmo);
   }
@@ -1280,6 +1336,10 @@ GZ3D.Scene.prototype.attachManipulator = function(model,mode)
   {
     this.emitter.emit('poseChanged', this.modelManipulator.object);
   }
+  if (this.modelManipulator.object !== model)
+  {
+    this.hideBoundingBox();
+  }
 
   this.modelManipulator.attach(model);
   this.modelManipulator.mode = mode;
@@ -1289,4 +1349,133 @@ GZ3D.Scene.prototype.attachManipulator = function(model,mode)
   this.mouseEntity = this.selectedEntity;
   this.scene.add(this.modelManipulator.gizmo);
   this.killCameraControl = false;
+  this.showBoundingBox(model);
+};
+
+/**
+ * Reset view
+ */
+GZ3D.Scene.prototype.resetView = function()
+{
+  this.camera.position.copy(this.defaultCameraPosition);
+  this.camera.up = new THREE.Vector3(0, 0, 1);
+  this.camera.lookAt(new THREE.Vector3( 0, 0, 0 ));
+  this.camera.updateMatrix();
+};
+
+/**
+ * Show radial menu
+ * @param {} event
+ */
+GZ3D.Scene.prototype.showRadialMenu = function(e)
+{
+  var event = e.originalEvent;
+
+  var pointer = event.touches ? event.touches[ 0 ] : event;
+  var pos = new THREE.Vector2(pointer.clientX, pointer.clientY);
+
+  var intersect = new THREE.Vector3();
+  var model = this.getRayCastModel(pos, intersect);
+
+  if (model && model.name !== '' && model.name !== 'plane'
+      && this.modelManipulator.pickerNames.indexOf(model.name) === -1)
+  {
+    this.radialMenu.show(event,model);
+    this.showBoundingBox(model);
+  }
+};
+
+/**
+ * Show bounding box for a model. The box is aligned with the world.
+ * @param {THREE.Object3D} model
+ */
+GZ3D.Scene.prototype.showBoundingBox = function(model)
+{
+  if (this.boundingBox.visible)
+  {
+    if (this.boundingBox.parent === model)
+    {
+      return;
+    }
+    else
+    {
+      this.hideBoundingBox();
+    }
+  }
+  var box = new THREE.Box3();
+  // w.r.t. world
+  box.setFromObject(model);
+  // center vertices with object
+  box.min.x = box.min.x - model.position.x;
+  box.min.y = box.min.y - model.position.y;
+  box.min.z = box.min.z - model.position.z;
+  box.max.x = box.max.x - model.position.x;
+  box.max.y = box.max.y - model.position.y;
+  box.max.z = box.max.z - model.position.z;
+
+  var vertex = new THREE.Vector3(box.max.x, box.max.y, box.max.z); // 0
+  this.boundingBox.geometry.vertices[0].copy(vertex);
+  this.boundingBox.geometry.vertices[7].copy(vertex);
+  this.boundingBox.geometry.vertices[16].copy(vertex);
+
+  vertex.set(box.min.x, box.max.y, box.max.z); // 1
+  this.boundingBox.geometry.vertices[1].copy(vertex);
+  this.boundingBox.geometry.vertices[2].copy(vertex);
+  this.boundingBox.geometry.vertices[18].copy(vertex);
+
+  vertex.set(box.min.x, box.min.y, box.max.z); // 2
+  this.boundingBox.geometry.vertices[3].copy(vertex);
+  this.boundingBox.geometry.vertices[4].copy(vertex);
+  this.boundingBox.geometry.vertices[20].copy(vertex);
+
+  vertex.set(box.max.x, box.min.y, box.max.z); // 3
+  this.boundingBox.geometry.vertices[5].copy(vertex);
+  this.boundingBox.geometry.vertices[6].copy(vertex);
+  this.boundingBox.geometry.vertices[22].copy(vertex);
+
+  vertex.set(box.max.x, box.max.y, box.min.z); // 4
+  this.boundingBox.geometry.vertices[8].copy(vertex);
+  this.boundingBox.geometry.vertices[15].copy(vertex);
+  this.boundingBox.geometry.vertices[17].copy(vertex);
+
+  vertex.set(box.min.x, box.max.y, box.min.z); // 5
+  this.boundingBox.geometry.vertices[9].copy(vertex);
+  this.boundingBox.geometry.vertices[10].copy(vertex);
+  this.boundingBox.geometry.vertices[19].copy(vertex);
+
+  vertex.set(box.min.x, box.min.y, box.min.z); // 6
+  this.boundingBox.geometry.vertices[11].copy(vertex);
+  this.boundingBox.geometry.vertices[12].copy(vertex);
+  this.boundingBox.geometry.vertices[21].copy(vertex);
+
+  vertex.set(box.max.x, box.min.y, box.min.z); // 7
+  this.boundingBox.geometry.vertices[13].copy(vertex);
+  this.boundingBox.geometry.vertices[14].copy(vertex);
+  this.boundingBox.geometry.vertices[23].copy(vertex);
+
+  this.boundingBox.geometry.verticesNeedUpdate = true;
+
+  // rotate the box back to the world
+  var modelRotation = new THREE.Matrix4();
+  modelRotation.extractRotation(model.matrixWorld);
+  var modelInverse = new THREE.Matrix4();
+  modelInverse.getInverse(modelRotation);
+  this.boundingBox.quaternion.setFromRotationMatrix(modelInverse);
+  this.boundingBox.name = 'boundingBox';
+  this.boundingBox.visible = true;
+
+  // Add box as model's child
+  model.add(this.boundingBox);
+};
+
+/**
+ * Hide bounding box
+ */
+GZ3D.Scene.prototype.hideBoundingBox = function()
+{
+  if(this.boundingBox.parent)
+  {
+    this.boundingBox.parent.remove(this.boundingBox);
+  }
+  this.boundingBox.visible = false;
 };

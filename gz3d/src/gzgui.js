@@ -8,6 +8,7 @@ $(function()
   //Initialize
   // Toggle items unchecked
   $('#view-collisions').buttonMarkup({icon: 'false'});
+  $('#snap-to-grid').buttonMarkup({icon: 'false'});
 
   $( '#clock-touch' ).popup('option', 'arrow', 't');
 
@@ -246,7 +247,8 @@ $(function()
       });
   $('#clock').click(function()
       {
-        if ($.mobile.activePage.find('#clock-touch').parent().hasClass('ui-popup-active'))
+        if ($.mobile.activePage.find('#clock-touch').parent().
+            hasClass('ui-popup-active'))
         {
           $( '#clock-touch' ).popup('close');
         }
@@ -269,11 +271,21 @@ $(function()
         guiEvents.emit('world_reset');
         guiEvents.emit('close_panel');
       });
+  $('#reset-view').click(function()
+      {
+        guiEvents.emit('view_reset');
+        guiEvents.emit('close_panel');
+      });
   $('#view-collisions').click(function()
       {
         guiEvents.emit('show_collision');
         guiEvents.emit('close_panel');
       });
+  $( '#snap-to-grid' ).click(function() {
+    guiEvents.emit('snap_to_grid');
+    guiEvents.emit('close_panel');
+  });
+
   // Disable Esc key to close panel
   $('body').on('keyup', function(event)
       {
@@ -282,6 +294,26 @@ $(function()
           return false;
         }
       });
+
+  // long press on canvas
+  var press_time = 400;
+  $('#container')
+    .on('touchstart', function (event) {
+      $(this).data('checkdown', setTimeout(function () {
+        guiEvents.emit('longpress_start',event);
+      }, press_time));
+    })
+    .on('touchend', function (event) {
+      clearTimeout($(this).data('checkdown'));
+      guiEvents.emit('longpress_end',event,false);
+    })
+    .on('touchmove', function (event) {
+      clearTimeout($(this).data('checkdown'));
+      $(this).data('checkdown', setTimeout(function () {
+        guiEvents.emit('longpress_start',event);
+      }, press_time));
+      guiEvents.emit('longpress_move',event);
+    });
 });
 
 /**
@@ -305,6 +337,7 @@ GZ3D.Gui.prototype.init = function()
   this.spawnModel = new GZ3D.SpawnModel(
       this.scene, this.scene.getDomElement());
   this.spawnState = null;
+  this.longPressState = null;
 
   var that = this;
 
@@ -361,6 +394,12 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
+  guiEvents.on('view_reset', function()
+      {
+        that.scene.resetView();
+      }
+  );
+
   guiEvents.on('pause', function(paused)
       {
         that.emitter.emit('pause', paused);
@@ -381,11 +420,119 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
+  guiEvents.on('snap_to_grid',
+      function ()
+      {
+        if(that.scene.modelManipulator.snapDist === null)
+        {
+          $('#snap-to-grid').buttonMarkup({icon: 'check'});
+          that.scene.modelManipulator.snapDist = 0.5;
+          that.spawnModel.snapDist = that.scene.modelManipulator.snapDist;
+        }
+        else
+        {
+          $('#snap-to-grid').buttonMarkup({icon: 'false'});
+          that.scene.modelManipulator.snapDist = null;
+          that.spawnModel.snapDist = null;
+        }
+      }
+  );
+
   guiEvents.on('close_panel', function()
       {
         if ($(window).width() / parseFloat($('body').css('font-size')) < 35)
         {
           $('#leftPanel').panel('close');
+        }
+      }
+  );
+
+  guiEvents.on('longpress_start',
+      function (event)
+      {
+        if (event.originalEvent.touches.length !== 1 ||
+            that.scene.modelManipulator.hovered)
+        {
+          guiEvents.emit('longpress_end', event.originalEvent,true);
+        }
+        else
+        {
+          that.scene.killCameraControl = true;
+          that.scene.showRadialMenu(event);
+          that.longPressState = 'START';
+        }
+      }
+  );
+
+  guiEvents.on('longpress_end', function(event,cancel)
+      {
+        if (that.scene.modelManipulator.object === undefined)
+        {
+          that.scene.hideBoundingBox();
+        }
+        if (that.longPressState !== 'START')
+        {
+          that.longPressState = 'END';
+          return;
+        }
+        that.longPressState = 'END';
+        that.scene.killCameraControl = false;
+        if (that.scene.radialMenu.showing)
+        {
+          if (cancel)
+          {
+            that.scene.radialMenu.hide(event);
+          }
+          else
+          {
+          that.scene.radialMenu.hide(event, function(type,entity)
+              {
+                if (type === 'delete')
+                {
+                  that.emitter.emit('deleteEntity',entity);
+                  that.scene.setManipulationMode('view');
+                  $( '#view-mode' ).prop('checked', true);
+                  $('input[type="radio"]').checkboxradio('refresh');
+                }
+                else if (type === 'translate')
+                {
+                  $('#translate-mode').click();
+                  $('input[type="radio"]').checkboxradio('refresh');
+                  that.scene.attachManipulator(entity,type);
+                }
+                else if (type === 'rotate')
+                {
+                  $( '#rotate-mode' ).click();
+                  $('input[type="radio"]').checkboxradio('refresh');
+                  that.scene.attachManipulator(entity,type);
+                }
+              });
+          }
+        }
+      }
+  );
+
+  guiEvents.on('longpress_move', function(event)
+      {
+        if (event.originalEvent.touches.length !== 1)
+        {
+          guiEvents.emit('longpress_end',event.originalEvent,true);
+        }
+        else
+        {
+          if (that.longPressState !== 'START')
+          {
+            return;
+          }
+          // Cancel long press in case of drag before it shows
+          if (!that.scene.radialMenu.showing)
+          {
+            that.scene.killCameraControl = false;
+          }
+          else
+          {
+            that.scene.radialMenu.onLongPressMove(event);
+          }
         }
       }
   );
@@ -405,7 +552,8 @@ GZ3D.Gui.prototype.setPaused = function(paused)
   else
   {
     $('#playText').html(
-        '<img style="height:1.2em" src="style/images/pause.png" title="Pause">');
+        '<img style="height:1.2em" src="style/images/pause.png" title="Pause">'
+        );
   }
 };
 
