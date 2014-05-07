@@ -6,11 +6,13 @@ var guiEvents = new EventEmitter2({ verbose: true });
 $(function()
 {
   //Initialize
-  // Toggle items unchecked
+  // Toggle items
   $('#view-collisions').buttonMarkup({icon: 'false'});
   $('#snap-to-grid').buttonMarkup({icon: 'false'});
+  guiEvents.emit('toggle_notifications');
 
   $( '#clock-touch' ).popup('option', 'arrow', 't');
+  $('#notification-popup-screen').remove();
 
   // Panel starts open for wide screens
   if ($(window).width() / parseFloat($('body').css('font-size')) > 35)
@@ -216,10 +218,12 @@ $(function()
         if ( $('#playText').html().indexOf('Play') !== -1 )
         {
           guiEvents.emit('pause', false);
+          guiEvents.emit('notification_popup','Physics engine running');
         }
         else
         {
           guiEvents.emit('pause', true);
+          guiEvents.emit('notification_popup','Physics engine paused');
         }
       });
   $('#clock').click(function()
@@ -260,6 +264,10 @@ $(function()
       });
   $( '#snap-to-grid' ).click(function() {
     guiEvents.emit('snap_to_grid');
+    guiEvents.emit('close_panel');
+  });
+  $( '#toggle-notifications' ).click(function() {
+    guiEvents.emit('toggle_notifications');
     guiEvents.emit('close_panel');
   });
 
@@ -315,6 +323,7 @@ GZ3D.Gui.prototype.init = function()
       this.scene, this.scene.getDomElement());
   this.spawnState = null;
   this.longPressState = null;
+  this.showNotifications = false;
 
   var that = this;
 
@@ -323,6 +332,9 @@ GZ3D.Gui.prototype.init = function()
       function(mode)
       {
         that.scene.setManipulationMode(mode);
+        guiEvents.emit('notification_popup',
+            mode.charAt(0).toUpperCase()+
+            mode.substring(1)+' mode');
       }
   );
 
@@ -337,7 +349,12 @@ GZ3D.Gui.prototype.init = function()
         that.spawnModel.start(entity,function(obj)
             {
               that.emitter.emit('entityCreated', obj, entity);
+              guiEvents.emit('notification_popup',
+                  entity.charAt(0).toUpperCase()+
+                  entity.substring(1)+' inserted');
             });
+        guiEvents.emit('notification_popup',
+            'Place '+entity+' at the desired position');
       }
   );
 
@@ -362,18 +379,21 @@ GZ3D.Gui.prototype.init = function()
   guiEvents.on('world_reset', function()
       {
         that.emitter.emit('reset', 'world');
+        guiEvents.emit('notification_popup','Reset world');
       }
   );
 
   guiEvents.on('model_reset', function()
       {
         that.emitter.emit('reset', 'model');
+        guiEvents.emit('notification_popup','Reset model poses');
       }
   );
 
   guiEvents.on('view_reset', function()
       {
         that.scene.resetView();
+        guiEvents.emit('notification_popup','Reset view');
       }
   );
 
@@ -389,10 +409,12 @@ GZ3D.Gui.prototype.init = function()
         if(!that.scene.showCollisions)
         {
           $('#view-collisions').buttonMarkup({icon: 'false'});
+          guiEvents.emit('notification_popup','Hiding collisions');
         }
         else
         {
           $('#view-collisions').buttonMarkup({icon: 'check'});
+          guiEvents.emit('notification_popup','Viewing collisions');
         }
       }
   );
@@ -405,12 +427,28 @@ GZ3D.Gui.prototype.init = function()
           $('#snap-to-grid').buttonMarkup({icon: 'check'});
           that.scene.modelManipulator.snapDist = 0.5;
           that.spawnModel.snapDist = that.scene.modelManipulator.snapDist;
+          guiEvents.emit('notification_popup','Snapping to grid');
         }
         else
         {
           $('#snap-to-grid').buttonMarkup({icon: 'false'});
           that.scene.modelManipulator.snapDist = null;
           that.spawnModel.snapDist = null;
+          guiEvents.emit('notification_popup','Not snapping to grid');
+        }
+      }
+  );
+
+  guiEvents.on('toggle_notifications', function ()
+      {
+        this.showNotifications = !this.showNotifications;
+        if(!this.showNotifications)
+        {
+            $('#toggle-notifications').buttonMarkup({ icon: 'false' });
+        }
+        else
+        {
+            $('#toggle-notifications').buttonMarkup({ icon: 'check' });
         }
       }
   );
@@ -470,6 +508,7 @@ GZ3D.Gui.prototype.init = function()
                   that.scene.setManipulationMode('view');
                   $( '#view-mode' ).prop('checked', true);
                   $('input[type="radio"]').checkboxradio('refresh');
+                  guiEvents.emit('notification_popup','Model deleted');
                 }
                 else if (type === 'translate')
                 {
@@ -510,6 +549,25 @@ GZ3D.Gui.prototype.init = function()
           {
             that.scene.radialMenu.onLongPressMove(event);
           }
+        }
+      }
+  );
+
+  var notificationTimeout;
+  guiEvents.on('notification_popup',
+      function (notification)
+      {
+        if (this.showNotifications)
+        {
+          clearTimeout(notificationTimeout);
+          $( '#notification-popup' ).popup('close');
+          $( '#notification-popup' ).html('&nbsp;'+notification+'&nbsp;');
+          $( '#notification-popup' ).popup('open', {
+              y:window.innerHeight-50});
+          notificationTimeout = setTimeout(function()
+          {
+            $( '#notification-popup' ).popup('close');
+          }, 2000);
         }
       }
   );
