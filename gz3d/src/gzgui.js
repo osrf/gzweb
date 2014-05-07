@@ -8,6 +8,7 @@ $(function()
   //Initialize
   // Toggle items unchecked
   $('#view-collisions').buttonMarkup({icon: 'false'});
+  $('#snap-to-grid').buttonMarkup({icon: 'false'});
 
   $( '#clock-touch' ).popup('option', 'arrow', 't');
 
@@ -223,7 +224,8 @@ $(function()
       });
   $('#clock').click(function()
       {
-        if ($.mobile.activePage.find('#clock-touch').parent().hasClass('ui-popup-active'))
+        if ($.mobile.activePage.find('#clock-touch').parent().
+            hasClass('ui-popup-active'))
         {
           $( '#clock-touch' ).popup('close');
         }
@@ -256,6 +258,10 @@ $(function()
         guiEvents.emit('show_collision');
         guiEvents.emit('close_panel');
       });
+  $( '#snap-to-grid' ).click(function() {
+    guiEvents.emit('snap_to_grid');
+    guiEvents.emit('close_panel');
+  });
 
   // Disable Esc key to close panel
   $('body').on('keyup', function(event)
@@ -391,6 +397,24 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
+  guiEvents.on('snap_to_grid',
+      function ()
+      {
+        if(that.scene.modelManipulator.snapDist === null)
+        {
+          $('#snap-to-grid').buttonMarkup({icon: 'check'});
+          that.scene.modelManipulator.snapDist = 0.5;
+          that.spawnModel.snapDist = that.scene.modelManipulator.snapDist;
+        }
+        else
+        {
+          $('#snap-to-grid').buttonMarkup({icon: 'false'});
+          that.scene.modelManipulator.snapDist = null;
+          that.spawnModel.snapDist = null;
+        }
+      }
+  );
+
   guiEvents.on('close_panel', function()
       {
         if ($(window).width() / parseFloat($('body').css('font-size')) < 35)
@@ -419,6 +443,10 @@ GZ3D.Gui.prototype.init = function()
 
   guiEvents.on('longpress_end', function(event,cancel)
       {
+        if (that.scene.modelManipulator.object === undefined)
+        {
+          that.scene.hideBoundingBox();
+        }
         if (that.longPressState !== 'START')
         {
           that.longPressState = 'END';
@@ -501,7 +529,8 @@ GZ3D.Gui.prototype.setPaused = function(paused)
   else
   {
     $('#playText').html(
-        '<img style="height:1.2em" src="style/images/pause.png" title="Pause">');
+        '<img style="height:1.2em" src="style/images/pause.png" title="Pause">'
+        );
   }
 };
 
