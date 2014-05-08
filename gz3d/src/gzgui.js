@@ -129,6 +129,16 @@ $(function()
       guiEvents.emit('spawn_entity_start', 'cylinder');
     });
 
+    $( '#insert-kitchen' ).click(function() {
+      $('#insert-menu').toggle();
+      $('#insert-menu-kitchen').toggle();
+    });
+
+    $( '#insert-back' ).click(function() {
+      $('#insert-menu').toggle();
+      $('#insert-menu-kitchen').toggle();
+    });
+
     $( '#insert-bowl' ).click(function() {
       guiEvents.emit('close_panel');
       guiEvents.emit('spawn_entity_start', 'bowl');
@@ -185,6 +195,13 @@ $(function()
         .css('z-index', '1000');
 
     $('#insert-menu')
+        .css('display', 'none')
+        .css('background-color', '#2a2a2a')
+        .css('padding', '10px')
+        .css('z-index', '1000')
+        .css('width', '100%');
+
+    $('#insert-menu-kitchen')
         .css('display', 'none')
         .css('background-color', '#2a2a2a')
         .css('padding', '10px')
@@ -338,6 +355,21 @@ GZ3D.Gui.prototype.init = function()
       this.scene, this.scene.getDomElement());
   this.spawnState = null;
   this.longPressState = null;
+
+  this.modelList = [];
+  this.modelList.robots =
+  [
+    'PR2',
+    'robonaut',
+    'youbot'
+  ];
+  this.modelList.kitchen =
+  [
+    'bowl',
+    'saucepan',
+    'beer',
+    'cokecan'
+  ];
 
   var that = this;
 

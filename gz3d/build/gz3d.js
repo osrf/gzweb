@@ -134,6 +134,16 @@ $(function()
       guiEvents.emit('spawn_entity_start', 'cylinder');
     });
 
+    $( '#insert-kitchen' ).click(function() {
+      $('#insert-menu').toggle();
+      $('#insert-menu-kitchen').toggle();
+    });
+
+    $( '#insert-back' ).click(function() {
+      $('#insert-menu').toggle();
+      $('#insert-menu-kitchen').toggle();
+    });
+
     $( '#insert-bowl' ).click(function() {
       guiEvents.emit('close_panel');
       guiEvents.emit('spawn_entity_start', 'bowl');
@@ -190,6 +200,13 @@ $(function()
         .css('z-index', '1000');
 
     $('#insert-menu')
+        .css('display', 'none')
+        .css('background-color', '#2a2a2a')
+        .css('padding', '10px')
+        .css('z-index', '1000')
+        .css('width', '100%');
+
+    $('#insert-menu-kitchen')
         .css('display', 'none')
         .css('background-color', '#2a2a2a')
         .css('padding', '10px')
@@ -343,6 +360,21 @@ GZ3D.Gui.prototype.init = function()
       this.scene, this.scene.getDomElement());
   this.spawnState = null;
   this.longPressState = null;
+
+  this.modelList = [];
+  this.modelList.robots =
+  [
+    'PR2',
+    'robonaut',
+    'youbot'
+  ];
+  this.modelList.kitchen =
+  [
+    'bowl',
+    'saucepan',
+    'beer',
+    'cokecan'
+  ];
 
   var that = this;
 
@@ -723,8 +755,6 @@ GZ3D.GZIface.prototype.init = function()
         this.scene.add(modelObj);
       }
 
-      // TODOin: consider this
-
       // visuals may arrive out of order (before the model msg),
       // add the visual in if we find its parent here
       var len = this.visualsToAdd.length;
@@ -1062,7 +1092,6 @@ GZ3D.GZIface.prototype.updateStatsGuiFromMsg = function(stats)
   this.gui.setSimTime(simTimeValue);
 };
 
-// TODOin: something like this in gzspawn
 GZ3D.GZIface.prototype.createModelFromMsg = function(model)
 {
   var modelObj = new THREE.Object3D();
