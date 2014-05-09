@@ -37,6 +37,16 @@ include (FindPkgConfig)
 if (PKG_CONFIG_FOUND)
   pkg_check_modules(GAZEBO gazebo>=1.9.0 REQUIRED)
   pkg_check_modules(JANSSON jansson REQUIRED)
+
+  # Find GNU Triangulation Surface Library
+  pkg_check_modules(GTS gts)
+  if (GTS_FOUND)
+    set (HAVE_GTS TRUE)
+  else ()
+    set (HAVE_GTS FALSE)
+    BUILD_WARNING ("GNU Triangulation Surface library not found")
+  endif ()
+
 else()
   message(FATAL_ERROR "pkg-config is required; please install it")
 endif()
@@ -45,7 +55,22 @@ include(FindBoost)
 find_package(Boost ${MIN_BOOST_VERSION} REQUIRED system filesystem regex thread)
 find_package(Protobuf REQUIRED)
 
+# Find tinyxml. Only debian distributions package tinyxml with a pkg-config
+find_path (tinyxml_include_dir tinyxml.h ${tinyxml_include_dirs} ENV CPATH)
+if (NOT tinyxml_include_dir)
+  message (STATUS "Looking for tinyxml.h - not found")
+  BUILD_ERROR("Missing: tinyxml")
+else ()
+  message (STATUS "Looking for tinyxml.h - found")
+  set (tinyxml_include_dirs ${tinyxml_include_dir} CACHE STRING
+    "tinyxml include paths. Use this to override automatic detection.")
+  set (tinyxml_libraries "tinyxml" CACHE INTERNAL "tinyxml libraries")
+endif ()
+
 add_subdirectory(gz3d)
+add_subdirectory(tools)
+
+
 
 ########### Add uninstall target ###############
 configure_file(
