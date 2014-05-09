@@ -712,7 +712,7 @@ GZ3D.GZIface.prototype.init = function()
   var poseUpdate = function(message)
   {
     var entity = this.scene.getByName(message.name);
-    if (entity)
+    if (entity && entity !== this.scene.modelManipulator.object)
     {
       this.scene.updatePose(entity, message.position, message.orientation);
     }
