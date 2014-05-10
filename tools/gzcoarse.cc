@@ -374,7 +374,7 @@ void ConvertGzToGts(const gazebo::common::Mesh *_mesh, GtsSurface *_surface)
   for (unsigned int i = 0; i < subSurfaces.size(); ++i)
     gts_surface_merge(_surface, subSurfaces[i]);
 
-  gts_surface_print_stats (_surface, stderr);
+  //gts_surface_print_stats (_surface, stderr);
   // Destroy duplicate triangles
   //triangle_cleanup(_surface);
 }
@@ -411,7 +411,7 @@ static gboolean stop_number_verbose (gdouble cost, guint number, guint * min)
     hours1 = floor (remaining/3600.);
     mins1 = floor ((remaining - 3600.*hours1)/60.);
     secs1 = floor (remaining - 3600.*hours1 - 60.*mins1);
-
+/*
     fprintf (stderr,
          "\rEdges: %10u %3.0f%% %6.0f edges/s "
          "Elapsed: %02.0f:%02.0f:%02.0f "
@@ -422,7 +422,7 @@ static gboolean stop_number_verbose (gdouble cost, guint number, guint * min)
          hours, mins, secs,
          hours1, mins1, secs1);
     fflush (stderr);
-
+*/
     nold = number;
     g_timer_start (timer);
   }
@@ -1051,7 +1051,9 @@ int main(int argc, char **argv)
     gzerr << "Could not open dae file." << std::endl;
     return -1;
   }
-
+std::cout << "GAZEBO_MAJOR_VERSION: " << GAZEBO_MAJOR_VERSION << std::endl;
+std::cout << "GAZEBO_MINOR_VERSION: " << GAZEBO_MINOR_VERSION << std::endl;
+#if GAZEBO_MAJOR_VERSION < 4
   std::string filename = argv[1];
   filename = filename.substr(0, filename.find(".dae"));
 
@@ -1119,7 +1121,7 @@ int main(int argc, char **argv)
   // Number of edges
   guint edgesAfter = gts_surface_edge_number(in_out_Gts);
   double obtainedPercentage = (double)100*edgesAfter/edgesBefore;
-  std::cout << std::endl << "Edges after: " << edgesAfter << " (" << obtainedPercentage << "%)" << std::endl;
+  std::cout << "Edges after: " << edgesAfter << " (" << obtainedPercentage << "%)" << std::endl;
 
   if (obtainedPercentage > desiredPercentage*1.5)
   {
@@ -1150,6 +1152,10 @@ int main(int argc, char **argv)
 
   // destroy surfaces
   gts_object_destroy(GTS_OBJECT(in_out_Gts));
+
+#else
+  std::cout << "GAZEBO_MAJOR_VERSION: " << GAZEBO_MAJOR_VERSION << std::endl;
+#endif
 
   return 0;
 }
