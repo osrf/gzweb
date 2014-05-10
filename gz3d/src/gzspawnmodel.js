@@ -30,8 +30,6 @@ GZ3D.SpawnModel.prototype.init = function()
  * @param {string} entity
  * @param {function} callback
  */
-
- // TODOin: entity: still take name and then check against db
 GZ3D.SpawnModel.prototype.start = function(entity, callback)
 {
   if (this.active)
@@ -64,9 +62,7 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
   }
   else
   {
-    // TODOin: find entity in database
-    console.log('insert '+entity);
-
+    // temp box for now
     mesh = this.scene.createBox(1, 1, 1);
     this.obj.name = entity + '_' + (new Date()).getTime();
 

@@ -134,19 +134,9 @@ $(function()
       guiEvents.emit('spawn_entity_start', 'cylinder');
     });
 
-    $( '#insert-kitchen' ).click(function() {
-      $('#insert-menu').toggle();
-      $('#insert-menu-kitchen').toggle();
-    });
-
-    $( '#insert-back' ).click(function() {
-      $('#insert-menu').toggle();
-      $('#insert-menu-kitchen').toggle();
-    });
-
-    $( '#insert-bowl' ).click(function() {
-      guiEvents.emit('close_panel');
-      guiEvents.emit('spawn_entity_start', 'bowl');
+    $( '.insert-back' ).click(function() {
+      $('#insert-menu').show();
+      $('[id^="insert-menu-"]').hide();
     });
 
     $('#clock-header-fieldset')
@@ -199,14 +189,7 @@ $(function()
         .css('top', '0em')
         .css('z-index', '1000');
 
-    $('#insert-menu')
-        .css('display', 'none')
-        .css('background-color', '#2a2a2a')
-        .css('padding', '10px')
-        .css('z-index', '1000')
-        .css('width', '100%');
-
-    $('#insert-menu-kitchen')
+    $('.insert-menus')
         .css('display', 'none')
         .css('background-color', '#2a2a2a')
         .css('padding', '10px')
@@ -221,7 +204,15 @@ $(function()
 
   $('#insertButton').click(function(){
         $('#leftPanel').panel('close');
-        $('#insert-menu').slideToggle('fast');
+        if($('#insert-menu').is(':visible'))
+        {
+          $('#insert-menu').hide();
+        }
+        else
+        {
+          $('#insert-menu').show();
+          $('[id^="insert-menu-"]').hide();
+        }
     });
 
   $( '#leftPanel' ).on('panelclose', function()
@@ -338,6 +329,47 @@ $(function()
     });
 });
 
+// Insert menu
+function insertControl($scope)
+{
+  $scope.categories =
+  [
+    {path:'kitchen', title:'Kitchen', examplePath:'bowl', models:
+    [
+      {modelPath:'bowl', modelTitle:'Bowl'},
+      {modelPath:'saucepan', modelTitle:'Sauce pan'}
+    ]},
+
+    {path:'buildings', title:'Buildings', examplePath:'house_1', models:
+    [
+      {modelPath:'house_1', modelTitle:'House 1'},
+      {modelPath:'house_2', modelTitle:'House 2'},
+      {modelPath:'house_3', modelTitle:'House 3'},
+      {modelPath:'kitchen_dining', modelTitle:'Kitchen/dining'}
+    ]},
+
+    {path:'robots', title:'Robots', examplePath:'pr2', models:
+    [
+      {modelPath:'pr2', modelTitle:'PR2'},
+      {modelPath:'turtlebot', modelTitle:'TurtleBot'},
+      {modelPath:'youbot', modelTitle:'Youbot'},
+      {modelPath:'robonaut', modelTitle:'Robonaut'}
+    ]}
+  ];
+
+  $scope.openCategory = function(category)
+  {
+    $('#insert-menu').hide();
+    var categoryID = '#insert-menu-'+category;
+    $(categoryID).show();
+  };
+
+  $scope.spawnEntity = function(entity)
+  {
+    guiEvents.emit('spawn_entity_start', entity);
+  };
+}
+
 /**
  * Graphical user interface
  * @constructor
@@ -360,21 +392,6 @@ GZ3D.Gui.prototype.init = function()
       this.scene, this.scene.getDomElement());
   this.spawnState = null;
   this.longPressState = null;
-
-  this.modelList = [];
-  this.modelList.robots =
-  [
-    'PR2',
-    'robonaut',
-    'youbot'
-  ];
-  this.modelList.kitchen =
-  [
-    'bowl',
-    'saucepan',
-    'beer',
-    'cokecan'
-  ];
 
   var that = this;
 
@@ -4779,8 +4796,6 @@ GZ3D.SpawnModel.prototype.init = function()
  * @param {string} entity
  * @param {function} callback
  */
-
- // TODOin: entity: still take name and then check against db
 GZ3D.SpawnModel.prototype.start = function(entity, callback)
 {
   if (this.active)
@@ -4813,9 +4828,7 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
   }
   else
   {
-    // TODOin: find entity in database
-    console.log('insert '+entity);
-
+    // temp box for now
     mesh = this.scene.createBox(1, 1, 1);
     this.obj.name = entity + '_' + (new Date()).getTime();
 

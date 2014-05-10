@@ -434,8 +434,6 @@ void GazeboInterface::ProcessMessages()
 
           }
 
-std::cout << newModelStr.str() << std::endl;
-
           // Spawn the model in the physics server
           factoryMsg.set_sdf(newModelStr.str());
           this->factoryPub->Publish(factoryMsg);

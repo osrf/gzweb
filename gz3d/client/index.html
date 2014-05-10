@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" ng-app>
   <head>
     <title>gz3d</title>
     <meta charset="utf-8">
@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="style/jquery-mobile/jquery.mobile-1.4.0.css" />
     <script src="js/include/jquery-1.9.1.js"></script>
     <script src="js/include/jquery.mobile-1.4.0.min.js"></script>
+    <script src="js/include/angular.min.js"></script>
     <script src="js/include/three.js"></script>
     <script src="js/include/OrbitControls.js"></script>
     <script src="js/include/Detector.js"></script>
@@ -192,7 +193,7 @@
       </fieldset>
 
       <fieldset id="insert-header-fieldset">
-        <a href="#" data-role="button" class="header-button" id="insertButton"><span><img style="height:1.45em" src="style/images/insert.png" title="Insert"></span></a>
+        <a href="#" data-role="button" class="header-button" id="insertButton"><span><img style="height:1.45em" src="style/images/insert.png" title="Insert model"></span></a>
       </fieldset>
 
       <fieldset id="play-header-fieldset">
@@ -241,15 +242,27 @@
       <!-- content -->
 
       <!-- insert menu -->
-      <div id="footer">
-        <div id="insert-menu">
-          <a href="#" id="insert-kitchen" data-role="button" data-inline="true" style="width:10em">Kitchen<br><img style="height:5em" src="/assets/bowl/thumbnails/1.png"></a>
-          <a href="#" id="insert-buildings" data-role="button" data-inline="true" style="width:10em">Buildings<br><img style="height:5em" src="/assets/house_1/thumbnails/1.png"></a>
-          <a href="#" id="insert-robots" data-role="button" data-inline="true" style="width:10em">Robots<br><img style="height:5em" src="/assets/pr2/thumbnails/1.png"></a>
+      <div id="footer" ng-controller="insertControl">
+        <div id="insert-menu" class="insert-menus">
+          <ul style="list-style:none;background-color:#2a2a2a;height:9em;padding:0em;margin:0em">
+            <li style="float:left" ng-repeat="category in categories">
+              <a href="#" ng-click="openCategory(category.path)" data-role="button" data-inline="true" style="width:10em">
+                {{category.title}}<br>
+                <img style="height:5em" src="/assets/{{category.examplePath}}/thumbnails/1.png">
+              </a>
+            </li>
+          </ul>
         </div>
-        <div id="insert-menu-kitchen">
-          <a href="#" id="insert-back"><img style="height:1.45em" src="style/images/back.png"></a>
-          <a href="#" id="insert-bowl" data-role="button" data-inline="true" style="width:10em">Bowl<br><img style="height:5em" src="/assets/bowl/thumbnails/1.png"></a>
+        <div ng-repeat="category in categories" class="insert-menus" id="insert-menu-{{category.path}}">
+          <a href="#" class="insert-back" style="float:left"><img style="height:1.45em" src="style/images/back.png"></a>
+          <ul style="list-style:none;background-color:#2a2a2a;height:9em;padding:0em;margin:0em">
+            <li style="float:left" ng-repeat="model in category.models">
+              <a href="#" ng-click="spawnEntity(model.modelPath)" data-role="button" data-inline="true" style="width:10em">
+                {{model.modelTitle}}<br>
+                <img style="height:5em" src="/assets/{{model.modelPath}}/thumbnails/1.png">
+              </a>
+            </li>
+          </ul>
         </div>
       </div>
       <!-- insert menu -->
