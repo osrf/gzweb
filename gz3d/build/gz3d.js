@@ -196,7 +196,8 @@ $(function()
         .css('background-color', '#2a2a2a')
         .css('padding', '10px')
         .css('z-index', '1000')
-        .css('width', '100%');
+        .css('width', '100%')
+        .css('overflow', 'auto');
   }
 
   $('.header-button')
@@ -342,26 +343,151 @@ function insertControl($scope)
 {
   $scope.categories =
   [
-    {path:'kitchen', title:'Kitchen', examplePath:'bowl', models:
-    [
-      {modelPath:'bowl', modelTitle:'Bowl'},
-      {modelPath:'saucepan', modelTitle:'Sauce pan'}
-    ]},
-
     {path:'buildings', title:'Buildings', examplePath:'house_1', models:
     [
+      {modelPath:'fast_food', modelTitle:'Fast Food'},
+      {modelPath:'gas_station', modelTitle:'Gas Station'},
       {modelPath:'house_1', modelTitle:'House 1'},
       {modelPath:'house_2', modelTitle:'House 2'},
       {modelPath:'house_3', modelTitle:'House 3'},
-      {modelPath:'kitchen_dining', modelTitle:'Kitchen/dining'}
+      {modelPath:'iss', modelTitle:'International Space Station'},
+      {modelPath:'iss_half', modelTitle:'ISS half'},
+      {modelPath:'kitchen_dining', modelTitle:'Kitchen and Dining'},
+      {modelPath:'office_building', modelTitle:'Office Building'},
+      {modelPath:'powerplant', modelTitle:'Power Plant'},
+      {modelPath:'starting_pen', modelTitle:'Starting Pen'},
+      {modelPath:'willowgarage', modelTitle:'Willow Garage'}
+    ]},
+
+    {path:'furniture', title:'Furniture', examplePath:'table', models:
+    [
+      {modelPath:'bookshelf', modelTitle:'Book Shelf'},
+      {modelPath:'cabinet', modelTitle:'Cabinet'},
+      {modelPath:'drc_practice_door_4x8', modelTitle:'4x8 Doorway'},
+      {modelPath:'drc_practice_ladder', modelTitle:'Ladder'},
+      {modelPath:'hinged_door', modelTitle:'Hinged Door'},
+      {modelPath:'table', modelTitle:'Table'},
+      {modelPath:'table_marble', modelTitle:'Table Marble'},
+
+      {modelPath:'drc_practice_ball_valve', modelTitle:'Ball Valve'},
+      {modelPath:'drc_practice_handle_wheel_valve', modelTitle:'Handle Wheel Valve'},
+      {modelPath:'drc_practice_hand_wheel_valve', modelTitle:'Hand Wheel Valve'},
+      {modelPath:'drc_practice_wheel_valve', modelTitle:'Wheel Valve'},
+      {modelPath:'drc_practice_wheel_valve_large', modelTitle:'Wheel Valve Large'},
+      {modelPath:'door_handle', modelTitle:'Door Handle'},
+
+      {modelPath:'drc_practice_ball_valve_wall', modelTitle:'Wall (Ball Valve)'},
+      {modelPath:'drc_practice_handle_wheel_valve_wall', modelTitle:'Wall (Handle Wheel Valve)'},
+      {modelPath:'drc_practice_hand_wheel_valve_wall', modelTitle:'Wall (Hand Wheel Valve)'},
+      {modelPath:'drc_practice_valve_wall', modelTitle:'Wall (Valve)'},
+      {modelPath:'drc_practice_wheel_valve_wall', modelTitle:'Wall (Wheel Valve)'},
+      {modelPath:'drc_practice_wheel_valve_large_wall', modelTitle:'Wall (Wheel Valve Large)'},
+      {modelPath:'grey_wall', modelTitle:'Grey Wall'},
+      {modelPath:'asphalt_plane', modelTitle:'Asphalt Plane'},
+      {modelPath:'drc_practice_base_4x8', modelTitle:'Debris base'},
+      {modelPath:'ground_plane', modelTitle:'Ground Plane'},
+      {modelPath:'nist_maze_wall_120', modelTitle:'120 Maze Wall'},
+      {modelPath:'nist_maze_wall_240', modelTitle:'240 Maze Wall'},
+      {modelPath:'nist_maze_wall_triple_holes_120', modelTitle:'120 Maze Wall Triple Holes'},
+      {modelPath:'nist_simple_ramp_120', modelTitle:'Simple Ramp'},
+      {modelPath:'nist_stairs_120', modelTitle:'Stairs'}
+    ]},
+
+    {path:'kitchen', title:'Kitchen', examplePath:'bowl', models:
+    [
+      {modelPath:'beer', modelTitle:'Beer'},
+      {modelPath:'bowl', modelTitle:'Bowl'},
+      {modelPath:'coke_can', modelTitle:'Coke Can'},
+      {modelPath:'saucepan', modelTitle:'Saucepan'}
+    ]},
+
+    {path:'robocup', title:'Robocup', examplePath:'robocup09_spl_field', models:
+    [
+      {modelPath:'robocup09_spl_field', modelTitle:'2009 SPL Field'},
+      {modelPath:'robocup14_spl_field', modelTitle:'2014 SPL Field'},
+      {modelPath:'robocup_3Dsim_field', modelTitle:'3D Sim. Field'},
+      {modelPath:'robocup14_spl_goal', modelTitle:'SPL Goal'},
+      {modelPath:'robocup_3Dsim_goal', modelTitle:'3D Sim. Goal'},
+      {modelPath:'robocup_spl_ball', modelTitle:'SPL Ball'},
+      {modelPath:'robocup_3Dsim_ball', modelTitle:'3D Sim. Ball'}
     ]},
 
     {path:'robots', title:'Robots', examplePath:'pr2', models:
     [
+      {modelPath:'create', modelTitle:'Create'},
+      {modelPath:'husky', modelTitle:'Husky'},
+      {modelPath:'irobot_hand', modelTitle:'iRobot Hand'},
+      {modelPath:'pioneer2dx', modelTitle:'Pioneer 2DX'},
+      {modelPath:'pioneer3at', modelTitle:'Pioneer 3AT'},
       {modelPath:'pr2', modelTitle:'PR2'},
+      {modelPath:'robonaut', modelTitle:'Robonaut'},
+      {modelPath:'simple_arm', modelTitle:'Simple Arm'},
+      {modelPath:'simple_arm_gripper', modelTitle:'Simple Arm and Gripper'},
+      {modelPath:'simple_gripper', modelTitle:'Simple Gripper'},
       {modelPath:'turtlebot', modelTitle:'TurtleBot'},
-      {modelPath:'youbot', modelTitle:'Youbot'},
-      {modelPath:'robonaut', modelTitle:'Robonaut'}
+      {modelPath:'youbot', modelTitle:'YouBot'}
+    ]},
+
+    {path:'sensors', title:'Sensors', examplePath:'kinect', models:
+    [
+      {modelPath:'camera', modelTitle:'Camera'},
+      {modelPath:'stereo_camera', modelTitle:'Stereo Camera'},
+      {modelPath:'hokuyo', modelTitle:'Hokuyo'},
+      {modelPath:'kinect', modelTitle:'Kinect'}
+    ]},
+
+    {path:'street', title:'Street', examplePath:'fire_hydrant', models:
+    [
+      {modelPath:'cinder_block', modelTitle:'Cinder Block'},
+      {modelPath:'cinder_block_2', modelTitle:'Cinder Block 2'},
+      {modelPath:'cinder_block_wide', modelTitle:'Cinder Block Wide'},
+      {modelPath:'construction_barrel', modelTitle:'Construction Barrel'},
+      {modelPath:'construction_cone', modelTitle:'Construction Cone'},
+      {modelPath:'drc_practice_angled_barrier_45', modelTitle:'Angled Barrier 45'},
+      {modelPath:'drc_practice_angled_barrier_135', modelTitle:'Angled Barrier 135'},
+      {modelPath:'drc_practice_block_wall', modelTitle:'Block Wall'},
+      {modelPath:'drc_practice_orange_jersey_barrier', modelTitle:'Jersey Barrier (Orange)'},
+      {modelPath:'drc_practice_white_jersey_barrier', modelTitle:'Jersey Barrier (White)'},
+      {modelPath:'drc_practice_truss', modelTitle:'Truss'},
+      {modelPath:'drc_practice_yellow_parking_block', modelTitle:'Parking Block'},
+      {modelPath:'dumpster', modelTitle:'Dumpster'},
+      {modelPath:'fire_hydrant', modelTitle:'Fire Hydrant'},
+      {modelPath:'jersey_barrier', modelTitle:'Jersey Barrier'},
+      {modelPath:'lamp_post', modelTitle:'Lamp Post'},
+      {modelPath:'mailbox', modelTitle:'Mailbox'},
+      {modelPath:'mud_box', modelTitle:'Mud Box'},
+      {modelPath:'nist_fiducial_barrel', modelTitle:'Fiducial Barrel'},
+      {modelPath:'speed_limit_sign', modelTitle:'Speed Limit Sign'},
+      {modelPath:'stop_sign', modelTitle:'Stop Sign'}
+
+    ]},
+
+    {path:'tools', title:'Tools', examplePath:'cordless_drill', models:
+    [
+      {modelPath:'cordless_drill', modelTitle:'Cordless Drill'},
+      {modelPath:'fire_hose_long', modelTitle:'Fire Hose'},
+      {modelPath:'fire_hose_long_curled', modelTitle:'Fire Hose Long Curled'},
+      {modelPath:'hammer', modelTitle:'Hammer'},
+      {modelPath:'monkey_wrench', modelTitle:'Monkey Wrench'},
+      {modelPath:'polaris_ranger_ev', modelTitle:'Polaris Ranger EV'},
+      {modelPath:'polaris_ranger_xp900', modelTitle:'Polaris Ranger XP900'},
+      {modelPath:'polaris_ranger_xp900_no_roll_cage', modelTitle:'Polaris Ranger without roll cage'},
+      {modelPath:'utility_cart', modelTitle:'Utility Cart'}
+    ]},
+
+    {path:'misc', title:'Misc.', examplePath:'double_pendulum_with_base', models:
+    [
+      {modelPath:'double_pendulum_with_base', modelTitle:'Double Pendulum With Base'},
+      {modelPath:'breakable_test', modelTitle:'Breakable_test'},
+      {modelPath:'brick_box_3x1x3', modelTitle:'Brick Box 3x1x3'},
+      {modelPath:'cube_20k', modelTitle:'Cube 20k'},
+      {modelPath:'drc_practice_2x4', modelTitle:'2x4 Lumber'},
+      {modelPath:'drc_practice_2x6', modelTitle:'2x6 Lumber'},
+      {modelPath:'drc_practice_4x4x20', modelTitle:'4x4x20 Lumber'},
+      {modelPath:'drc_practice_4x4x40', modelTitle:'4x4x40 Lumber'},
+      {modelPath:'drc_practice_blue_cylinder', modelTitle:'Blue Cylinder'},
+      {modelPath:'drc_practice_wood_slats', modelTitle:'Wood Slats'},
+      {modelPath:'nist_elevated_floor_120', modelTitle:'Elevated Floor 120'}
     ]}
   ];
 
