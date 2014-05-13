@@ -7,387 +7,7 @@ var GZ3D = GZ3D || {
 
 var guiEvents = new EventEmitter2({ verbose: true });
 
-// Bind events to buttons
-$(function()
-{
-  //Initialize
-  // Toggle items
-  $('#view-collisions').buttonMarkup({icon: 'false'});
-  $('#snap-to-grid').buttonMarkup({icon: 'false'});
-  guiEvents.emit('toggle_notifications');
-
-  $( '#clock-touch' ).popup('option', 'arrow', 't');
-  $('#notification-popup-screen').remove();
-
-  // Panel starts open for wide screens
-  if ($(window).width() / parseFloat($('body').css('font-size')) > 35)
-  {
-    $('#leftPanel').panel('open');
-  }
-
-  // Clicks/taps// Touch devices
-  if ('ontouchstart' in window || 'onmsgesturechange' in window)
-  {
-    // swipe icon
-    $('#box').html('<b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Box</b>'+
-        '<div style="float: right;">'+
-        '<img src="style/images/box.png" '+
-        'style="vertical-align:middle;height:1.4em;">'+
-        '<img src="style/images/swipe.png" '+
-        'style="vertical-align:middle;margin-left:1em;"></div>');
-    $('#sphere').html('<b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sphere</b>'+
-        '<div style="float: right;">'+
-        '<img src="style/images/sphere.png" '+
-        'style="vertical-align:middle;;height:1.4em;">'+
-        '<img src="style/images/swipe.png" '+
-        'style="vertical-align:middle; margin-left:1em;"></div>');
-    $('#cylinder').html('<b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Cylinder</b>'+
-        '<div style="float: right;">'+
-        '<img src="style/images/cylinder.png" '+
-        'style="vertical-align:middle;;height:1.4em;">'+
-        '<img src="style/images/swipe.png" '+
-        'style="vertical-align:middle; margin-left:1em;"></div>');
-
-    // touchstart
-    $( '#box' ).bind('touchstart',function(event) {
-      guiEvents.emit('close_panel');
-      guiEvents.emit('spawn_entity_start', 'box');
-      event.stopPropagation();
-    });
-    $( '#sphere' ).bind('touchstart',function(event) {
-      guiEvents.emit('close_panel');
-      guiEvents.emit('spawn_entity_start', 'sphere');
-      event.stopPropagation();
-    });
-    $( '#cylinder' ).bind('touchstart',function(event) {
-      guiEvents.emit('close_panel');
-      guiEvents.emit('spawn_entity_start', 'cylinder');
-      event.stopPropagation();
-    });
-    $('[id^="insert-entity-"]').bind('touchstart',function(event) {
-      var id = $(this).attr('id');
-      id = id.substring(14);
-      guiEvents.emit('close_panel');
-      guiEvents.emit('spawn_entity_start', id);
-      event.stopPropagation();
-    });
-    // touchmove
-    $( '#box' ).bind('touchmove',function(event) {
-      guiEvents.emit('spawn_entity_move', event);
-      event.stopPropagation();
-    });
-    $( '#sphere' ).bind('touchmove',function(event) {
-      guiEvents.emit('spawn_entity_move', event);
-      event.stopPropagation();
-    });
-    $( '#cylinder' ).bind('touchmove',function(event) {
-      guiEvents.emit('spawn_entity_move', event);
-      event.stopPropagation();
-    });
-    $('[id^="insert-entity-"]').bind('touchmove',function(event) {
-      guiEvents.emit('spawn_entity_move', event);
-      event.stopPropagation();
-    });
-    // touchend
-    $( '#box' ).bind('touchend',function() {
-      guiEvents.emit('spawn_entity_end');
-    });
-    $( '#sphere' ).bind('touchend',function() {
-      guiEvents.emit('spawn_entity_end');
-    });
-    $( '#cylinder' ).bind('touchend',function() {
-      guiEvents.emit('spawn_entity_end');
-    });
-    $('[id^="insert-entity-"]').bind('touchend',function() {
-      guiEvents.emit('spawn_entity_end');
-    });
-
-    $('#play-header-fieldset')
-        .css('position', 'absolute')
-        .css('right', '15.8em')
-        .css('top', '0em')
-        .css('z-index', '1000');
-
-    $('#clock-header-fieldset')
-        .css('position', 'absolute')
-        .css('right', '12.8em')
-        .css('top', '0em')
-        .css('z-index', '1000');
-
-    $('#clock-mouse')
-        .css('visibility','hidden');
-
-    $('#mode-header-fieldset')
-        .css('position', 'absolute')
-        .css('right', '4.5em')
-        .css('top', '0.15em')
-        .css('z-index', '1000');
-
-    $('#box-header-fieldset')
-        .css('visibility','hidden');
-
-    $('#sphere-header-fieldset')
-        .css('visibility','hidden');
-
-    $('#cylinder-header-fieldset')
-        .css('visibility','hidden');
-
-    $('#insert-header-fieldset')
-        .css('position', 'absolute')
-        .css('right', '0.5em')
-        .css('top', '0em')
-        .css('z-index', '1000');
-
-    $('#insert-menu').find('*').touchmove(function(event){
-        var left = (event.pageX - this.offset().left);
-        $('#insert-menu').scrollLeft(left);
-        event.stopPropagation();
-    });
-  }
-  // Mouse devices
-  else
-  {
-    $( '#box' ).click(function() {
-      guiEvents.emit('close_panel');
-      guiEvents.emit('spawn_entity_start', 'box');
-    });
-
-    $( '#sphere' ).click(function() {
-      guiEvents.emit('close_panel');
-      guiEvents.emit('spawn_entity_start', 'sphere');
-    });
-
-    $( '#cylinder' ).click(function() {
-      guiEvents.emit('close_panel');
-      guiEvents.emit('spawn_entity_start', 'cylinder');
-    });
-
-    $('[id^="insert-entity-"]').click(function(event) {
-      var id = $(this).attr('id');
-      id = id.substring(14);
-      guiEvents.emit('close_panel');
-      guiEvents.emit('spawn_entity_start', id);
-    });
-
-    $('#clock-header-fieldset')
-        .css('visibility','hidden');
-
-    $('#play-header-fieldset')
-        .css('position', 'absolute')
-        .css('right', '35.2em')
-        .css('top', '0em')
-        .css('z-index', '1000');
-
-    $('#clock-mouse')
-        .css('position', 'absolute')
-        .css('right', '22.4em')
-        .css('top', '0.5em')
-        .css('z-index', '100')
-        .css('width', '12em')
-        .css('height', '2.5em')
-        .css('background-color', '#333333')
-        .css('padding', '3px')
-        .css('border-radius', '5px');
-
-    $('#mode-header-fieldset')
-        .css('position', 'absolute')
-        .css('right', '16.4em')
-        .css('top', '0.15em')
-        .css('z-index', '1000');
-
-    $('#box-header-fieldset')
-        .css('position', 'absolute')
-        .css('right', '9.5em')
-        .css('top', '0em')
-        .css('z-index', '1000');
-
-    $('#sphere-header-fieldset')
-        .css('position', 'absolute')
-        .css('right', '6.5em')
-        .css('top', '0em')
-        .css('z-index', '1000');
-
-    $('#cylinder-header-fieldset')
-        .css('position', 'absolute')
-        .css('right', '3.5em')
-        .css('top', '0em')
-        .css('z-index', '1000');
-
-    $('#insert-header-fieldset')
-        .css('position', 'absolute')
-        .css('right', '0.5em')
-        .css('top', '0em')
-        .css('z-index', '1000');
-  }
-
-  $('.header-button')
-      .css('float', 'left')
-      .css('height', '1.45em')
-      .css('padding', '0.65em');
-
-  $('.insert-menus')
-      .css('display', 'none')
-      .css('background-color', '#2a2a2a')
-      .css('padding', '10px')
-      .css('z-index', '1000')
-      .css('width', '100%')
-      .css('overflow', 'auto');
-
-  $('#insertButton').click(function(){
-        $('#leftPanel').panel('close');
-        if($('#insert-menu').is(':visible'))
-        {
-          $('#insert-menu').hide();
-        }
-        else
-        {
-          $('#insert-menu').show();
-          $('[id^="insert-menu-"]').hide();
-        }
-    });
-
-    $( '.insert-back' ).click(function() {
-      $('#insert-menu').show();
-      $('[id^="insert-menu-"]').hide();
-    });
-
-  $('.insert-menus').on('scroll', function()
-      {
-        guiEvents.emit('insert-scrolling');
-      });
-
-  $( '#leftPanel' ).on('panelopen', function()
-      {
-        if($('#insert-menu').is(':visible'))
-        {
-          $('#insert-menu').hide();
-        }
-      });
-
-  $( '#leftPanel' ).on('panelclose', function()
-      {
-        $('#panelButton').removeClass('ui-btn-active');
-      });
-
-  $('#view-mode').click(function()
-      {
-        guiEvents.emit('manipulation_mode', 'view');
-      });
-  $('#translate-mode').click(function()
-      {
-        guiEvents.emit('manipulation_mode', 'translate');
-      });
-  $('#rotate-mode').click(function()
-      {
-        guiEvents.emit('manipulation_mode', 'rotate');
-      });
-  $('#box-header').click(function()
-      {
-        guiEvents.emit('close_panel');
-        guiEvents.emit('spawn_entity_start', 'box');
-      });
-  $('#sphere-header').click(function()
-      {
-        guiEvents.emit('close_panel');
-        guiEvents.emit('spawn_entity_start', 'sphere');
-      });
-  $('#cylinder-header').click(function()
-      {
-        guiEvents.emit('close_panel');
-        guiEvents.emit('spawn_entity_start', 'cylinder');
-      });
-  $('#play').click(function()
-      {
-        if ( $('#playText').html().indexOf('Play') !== -1 )
-        {
-          guiEvents.emit('pause', false);
-          guiEvents.emit('notification_popup','Physics engine running');
-        }
-        else
-        {
-          guiEvents.emit('pause', true);
-          guiEvents.emit('notification_popup','Physics engine paused');
-        }
-      });
-  $('#clock').click(function()
-      {
-        if ($.mobile.activePage.find('#clock-touch').parent().
-            hasClass('ui-popup-active'))
-        {
-          $( '#clock-touch' ).popup('close');
-        }
-        else
-        {
-          var position = $('#clock').offset();
-          $('#clock-touch').popup('open', {
-              x:position.left+1.6*parseFloat($('body').css('font-size')),
-              y:4*parseFloat($('body').css('font-size'))});
-        }
-      });
-
-  $('#reset-model').click(function()
-      {
-        guiEvents.emit('model_reset');
-        guiEvents.emit('close_panel');
-      });
-  $('#reset-world').click(function()
-      {
-        guiEvents.emit('world_reset');
-        guiEvents.emit('close_panel');
-      });
-  $('#reset-view').click(function()
-      {
-        guiEvents.emit('view_reset');
-        guiEvents.emit('close_panel');
-      });
-  $('#view-collisions').click(function()
-      {
-        guiEvents.emit('show_collision');
-        guiEvents.emit('close_panel');
-      });
-  $( '#snap-to-grid' ).click(function() {
-    guiEvents.emit('snap_to_grid');
-    guiEvents.emit('close_panel');
-  });
-  $( '#toggle-notifications' ).click(function() {
-    guiEvents.emit('toggle_notifications');
-    guiEvents.emit('close_panel');
-  });
-
-  // Disable Esc key to close panel
-  $('body').on('keyup', function(event)
-      {
-        if (event.which === 27)
-        {
-          return false;
-        }
-      });
-
-  // long press on canvas
-  var press_time = 400;
-  $('#container')
-    .on('touchstart', function (event) {
-      $(this).data('checkdown', setTimeout(function () {
-        guiEvents.emit('longpress_start',event);
-      }, press_time));
-    })
-    .on('touchend', function (event) {
-      clearTimeout($(this).data('checkdown'));
-      guiEvents.emit('longpress_end',event,false);
-    })
-    .on('touchmove', function (event) {
-      clearTimeout($(this).data('checkdown'));
-      $(this).data('checkdown', setTimeout(function () {
-        guiEvents.emit('longpress_start',event);
-      }, press_time));
-      guiEvents.emit('longpress_move',event);
-    });
-});
-
-// Insert menu
-function insertControl($scope)
-{
-  $scope.categories =
+var modelList =
   [
     {path:'buildings', title:'Buildings', examplePath:'house_1', models:
     [
@@ -537,6 +157,389 @@ function insertControl($scope)
     ]}
   ];
 
+// Bind events to buttons
+$(function()
+{
+  //Initialize
+  // Toggle items
+  $('#view-collisions').buttonMarkup({icon: 'false'});
+  $('#snap-to-grid').buttonMarkup({icon: 'false'});
+  guiEvents.emit('toggle_notifications');
+
+  $( '#clock-touch' ).popup('option', 'arrow', 't');
+  $('#notification-popup-screen').remove();
+
+  // Panel starts open for wide screens
+  if ($(window).width() / parseFloat($('body').css('font-size')) > 35)
+  {
+    $('#leftPanel').panel('open');
+  }
+
+  // Clicks/taps// Touch devices
+  if ('ontouchstart' in window || 'onmsgesturechange' in window)
+  {
+    // swipe icon
+    $('#box').html('<b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Box</b>'+
+        '<div style="float: right;">'+
+        '<img src="style/images/box.png" '+
+        'style="vertical-align:middle;height:1.4em;">'+
+        '<img src="style/images/swipe.png" '+
+        'style="vertical-align:middle;margin-left:1em;"></div>');
+    $('#sphere').html('<b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sphere</b>'+
+        '<div style="float: right;">'+
+        '<img src="style/images/sphere.png" '+
+        'style="vertical-align:middle;;height:1.4em;">'+
+        '<img src="style/images/swipe.png" '+
+        'style="vertical-align:middle; margin-left:1em;"></div>');
+    $('#cylinder').html('<b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Cylinder</b>'+
+        '<div style="float: right;">'+
+        '<img src="style/images/cylinder.png" '+
+        'style="vertical-align:middle;;height:1.4em;">'+
+        '<img src="style/images/swipe.png" '+
+        'style="vertical-align:middle; margin-left:1em;"></div>');
+
+    // touchstart
+    $( '#box' ).bind('touchstart',function(event) {
+      guiEvents.emit('close_panel');
+      guiEvents.emit('spawn_entity_start', 'box', 'Box');
+      event.stopPropagation();
+    });
+    $( '#sphere' ).bind('touchstart',function(event) {
+      guiEvents.emit('close_panel');
+      guiEvents.emit('spawn_entity_start', 'sphere', 'Sphere');
+      event.stopPropagation();
+    });
+    $( '#cylinder' ).bind('touchstart',function(event) {
+      guiEvents.emit('close_panel');
+      guiEvents.emit('spawn_entity_start', 'cylinder', 'Cylinder');
+      event.stopPropagation();
+    });
+    $('[id^="insert-entity-"]').bind('touchstart',function(event) {
+      var path = $(this).attr('id');
+      path = path.substring(14);
+      guiEvents.emit('close_panel');
+      guiEvents.emit('spawn_entity_start', path);
+      event.stopPropagation();
+    });
+    // touchmove
+    $( '#box' ).bind('touchmove',function(event) {
+      guiEvents.emit('spawn_entity_move', event);
+      event.stopPropagation();
+    });
+    $( '#sphere' ).bind('touchmove',function(event) {
+      guiEvents.emit('spawn_entity_move', event);
+      event.stopPropagation();
+    });
+    $( '#cylinder' ).bind('touchmove',function(event) {
+      guiEvents.emit('spawn_entity_move', event);
+      event.stopPropagation();
+    });
+    $('[id^="insert-entity-"]').bind('touchmove',function(event) {
+      guiEvents.emit('spawn_entity_move', event);
+      event.stopPropagation();
+    });
+    // touchend
+    $( '#box' ).bind('touchend',function() {
+      guiEvents.emit('spawn_entity_end');
+    });
+    $( '#sphere' ).bind('touchend',function() {
+      guiEvents.emit('spawn_entity_end');
+    });
+    $( '#cylinder' ).bind('touchend',function() {
+      guiEvents.emit('spawn_entity_end');
+    });
+    $('[id^="insert-entity-"]').bind('touchend',function() {
+      guiEvents.emit('spawn_entity_end');
+    });
+
+    $('#play-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '15.8em')
+        .css('top', '0em')
+        .css('z-index', '1000');
+
+    $('#clock-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '12.8em')
+        .css('top', '0em')
+        .css('z-index', '1000');
+
+    $('#clock-mouse')
+        .css('visibility','hidden');
+
+    $('#mode-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '4.5em')
+        .css('top', '0.15em')
+        .css('z-index', '1000');
+
+    $('#box-header-fieldset')
+        .css('visibility','hidden');
+
+    $('#sphere-header-fieldset')
+        .css('visibility','hidden');
+
+    $('#cylinder-header-fieldset')
+        .css('visibility','hidden');
+
+    $('#insert-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '0.5em')
+        .css('top', '0em')
+        .css('z-index', '1000');
+
+    $('#insert-menu').find('*').touchmove(function(event){
+        var left = (event.pageX - this.offset().left);
+        $('#insert-menu').scrollLeft(left);
+        event.stopPropagation();
+    });
+  }
+  // Mouse devices
+  else
+  {
+    $( '#box' ).click(function() {
+      guiEvents.emit('close_panel');
+      guiEvents.emit('spawn_entity_start', 'box', 'Box');
+    });
+
+    $( '#sphere' ).click(function() {
+      guiEvents.emit('close_panel');
+      guiEvents.emit('spawn_entity_start', 'sphere', 'Sphere');
+    });
+
+    $( '#cylinder' ).click(function() {
+      guiEvents.emit('close_panel');
+      guiEvents.emit('spawn_entity_start', 'cylinder', 'Cylinder');
+    });
+
+    $('[id^="insert-entity-"]').click(function(event) {
+      var path = $(this).attr('id');
+      path = path.substring(14);
+
+      guiEvents.emit('close_panel');
+      guiEvents.emit('spawn_entity_start', path);
+    });
+
+    $('#clock-header-fieldset')
+        .css('visibility','hidden');
+
+    $('#play-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '35.2em')
+        .css('top', '0em')
+        .css('z-index', '1000');
+
+    $('#clock-mouse')
+        .css('position', 'absolute')
+        .css('right', '22.4em')
+        .css('top', '0.5em')
+        .css('z-index', '100')
+        .css('width', '12em')
+        .css('height', '2.5em')
+        .css('background-color', '#333333')
+        .css('padding', '3px')
+        .css('border-radius', '5px');
+
+    $('#mode-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '16.4em')
+        .css('top', '0.15em')
+        .css('z-index', '1000');
+
+    $('#box-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '9.5em')
+        .css('top', '0em')
+        .css('z-index', '1000');
+
+    $('#sphere-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '6.5em')
+        .css('top', '0em')
+        .css('z-index', '1000');
+
+    $('#cylinder-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '3.5em')
+        .css('top', '0em')
+        .css('z-index', '1000');
+
+    $('#insert-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '0.5em')
+        .css('top', '0em')
+        .css('z-index', '1000');
+  }
+
+  $('.header-button')
+      .css('float', 'left')
+      .css('height', '1.45em')
+      .css('padding', '0.65em');
+
+  $('.insert-menus')
+      .css('display', 'none')
+      .css('background-color', '#2a2a2a')
+      .css('padding', '10px')
+      .css('z-index', '1000')
+      .css('width', '100%')
+      .css('overflow', 'auto');
+
+  $('#insertButton').click(function(){
+        $('#leftPanel').panel('close');
+        if($('#insert-menu').is(':visible'))
+        {
+          $('#insert-menu').hide();
+        }
+        else
+        {
+          $('#insert-menu').show();
+          $('[id^="insert-menu-"]').hide();
+        }
+    });
+
+    $( '.insert-back' ).click(function() {
+      $('#insert-menu').show();
+      $('[id^="insert-menu-"]').hide();
+    });
+
+  $('.insert-menus').on('scroll', function()
+      {
+        guiEvents.emit('insert-scrolling');
+      });
+
+  $( '#leftPanel' ).on('panelopen', function()
+      {
+        if($('#insert-menu').is(':visible'))
+        {
+          $('#insert-menu').hide();
+        }
+      });
+
+  $( '#leftPanel' ).on('panelclose', function()
+      {
+        $('#panelButton').removeClass('ui-btn-active');
+      });
+
+  $('#view-mode').click(function()
+      {
+        guiEvents.emit('manipulation_mode', 'view');
+      });
+  $('#translate-mode').click(function()
+      {
+        guiEvents.emit('manipulation_mode', 'translate');
+      });
+  $('#rotate-mode').click(function()
+      {
+        guiEvents.emit('manipulation_mode', 'rotate');
+      });
+  $('#box-header').click(function()
+      {
+        guiEvents.emit('close_panel');
+        guiEvents.emit('spawn_entity_start', 'box', 'Box');
+      });
+  $('#sphere-header').click(function()
+      {
+        guiEvents.emit('close_panel');
+        guiEvents.emit('spawn_entity_start', 'sphere', 'Sphere');
+      });
+  $('#cylinder-header').click(function()
+      {
+        guiEvents.emit('close_panel');
+        guiEvents.emit('spawn_entity_start', 'cylinder', 'Cylinder');
+      });
+  $('#play').click(function()
+      {
+        if ( $('#playText').html().indexOf('Play') !== -1 )
+        {
+          guiEvents.emit('pause', false);
+          guiEvents.emit('notification_popup','Physics engine running');
+        }
+        else
+        {
+          guiEvents.emit('pause', true);
+          guiEvents.emit('notification_popup','Physics engine paused');
+        }
+      });
+  $('#clock').click(function()
+      {
+        if ($.mobile.activePage.find('#clock-touch').parent().
+            hasClass('ui-popup-active'))
+        {
+          $( '#clock-touch' ).popup('close');
+        }
+        else
+        {
+          var position = $('#clock').offset();
+          $('#clock-touch').popup('open', {
+              x:position.left+1.6*parseFloat($('body').css('font-size')),
+              y:4*parseFloat($('body').css('font-size'))});
+        }
+      });
+
+  $('#reset-model').click(function()
+      {
+        guiEvents.emit('model_reset');
+        guiEvents.emit('close_panel');
+      });
+  $('#reset-world').click(function()
+      {
+        guiEvents.emit('world_reset');
+        guiEvents.emit('close_panel');
+      });
+  $('#reset-view').click(function()
+      {
+        guiEvents.emit('view_reset');
+        guiEvents.emit('close_panel');
+      });
+  $('#view-collisions').click(function()
+      {
+        guiEvents.emit('show_collision');
+        guiEvents.emit('close_panel');
+      });
+  $( '#snap-to-grid' ).click(function() {
+    guiEvents.emit('snap_to_grid');
+    guiEvents.emit('close_panel');
+  });
+  $( '#toggle-notifications' ).click(function() {
+    guiEvents.emit('toggle_notifications');
+    guiEvents.emit('close_panel');
+  });
+
+  // Disable Esc key to close panel
+  $('body').on('keyup', function(event)
+      {
+        if (event.which === 27)
+        {
+          return false;
+        }
+      });
+
+  // long press on canvas
+  var press_time = 400;
+  $('#container')
+    .on('touchstart', function (event) {
+      $(this).data('checkdown', setTimeout(function () {
+        guiEvents.emit('longpress_start',event);
+      }, press_time));
+    })
+    .on('touchend', function (event) {
+      clearTimeout($(this).data('checkdown'));
+      guiEvents.emit('longpress_end',event,false);
+    })
+    .on('touchmove', function (event) {
+      clearTimeout($(this).data('checkdown'));
+      $(this).data('checkdown', setTimeout(function () {
+        guiEvents.emit('longpress_start',event);
+      }, press_time));
+      guiEvents.emit('longpress_move',event);
+    });
+});
+
+// Insert menu
+function insertControl($scope)
+{
+  $scope.categories = modelList;
+
   $scope.openCategory = function(category)
   {
     $('#insert-menu').hide();
@@ -544,10 +547,24 @@ function insertControl($scope)
     $(categoryID).show();
   };
 
-  $scope.spawnEntity = function(entity)
+  $scope.spawnEntity = function(path)
   {
-    guiEvents.emit('spawn_entity_start', entity);
+    guiEvents.emit('spawn_entity_start', path);
   };
+}
+
+function getNameFromPath(path)
+{
+  for(var i = 0; i < modelList.length; ++i)
+  {
+    for(var j = 0; j < modelList[i].models.length; ++j)
+    {
+      if(modelList[i].models[j].modelPath === path)
+      {
+        return modelList[i].models[j].modelTitle;
+      }
+    }
+  }
 }
 
 /**
@@ -588,22 +605,33 @@ GZ3D.Gui.prototype.init = function()
   );
 
   // Create temp model
-  guiEvents.on('spawn_entity_start', function(entity)
+  guiEvents.on('spawn_entity_start', function(entity, entityName)
       {
         // manually trigger view mode
         that.scene.setManipulationMode('view');
         $('#view-mode').prop('checked', true);
         $('input[type="radio"]').checkboxradio('refresh');
+
+        var name;
+        if(entityName)
+        {
+          name = entityName;
+        }
+        else
+        {
+          name = getNameFromPath(entity);
+        }
+
         that.spawnState = 'START';
         that.spawnModel.start(entity,function(obj)
             {
               that.emitter.emit('entityCreated', obj, entity);
+
               guiEvents.emit('notification_popup',
-                  entity.charAt(0).toUpperCase()+
-                  entity.substring(1)+' inserted');
+                  name+' inserted');
             });
         guiEvents.emit('notification_popup',
-            'Place '+entity+' at the desired position');
+            'Place '+name+' at the desired position');
       }
   );
 

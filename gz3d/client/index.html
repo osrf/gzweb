@@ -246,6 +246,7 @@
       <!-- insert menu -->
       <div id="footer" ng-controller="insertControl">
         <div id="insert-menu" class="insert-menus">
+          <h3 style="margin:0em">Insert</h3>
           <ul style="list-style:none;background-color:#2a2a2a;height:9em;padding:0em;margin:0em;width:{{categories.length*13}}em">
             <li style="float:left" ng-repeat="category in categories">
               <a href="#" ng-click="openCategory(category.path)" data-role="button" data-inline="true" style="width:10em">
@@ -256,7 +257,8 @@
           </ul>
         </div>
         <div ng-repeat="category in categories" class="insert-menus" id="insert-menu-{{category.path}}">
-          <a href="#" class="insert-back" style="float:left"><img style="height:1.45em" src="style/images/back.png"></a>
+          <a href="#" class="insert-back" style="float:left"><img style="height:1.2em" src="style/images/back.png"></a>
+          <h3 style="margin:0em"> &nbsp; {{category.title}}</h3>
           <ul style="list-style:none;background-color:#2a2a2a;height:9em;padding:0em;margin:0em;width:{{category.models.length*13+2}}em">
             <li style="float:left" ng-repeat="model in category.models">
               <a href="#" id="insert-entity-{{model.modelPath}}" ng-mousedown="spawnEntity(model.modelPath)" data-role="button" data-inline="true" style="width:10em">
