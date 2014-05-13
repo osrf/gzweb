@@ -395,11 +395,18 @@ $(function()
     $( '.insert-back' ).click(function() {
       $('#insert-menu').show();
       $('[id^="insert-menu-"]').hide();
+      $('.insert-menu-title')
+            .css('margin-left', '0px');
     });
 
   $('.insert-menus').on('scroll', function()
       {
         guiEvents.emit('insert-scrolling');
+
+        var id = $(this).attr('id');
+
+        $('.insert-menu-title')
+            .css('margin-left', document.getElementById(id).scrollLeft);
       });
 
   $( '#leftPanel' ).on('panelopen', function()
@@ -538,6 +545,8 @@ function insertControl($scope)
   $scope.openCategory = function(category)
   {
     $('#insert-menu').hide();
+    $('.insert-menu-title')
+            .css('margin-left', '0px');
     var categoryID = '#insert-menu-'+category;
     $(categoryID).show();
   };
@@ -825,7 +834,7 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('insert-scrolling', function(event)
+  guiEvents.on('insert-scrolling', function()
       {
         that.scene.killCameraControl = true;
 
