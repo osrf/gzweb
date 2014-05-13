@@ -712,7 +712,7 @@ GZ3D.GZIface.prototype.init = function()
   var poseUpdate = function(message)
   {
     var entity = this.scene.getByName(message.name);
-    if (entity)
+    if (entity && entity !== this.scene.modelManipulator.object)
     {
       this.scene.updatePose(entity, message.position, message.orientation);
     }
@@ -3650,7 +3650,7 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
   var point;
   if (objects.length > 0)
   {
-
+    modelsloop:
     for (var i = 0; i < objects.length; ++i)
     {
       model = objects[i].object;
@@ -3662,7 +3662,7 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
         break;
       }
 
-      if (objects[i].object.name === 'grid')
+      if (model.name === 'grid')
       {
         model = null;
         continue;
@@ -3670,6 +3670,14 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
 
       while (model.parent !== this.scene)
       {
+        // Select handle instead of background object
+        if (this.mode !== 'view' &&
+            model.parent.parent === this.modelManipulator.gizmo &&
+            model.name !== '')
+        {
+          break modelsloop;
+        }
+
         model = model.parent;
       }
 
