@@ -59,6 +59,13 @@ $(function()
       guiEvents.emit('spawn_entity_start', 'cylinder');
       event.stopPropagation();
     });
+    $('[id^="insert-entity-"]').bind('touchstart',function(event) {
+      var id = $(this).attr('id');
+      id = id.substring(14);
+      guiEvents.emit('close_panel');
+      guiEvents.emit('spawn_entity_start', id);
+      event.stopPropagation();
+    });
     // touchmove
     $( '#box' ).bind('touchmove',function(event) {
       guiEvents.emit('spawn_entity_move', event);
@@ -72,6 +79,10 @@ $(function()
       guiEvents.emit('spawn_entity_move', event);
       event.stopPropagation();
     });
+    $('[id^="insert-entity-"]').bind('touchmove',function(event) {
+      guiEvents.emit('spawn_entity_move', event);
+      event.stopPropagation();
+    });
     // touchend
     $( '#box' ).bind('touchend',function() {
       guiEvents.emit('spawn_entity_end');
@@ -80,6 +91,9 @@ $(function()
       guiEvents.emit('spawn_entity_end');
     });
     $( '#cylinder' ).bind('touchend',function() {
+      guiEvents.emit('spawn_entity_end');
+    });
+    $('[id^="insert-entity-"]').bind('touchend',function() {
       guiEvents.emit('spawn_entity_end');
     });
 
@@ -141,6 +155,13 @@ $(function()
     $( '#cylinder' ).click(function() {
       guiEvents.emit('close_panel');
       guiEvents.emit('spawn_entity_start', 'cylinder');
+    });
+
+    $('[id^="insert-entity-"]').click(function(event) {
+      var id = $(this).attr('id');
+      id = id.substring(14);
+      guiEvents.emit('close_panel');
+      guiEvents.emit('spawn_entity_start', id);
     });
 
     $('#clock-header-fieldset')
