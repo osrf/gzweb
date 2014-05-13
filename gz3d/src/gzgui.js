@@ -85,13 +85,13 @@ $(function()
 
     $('#play-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '13.2em')
+        .css('right', '15.8em')
         .css('top', '0em')
         .css('z-index', '1000');
 
     $('#clock-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '9.9em')
+        .css('right', '12.8em')
         .css('top', '0em')
         .css('z-index', '1000');
 
@@ -100,7 +100,7 @@ $(function()
 
     $('#mode-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '0.5em')
+        .css('right', '4.5em')
         .css('top', '0.15em')
         .css('z-index', '1000');
 
@@ -112,6 +112,18 @@ $(function()
 
     $('#cylinder-header-fieldset')
         .css('visibility','hidden');
+
+    $('#insert-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '0.5em')
+        .css('top', '0em')
+        .css('z-index', '1000');
+
+    $('#insert-menu').find('*').touchmove(function(event){
+        var left = (event.pageX - this.offset().left);
+        $('#insert-menu').scrollLeft(left);
+        event.stopPropagation();
+    });
   }
   // Mouse devices
   else
@@ -131,29 +143,18 @@ $(function()
       guiEvents.emit('spawn_entity_start', 'cylinder');
     });
 
-    $( '.insert-back' ).click(function() {
-      $('#insert-menu').show();
-      $('[id^="insert-menu-"]').hide();
-    });
-
     $('#clock-header-fieldset')
         .css('visibility','hidden');
 
-    $('#insert-header-fieldset')
-        .css('position', 'absolute')
-        .css('right', '40.4em')
-        .css('top', '0em')
-        .css('z-index', '1000');
-
     $('#play-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '32.4em')
+        .css('right', '35.2em')
         .css('top', '0em')
         .css('z-index', '1000');
 
     $('#clock-mouse')
         .css('position', 'absolute')
-        .css('right', '19.5em')
+        .css('right', '22.4em')
         .css('top', '0.5em')
         .css('z-index', '100')
         .css('width', '12em')
@@ -164,41 +165,47 @@ $(function()
 
     $('#mode-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '12.6em')
+        .css('right', '16.4em')
         .css('top', '0.15em')
         .css('z-index', '1000');
 
     $('#box-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '6.5em')
+        .css('right', '9.5em')
         .css('top', '0em')
         .css('z-index', '1000');
 
     $('#sphere-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '3.5em')
+        .css('right', '6.5em')
         .css('top', '0em')
         .css('z-index', '1000');
 
     $('#cylinder-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '0.5em')
+        .css('right', '3.5em')
         .css('top', '0em')
         .css('z-index', '1000');
 
-    $('.insert-menus')
-        .css('display', 'none')
-        .css('background-color', '#2a2a2a')
-        .css('padding', '10px')
-        .css('z-index', '1000')
-        .css('width', '100%')
-        .css('overflow', 'auto');
+    $('#insert-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '0.5em')
+        .css('top', '0em')
+        .css('z-index', '1000');
   }
 
   $('.header-button')
       .css('float', 'left')
       .css('height', '1.45em')
       .css('padding', '0.65em');
+
+  $('.insert-menus')
+      .css('display', 'none')
+      .css('background-color', '#2a2a2a')
+      .css('padding', '10px')
+      .css('z-index', '1000')
+      .css('width', '100%')
+      .css('overflow', 'auto');
 
   $('#insertButton').click(function(){
         $('#leftPanel').panel('close');
@@ -212,6 +219,24 @@ $(function()
           $('[id^="insert-menu-"]').hide();
         }
     });
+
+    $( '.insert-back' ).click(function() {
+      $('#insert-menu').show();
+      $('[id^="insert-menu-"]').hide();
+    });
+
+  $('.insert-menus').on('scroll', function()
+      {
+        guiEvents.emit('insert-scrolling');
+      });
+
+  $( '#leftPanel' ).on('panelopen', function()
+      {
+        if($('#insert-menu').is(':visible'))
+        {
+          $('#insert-menu').hide();
+        }
+      });
 
   $( '#leftPanel' ).on('panelclose', function()
       {
@@ -748,6 +773,19 @@ GZ3D.Gui.prototype.init = function()
             that.scene.radialMenu.onLongPressMove(event);
           }
         }
+      }
+  );
+
+  guiEvents.on('insert-scrolling', function(event)
+      {
+        that.scene.killCameraControl = true;
+
+        clearTimeout($.data(this, 'scrollTimer'));
+
+        $.data(this, 'scrollTimer', setTimeout(function()
+        {
+          that.scene.killCameraControl = false;
+        }, 250));
       }
   );
 
