@@ -173,42 +173,7 @@ $(function()
   // Clicks/taps// Touch devices
   if ('ontouchstart' in window || 'onmsgesturechange' in window)
   {
-    // swipe icon
-    $('#box').html('<b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Box</b>'+
-        '<div style="float: right;">'+
-        '<img src="style/images/box.png" '+
-        'style="vertical-align:middle;height:1.4em;">'+
-        '<img src="style/images/swipe.png" '+
-        'style="vertical-align:middle;margin-left:1em;"></div>');
-    $('#sphere').html('<b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sphere</b>'+
-        '<div style="float: right;">'+
-        '<img src="style/images/sphere.png" '+
-        'style="vertical-align:middle;;height:1.4em;">'+
-        '<img src="style/images/swipe.png" '+
-        'style="vertical-align:middle; margin-left:1em;"></div>');
-    $('#cylinder').html('<b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Cylinder</b>'+
-        '<div style="float: right;">'+
-        '<img src="style/images/cylinder.png" '+
-        'style="vertical-align:middle;;height:1.4em;">'+
-        '<img src="style/images/swipe.png" '+
-        'style="vertical-align:middle; margin-left:1em;"></div>');
-
     // touchstart
-    $( '#box' ).bind('touchstart',function(event) {
-      guiEvents.emit('close_panel');
-      guiEvents.emit('spawn_entity_start', 'box', 'Box');
-      event.stopPropagation();
-    });
-    $( '#sphere' ).bind('touchstart',function(event) {
-      guiEvents.emit('close_panel');
-      guiEvents.emit('spawn_entity_start', 'sphere', 'Sphere');
-      event.stopPropagation();
-    });
-    $( '#cylinder' ).bind('touchstart',function(event) {
-      guiEvents.emit('close_panel');
-      guiEvents.emit('spawn_entity_start', 'cylinder', 'Cylinder');
-      event.stopPropagation();
-    });
     $('[id^="insert-entity-"]').bind('touchstart',function(event) {
       var path = $(this).attr('id');
       path = path.substring(14);
@@ -217,32 +182,11 @@ $(function()
       event.stopPropagation();
     });
     // touchmove
-    $( '#box' ).bind('touchmove',function(event) {
-      guiEvents.emit('spawn_entity_move', event);
-      event.stopPropagation();
-    });
-    $( '#sphere' ).bind('touchmove',function(event) {
-      guiEvents.emit('spawn_entity_move', event);
-      event.stopPropagation();
-    });
-    $( '#cylinder' ).bind('touchmove',function(event) {
-      guiEvents.emit('spawn_entity_move', event);
-      event.stopPropagation();
-    });
     $('[id^="insert-entity-"]').bind('touchmove',function(event) {
       guiEvents.emit('spawn_entity_move', event);
       event.stopPropagation();
     });
     // touchend
-    $( '#box' ).bind('touchend',function() {
-      guiEvents.emit('spawn_entity_end');
-    });
-    $( '#sphere' ).bind('touchend',function() {
-      guiEvents.emit('spawn_entity_end');
-    });
-    $( '#cylinder' ).bind('touchend',function() {
-      guiEvents.emit('spawn_entity_end');
-    });
     $('[id^="insert-entity-"]').bind('touchend',function() {
       guiEvents.emit('spawn_entity_end');
     });
@@ -292,21 +236,6 @@ $(function()
   // Mouse devices
   else
   {
-    $( '#box' ).click(function() {
-      guiEvents.emit('close_panel');
-      guiEvents.emit('spawn_entity_start', 'box', 'Box');
-    });
-
-    $( '#sphere' ).click(function() {
-      guiEvents.emit('close_panel');
-      guiEvents.emit('spawn_entity_start', 'sphere', 'Sphere');
-    });
-
-    $( '#cylinder' ).click(function() {
-      guiEvents.emit('close_panel');
-      guiEvents.emit('spawn_entity_start', 'cylinder', 'Cylinder');
-    });
-
     $('[id^="insert-entity-"]').click(function(event) {
       var path = $(this).attr('id');
       path = path.substring(14);
@@ -437,17 +366,17 @@ $(function()
   $('#box-header').click(function()
       {
         guiEvents.emit('close_panel');
-        guiEvents.emit('spawn_entity_start', 'box', 'Box');
+        guiEvents.emit('spawn_entity_start', 'box');
       });
   $('#sphere-header').click(function()
       {
         guiEvents.emit('close_panel');
-        guiEvents.emit('spawn_entity_start', 'sphere', 'Sphere');
+        guiEvents.emit('spawn_entity_start', 'sphere');
       });
   $('#cylinder-header').click(function()
       {
         guiEvents.emit('close_panel');
-        guiEvents.emit('spawn_entity_start', 'cylinder', 'Cylinder');
+        guiEvents.emit('spawn_entity_start', 'cylinder');
       });
   $('#play').click(function()
       {
@@ -559,6 +488,19 @@ function insertControl($scope)
 
 function getNameFromPath(path)
 {
+  if(path === 'box')
+  {
+    return 'Box';
+  }
+  if(path === 'sphere')
+  {
+    return 'Sphere';
+  }
+  if(path === 'cylinder')
+  {
+    return 'Cylinder';
+  }
+
   for(var i = 0; i < modelList.length; ++i)
   {
     for(var j = 0; j < modelList[i].models.length; ++j)
@@ -609,22 +551,14 @@ GZ3D.Gui.prototype.init = function()
   );
 
   // Create temp model
-  guiEvents.on('spawn_entity_start', function(entity, entityName)
+  guiEvents.on('spawn_entity_start', function(entity)
       {
         // manually trigger view mode
         that.scene.setManipulationMode('view');
         $('#view-mode').prop('checked', true);
         $('input[type="radio"]').checkboxradio('refresh');
 
-        var name;
-        if(entityName)
-        {
-          name = entityName;
-        }
-        else
-        {
-          name = getNameFromPath(entity);
-        }
+        var name = getNameFromPath(entity);
 
         that.spawnState = 'START';
         that.spawnModel.start(entity,function(obj)
