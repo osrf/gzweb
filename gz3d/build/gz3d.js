@@ -4328,58 +4328,39 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
   if (this.meshes[uri])
   {
     dae = this.meshes[uri];
-    if (submesh)
-    {
-      // clone the dae object as we are modifying it's mesh vertices
-      dae = dae.clone();
-      mesh = this.prepareColladaMesh(dae, submesh, centerSubmesh);
-    }
-    else
-    {
-      dae = this.createMeshInstance(dae, null);
-    }
+    dae = dae.clone();
+    this.useColladaSubMesh(dae, submesh, centerSubmesh);
     callback(dae);
+    return;
   }
 
-  if (!mesh)
+  var loader = new THREE.ColladaLoader();
+  // var loader = new ColladaLoader2();
+  // loader.options.convertUpAxis = true;
+  var thatURI = uri;
+  var thatSubmesh = submesh;
+  var thatCenterSubmesh = centerSubmesh;
+  var that = this;
+
+  loader.load(uri, function(collada)
   {
-    var loader = new THREE.ColladaLoader();
-    // var loader = new ColladaLoader2();
-    // loader.options.convertUpAxis = true;
-    var thatURI = uri;
-    var thatSubmesh = submesh;
-    var thatCenterSubmesh = centerSubmesh;
-    var that = this;
-
-    loader.load(uri, function(collada)
+    // check for a scale factor
+    /*if(collada.dae.asset.unit)
     {
-      // check for a scale factor
-      /*if(collada.dae.asset.unit)
-      {
-        var scale = collada.dae.asset.unit;
-        collada.scene.scale = new THREE.Vector3(scale, scale, scale);
-      }*/
+      var scale = collada.dae.asset.unit;
+      collada.scene.scale = new THREE.Vector3(scale, scale, scale);
+    }*/
 
-      dae = collada.scene;
-      dae.updateMatrix();
-      this.scene.prepareColladaMesh(dae);
-      this.scene.meshes[thatURI] = dae;
+    dae = collada.scene;
+    dae.updateMatrix();
+    this.scene.prepareColladaMesh(dae);
+    this.scene.meshes[thatURI] = dae;
+    dae = dae.clone();
+    this.scene.useColladaSubMesh(dae, thatSubmesh, centerSubmesh);
 
-      if (thatSubmesh)
-      {
-        // clone the dae object as we are modifying it's mesh vertices
-        dae = dae.clone();
-        mesh = this.scene.useColladaSubMesh(dae, thatSubmesh, centerSubmesh);
-      }
-      else
-      {
-        dae = that.createMeshInstance(dae, null);
-      }
-
-      dae.name = uri;
-      callback(dae);
-    });
-  }
+    dae.name = uri;
+    callback(dae);
+  });
 };
 
 /**
@@ -4408,6 +4389,11 @@ GZ3D.Scene.prototype.prepareColladaMesh = function(dae)
  */
 GZ3D.Scene.prototype.useColladaSubMesh = function(dae, submesh, centerSubmesh)
 {
+  if (!submesh)
+  {
+    return null;
+  }
+
   var mesh;
   var allChildren = [];
   dae.getDescendants(allChildren);
@@ -4478,38 +4464,6 @@ GZ3D.Scene.prototype.useColladaSubMesh = function(dae, submesh, centerSubmesh)
     }
   }
   return mesh;
-};
-
-/**
- * Create an instance of a mesh
- * @param {} meshNode
- * @returns {THREE.Object3D} Object containing the mesh instance
- */
-GZ3D.Scene.prototype.createMeshInstance = function(meshNode, parent)
-{
-  if (meshNode instanceof THREE.Mesh)
-  {
-    var mesh = new THREE.Mesh(meshNode.geometry, meshNode.material);
-    parent.add(mesh);
-    return parent;
-  }
-
-  var node = new THREE.Object3D();
-  node.scale = meshNode.scale;
-  node.matrixWorld = meshNode.matrixWorld;
-  node.matrixWorldNeedsUpdate = true;
-
-  if (parent)
-  {
-    parent.add(node);
-  }
-
-  for (var i  = 0; i < meshNode.children.length; ++i)
-  {
-    this.createMeshInstance(meshNode.children[i], node);
-  }
-
-  return node;
 };
 
 /*GZ3D.Scene.prototype.setMaterial = function(mesh, texture, normalMap)
