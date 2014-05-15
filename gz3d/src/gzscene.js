@@ -1487,3 +1487,18 @@ GZ3D.Scene.prototype.hideBoundingBox = function()
   }
   this.boundingBox.visible = false;
 };
+
+/**
+ * Mouse right click
+ */
+GZ3D.Scene.prototype.onRightClick = function(event, callback)
+{
+  var pos = new THREE.Vector2(event.clientX, event.clientY);
+  var intersect = new THREE.Vector3();
+  var model = this.getRayCastModel(pos, intersect);
+
+  if(model.name !== '' && model.name !== 'plane')
+  {
+    callback(model);
+  }
+};
