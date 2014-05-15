@@ -178,24 +178,6 @@ $(function()
   // Clicks/taps// Touch devices
   if ('ontouchstart' in window || 'onmsgesturechange' in window)
   {
-    // touchstart
-    $('[id^="insert-entity-"]').bind('touchstart',function(event) {
-      var path = $(this).attr('id');
-      path = path.substring(14);
-      guiEvents.emit('close_panel');
-      guiEvents.emit('spawn_entity_start', path);
-      event.stopPropagation();
-    });
-    // touchmove
-    $('[id^="insert-entity-"]').bind('touchmove',function(event) {
-      guiEvents.emit('spawn_entity_move', event);
-      event.stopPropagation();
-    });
-    // touchend
-    $('[id^="insert-entity-"]').bind('touchend',function() {
-      guiEvents.emit('spawn_entity_end');
-    });
-
     $('#play-header-fieldset')
         .css('position', 'absolute')
         .css('right', '15.8em')
@@ -237,17 +219,66 @@ $(function()
         $('#insert-menu').scrollLeft(left);
         event.stopPropagation();
     });
+
+    $('#footer').touchstart(function(event){
+        guiEvents.emit('killCameraControl');
+    });
+
+    $('#footer').touchend(function(event){
+        guiEvents.emit('allowCameraControl');
+    });
+
+    // long press on canvas
+    var press_time_container = 400;
+    $('#container')
+      .on('touchstart', function (event) {
+        $(this).data('checkdown', setTimeout(function () {
+          guiEvents.emit('longpress_container_start',event);
+        }, press_time_container));
+      })
+      .on('touchend', function (event) {
+        clearTimeout($(this).data('checkdown'));
+        guiEvents.emit('longpress_container_end',event,false);
+      })
+      .on('touchmove', function (event) {
+        clearTimeout($(this).data('checkdown'));
+        $(this).data('checkdown', setTimeout(function () {
+          guiEvents.emit('longpress_container_start',event);
+        }, press_time_container));
+        guiEvents.emit('longpress_container_move',event);
+      });
+
+    // long press on insert menu item
+    var press_time_footer = 400;
+    $('[id^="insert-entity-"]')
+      .on('touchstart', function (event) {
+        var path = $(this).attr('id');
+        path = path.substring(14);
+        $(this).data('checkdown', setTimeout(function () {
+          guiEvents.emit('longpress_footer_start', event, path);
+        }, press_time_footer));
+      })
+      .on('touchend', function (event) {
+        clearTimeout($(this).data('checkdown'));
+        guiEvents.emit('longpress_footer_end',event,false);
+      })
+      .on('touchmove', function (event) {
+        clearTimeout($(this).data('checkdown'));
+        guiEvents.emit('longpress_footer_move',event);
+      });
   }
   // Mouse devices
   else
   {
-    $('[id^="insert-entity-"]').click(function(event) {
-      var path = $(this).attr('id');
-      path = path.substring(14);
-
-      guiEvents.emit('close_panel');
-      guiEvents.emit('spawn_entity_start', path);
-    });
+    $('[id^="insert-entity-"]')
+      .click(function(event) {
+        var path = $(this).attr('id');
+        path = path.substring(14);
+        guiEvents.emit('spawn_entity_start', path);
+      })
+      .on('mousedown', function(event) {
+        event.preventDefault();
+      });
 
     $('#clock-header-fieldset')
         .css('visibility','hidden');
@@ -298,6 +329,14 @@ $(function()
         .css('right', '0.5em')
         .css('top', '0em')
         .css('z-index', '1000');
+
+    $('#footer').mouseenter(function(event){
+        guiEvents.emit('killCameraControl');
+    });
+
+    $('#footer').mouseleave(function(event){
+        guiEvents.emit('allowCameraControl');
+    });
   }
 
   $('.header-button')
@@ -335,8 +374,6 @@ $(function()
 
   $('.insert-menus').on('scroll', function()
       {
-        guiEvents.emit('insert-scrolling');
-
         var id = $(this).attr('id');
 
         $('.insert-menu-title')
@@ -449,26 +486,6 @@ $(function()
           return false;
         }
       });
-
-  // long press on canvas
-  var press_time = 400;
-  $('#container')
-    .on('touchstart', function (event) {
-      $(this).data('checkdown', setTimeout(function () {
-        guiEvents.emit('longpress_start',event);
-      }, press_time));
-    })
-    .on('touchend', function (event) {
-      clearTimeout($(this).data('checkdown'));
-      guiEvents.emit('longpress_end',event,false);
-    })
-    .on('touchmove', function (event) {
-      clearTimeout($(this).data('checkdown'));
-      $(this).data('checkdown', setTimeout(function () {
-        guiEvents.emit('longpress_start',event);
-      }, press_time));
-      guiEvents.emit('longpress_move',event);
-    });
 });
 
 // Insert menu
@@ -539,7 +556,8 @@ GZ3D.Gui.prototype.init = function()
   this.spawnModel = new GZ3D.SpawnModel(
       this.scene, this.scene.getDomElement());
   this.spawnState = null;
-  this.longPressState = null;
+  this.longPressContainerState = null;
+  this.longPressFooterState = null;
   this.showNotifications = false;
 
   var that = this;
@@ -682,35 +700,35 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('longpress_start',
+  guiEvents.on('longpress_container_start',
       function (event)
       {
         if (event.originalEvent.touches.length !== 1 ||
             that.scene.modelManipulator.hovered)
         {
-          guiEvents.emit('longpress_end', event.originalEvent,true);
+          guiEvents.emit('longpress_container_end', event.originalEvent,true);
         }
         else
         {
           that.scene.killCameraControl = true;
           that.scene.showRadialMenu(event);
-          that.longPressState = 'START';
+          that.longPressContainerState = 'START';
         }
       }
   );
 
-  guiEvents.on('longpress_end', function(event,cancel)
+  guiEvents.on('longpress_container_end', function(event,cancel)
       {
         if (that.scene.modelManipulator.object === undefined)
         {
           that.scene.hideBoundingBox();
         }
-        if (that.longPressState !== 'START')
+        if (that.longPressContainerState !== 'START')
         {
-          that.longPressState = 'END';
+          that.longPressContainerState = 'END';
           return;
         }
-        that.longPressState = 'END';
+        that.longPressContainerState = 'END';
         that.scene.killCameraControl = false;
         if (that.scene.radialMenu.showing)
         {
@@ -748,15 +766,15 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('longpress_move', function(event)
+  guiEvents.on('longpress_container_move', function(event)
       {
         if (event.originalEvent.touches.length !== 1)
         {
-          guiEvents.emit('longpress_end',event.originalEvent,true);
+          guiEvents.emit('longpress_container_end',event.originalEvent,true);
         }
         else
         {
-          if (that.longPressState !== 'START')
+          if (that.longPressContainerState !== 'START')
           {
             return;
           }
@@ -773,16 +791,24 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('insert-scrolling', function()
+  guiEvents.on('longpress_footer_start', function (event, path)
       {
-        that.scene.killCameraControl = true;
+        navigator.vibrate(50);
+        guiEvents.emit('spawn_entity_start', path);
+        event.stopPropagation();
+      }
+  );
 
-        clearTimeout($.data(this, 'scrollTimer'));
+  guiEvents.on('longpress_footer_end', function(event)
+      {
+        guiEvents.emit('spawn_entity_end');
+      }
+  );
 
-        $.data(this, 'scrollTimer', setTimeout(function()
-        {
-          that.scene.killCameraControl = false;
-        }, 250));
+  guiEvents.on('longpress_footer_move', function(event)
+      {
+        guiEvents.emit('spawn_entity_move', event);
+        event.stopPropagation();
       }
   );
 
@@ -802,6 +828,18 @@ GZ3D.Gui.prototype.init = function()
             $( '#notification-popup' ).popup('close');
           }, 2000);
         }
+      }
+  );
+
+  guiEvents.on('killCameraControl', function ()
+      {
+        that.scene.killCameraControl = true;
+      }
+  );
+
+  guiEvents.on('allowCameraControl', function ()
+      {
+        that.scene.killCameraControl = false;
       }
   );
 };
