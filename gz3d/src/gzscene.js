@@ -1062,7 +1062,7 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
     {
       // clone the dae object as we are modifying it's mesh vertices
       dae = dae.clone();
-      mesh = this.prepareColladaMesh(dae, submesh, centerSubmesh);
+      mesh = this.useColladaMesh(dae, submesh, centerSubmesh);
     }
     else
     {
