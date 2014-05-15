@@ -4327,7 +4327,7 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
   var mesh = null;
   if (this.meshes[uri])
   {
-    dae = this.meshes[uri];
+    dae = this.meshes[uri].clone();
     if (submesh)
     {
       mesh = this.prepareColladaMesh(dae, submesh, centerSubmesh);
