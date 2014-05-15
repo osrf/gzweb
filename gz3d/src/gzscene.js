@@ -1070,7 +1070,6 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
   var thatURI = uri;
   var thatSubmesh = submesh;
   var thatCenterSubmesh = centerSubmesh;
-  var that = this;
 
   loader.load(uri, function(collada)
   {
