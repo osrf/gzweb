@@ -2,9 +2,9 @@
 
 var guiEvents = new EventEmitter2({ verbose: true });
 
-var toEmUnits = function(pixels)
+var emUnits = function(value)
     {
-      return pixels*parseFloat($('body').css('font-size'));
+      return value*parseFloat($('body').css('font-size'));
     };
 
 // Bind events to buttons
@@ -20,7 +20,7 @@ $(function()
   $('#notification-popup-screen').remove();
 
   // Panel starts open for wide screens
-  if ($(window).width() / toEmUnits(1) > 35)
+  if ($(window).width() / emUnits(1) > 35)
   {
     $('#leftPanel').panel('open');
   }
@@ -257,8 +257,8 @@ $(function()
         {
           var position = $('#clock').offset();
           $('#clock-touch').popup('open', {
-              x:position.left+toEmUnits(1.6),
-              y:toEmUnits(4)});
+              x:position.left+emUnits(1.6),
+              y:emUnits(4)});
         }
       });
 
@@ -479,7 +479,7 @@ GZ3D.Gui.prototype.init = function()
 
   guiEvents.on('close_panel', function()
       {
-        if ($(window).width() / toEmUnits(1)< 35)
+        if ($(window).width() / emUnits(1)< 35)
         {
           $('#leftPanel').panel('close');
         }
@@ -600,12 +600,12 @@ GZ3D.Gui.prototype.init = function()
       {
         that.scene.onRightClick(event, function(entity)
             {
-              that.scene.showBoundingBox(entity);
               that.scene.selectedModel = entity;
+              that.scene.showBoundingBox(entity);
               $('.ui-popup').popup('close');
               $('#model-popup').popup('open',
-                  {x: event.clientX + toEmUnits(3),
-                   y: event.clientY + toEmUnits(1.5)});
+                  {x: event.clientX + emUnits(3),
+                   y: event.clientY + emUnits(1.5)});
             });
       }
   );

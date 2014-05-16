@@ -1506,14 +1506,15 @@ GZ3D.Scene.prototype.hideBoundingBox = function()
 
 /**
  * Mouse right click
+ * @param {} event
+ * @param {} callback - function to be executed to the clicked model
  */
 GZ3D.Scene.prototype.onRightClick = function(event, callback)
 {
   if(this.manipulationMode === 'view')
   {
     var pos = new THREE.Vector2(event.clientX, event.clientY);
-    var intersect = new THREE.Vector3();
-    var model = this.getRayCastModel(pos, intersect);
+    var model = this.getRayCastModel(pos, new THREE.Vector3());
 
     if(model && model.name !== '' && model.name !== 'plane' &&
         this.modelManipulator.pickerNames.indexOf(model.name) === -1)
