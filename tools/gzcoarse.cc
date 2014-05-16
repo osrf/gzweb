@@ -25,35 +25,12 @@
 #define PI 3.14159265359
 #endif
 
-void build_list (gpointer * data, GSList ** list)
+enum GeometryType {POSITION, NORMAL, UVMAP};
+
+void build_list (gpointer *data, GSList **list)
 {
   /* always use O(1) g_slist_prepend instead of O(n) g_slist_append */
   *list = g_slist_prepend (*list, data);
-}
-
-void triangle_cleanup (GtsSurface * s)
-{
-  GSList * triangles = NULL;
-  GSList * i;
-
-  g_return_if_fail (s != NULL);
-
-  /* build list of triangles */
-  gts_surface_foreach_face (s, (GtsFunc) build_list, &triangles);
-
-  /* remove duplicate triangles */
-  i = triangles;
-  while (i) {
-    GtsTriangle * t = (GtsTriangle*)i->data;
-    if (gts_triangle_is_duplicate (t))
-      /* destroy t, its edges (if not used by any other triangle)
-     and its corners (if not used by any other edge) */
-      gts_object_destroy (GTS_OBJECT (t));
-    i = i->next;
-  }
-
-  /* free list of triangles */
-  g_slist_free (triangles);
 }
 
 //////////////////////////////////////////////////
@@ -104,7 +81,7 @@ void FillVertex(GtsPoint *_p, gpointer *_data)
   // create a Gazebo vertex from GTS_POINT and add it to the submesh
   gazebo::common::SubMesh *subMesh =
       reinterpret_cast<gazebo::common::SubMesh *>(_data[0]);
-  GHashTable* vIndex = reinterpret_cast<GHashTable *>(_data[2]);
+  GHashTable*vIndex = reinterpret_cast<GHashTable *>(_data[2]);
   subMesh->AddVertex(GTS_POINT(_p)->x, GTS_POINT(_p)->y, GTS_POINT(_p)->z);
 
   // add the normals, they are not correct now, but will be recalculated later.
@@ -126,9 +103,9 @@ void FillFace(GtsTriangle *_t, gpointer *_data)
 {
   gazebo::common::SubMesh *subMesh =
       reinterpret_cast<gazebo::common::SubMesh *>(_data[0]);
-  GHashTable* vIndex = reinterpret_cast<GHashTable *>(_data[2]);
+  GHashTable*vIndex = reinterpret_cast<GHashTable *>(_data[2]);
 
-  GtsVertex * v1, * v2, * v3;
+  GtsVertex *v1, *v2, *v3;
   gts_triangle_vertices(_t, &v1, &v2, &v3);
 
   subMesh->AddIndex(GPOINTER_TO_UINT(g_hash_table_lookup(vIndex, v1)));
@@ -137,7 +114,7 @@ void FillFace(GtsTriangle *_t, gpointer *_data)
 }
 
 //////////////////////////////////////////////////
-void MergeVertices(GPtrArray * _vertices, double _epsilon)
+void MergeVertices(GPtrArray *_vertices, double _epsilon)
 {
   GPtrArray *array;
   GNode *kdtree;
@@ -193,7 +170,7 @@ void MergeVertices(GPtrArray * _vertices, double _epsilon)
   gts_allow_floating_vertices = true;
   for (unsigned int i = 0; i < _vertices->len; ++i)
   {
-    GtsVertex * v = reinterpret_cast<GtsVertex *>(verticesData[i]);
+    GtsVertex *v = reinterpret_cast<GtsVertex *>(verticesData[i]);
     // v is inactive
     if (GTS_OBJECT(v)->reserved)
     {
@@ -206,8 +183,8 @@ void MergeVertices(GPtrArray * _vertices, double _epsilon)
 }
 
 //////////////////////////////////////////////////
-void ConvertGtsToGz(GtsSurface *_surface, gazebo::common::Mesh *_outGz,
-    const gazebo::common::Mesh *_inGz)
+void ConvertGtsToGz(GtsSurface *_surface, const gazebo::common::Mesh *_inGz,
+    gazebo::common::Mesh *_outGz)
 {
   gazebo::common::SubMesh *outSubMesh = new gazebo::common::SubMesh();
   _outGz->AddSubMesh(outSubMesh);
@@ -229,176 +206,21 @@ void ConvertGtsToGz(GtsSurface *_surface, gazebo::common::Mesh *_outGz,
   // Calculate normals
   _outGz->RecalculateNormals();
 
-  // Calculate texture using inGz
-  if (_inGz->GetSubMesh(0)->GetTexCoordCount() != 0)
+  // Add material
+  for(unsigned int m = 0; m < _inGz->GetMaterialCount(); ++m)
   {
-    std::cout << "Calculating texture map..." << std::endl;
+    const gazebo::common::Material *inMaterial = _inGz->GetMaterial(m);
+    gazebo::common::Material *outMaterial = new gazebo::common::Material();
 
-    const gazebo::common::SubMesh *inSubMesh = _inGz->GetSubMesh(0);
+    outMaterial->SetTextureImage(inMaterial->GetTextureImage());
+    outMaterial->SetAmbient(inMaterial->GetAmbient());
+    outMaterial->SetDiffuse(inMaterial->GetDiffuse());
+    outMaterial->SetSpecular(inMaterial->GetSpecular());
+    outMaterial->SetEmissive(inMaterial->GetEmissive());
+    outMaterial->SetTransparency(inMaterial->GetTransparency());
+    outMaterial->SetShininess(inMaterial->GetShininess());
 
-    // Fill the point cloud with vertices from the original mesh
-    PointCloud<double> cloud;
-    unsigned int inCount = inSubMesh->GetVertexCount();
-    cloud.pts.resize(inCount);
-    gazebo::math::Vector3 inVertex;
-    for(long unsigned int i = 0; i < inCount; ++i)
-    {
-      inVertex = inSubMesh->GetVertex(i);
-      cloud.pts[i].x = inVertex.x;
-      cloud.pts[i].y = inVertex.y;
-      cloud.pts[i].z = inVertex.z;
-    }
-
-    // construct a kd-tree index:
-    typedef nanoflann::KDTreeSingleIndexAdaptor<
-        nanoflann::L2_Simple_Adaptor<double, PointCloud<double> > ,
-        PointCloud<double>,
-        3
-        > my_kd_tree_t;
-
-    my_kd_tree_t cloudIndex(3, cloud, nanoflann::KDTreeSingleIndexAdaptorParams(10));
-    cloudIndex.buildIndex();
-
-    // For each vertex of each triangle
-    unsigned int outTriIndexCount = outSubMesh->GetIndexCount();
-    const long unsigned int num_results = 30;
-    std::vector<long unsigned int> result_index(num_results);
-    std::vector<double> out_dist_sqr(num_results);
-    static const int offset[] = {1,2,-1,1,-2,-1};
-    outSubMesh->SetTexCoordCount(outTriIndexCount);
-    for (int i = 0; i < outTriIndexCount; i++)
-    {
-      unsigned int outIndex = outSubMesh->GetIndex(i);
-      gazebo::math::Vector3 outVertex = outSubMesh->GetVertex(outIndex);
-
-      const double query_pt[3] = { outVertex.x, outVertex.y, outVertex.z};
-      // Get nearest num_results
-      cloudIndex.knnSearch(&query_pt[0], num_results, &result_index[0],
-          &out_dist_sqr[0]);
-
-      std::vector<long unsigned int> closestIndices;
-      double closestDistance = 1000;
-      for (int j = 0; j < num_results; j++)
-      {
-        inVertex = inSubMesh->GetVertex(result_index[j]);
-
-        double distance = inVertex.Distance(outVertex);
-        // closer vertex
-        if ( distance <  closestDistance)
-        {
-          closestDistance = distance;
-          closestIndices.clear();
-          closestIndices.push_back(result_index[j]);
-        }
-        // overlapping vertex
-        else if ( distance == closestDistance )
-        {
-          closestIndices.push_back(result_index[j]);
-        }
-      }
-
-      // Choose best UV among overlapping closestIndices
-
-      // index%3 == 0: beginning of a triangle
-      // triangle 1: i == 0,1,2; triangle 2: i == 3,4,5 and so on
-      gazebo::math::Vector2d outOffset(i+offset[(i % 3)*2],
-                                     i+offset[(i % 3)*2+1]);
-      // Get other vertices in the same triangle
-      unsigned int outIndex_1 = outSubMesh->GetIndex(outOffset.x);
-      unsigned int outIndex_2 = outSubMesh->GetIndex(outOffset.y);
-      gazebo::math::Vector3 outVertex_1 = outSubMesh->GetVertex(outIndex_1);
-      gazebo::math::Vector3 outVertex_2 = outSubMesh->GetVertex(outIndex_2);
-
-      // Get directions
-      gazebo::math::Vector3 outDir_1 = (outVertex_1-outVertex).Normalize();
-      gazebo::math::Vector3 outDir_2 = (outVertex_2-outVertex).Normalize();
-
-      // Initialize closestVertex
-      long unsigned int closestIndex = closestIndices[0];
-      gazebo::math::Vector2d closestOffset(closestIndex+offset[(closestIndex % 3)*2],
-                                           closestIndex+offset[(closestIndex % 3)*2+1]);
-
-      gazebo::math::Vector3 closestVertex = inSubMesh->GetVertex(closestIndex);
-      gazebo::math::Vector3 closestVertex_1 = inSubMesh->GetVertex(closestOffset.x);
-      gazebo::math::Vector3 closestVertex_2 = inSubMesh->GetVertex(closestOffset.y);
-
-      gazebo::math::Vector3 closestDir_1 = (closestVertex_1-closestVertex).Normalize();
-      gazebo::math::Vector3 closestDir_2 = (closestVertex_2-closestVertex).Normalize();
-
-      // Initialize sum of closest directions
-      double closestSum;
-      if ( outDir_1.Distance(closestDir_1) < outDir_1.Distance(closestDir_2) )
-      {
-        closestSum = outDir_1.Distance(closestDir_1) + outDir_2.Distance(closestDir_2);
-      }
-      else
-      {
-        closestSum = outDir_2.Distance(closestDir_1) + outDir_1.Distance(closestDir_2);
-      }
-
-      // Find the closest direction among all triangles containing overlapping vertices
-      for (int k = 1; k < closestIndices.size(); k++)
-      {
-        // Current vertex
-        long unsigned int currentIndex = closestIndices[k];
-        gazebo::math::Vector2d currentOffset(currentIndex+offset[(currentIndex % 3)*2],
-                                             currentIndex+offset[(currentIndex % 3)*2+1]);
-
-        gazebo::math::Vector3 currentVertex = inSubMesh->GetVertex(currentIndex);
-        gazebo::math::Vector3 currentVertex_1 = inSubMesh->GetVertex(currentOffset.x);
-        gazebo::math::Vector3 currentVertex_2 = inSubMesh->GetVertex(currentOffset.y);
-
-        gazebo::math::Vector3 currentDir_1 = (currentVertex_1-currentVertex).Normalize();
-        gazebo::math::Vector3 currentDir_2 = (currentVertex_2-currentVertex).Normalize();
-
-        double currentSum;
-        if ( outDir_1.Distance(currentDir_1) < outDir_1.Distance(currentDir_2) )
-        {
-          currentSum = outDir_1.Distance(currentDir_1) + outDir_2.Distance(currentDir_2);
-        }
-        else
-        {
-          currentSum = outDir_2.Distance(currentDir_1) + outDir_1.Distance(currentDir_2);
-        }
-
-        if (currentSum < closestSum)
-        {
-          closestSum = currentSum;
-          closestIndex = currentIndex;
-          closestDir_1 = currentDir_1;
-          closestDir_2 = currentDir_2;
-          closestVertex = currentVertex;
-        }
-      }
-
-      // Get UV coordinates
-      double U = inSubMesh->GetTexCoord(closestIndex).x;
-      double V = inSubMesh->GetTexCoord(closestIndex).y;
-
-      // Neither works... Probably the texture indexation I made is incompatible with Gazebo indexation
-      gazebo::math::Vector2d texCoord(U, 1.0-V);
-
-      outSubMesh->SetTexCoord(outSubMesh->GetIndex(i), texCoord);
-
-      //outSubMesh->AddTexCoord(U, 1.0-V);
-    }
-
-    // Add material
-    for(unsigned int m; m < _inGz->GetMaterialCount(); ++m)
-    {
-      const gazebo::common::Material *inMaterial = _inGz->GetMaterial(m);
-      gazebo::common::Material *outMaterial = new gazebo::common::Material();
-
-      outMaterial->SetTextureImage(inMaterial->GetTextureImage());
-      outMaterial->SetAmbient(inMaterial->GetAmbient());
-      outMaterial->SetDiffuse(inMaterial->GetDiffuse());
-      outMaterial->SetSpecular(inMaterial->GetSpecular());
-      outMaterial->SetEmissive(inMaterial->GetEmissive());
-      outMaterial->SetTransparency(inMaterial->GetTransparency());
-      outMaterial->SetShininess(inMaterial->GetShininess());
-
-      _outGz->AddMaterial(outMaterial);
-    }
+    _outGz->AddMaterial(outMaterial);
   }
 }
 
@@ -507,30 +329,6 @@ void ConvertGzToGts(const gazebo::common::Mesh *_mesh, GtsSurface *_surface)
             continue;
         }
 
-      /*if (GTS_SEGMENT (e1)->v2 == GTS_SEGMENT (e2)->v2)
-        {
-          if (!gts_segment_connect (GTS_SEGMENT (e3),
-             GTS_SEGMENT (e1)->v1,
-             GTS_SEGMENT (e2)->v1))
-          {
-            std::cout << " fail " << std::endl;
-            std::cout << e1->segment.v1->p.x << " " << e1->segment.v1->p.y << " "
-                << e1->segment.v1->p.z << ", ";
-            std::cout << e1->segment.v2->p.x << " " << e1->segment.v2->p.y << " "
-                << e1->segment.v2->p.z << std::endl;
-            std::cout << e2->segment.v1->p.x << " " << e2->segment.v1->p.y << " "
-                << e2->segment.v1->p.z << ", ";
-            std::cout << e2->segment.v2->p.x << " " << e2->segment.v2->p.y << " "
-                << e2->segment.v2->p.z << std::endl;
-
-            std::cout << " e3 " << std::endl;
-            std::cout << e3->segment.v1->p.x << " " << e3->segment.v1->p.y << " "
-                << e3->segment.v1->p.z << ", ";
-            std::cout << e3->segment.v2->p.x << " " << e3->segment.v2->p.y << " "
-                << e3->segment.v2->p.z << std::endl;
-          }
-        }*/
-
         GtsFace *face = gts_face_new(subSurface->face_class, e1, e2, e3);
         if (!gts_triangle_is_duplicate(&face->triangle))
           gts_surface_add_face(subSurface, face);
@@ -546,17 +344,13 @@ void ConvertGzToGts(const gazebo::common::Mesh *_mesh, GtsSurface *_surface)
 
   for (unsigned int i = 0; i < subSurfaces.size(); ++i)
     gts_surface_merge(_surface, subSurfaces[i]);
-
-  //gts_surface_print_stats (_surface, stderr);
-  // Destroy duplicate triangles
-  //triangle_cleanup(_surface);
 }
 
 /////////////////////////////////////////////////
-static gboolean stop_number_verbose (gdouble cost, guint number, guint * min)
+static gboolean stop_number_verbose (gdouble cost, guint number, guint *min)
 {
   static guint nmax = 0, nold = 0;
-  static GTimer * timer = NULL, * total_timer = NULL;
+  static GTimer *timer = NULL, *total_timer = NULL;
 
   g_return_val_if_fail (min != NULL, TRUE);
   if (timer == NULL) {
@@ -608,21 +402,13 @@ static gboolean stop_number_verbose (gdouble cost, guint number, guint * min)
 }
 
 //////////////////////////////////////////////////
-void FillTextureSource(const gazebo::common::Mesh *_outGz,
-    const gazebo::common::Mesh *_inGz,
-    TiXmlElement *Mesh,
-    const char *meshID)
+void ExportTextureSource(const gazebo::common::SubMesh *_outSubMesh,
+    const gazebo::common::SubMesh *_inSubMesh,
+    TiXmlElement *_meshXml, const char *_meshID)
 {
-  const gazebo::common::SubMesh *outSubMesh = _outGz->GetSubMesh(0);
-  const gazebo::common::SubMesh *inSubMesh = _inGz->GetSubMesh(0);
-
   // For collada
-  std::ostringstream sourceID;
-  std::ostringstream sourceArrayID;
-  std::ostringstream sourceArrayIdSelector;
-  unsigned int outCount = outSubMesh->GetVertexCount();
-  unsigned int inCount = inSubMesh->GetVertexCount();
-  int stride = 2;
+  char sourceId[100], sourceArrayId[100];
+  unsigned int inCount = _inSubMesh->GetVertexCount();
   std::ostringstream fillData;
   fillData.precision(5);
   fillData<<std::fixed;
@@ -636,7 +422,7 @@ void FillTextureSource(const gazebo::common::Mesh *_outGz,
   gazebo::math::Vector3 inVertex;
   for(long unsigned int i = 0; i < inCount; ++i)
   {
-      inVertex = inSubMesh->GetVertex(i);
+      inVertex = _inSubMesh->GetVertex(i);
       cloud.pts[i].x = inVertex.x;
       cloud.pts[i].y = inVertex.y;
       cloud.pts[i].z = inVertex.z;
@@ -653,15 +439,15 @@ void FillTextureSource(const gazebo::common::Mesh *_outGz,
   cloudIndex.buildIndex();
 
   // For each vertex of each triangle
-  unsigned int outTriIndexCount = outSubMesh->GetIndexCount();
+  unsigned int outTriIndexCount = _outSubMesh->GetIndexCount();
   const long unsigned int num_results = 30;
   std::vector<long unsigned int> result_index(num_results);
   std::vector<double> out_dist_sqr(num_results);
   static const int offset[] = {1,2,-1,1,-2,-1};
   for (int i = 0; i < outTriIndexCount; i++)
   {
-    unsigned int outIndex = outSubMesh->GetIndex(i);
-    gazebo::math::Vector3 outVertex = outSubMesh->GetVertex(outIndex);
+    unsigned int outIndex = _outSubMesh->GetIndex(i);
+    gazebo::math::Vector3 outVertex = _outSubMesh->GetVertex(outIndex);
 
     const double query_pt[3] = { outVertex.x, outVertex.y, outVertex.z};
     // Get nearest num_results
@@ -672,18 +458,18 @@ void FillTextureSource(const gazebo::common::Mesh *_outGz,
     double closestDistance = 1000;
     for (int j = 0; j < num_results; j++)
     {
-      inVertex = inSubMesh->GetVertex(result_index[j]);
+      inVertex = _inSubMesh->GetVertex(result_index[j]);
 
       double distance = inVertex.Distance(outVertex);
       // closer vertex
-      if ( distance <  closestDistance)
+      if (distance <  closestDistance)
       {
         closestDistance = distance;
         closestIndices.clear();
         closestIndices.push_back(result_index[j]);
       }
       // overlapping vertex
-      else if ( distance == closestDistance )
+      else if (distance == closestDistance)
       {
         closestIndices.push_back(result_index[j]);
       }
@@ -696,10 +482,10 @@ void FillTextureSource(const gazebo::common::Mesh *_outGz,
     gazebo::math::Vector2d outOffset(i+offset[(i % 3)*2],
                                      i+offset[(i % 3)*2+1]);
     // Get other vertices in the same triangle
-    unsigned int outIndex_1 = outSubMesh->GetIndex(outOffset.x);
-    unsigned int outIndex_2 = outSubMesh->GetIndex(outOffset.y);
-    gazebo::math::Vector3 outVertex_1 = outSubMesh->GetVertex(outIndex_1);
-    gazebo::math::Vector3 outVertex_2 = outSubMesh->GetVertex(outIndex_2);
+    unsigned int outIndex_1 = _outSubMesh->GetIndex(outOffset.x);
+    unsigned int outIndex_2 = _outSubMesh->GetIndex(outOffset.y);
+    gazebo::math::Vector3 outVertex_1 = _outSubMesh->GetVertex(outIndex_1);
+    gazebo::math::Vector3 outVertex_2 = _outSubMesh->GetVertex(outIndex_2);
 
     // Get directions
     gazebo::math::Vector3 outDir_1 = (outVertex_1-outVertex).Normalize();
@@ -710,16 +496,16 @@ void FillTextureSource(const gazebo::common::Mesh *_outGz,
     gazebo::math::Vector2d closestOffset(closestIndex+offset[(closestIndex % 3)*2],
                                          closestIndex+offset[(closestIndex % 3)*2+1]);
 
-    gazebo::math::Vector3 closestVertex = inSubMesh->GetVertex(closestIndex);
-    gazebo::math::Vector3 closestVertex_1 = inSubMesh->GetVertex(closestOffset.x);
-    gazebo::math::Vector3 closestVertex_2 = inSubMesh->GetVertex(closestOffset.y);
+    gazebo::math::Vector3 closestVertex = _inSubMesh->GetVertex(closestIndex);
+    gazebo::math::Vector3 closestVertex_1 = _inSubMesh->GetVertex(closestOffset.x);
+    gazebo::math::Vector3 closestVertex_2 = _inSubMesh->GetVertex(closestOffset.y);
 
     gazebo::math::Vector3 closestDir_1 = (closestVertex_1-closestVertex).Normalize();
     gazebo::math::Vector3 closestDir_2 = (closestVertex_2-closestVertex).Normalize();
 
     // Initialize sum of closest directions
     double closestSum;
-    if ( outDir_1.Distance(closestDir_1) < outDir_1.Distance(closestDir_2) )
+    if (outDir_1.Distance(closestDir_1) < outDir_1.Distance(closestDir_2))
     {
       closestSum = outDir_1.Distance(closestDir_1) + outDir_2.Distance(closestDir_2);
     }
@@ -736,15 +522,15 @@ void FillTextureSource(const gazebo::common::Mesh *_outGz,
       gazebo::math::Vector2d currentOffset(currentIndex+offset[(currentIndex % 3)*2],
                                            currentIndex+offset[(currentIndex % 3)*2+1]);
 
-      gazebo::math::Vector3 currentVertex = inSubMesh->GetVertex(currentIndex);
-      gazebo::math::Vector3 currentVertex_1 = inSubMesh->GetVertex(currentOffset.x);
-      gazebo::math::Vector3 currentVertex_2 = inSubMesh->GetVertex(currentOffset.y);
+      gazebo::math::Vector3 currentVertex = _inSubMesh->GetVertex(currentIndex);
+      gazebo::math::Vector3 currentVertex_1 = _inSubMesh->GetVertex(currentOffset.x);
+      gazebo::math::Vector3 currentVertex_2 = _inSubMesh->GetVertex(currentOffset.y);
 
       gazebo::math::Vector3 currentDir_1 = (currentVertex_1-currentVertex).Normalize();
       gazebo::math::Vector3 currentDir_2 = (currentVertex_2-currentVertex).Normalize();
 
       double currentSum;
-      if ( outDir_1.Distance(currentDir_1) < outDir_1.Distance(currentDir_2) )
+      if (outDir_1.Distance(currentDir_1) < outDir_1.Distance(currentDir_2))
       {
         currentSum = outDir_1.Distance(currentDir_1) + outDir_2.Distance(currentDir_2);
       }
@@ -764,8 +550,8 @@ void FillTextureSource(const gazebo::common::Mesh *_outGz,
     }
 
     // Get UV coordinates
-    double U = inSubMesh->GetTexCoord(closestIndex).x;
-    double V = inSubMesh->GetTexCoord(closestIndex).y;
+    double U = _inSubMesh->GetTexCoord(closestIndex).x;
+    double V = _inSubMesh->GetTexCoord(closestIndex).y;
 
     fillData << U << " " << 1.0-V << " ";
   }
@@ -774,431 +560,593 @@ void FillTextureSource(const gazebo::common::Mesh *_outGz,
   gazebo::math::Vector2d inTexCoord;
   for(long unsigned int i = 0; i < inCount; ++i)
   {
-    inTexCoord = inSubMesh->GetTexCoord(i);
+    inTexCoord = _inSubMesh->GetTexCoord(i);
     fillData << inTexCoord.x << " " << 1-inTexCoord.y << " ";
   }
 */
 
   std::cout << "Texture map calculation complete." << std::endl;
 
-  sourceID << meshID << "-UVMap";
-  sourceArrayID << sourceID.str() << "-array";
-  sourceArrayIdSelector << "#" << sourceArrayID.str();
+  snprintf(sourceId, sizeof(sourceId), "%s-UVMap", _meshID);
+  unsigned int outCount = _outSubMesh->GetVertexCount();
+  int stride = 2;
 
-  TiXmlElement *source = new TiXmlElement( "source" );
-  Mesh->LinkEndChild( source );
-  source->SetAttribute("id", sourceID.str().c_str());
-  source->SetAttribute("name", sourceID.str().c_str());
+  TiXmlElement *sourceXml = new TiXmlElement("source");
+  _meshXml->LinkEndChild(sourceXml);
+  sourceXml->SetAttribute("id", sourceId);
+  sourceXml->SetAttribute("name", sourceId);
 
-  TiXmlElement *float_array = new TiXmlElement( "float_array" );
-  float_array->SetAttribute("count", outCount*stride);
-  float_array->SetAttribute("id", sourceArrayID.str().c_str());
-  float_array->LinkEndChild( new TiXmlText( fillData.str().c_str() ));
-  source->LinkEndChild( float_array );
+  snprintf(sourceArrayId, sizeof(sourceArrayId), "%s-array", sourceId);
+  TiXmlElement *floatArrayXml = new TiXmlElement("float_array");
+  floatArrayXml->SetAttribute("count", outCount *stride);
+  floatArrayXml->SetAttribute("id", sourceArrayId);
+  floatArrayXml->LinkEndChild(new TiXmlText(fillData.str().c_str()));
+  sourceXml->LinkEndChild(floatArrayXml);
 
-  TiXmlElement *technique_common = new TiXmlElement( "technique_common" );
-  source->LinkEndChild( technique_common );
+  TiXmlElement *techniqueCommonXml = new TiXmlElement("technique_common");
+  sourceXml->LinkEndChild(techniqueCommonXml);
 
-  TiXmlElement *accessor = new TiXmlElement( "accessor" );
-  accessor->SetAttribute("count", outCount);
-  accessor->SetAttribute("source", sourceArrayIdSelector.str().c_str());
-  accessor->SetAttribute("stride", stride);
-  technique_common->LinkEndChild( accessor );
+  snprintf(sourceArrayId, sizeof(sourceArrayId), "#%s-array", sourceId);
+  TiXmlElement *accessorXml = new TiXmlElement("accessor");
+  accessorXml->SetAttribute("count", outCount);
+  accessorXml->SetAttribute("source", sourceArrayId);
+  accessorXml->SetAttribute("stride", stride);
+  techniqueCommonXml->LinkEndChild(accessorXml);
 
-  TiXmlElement *param = new TiXmlElement( "param" );
+  TiXmlElement *paramXml = new TiXmlElement("param");
 
-  param->SetAttribute("type", "float");
-  param->SetAttribute("name", "U");
-  accessor->LinkEndChild( param );
+  paramXml->SetAttribute("type", "float");
+  paramXml->SetAttribute("name", "U");
+  accessorXml->LinkEndChild(paramXml);
 
-  param = new TiXmlElement( "param" );
-  param->SetAttribute("type", "float");
-  param->SetAttribute("name", "V");
-  accessor->LinkEndChild( param );
+  paramXml = new TiXmlElement("param");
+  paramXml->SetAttribute("type", "float");
+  paramXml->SetAttribute("name", "V");
+  accessorXml->LinkEndChild(paramXml);
 }
 
 //////////////////////////////////////////////////
 void ExportGeometrySource(const gazebo::common::SubMesh *_subMesh,
-    TiXmlElement *Mesh, int type, const char *meshID)
+    TiXmlElement *_meshXml, GeometryType _type, const char *_meshID)
 {
-
-  std::ostringstream sourceID;
-  std::ostringstream sourceArrayID;
-  std::ostringstream sourceArrayIdSelector;
+  char sourceId[100], sourceArrayId[100];
   std::ostringstream fillData;
-  fillData.precision(5);
-  fillData<<std::fixed;
+  fillData.precision(8);
+  fillData << std::fixed;
   int stride;
-  unsigned int count;
+  unsigned int count = 0;
 
-  if (type == 1)
+  if (_type == POSITION)
   {
-    sourceID << meshID << "-Positions";
+    snprintf(sourceId, sizeof(sourceId), "%s-Positions", _meshID);
     count = _subMesh->GetVertexCount();
     stride = 3;
     gazebo::math::Vector3 vertex;
-    for(unsigned int i = 0; i < count; ++i)
+    for (unsigned int i = 0; i < count; ++i)
     {
       vertex = _subMesh->GetVertex(i);
       fillData << vertex.x << " " << vertex.y << " " << vertex.z << " ";
     }
   }
-  if (type == 2)
+  if (_type == NORMAL)
   {
-    sourceID << meshID << "-Normals";
+    snprintf(sourceId, sizeof(sourceId), "%s-Normals", _meshID);
     count = _subMesh->GetNormalCount();
     stride = 3;
     gazebo::math::Vector3 normal;
-    for(unsigned int i = 0; i < count; ++i)
+    for (unsigned int i = 0; i < count; ++i)
     {
       normal = _subMesh->GetNormal(i);
       fillData << normal.x << " " << normal.y << " " << normal.z << " ";
     }
   }
-  sourceArrayID << sourceID.str() << "-array";
-  sourceArrayIdSelector << "#" << sourceArrayID.str();
 
-  TiXmlElement *source = new TiXmlElement( "source" );
-  Mesh->LinkEndChild( source );
-  source->SetAttribute("id", sourceID.str().c_str());
-  source->SetAttribute("name", sourceID.str().c_str());
+  TiXmlElement *sourceXml = new TiXmlElement("source");
+  _meshXml->LinkEndChild(sourceXml);
+  sourceXml->SetAttribute("id", sourceId);
+  sourceXml->SetAttribute("name", sourceId);
 
-  TiXmlElement *float_array = new TiXmlElement( "float_array" );
-  float_array->SetAttribute("count", count*stride);
-  float_array->SetAttribute("id", sourceArrayID.str().c_str());
-  float_array->LinkEndChild( new TiXmlText( fillData.str().c_str() ));
-  source->LinkEndChild( float_array );
+  snprintf(sourceArrayId, sizeof(sourceArrayId), "%s-array", sourceId);
+  TiXmlElement *floatArrayXml = new TiXmlElement("float_array");
+  floatArrayXml->SetAttribute("count", count *stride);
+  floatArrayXml->SetAttribute("id", sourceArrayId);
+  floatArrayXml->LinkEndChild(new TiXmlText(fillData.str().c_str()));
+  sourceXml->LinkEndChild(floatArrayXml);
 
-  TiXmlElement *technique_common = new TiXmlElement( "technique_common" );
-  source->LinkEndChild( technique_common );
+  TiXmlElement *techniqueCommonXml = new TiXmlElement("technique_common");
+  sourceXml->LinkEndChild(techniqueCommonXml);
 
-  TiXmlElement *accessor = new TiXmlElement( "accessor" );
-  accessor->SetAttribute("count", count);
-  accessor->SetAttribute("source", sourceArrayIdSelector.str().c_str());
-  accessor->SetAttribute("stride", stride);
-  technique_common->LinkEndChild( accessor );
+  snprintf(sourceArrayId, sizeof(sourceArrayId), "#%s-array", sourceId);
+  TiXmlElement *accessorXml = new TiXmlElement("accessor");
+  accessorXml->SetAttribute("count", count);
+  accessorXml->SetAttribute("source", sourceArrayId);
+  accessorXml->SetAttribute("stride", stride);
+  techniqueCommonXml->LinkEndChild(accessorXml);
 
-  TiXmlElement *param = new TiXmlElement( "param" );
-
-  if (type == 1 || type == 2)
+  TiXmlElement *paramXml = new TiXmlElement("param");
+  if (_type == POSITION || _type == NORMAL)
   {
-    param->SetAttribute("type", "float");
-    param->SetAttribute("name", "X");
-    accessor->LinkEndChild( param );
+    paramXml->SetAttribute("type", "float");
+    paramXml->SetAttribute("name", "X");
+    accessorXml->LinkEndChild(paramXml);
 
-    param = new TiXmlElement( "param" );
-    param->SetAttribute("type", "float");
-    param->SetAttribute("name", "Y");
-    accessor->LinkEndChild( param );
+    paramXml = new TiXmlElement("param");
+    paramXml->SetAttribute("type", "float");
+    paramXml->SetAttribute("name", "Y");
+    accessorXml->LinkEndChild(paramXml);
 
-    param = new TiXmlElement( "param" );
-    param->SetAttribute("type", "float");
-    param->SetAttribute("name", "Z");
-    accessor->LinkEndChild( param );
+    paramXml = new TiXmlElement("param");
+    paramXml->SetAttribute("type", "float");
+    paramXml->SetAttribute("name", "Z");
+    accessorXml->LinkEndChild(paramXml);
   }
 }
 
 //////////////////////////////////////////////////
-void CopyElement(TiXmlElement *inElem, TiXmlElement *outElem)
+void ExportScene(TiXmlElement *_sceneXml)
 {
-  TiXmlElement* inSubElem;
-  inSubElem = inElem->FirstChildElement();
+  TiXmlElement *instanceVisualSceneXml =
+      new TiXmlElement("instance_visual_scene");
+  _sceneXml->LinkEndChild(instanceVisualSceneXml);
+  instanceVisualSceneXml->SetAttribute("url", "#Scene");
+}
 
-  TiXmlElement* outSubElem;
-  for( inSubElem; inSubElem; inSubElem=inSubElem->NextSiblingElement())
+//////////////////////////////////////////////////
+void ExportVisualScenes(TiXmlElement *_libraryVisualScenesXml,
+    const gazebo::common::Mesh *_mesh)
+{
+  unsigned int subMeshCount =  _mesh->GetSubMeshCount();
+
+  TiXmlElement *visualSceneXml = new TiXmlElement("visual_scene");
+  _libraryVisualScenesXml->LinkEndChild(visualSceneXml);
+  visualSceneXml->SetAttribute("name", "Scene");
+  visualSceneXml->SetAttribute("id", "Scene");
+
+  TiXmlElement *nodeXml = new TiXmlElement("node");
+  visualSceneXml->LinkEndChild(nodeXml);
+  nodeXml->SetAttribute("name", "node");
+  nodeXml->SetAttribute("id", "node");
+
+  for (unsigned int i = 0; i < subMeshCount; ++i)
   {
-    const char *elementValue=inSubElem->Value();
-    const char *elementText=inSubElem->GetText();
-    if (elementValue)
+    char meshId[100], materialId[100], attributeValue[100];
+    snprintf(meshId, sizeof(meshId), "mesh_%u", i);
+    snprintf(materialId, sizeof(materialId), "material_%u", i);
+
+    TiXmlElement *instanceGeometryXml = new TiXmlElement("instance_geometry");
+    nodeXml->LinkEndChild(instanceGeometryXml);
+    snprintf(attributeValue, sizeof(attributeValue), "#%s", meshId);
+    instanceGeometryXml->SetAttribute("url", attributeValue);
+
+    const gazebo::common::Material *material =
+        _mesh->GetMaterial(i);
+
+    if (material)
     {
-      if ( strcmp(elementValue,"unit") == 0)
+      TiXmlElement *bindMaterialXml = new TiXmlElement("bind_material");
+      instanceGeometryXml->LinkEndChild(bindMaterialXml);
+
+      TiXmlElement *techniqueCommonXml = new TiXmlElement("technique_common");
+      bindMaterialXml->LinkEndChild(techniqueCommonXml);
+
+      TiXmlElement *instanceMaterialXml =
+          new TiXmlElement("instance_material");
+      techniqueCommonXml->LinkEndChild(instanceMaterialXml);
+      instanceMaterialXml->SetAttribute("symbol", materialId);
+      snprintf(attributeValue, sizeof(attributeValue), "#%s", materialId);
+      instanceMaterialXml->SetAttribute("target", attributeValue);
+
+      std::string imageString = material->GetTextureImage();
+
+      if (imageString.find("meshes/") != std::string::npos)
       {
-        outSubElem = new TiXmlElement( "unit" );
-        outSubElem->SetAttribute("meter", "1");
-        outSubElem->SetAttribute("name", "meter");
+        TiXmlElement *bindVertexInputXml =
+            new TiXmlElement("bind_vertex_input");
+        instanceMaterialXml->LinkEndChild(bindVertexInputXml);
+        bindVertexInputXml->SetAttribute("semantic", "UVSET0");
+        bindVertexInputXml->SetAttribute("input_semantic", "TEXCOORD");
       }
-      else
-      {
-        outSubElem = new TiXmlElement( elementValue );
-        if (elementText)
-        {
-           outSubElem->LinkEndChild( new TiXmlText( elementText ));
-        }
-        TiXmlAttribute* inAttribute=inSubElem->FirstAttribute();
-        while (inAttribute)
-        {
-          outSubElem->SetAttribute(inAttribute->Name(), inAttribute->Value());
-          inAttribute=inAttribute->Next();
-        }
-        CopyElement(inSubElem,outSubElem);
-      }
-      outElem->LinkEndChild( outSubElem );
     }
   }
 }
 
 //////////////////////////////////////////////////
-TiXmlDocument ConvertGzToDae(TiXmlDocument _inDae,
-    const gazebo::common::Mesh *_outGz,
-    const gazebo::common::Mesh *_inGz)
+void ExportEffects(TiXmlElement *_libraryEffectsXml,
+    const gazebo::common::Mesh *_mesh)
 {
-  TiXmlElement *inElem;
-  char attributeValue[100];
-  bool hasTexture = true;
+  unsigned int materialCount =  _mesh->GetMaterialCount();
 
-  if (_inGz->GetSubMesh(0)->GetTexCoordCount() == 0)
+  for (unsigned int i = 0; i < materialCount; ++i)
   {
-    hasTexture = false;
-    std::cout << "The model doesn't have textures." << std::endl;
+    char id[100];
+    snprintf(id, sizeof(id), "material_%u_fx", i);
+
+    TiXmlElement *effectXml = new TiXmlElement("effect");
+    effectXml->SetAttribute("id", id);
+    _libraryEffectsXml->LinkEndChild(effectXml);
+
+    TiXmlElement *profileCommonXml = new TiXmlElement("profile_COMMON");
+    effectXml->LinkEndChild(profileCommonXml);
+
+    // Image
+    const gazebo::common::Material *material =
+        _mesh->GetMaterial(i);
+    std::string imageString = material->GetTextureImage();
+
+    if (imageString.find("meshes/") != std::string::npos)
+    {
+      TiXmlElement *newParamXml = new TiXmlElement("newparam");
+      snprintf(id, sizeof(id), "image_%u_surface", i);
+      newParamXml->SetAttribute("sid", id);
+      profileCommonXml->LinkEndChild(newParamXml);
+
+      TiXmlElement *surfaceXml = new TiXmlElement("surface");
+      surfaceXml->SetAttribute("type", "2D");
+      newParamXml->LinkEndChild(surfaceXml);
+
+      TiXmlElement *initFromXml = new TiXmlElement("init_from");
+      snprintf(id, sizeof(id), "image_%u", i);
+      initFromXml->LinkEndChild(new TiXmlText(id));
+      surfaceXml->LinkEndChild(initFromXml);
+
+      newParamXml = new TiXmlElement("newparam");
+      snprintf(id, sizeof(id), "image_%u_sampler", i);
+      newParamXml->SetAttribute("sid", id);
+      profileCommonXml->LinkEndChild(newParamXml);
+
+      TiXmlElement *sampler2dXml = new TiXmlElement("sampler2D");
+      newParamXml->LinkEndChild(sampler2dXml);
+
+      TiXmlElement *sourceXml = new TiXmlElement("source");
+      snprintf(id, sizeof(id), "image_%u_surface", i);
+      sourceXml->LinkEndChild(new TiXmlText(id));
+      sampler2dXml->LinkEndChild(sourceXml);
+
+      TiXmlElement *minFilterXml = new TiXmlElement("minfilter");
+      minFilterXml->LinkEndChild(new TiXmlText("LINEAR"));
+      sampler2dXml->LinkEndChild(minFilterXml);
+
+      TiXmlElement *magFilterXml = new TiXmlElement("magfilter");
+      magFilterXml->LinkEndChild(new TiXmlText("LINEAR"));
+      sampler2dXml->LinkEndChild(magFilterXml);
+    }
+
+    TiXmlElement *techniqueXml = new TiXmlElement("technique");
+    techniqueXml->SetAttribute("sid", "COMMON");
+    profileCommonXml->LinkEndChild(techniqueXml);
+
+    // gazebo::common::Material::ShadeMode shadeMode =
+    //    material->GetShadeMode();
+
+    // Using phong for now
+    TiXmlElement *phongXml = new TiXmlElement("phong");
+    techniqueXml->LinkEndChild(phongXml);
+
+    // ambient
+    unsigned int RGBAcolor = material->GetAmbient().GetAsRGBA();
+    float r = ((RGBAcolor >> 24) & 0xFF) / 255.0f;
+    float g = ((RGBAcolor >> 16) & 0xFF) / 255.0f;
+    float b = ((RGBAcolor >> 8) & 0xFF) / 255.0f;
+    float a = (RGBAcolor & 0xFF) / 255.0f;
+
+    TiXmlElement *ambientXml = new TiXmlElement("ambient");
+    phongXml->LinkEndChild(ambientXml);
+
+    TiXmlElement *colorXml = new TiXmlElement("color");
+    snprintf(id, sizeof(id), "%f %f %f %f", r, g, b, a);
+    colorXml->LinkEndChild(new TiXmlText(id));
+    ambientXml->LinkEndChild(colorXml);
+
+    // emission
+    RGBAcolor = material->GetEmissive().GetAsRGBA();
+    r = ((RGBAcolor >> 24) & 0xFF) / 255.0f;
+    g = ((RGBAcolor >> 16) & 0xFF) / 255.0f;
+    b = ((RGBAcolor >> 8) & 0xFF) / 255.0f;
+    a = (RGBAcolor & 0xFF) / 255.0f;
+
+    TiXmlElement *emissionXml = new TiXmlElement("emission");
+    phongXml->LinkEndChild(emissionXml);
+
+    colorXml = new TiXmlElement("color");
+    snprintf(id, sizeof(id), "%f %f %f %f", r, g, b, a);
+    colorXml->LinkEndChild(new TiXmlText(id));
+    emissionXml->LinkEndChild(colorXml);
+
+    // diffuse
+    TiXmlElement *diffuseXml = new TiXmlElement("diffuse");
+    phongXml->LinkEndChild(diffuseXml);
+
+    if (imageString.find("meshes/") != std::string::npos)
+    {
+      TiXmlElement *textureXml = new TiXmlElement("texture");
+      snprintf(id, sizeof(id), "image_%u", i);
+      textureXml->SetAttribute("texture", id);
+      textureXml->SetAttribute("texcoord", "UVSET0");
+      diffuseXml->LinkEndChild(textureXml);
+    }
+    else
+    {
+      RGBAcolor = material->GetDiffuse().GetAsRGBA();
+      r = ((RGBAcolor >> 24) & 0xFF) / 255.0f;
+      g = ((RGBAcolor >> 16) & 0xFF) / 255.0f;
+      b = ((RGBAcolor >> 8) & 0xFF) / 255.0f;
+      a = (RGBAcolor & 0xFF) / 255.0f;
+
+      colorXml = new TiXmlElement("color");
+      snprintf(id, sizeof(id), "%f %f %f %f", r, g, b, a);
+      colorXml->LinkEndChild(new TiXmlText(id));
+      diffuseXml->LinkEndChild(colorXml);
+    }
+
+    // specular
+    RGBAcolor = material->GetSpecular().GetAsRGBA();
+    r = ((RGBAcolor >> 24) & 0xFF) / 255.0f;
+    g = ((RGBAcolor >> 16) & 0xFF) / 255.0f;
+    b = ((RGBAcolor >> 8) & 0xFF) / 255.0f;
+    a = (RGBAcolor & 0xFF) / 255.0f;
+
+    TiXmlElement *specularXml = new TiXmlElement("specular");
+    phongXml->LinkEndChild(specularXml);
+
+    colorXml = new TiXmlElement("color");
+    snprintf(id, sizeof(id), "%f %f %f %f", r, g, b, a);
+    colorXml->LinkEndChild(new TiXmlText(id));
+    specularXml->LinkEndChild(colorXml);
+
+    // transparency
+    double transp = material->GetTransparency();
+
+    TiXmlElement *transparencyXml = new TiXmlElement("transparency");
+    phongXml->LinkEndChild(transparencyXml);
+
+    TiXmlElement *floatXml = new TiXmlElement("float");
+    snprintf(id, sizeof(id), "%f", transp);
+    floatXml->LinkEndChild(new TiXmlText(id));
+    transparencyXml->LinkEndChild(floatXml);
+
+    // shininess
+    double shine = material->GetShininess();
+
+    TiXmlElement *shininessXml = new TiXmlElement("shininess");
+    phongXml->LinkEndChild(shininessXml);
+
+    colorXml = new TiXmlElement("color");
+    snprintf(id, sizeof(id), "%f", shine);
+    colorXml->LinkEndChild(new TiXmlText(id));
+    shininessXml->LinkEndChild(colorXml);
+  }
+}
+
+//////////////////////////////////////////////////
+void ExportMaterials(TiXmlElement *_libraryMaterialsXml,
+    const gazebo::common::Mesh *_mesh)
+{
+  unsigned int materialCount =  _mesh->GetMaterialCount();
+
+  for (unsigned int i = 0; i < materialCount; ++i)
+  {
+    char id[100];
+    snprintf(id, sizeof(id), "material_%u", i);
+
+    TiXmlElement *materialXml = new TiXmlElement("material");
+    materialXml->SetAttribute("id", id);
+    _libraryMaterialsXml->LinkEndChild(materialXml);
+
+    snprintf(id, sizeof(id), "#material_%u_fx", i);
+    TiXmlElement *instanceEffectXml = new TiXmlElement("instance_effect");
+    instanceEffectXml->SetAttribute("url", id);
+    materialXml->LinkEndChild(instanceEffectXml);
+  }
+}
+
+//////////////////////////////////////////////////
+int ExportImages(TiXmlElement *_libraryImagesXml,
+    const gazebo::common::Mesh *_mesh)
+{
+  unsigned int materialCount =  _mesh->GetMaterialCount();
+
+  int imageCount = 0;
+  for (unsigned int i = 0; i < materialCount; ++i)
+  {
+    const gazebo::common::Material *material =
+        _mesh->GetMaterial(i);
+    std::string imageString = material->GetTextureImage();
+
+    if (imageString.find("meshes/") != std::string::npos)
+    {
+      char id[100];
+      snprintf(id, sizeof(id), "image_%u", i);
+
+      TiXmlElement *imageXml = new TiXmlElement("image");
+      imageXml->SetAttribute("id", id);
+      _libraryImagesXml->LinkEndChild(imageXml);
+
+      TiXmlElement *initFromXml = new TiXmlElement("init_from");
+      initFromXml->LinkEndChild(new TiXmlText(
+        imageString.substr(imageString.find("meshes/")+7)));
+      imageXml->LinkEndChild(initFromXml);
+
+      imageCount++;
+    }
   }
 
-  const gazebo::common::SubMesh *_subMesh = _outGz->GetSubMesh(0);
+  return imageCount;
+}
+
+//////////////////////////////////////////////////
+void ExportGeometries(TiXmlElement *_libraryGeometriesXml,
+    const gazebo::common::Mesh *_outMesh,
+    const gazebo::common::Mesh *_inMesh)
+{
+  unsigned int subMeshCount =  _outMesh->GetSubMeshCount();
+  unsigned int materialCount =  _outMesh->GetMaterialCount();
+
+  for (unsigned int i = 0; i < subMeshCount; ++i)
+  {
+    char meshId[100], materialId[100];
+    snprintf(meshId, sizeof(meshId), "mesh_%u", i);
+    snprintf(materialId, sizeof(materialId), "material_%u", i);
+
+    TiXmlElement *geometryXml = new TiXmlElement("geometry");
+    geometryXml->SetAttribute("id", meshId);
+    _libraryGeometriesXml->LinkEndChild(geometryXml);
+
+    TiXmlElement *meshXml = new TiXmlElement("mesh");
+    geometryXml->LinkEndChild(meshXml);
+
+    const gazebo::common::SubMesh *subMesh =
+        _outMesh->GetSubMesh(i);
+    const gazebo::common::SubMesh *inSubMesh =
+        _inMesh->GetSubMesh(i);
+
+    ExportGeometrySource(subMesh, meshXml, POSITION, meshId);
+    ExportGeometrySource(subMesh, meshXml, NORMAL, meshId);
+    if (inSubMesh->GetTexCoordCount() != 0)
+    {
+      ExportTextureSource(subMesh, inSubMesh, meshXml, meshId);
+    }
+
+    char attributeValue[100];
+
+    TiXmlElement *verticesXml = new TiXmlElement("vertices");
+    meshXml->LinkEndChild(verticesXml);
+    snprintf(attributeValue, sizeof(attributeValue), "%s-Vertex", meshId);
+    verticesXml->SetAttribute("id", attributeValue);
+    verticesXml->SetAttribute("name", attributeValue);
+
+    TiXmlElement *inputXml = new TiXmlElement("input");
+    verticesXml->LinkEndChild(inputXml);
+    inputXml->SetAttribute("semantic", "POSITION");
+    snprintf(attributeValue, sizeof(attributeValue), "#%s-Positions", meshId);
+    inputXml->SetAttribute("source", attributeValue);
+
+    unsigned int indexCount = subMesh->GetIndexCount();
+
+    TiXmlElement *trianglesXml = new TiXmlElement("triangles");
+    meshXml->LinkEndChild(trianglesXml);
+    trianglesXml->SetAttribute("count", indexCount/3);
+    if (materialCount != 0)
+    {
+      trianglesXml->SetAttribute("material", materialId);
+    }
+
+    inputXml = new TiXmlElement("input");
+    trianglesXml->LinkEndChild(inputXml);
+    inputXml->SetAttribute("offset", 0);
+    inputXml->SetAttribute("semantic", "VERTEX");
+    snprintf(attributeValue, sizeof(attributeValue), "#%s-Vertex", meshId);
+    inputXml->SetAttribute("source", attributeValue);
+
+    inputXml = new TiXmlElement("input");
+    trianglesXml->LinkEndChild(inputXml);
+    inputXml->SetAttribute("offset", 1);
+    inputXml->SetAttribute("semantic", "NORMAL");
+    snprintf(attributeValue, sizeof(attributeValue), "#%s-Normals", meshId);
+    inputXml->SetAttribute("source", attributeValue);
+
+    if (inSubMesh->GetTexCoordCount() != 0)
+    {
+      inputXml = new TiXmlElement("input");
+      trianglesXml->LinkEndChild(inputXml);
+      inputXml->SetAttribute("offset", 2);
+      inputXml->SetAttribute("semantic", "TEXCOORD");
+      snprintf(attributeValue, sizeof(attributeValue), "#%s-UVMap", meshId);
+      inputXml->SetAttribute("source", attributeValue);
+    }
+
+    std::ostringstream fillData;
+    for (unsigned int j = 0; j < indexCount; ++j)
+    {
+      fillData << subMesh->GetIndex(j) << " "
+               << subMesh->GetIndex(j) << " ";
+      if (inSubMesh->GetTexCoordCount() != 0)
+      {
+        fillData << j << " ";
+      }
+    }
+
+    TiXmlElement *pXml = new TiXmlElement("p");
+    trianglesXml->LinkEndChild(pXml);
+    pXml->LinkEndChild(new TiXmlText(fillData.str().c_str()));
+  }
+}
+
+//////////////////////////////////////////////////
+void ExportAsset(TiXmlElement *_assetXml)
+{
+  TiXmlElement *unitXml = new TiXmlElement("unit");
+  unitXml->SetAttribute("meter", "1");
+  unitXml->SetAttribute("name", "meter");
+  _assetXml->LinkEndChild(unitXml);
+
+  TiXmlElement *upAxisXml = new TiXmlElement("up_axis");
+  upAxisXml->LinkEndChild(new TiXmlText("Z_UP"));
+  _assetXml->LinkEndChild(upAxisXml);
+}
+
+//////////////////////////////////////////////////
+TiXmlDocument ConvertGzToDae(const gazebo::common::Mesh *_inGz,
+    const gazebo::common::Mesh *_outGz)
+{
+  unsigned int materialCount = _outGz->GetMaterialCount();
 
   // Input and output collada files
-  TiXmlHandle h_inDae(&_inDae);
-  TiXmlDocument _outDae;
+  TiXmlDocument outDae;
 
   // XML declaration
-  TiXmlDeclaration* decl = new TiXmlDeclaration( "1.0", "utf-8", "" );
-  _outDae.LinkEndChild( decl );
+  TiXmlDeclaration *declarationXml = new TiXmlDeclaration("1.0", "utf-8", "");
+  outDae.LinkEndChild(declarationXml);
 
-  // output COLLADA element
-  TiXmlElement *collada = new TiXmlElement( "COLLADA" );
-  _outDae.LinkEndChild( collada );
-  collada->SetAttribute("version", "1.4.1");
-  collada->SetAttribute("xmlns", "http://www.collada.org/2005/11/COLLADASchema");
+  // Collada element
+  TiXmlElement *colladaXml = new TiXmlElement("COLLADA");
+  outDae.LinkEndChild(colladaXml);
+  colladaXml->SetAttribute("version", "1.4.1");
+  colladaXml->SetAttribute("xmlns",
+      "http://www.collada.org/2005/11/COLLADASchema");
 
-  // asset
-  // input asset element
-  inElem=h_inDae.FirstChildElement().FirstChild( "asset" ).Element();
-  // output asset element
-  TiXmlElement *asset = new TiXmlElement( "asset" );
-  collada->LinkEndChild( asset );
+  // Asset element
+  TiXmlElement *assetXml = new TiXmlElement("asset");
+  ExportAsset(assetXml);
+  colladaXml->LinkEndChild(assetXml);
 
-  CopyElement(inElem,asset);
+  // Library geometries element
+  TiXmlElement *libraryGeometriesXml = new TiXmlElement("library_geometries");
+  ExportGeometries(libraryGeometriesXml, _outGz, _inGz);
+  colladaXml->LinkEndChild(libraryGeometriesXml);
 
-  // library_geometries
-  TiXmlElement *library_geometries = new TiXmlElement( "library_geometries" );
-  collada->LinkEndChild( library_geometries );
-
-  TiXmlElement *geometry = new TiXmlElement( "geometry" );
-  library_geometries->LinkEndChild( geometry );
-
-  // Copy geometry name and ID
-  inElem=h_inDae.FirstChildElement().FirstChild( "library_geometries" )
-      .FirstChild( "geometry" ).Element();
-  const char *meshID = inElem->Attribute("id");
-  if (!meshID)
+  if (materialCount != 0)
   {
-    meshID = "mesh0";
-  }
-
-  geometry->SetAttribute("id", meshID);
-
-  TiXmlElement *Mesh = new TiXmlElement( "mesh" );
-  geometry->LinkEndChild( Mesh );
-
-  // Position
-  ExportGeometrySource(_subMesh, Mesh, 1, meshID);
-  // Normals
-  ExportGeometrySource(_subMesh, Mesh, 2, meshID);
-  // UV Map
-  if (hasTexture)
-  {
-    FillTextureSource(_outGz, _inGz, Mesh, meshID);
-  }
-
-  // Vertices
-  TiXmlElement *vertices = new TiXmlElement( "vertices" );
-  Mesh->LinkEndChild( vertices );
-  strcpy(attributeValue,meshID);
-  strcat(attributeValue,"-Vertex");
-  vertices->SetAttribute("id", attributeValue);
-  vertices->SetAttribute("name", attributeValue);
-
-  TiXmlElement *input = new TiXmlElement( "input" );
-  vertices->LinkEndChild( input );
-  input->SetAttribute("semantic", "POSITION");
-  strcpy(attributeValue,"#");
-  strcat(attributeValue,meshID);
-  strcat(attributeValue,"-Positions");
-  input->SetAttribute("source", attributeValue);
-
-  // Triangles
-  unsigned int indexCount = _subMesh->GetIndexCount();
-
-  TiXmlElement *triangles = new TiXmlElement( "triangles" );
-  Mesh->LinkEndChild( triangles );
-  triangles->SetAttribute("count", indexCount/3);
-  inElem=h_inDae.FirstChildElement().FirstChild( "library_geometries" )
-      .FirstChild( "geometry" ).FirstChild( "mesh" )
-      .FirstChild( "triangles" ).Element();
-  if (!inElem)
-  {
-    inElem=h_inDae.FirstChildElement().FirstChild( "library_geometries" )
-      .FirstChild( "geometry" ).FirstChild( "mesh" )
-      .FirstChild( "polylist" ).Element();
-  }
-  const char *triangleMaterialID = inElem->Attribute("material");
-  if (triangleMaterialID)
-  {
-    triangles->SetAttribute("material", inElem->Attribute("material"));
-  }
-
-  input = new TiXmlElement( "input" );
-  triangles->LinkEndChild( input );
-  input->SetAttribute("offset", 0);
-  input->SetAttribute("semantic", "VERTEX");
-  strcpy(attributeValue,"#");
-  strcat(attributeValue,meshID);
-  strcat(attributeValue,"-Vertex");
-  input->SetAttribute("source", attributeValue);
-
-  input = new TiXmlElement( "input" );
-  triangles->LinkEndChild( input );
-  input->SetAttribute("offset", 1);
-  input->SetAttribute("semantic", "NORMAL");
-  strcpy(attributeValue,"#");
-  strcat(attributeValue,meshID);
-  strcat(attributeValue,"-Normals");
-  input->SetAttribute("source", attributeValue);
-
-  if (hasTexture)
-  {
-    input = new TiXmlElement( "input" );
-    triangles->LinkEndChild( input );
-    input->SetAttribute("offset", 2);
-    input->SetAttribute("semantic", "TEXCOORD");
-    strcpy(attributeValue,"#");
-    strcat(attributeValue,meshID);
-    strcat(attributeValue,"-UVMap");
-    input->SetAttribute("source", attributeValue);
-  }
-
-  std::ostringstream fillData;
-  // Putting all offset = 0 and writing the index only once
-  // doesn't work for meshlab but does for gzweb
-  for (unsigned int i = 0; i < indexCount; ++i)
-  {
-    fillData << _subMesh->GetIndex(i) << " "
-             << _subMesh->GetIndex(i) << " ";
-    if (hasTexture)
+    // Library images element
+    TiXmlElement *libraryImagesXml = new TiXmlElement("library_images");
+    int imageCount = ExportImages(libraryImagesXml, _outGz);
+    if (imageCount != 0)
     {
-      fillData << i << " ";
+      colladaXml->LinkEndChild(libraryImagesXml);
     }
+
+    // Library materials element
+    TiXmlElement *libraryMaterialsXml = new TiXmlElement("library_materials");
+    ExportMaterials(libraryMaterialsXml, _outGz);
+    colladaXml->LinkEndChild(libraryMaterialsXml);
+
+    // Library effects element
+    TiXmlElement *libraryEffectsXml = new TiXmlElement("library_effects");
+    ExportEffects(libraryEffectsXml, _outGz);
+    colladaXml->LinkEndChild(libraryEffectsXml);
   }
 
-  TiXmlElement *p = new TiXmlElement( "p" );
-  triangles->LinkEndChild( p );
-  p->LinkEndChild( new TiXmlText( fillData.str().c_str() ));
+  // Library visual scenes element
+  TiXmlElement *libraryVisualScenesXml =
+      new TiXmlElement("library_visual_scenes");
+  ExportVisualScenes(libraryVisualScenesXml, _outGz);
+  colladaXml->LinkEndChild(libraryVisualScenesXml);
 
-  // If there are extras
-  // input extra element
-  inElem=h_inDae.FirstChildElement().FirstChild( "library_geometries" )
-      .FirstChild( "geometry" ).FirstChild( "extra" ).Element();
-  if(inElem)
-  {
-    // output extra element
-    TiXmlElement *extra = new TiXmlElement( "extra" );
-    geometry->LinkEndChild( extra );
+  // Scene element
+  TiXmlElement *sceneXml = new TiXmlElement("scene");
+  ExportScene(sceneXml);
+  colladaXml->LinkEndChild(sceneXml);
 
-    CopyElement(inElem,extra);
-  }
-
-  // library_images
-  // input library_images element
-  inElem=h_inDae.FirstChildElement().FirstChild( "library_images" ).Element();
-  if(inElem)
-  {
-    // output library_images element
-    TiXmlElement *libraryImages = new TiXmlElement( "library_images" );
-    collada->LinkEndChild( libraryImages );
-
-    CopyElement(inElem,libraryImages);
-  }
-
-  // library_materials
-  // input library_materials element
-  inElem=h_inDae.FirstChildElement().FirstChild( "library_materials" ).Element();
-  // output library_materials element
-  TiXmlElement *libraryMaterials = new TiXmlElement( "library_materials" );
-  collada->LinkEndChild( libraryMaterials );
-  const char *materialID = NULL;
-  if(inElem)
-  {
-    CopyElement(inElem,libraryMaterials);
-    // Copy material ID
-    inElem=h_inDae.FirstChildElement().FirstChild( "library_materials" )
-        .FirstChild( "material" ).Element();
-    if(inElem)
-    {
-      materialID = inElem->Attribute("id");
-    }
-  }
-
-  // library_effects
-  // input library_effects element
-  inElem=h_inDae.FirstChildElement().FirstChild( "library_effects" ).Element();
-  // output library_effects element
-  TiXmlElement *libraryEffects = new TiXmlElement( "library_effects" );
-  collada->LinkEndChild( libraryEffects );
-  if(inElem)
-  {
-    CopyElement(inElem,libraryEffects);
-  }
-
-  // library_visual_scenes
-  TiXmlElement *library_visual_scenes =
-      new TiXmlElement( "library_visual_scenes" );
-  collada->LinkEndChild( library_visual_scenes );
-
-  TiXmlElement *visual_scene = new TiXmlElement( "visual_scene" );
-  library_visual_scenes->LinkEndChild( visual_scene );
-  visual_scene->SetAttribute("name", "Scene");
-  visual_scene->SetAttribute("id", "Scene");
-
-  TiXmlElement *node = new TiXmlElement( "node" );
-  visual_scene->LinkEndChild( node );
-  node->SetAttribute("name", "node");
-  node->SetAttribute("id", "node");
-
-  TiXmlElement *instance_geometry = new TiXmlElement( "instance_geometry" );
-  node->LinkEndChild( instance_geometry );
-  strcpy(attributeValue,"#");
-  strcat(attributeValue,meshID);
-  instance_geometry->SetAttribute("url", attributeValue);
-
-  TiXmlElement *bind_material = new TiXmlElement( "bind_material" );
-  instance_geometry->LinkEndChild( bind_material );
-
-  TiXmlElement *techniqueCommon = new TiXmlElement( "technique_common" );
-  bind_material->LinkEndChild( techniqueCommon );
-
-  if (materialID)
-  {
-    TiXmlElement *instanceMaterial = new TiXmlElement( "instance_material" );
-    techniqueCommon->LinkEndChild( instanceMaterial );
-    instanceMaterial->SetAttribute("symbol", materialID);
-    strcpy(attributeValue,"#");
-    strcat(attributeValue,materialID);
-    instanceMaterial->SetAttribute("target", attributeValue);
-
-    TiXmlElement *bindVertexInput = new TiXmlElement( "bind_vertex_input" );
-    instanceMaterial->LinkEndChild( bindVertexInput );
-    bindVertexInput->SetAttribute("semantic", "UVSET0");
-    bindVertexInput->SetAttribute("input_semantic", "TEXCOORD");
-  }
-
-  // scene
-  TiXmlElement *scene = new TiXmlElement( "scene" );
-  collada->LinkEndChild( scene );
-
-  TiXmlElement *instance_visual_scene =
-      new TiXmlElement( "instance_visual_scene" );
-  scene->LinkEndChild( instance_visual_scene );
-  instance_visual_scene->SetAttribute("url", "#Scene");
-
-  return(_outDae);
+  return(outDae);
 }
 
 /////////////////////////////////////////////////
@@ -1218,7 +1166,7 @@ int main(int argc, char **argv)
     return -1;
   }
 
-  TiXmlDocument inDae( argv[1] );
+  TiXmlDocument inDae(argv[1]);
   if (!inDae.LoadFile())
   {
     gzerr << "Could not open dae file." << std::endl;
@@ -1228,28 +1176,25 @@ int main(int argc, char **argv)
   std::string filename = argv[1];
   filename = filename.substr(0, filename.find(".dae"));
 
-  // load collada mesh into Gazebo Mesh format
+  // COLLADA to GAZEBO
   const gazebo::common::Mesh *inGz =
       gazebo::common::MeshManager::Instance()->Load(argv[1]);
 /*
   // export original Gz mesh to Dae
   TiXmlDocument exportInDae;
-  exportInDae = ConvertGzToDae(inDae,inGz,inGz);
-  exportInDae.SaveFile( filename+"_original.dae" );
+  exportInDae = ConvertGzToDae(inGz,inGz);
+  exportInDae.SaveFile(filename+"_original.dae");
 
   //return 0;
 */
 
+  // GAZEBO to GTS
   GtsSurface *in_out_Gts;
-  GNode *tree1;
-  in_out_Gts = gts_surface_new(gts_surface_class(), gts_face_class(), gts_edge_class(),
-      gts_vertex_class());
-
-  // convert Gazebo Mesh to GTS format
+  in_out_Gts = gts_surface_new(gts_surface_class(), gts_face_class(),
+      gts_edge_class(), gts_vertex_class());
   ConvertGzToGts(inGz, in_out_Gts);
 
-  /*** Do mesh simplification here ***/
-
+  // SIMPLIFICATION
   // Number of edges
   guint edgesBefore = gts_surface_edge_number(in_out_Gts);
   std::cout << "Edges before: " << edgesBefore << std::endl;
@@ -1259,11 +1204,6 @@ int main(int argc, char **argv)
     gzwarn << "There are less than 300 edges. Not simplifying.\n";
     return -1;
   }
-
-  // print stats
-  /*gts_surface_print_stats (in_out_Gts, stderr);
-  fprintf (stderr, "# volume: %g area: %g\n",
-         gts_surface_volume (in_out_Gts), gts_surface_area (in_out_Gts));*/
 
   // default cost function COST_OPTIMIZED
   GtsKeyFunc cost_func = (GtsKeyFunc) gts_volume_optimized_cost;
@@ -1277,11 +1217,8 @@ int main(int argc, char **argv)
   // set stop to number
   GtsStopFunc stop_func = (GtsStopFunc) stop_number_verbose;
   double desiredPercentage = atoi (argv[2]);
-  guint number = edgesBefore * desiredPercentage/100;
-
+  guint number = edgesBefore *desiredPercentage/100;
   gpointer stop_data = &number;
-
-  // maximum fold angle
   gdouble fold = PI/180.;
 
   // coarsen
@@ -1293,41 +1230,33 @@ int main(int argc, char **argv)
   // Number of edges
   guint edgesAfter = gts_surface_edge_number(in_out_Gts);
   double obtainedPercentage = (double)100*edgesAfter/edgesBefore;
-  std::cout << "Edges after: " << edgesAfter << " (" << obtainedPercentage << "%)" << std::endl;
+  std::cout << "Edges after: " << edgesAfter << " (" << obtainedPercentage
+      << "%)" << std::endl;
 
   if (obtainedPercentage > desiredPercentage*1.5)
   {
-    std::cout << "It wasn't possible to significantly reduce the mesh. Not simplifying." << std::endl;
+    std::cout << "It wasn't possible to significantly reduce the mesh. "
+              << "Not simplifying." << std::endl;
     return 0;
   }
 
-  // stats after coarsening
-  /*gts_surface_print_stats (in_out_Gts, stderr);
-  fprintf (stderr, "# volume: %g area: %g\n",
-         gts_surface_volume (in_out_Gts), gts_surface_area (in_out_Gts));*/
-
-  /*** End mesh simplification ***/
-
-  // Output Gazebo mesh
+  // GTS to GAZEBO
+  // Vertices:  in_out_Gts
+  // Normals:   RecalculateNormals
+  // TexCoords: inGz (or none?)
   gazebo::common::Mesh *outGz = new gazebo::common::Mesh();
-  ConvertGtsToGz(in_out_Gts, outGz, inGz);
+  ConvertGtsToGz(in_out_Gts, inGz, outGz);
 
-  /*** Export as COLLADA ***/
-
+  // GAZEBO to COLLADA
 // it's actually 4, using 3 during dev
-#if GAZEBO_MAJOR_VERSION < 3
+#if GAZEBO_MAJOR_VERSION < 4
   TiXmlDocument outDae;
-
-  outDae = ConvertGzToDae(inDae,outGz,inGz);
-
-  outDae.SaveFile( filename+"_coarse.dae" );
+  outDae = ConvertGzToDae(inGz, outGz);
+  outDae.SaveFile(filename+"_coarse.dae");
 #else
-  // export Gazebo Mesh into Collada format
   gazebo::common::MeshManager::Instance()->Export(outGz, filename+"_coarseNEW", "dae", false);
 #endif
-  /*** End export as COLLADA ***/
 
-  // destroy surfaces
   gts_object_destroy(GTS_OBJECT(in_out_Gts));
 
   return 0;
