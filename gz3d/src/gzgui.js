@@ -183,6 +183,7 @@ $(function()
     // right-click
     $('#container').mousedown(function(event)
         {
+          event.preventDefault();
           if(event.which === 3)
           {
             guiEvents.emit('right_click', event);
@@ -347,7 +348,6 @@ GZ3D.Gui.prototype.init = function()
   this.spawnState = null;
   this.longPressState = null;
   this.showNotifications = false;
-  this.selectedModel = null;
 
   var that = this;
 
@@ -601,7 +601,8 @@ GZ3D.Gui.prototype.init = function()
         that.scene.onRightClick(event, function(entity)
             {
               that.scene.showBoundingBox(entity);
-              that.selectedModel = entity;
+              that.scene.selectedModel = entity;
+              $('.ui-popup').popup('close');
               $('#model-popup').popup('open',
                   {x: event.clientX + toEmUnits(3),
                    y: event.clientY + toEmUnits(1.5)});
@@ -611,10 +612,10 @@ GZ3D.Gui.prototype.init = function()
 
   guiEvents.on('delete_entity', function ()
       {
-        that.emitter.emit('deleteEntity',that.selectedModel);
+        that.emitter.emit('deleteEntity',that.scene.selectedModel);
         guiEvents.emit('notification_popup','Model deleted');
         $('#model-popup').popup('close');
-        that.selectedModel = null;
+        that.scene.selectedModel = null;
       }
   );
 

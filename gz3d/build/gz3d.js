@@ -188,6 +188,7 @@ $(function()
     // right-click
     $('#container').mousedown(function(event)
         {
+          event.preventDefault();
           if(event.which === 3)
           {
             guiEvents.emit('right_click', event);
@@ -352,7 +353,6 @@ GZ3D.Gui.prototype.init = function()
   this.spawnState = null;
   this.longPressState = null;
   this.showNotifications = false;
-  this.selectedModel = null;
 
   var that = this;
 
@@ -606,7 +606,8 @@ GZ3D.Gui.prototype.init = function()
         that.scene.onRightClick(event, function(entity)
             {
               that.scene.showBoundingBox(entity);
-              that.selectedModel = entity;
+              that.scene.selectedModel = entity;
+              $('.ui-popup').popup('close');
               $('#model-popup').popup('open',
                   {x: event.clientX + toEmUnits(3),
                    y: event.clientY + toEmUnits(1.5)});
@@ -616,10 +617,10 @@ GZ3D.Gui.prototype.init = function()
 
   guiEvents.on('delete_entity', function ()
       {
-        that.emitter.emit('deleteEntity',that.selectedModel);
+        that.emitter.emit('deleteEntity',that.scene.selectedModel);
         guiEvents.emit('notification_popup','Model deleted');
         $('#model-popup').popup('close');
-        that.selectedModel = null;
+        that.scene.selectedModel = null;
       }
   );
 
@@ -3347,6 +3348,7 @@ GZ3D.Scene.prototype.init = function()
 
   this.selectedEntity = null;
   this.mouseEntity = null;
+  this.selectedModel = null;
 
   this.manipulationMode = 'view';
 
@@ -3494,7 +3496,7 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
 {
   event.preventDefault();
 
-  var pointer;
+  var pointer, mainPointer = true;
   if (event.touches)
   {
     // Cancel in case of multitouch
@@ -3507,6 +3509,10 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
   else
   {
     pointer = event;
+    if (pointer.which !== 1)
+    {
+      mainPointer = false;
+    }
   }
 
   // X-Y coordinates of where mouse clicked
@@ -3546,7 +3552,7 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
     // Attach manipulator to model
     else if (model.name !== '')
     {
-      if (model.parent === this.scene)
+      if (mainPointer && model.parent === this.scene)
       {
         this.attachManipulator(model, this.manipulationMode);
       }
@@ -3585,9 +3591,9 @@ GZ3D.Scene.prototype.onPointerUp = function(event)
   // The mouse is not holding anything
   this.mouseEntity = null;
 
-  // Clicks (<100ms) outside any models trigger view mode
+  // Clicks (<150ms) outside any models trigger view mode
   var millisecs = new Date().getTime();
-  if (millisecs - this.timeDown < 100)
+  if (millisecs - this.timeDown < 150)
   {
     this.setManipulationMode('view');
     $( '#view-mode' ).click();
@@ -4815,13 +4821,17 @@ GZ3D.Scene.prototype.hideBoundingBox = function()
  */
 GZ3D.Scene.prototype.onRightClick = function(event, callback)
 {
-  var pos = new THREE.Vector2(event.clientX, event.clientY);
-  var intersect = new THREE.Vector3();
-  var model = this.getRayCastModel(pos, intersect);
-
-  if(model.name !== '' && model.name !== 'plane')
+  if(this.manipulationMode === 'view')
   {
-    callback(model);
+    var pos = new THREE.Vector2(event.clientX, event.clientY);
+    var intersect = new THREE.Vector3();
+    var model = this.getRayCastModel(pos, intersect);
+
+    if(model && model.name !== '' && model.name !== 'plane' &&
+        this.modelManipulator.pickerNames.indexOf(model.name) === -1)
+    {
+      callback(model);
+    }
   }
 };
 
