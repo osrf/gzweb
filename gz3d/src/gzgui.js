@@ -194,6 +194,11 @@ $(function()
         {
           guiEvents.emit('hide_boundingBox');
         }});
+
+    $('#model-popup-screen').mousedown(function(event)
+        {
+          $('#model-popup').popup('close');
+        });
   }
 
   $('.header-button')
