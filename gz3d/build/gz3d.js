@@ -4594,56 +4594,71 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
   if (this.meshes[uri])
   {
     dae = this.meshes[uri];
-    if (submesh)
-    {
-      mesh = this.prepareColladaMesh(dae, submesh, centerSubmesh);
-    }
-    else
-    {
-      mesh = this.prepareColladaMesh(dae, null, null);
-    }
+    dae = dae.clone();
+    this.useColladaSubMesh(dae, submesh, centerSubmesh);
     callback(dae);
+    return;
   }
 
-  if (!mesh)
+  var loader = new THREE.ColladaLoader();
+  // var loader = new ColladaLoader2();
+  // loader.options.convertUpAxis = true;
+  var thatURI = uri;
+  var thatSubmesh = submesh;
+  var thatCenterSubmesh = centerSubmesh;
+
+  loader.load(uri, function(collada)
   {
-    var loader = new THREE.ColladaLoader();
-    // var loader = new ColladaLoader2();
-    // loader.options.convertUpAxis = true;
-    var thatURI = uri;
-    var thatSubmesh = submesh;
-    var thatCenterSubmesh = centerSubmesh;
-
-    loader.load(uri, function(collada)
+    // check for a scale factor
+    /*if(collada.dae.asset.unit)
     {
-      // check for a scale factor
-      /*if(collada.dae.asset.unit)
-      {
-        var scale = collada.dae.asset.unit;
-        collada.scene.scale = new THREE.Vector3(scale, scale, scale);
-      }*/
+      var scale = collada.dae.asset.unit;
+      collada.scene.scale = new THREE.Vector3(scale, scale, scale);
+    }*/
 
-      dae = collada.scene;
-      dae.updateMatrix();
-      this.scene.meshes[thatURI] = dae;
-      mesh = this.scene.prepareColladaMesh(dae, thatSubmesh, centerSubmesh);
+    dae = collada.scene;
+    dae.updateMatrix();
+    this.scene.prepareColladaMesh(dae);
+    this.scene.meshes[thatURI] = dae;
+    dae = dae.clone();
+    this.scene.useColladaSubMesh(dae, thatSubmesh, centerSubmesh);
 
-      dae.name = uri;
-      callback(dae);
-    });
+    dae.name = uri;
+    callback(dae);
+  });
+};
+
+/**
+ * Prepare collada by removing other non-mesh entities such as lights
+ * @param {} dae
+ */
+GZ3D.Scene.prototype.prepareColladaMesh = function(dae)
+{
+  var allChildren = [];
+  dae.getDescendants(allChildren);
+  for (var i = 0; i < allChildren.length; ++i)
+  {
+    if (allChildren[i] instanceof THREE.Light)
+    {
+      allChildren[i].parent.remove(allChildren[i]);
+    }
   }
 };
 
 /**
- * Prepare collada by handling submesh-only loading and removing other
- * non-mesh entities such as lights
+ * Prepare collada by handling submesh-only loading
  * @param {} dae
  * @param {} submesh
  * @param {} centerSubmesh
  * @returns {THREE.Mesh} mesh
  */
-GZ3D.Scene.prototype.prepareColladaMesh = function(dae, submesh, centerSubmesh)
+GZ3D.Scene.prototype.useColladaSubMesh = function(dae, submesh, centerSubmesh)
 {
+  if (!submesh)
+  {
+    return null;
+  }
+
   var mesh;
   var allChildren = [];
   dae.getDescendants(allChildren);
@@ -4711,10 +4726,6 @@ GZ3D.Scene.prototype.prepareColladaMesh = function(dae, submesh, centerSubmesh)
           allChildren[i].parent.remove(allChildren[i]);
         }
       }
-    }
-    else if (allChildren[i] instanceof THREE.Light)
-    {
-      allChildren[i].parent.remove(allChildren[i]);
     }
   }
   return mesh;
