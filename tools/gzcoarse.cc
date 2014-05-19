@@ -27,52 +27,45 @@
 
 enum GeometryType {POSITION, NORMAL, UVMAP};
 
-void build_list (gpointer *data, GSList **list)
-{
-  /* always use O(1) g_slist_prepend instead of O(n) g_slist_append */
-  *list = g_slist_prepend (*list, data);
-}
-
 //////////////////////////////////////////////////
 // Custom data set for nanoflann
 template <typename T>
 struct PointCloud
 {
-    struct Point
-    {
-        T  x,y,z;
-    };
+  struct Point
+  {
+    T  x,y,z;
+  };
 
-    std::vector<Point>  pts;
+  std::vector<Point>  pts;
 
-    // Must return the number of data points
-    inline long unsigned int kdtree_get_point_count() const { return pts.size(); }
+  // Must return the number of data points
+  inline long unsigned int kdtree_get_point_count() const { return pts.size(); }
 
-    // Returns the distance between the vector "p1[0:size-1]" and the data point with index "idx_p2" stored in the class:
-    inline T kdtree_distance(const T *p1, const long unsigned int idx_p2,long unsigned int size) const
-    {
-        const T d0=p1[0]-pts[idx_p2].x;
-        const T d1=p1[1]-pts[idx_p2].y;
-        const T d2=p1[2]-pts[idx_p2].z;
-        return d0*d0+d1*d1+d2*d2;
-    }
+  // Returns the distance between the vector "p1[0:size-1]" and the data point with index "idx_p2" stored in the class:
+  inline T kdtree_distance(const T *p1, const long unsigned int idx_p2,long unsigned int size) const
+  {
+    const T d0=p1[0]-pts[idx_p2].x;
+    const T d1=p1[1]-pts[idx_p2].y;
+    const T d2=p1[2]-pts[idx_p2].z;
+    return d0*d0+d1*d1+d2*d2;
+  }
 
-    // Returns the dim'th component of the idx'th point in the class:
-    // Since this is inlined and the "dim" argument is typically an immediate value, the
-    //  "if/else's" are actually solved at compile time.
-    inline T kdtree_get_pt(const long unsigned int idx, int dim) const
-    {
-        if (dim==0) return pts[idx].x;
-        else if (dim==1) return pts[idx].y;
-        else return pts[idx].z;
-    }
+  // Returns the dim'th component of the idx'th point in the class:
+  // Since this is inlined and the "dim" argument is typically an immediate value, the
+  //  "if/else's" are actually solved at compile time.
+  inline T kdtree_get_pt(const long unsigned int idx, int dim) const
+  {
+    if (dim==0) return pts[idx].x;
+    else if (dim==1) return pts[idx].y;
+    else return pts[idx].z;
+  }
 
-    // Optional bounding-box computation: return false to default to a standard bbox computation loop.
-    //   Return true if the BBOX was already computed by the class and returned in "bb" so it can be avoided to redo it again.
-    //   Look at bb.size() to find out the expected dimensionality (e.g. 2 or 3 for point clouds)
-    template <class BBOX>
-    bool kdtree_get_bbox(BBOX &bb) const { return false; }
-
+  // Optional bounding-box computation: return false to default to a standard bbox computation loop.
+  //   Return true if the BBOX was already computed by the class and returned in "bb" so it can be avoided to redo it again.
+  //   Look at bb.size() to find out the expected dimensionality (e.g. 2 or 3 for point clouds)
+  template <class BBOX>
+  bool kdtree_get_bbox(BBOX &bb) const { return false; }
 };
 
 //////////////////////////////////////////////////
@@ -94,8 +87,6 @@ void FillVertex(GtsPoint *_p, gpointer *_data)
        GTS_POINT(_p)->z << " " << (*(reinterpret_cast<guint *>(_data[1]))) << std::endl;*/
   g_hash_table_insert(vIndex, _p,
       GUINT_TO_POINTER((*(reinterpret_cast<guint *>(_data[1])))++));
-
- //     std::cout << " done " << std::endl;
 }
 
 //////////////////////////////////////////////////
@@ -207,7 +198,7 @@ void ConvertGtsToGz(GtsSurface *_surface, const gazebo::common::Mesh *_inGz,
   _outGz->RecalculateNormals();
 
   // Add material
-  for(unsigned int m = 0; m < _inGz->GetMaterialCount(); ++m)
+  for (unsigned int m = 0; m < _inGz->GetMaterialCount(); ++m)
   {
     const gazebo::common::Material *inMaterial = _inGz->GetMaterial(m);
     gazebo::common::Material *outMaterial = new gazebo::common::Material();
@@ -298,8 +289,6 @@ void ConvertGzToGts(const gazebo::common::Mesh *_mesh, GtsSurface *_surface)
       if (e1 != NULL && e2 != NULL && e3 != NULL &&
           e1 != e2 && e2 != e3 && e1 != e3)
       {
-
-
         if (GTS_SEGMENT (e1)->v1 == GTS_SEGMENT (e2)->v1)
         {
           if (!gts_segment_connect (GTS_SEGMENT (e3),
@@ -332,7 +321,6 @@ void ConvertGzToGts(const gazebo::common::Mesh *_mesh, GtsSurface *_surface)
         GtsFace *face = gts_face_new(subSurface->face_class, e1, e2, e3);
         if (!gts_triangle_is_duplicate(&face->triangle))
           gts_surface_add_face(subSurface, face);
-
       }
       else
       {
@@ -353,7 +341,8 @@ static gboolean stop_number_verbose (gdouble cost, guint number, guint *min)
   static GTimer *timer = NULL, *total_timer = NULL;
 
   g_return_val_if_fail (min != NULL, TRUE);
-  if (timer == NULL) {
+  if (timer == NULL)
+  {
     nmax = nold = number;
     timer = g_timer_new ();
     total_timer = g_timer_new ();
@@ -402,30 +391,30 @@ static gboolean stop_number_verbose (gdouble cost, guint number, guint *min)
 }
 
 //////////////////////////////////////////////////
+// Diff from ColladaExporter
 void ExportTextureSource(const gazebo::common::SubMesh *_outSubMesh,
     const gazebo::common::SubMesh *_inSubMesh,
     TiXmlElement *_meshXml, const char *_meshID)
 {
-  // For collada
+  std::cout << "Calculating texture map..." << std::endl;
+
   char sourceId[100], sourceArrayId[100];
   unsigned int inCount = _inSubMesh->GetVertexCount();
   std::ostringstream fillData;
   fillData.precision(5);
   fillData<<std::fixed;
 
-  std::cout << "Calculating texture map..." << std::endl;
-
   // Fill the point cloud with vertices from the original mesh
   //assert(inCount%3 == 0);
   PointCloud<double> cloud;
   cloud.pts.resize(inCount);
   gazebo::math::Vector3 inVertex;
-  for(long unsigned int i = 0; i < inCount; ++i)
+  for (long unsigned int i = 0; i < inCount; ++i)
   {
-      inVertex = _inSubMesh->GetVertex(i);
-      cloud.pts[i].x = inVertex.x;
-      cloud.pts[i].y = inVertex.y;
-      cloud.pts[i].z = inVertex.z;
+    inVertex = _inSubMesh->GetVertex(i);
+    cloud.pts[i].x = inVertex.x;
+    cloud.pts[i].y = inVertex.y;
+    cloud.pts[i].z = inVertex.z;
   }
 
   // construct a kd-tree index:
@@ -558,7 +547,7 @@ void ExportTextureSource(const gazebo::common::SubMesh *_outSubMesh,
 
 /*
   gazebo::math::Vector2d inTexCoord;
-  for(long unsigned int i = 0; i < inCount; ++i)
+  for (long unsigned int i = 0; i < inCount; ++i)
   {
     inTexCoord = _inSubMesh->GetTexCoord(i);
     fillData << inTexCoord.x << " " << 1-inTexCoord.y << " ";
@@ -832,6 +821,7 @@ void ExportEffects(TiXmlElement *_libraryEffectsXml,
     TiXmlElement *ambientXml = new TiXmlElement("ambient");
     phongXml->LinkEndChild(ambientXml);
 
+ //     std::cout << " done " << std::endl;
     TiXmlElement *colorXml = new TiXmlElement("color");
     snprintf(id, sizeof(id), "%f %f %f %f", r, g, b, a);
     colorXml->LinkEndChild(new TiXmlText(id));
@@ -1003,6 +993,8 @@ void ExportGeometries(TiXmlElement *_libraryGeometriesXml,
     ExportGeometrySource(subMesh, meshXml, NORMAL, meshId);
     if (inSubMesh->GetTexCoordCount() != 0)
     {
+      // Diff from ColladaExporter
+      // ExportGeometrySource(subMesh, meshXml, UVMAP, meshId);
       ExportTextureSource(subMesh, inSubMesh, meshXml, meshId);
     }
 
@@ -1061,6 +1053,8 @@ void ExportGeometries(TiXmlElement *_libraryGeometriesXml,
                << subMesh->GetIndex(j) << " ";
       if (inSubMesh->GetTexCoordCount() != 0)
       {
+        // Diff from ColladaExporter
+        // fillData << subMesh->GetIndex(j) << " ";
         fillData << j << " ";
       }
     }
@@ -1154,9 +1148,9 @@ int main(int argc, char **argv)
 {
   if (argc < 3)
   {
-    gzerr << "Missing argument. Please specify a collada file and "<<
-             "the desired percentage of edges. For 20%, write 20."
-        << std::endl;
+    gzerr << "Missing argument. Please specify a collada file and "
+          << "the desired percentage of edges. For 20%, write 20."
+          << std::endl;
     return -1;
   }
   if (atoi(argv[2]) < 0 || atoi(argv[2]) > 100)
@@ -1243,19 +1237,25 @@ int main(int argc, char **argv)
   // GTS to GAZEBO
   // Vertices:  in_out_Gts
   // Normals:   RecalculateNormals
-  // TexCoords: inGz (or none?)
+  // TexCoords: none
+  // Materials: inGz
   gazebo::common::Mesh *outGz = new gazebo::common::Mesh();
   ConvertGtsToGz(in_out_Gts, inGz, outGz);
 
   // GAZEBO to COLLADA
-// it's actually 4, using 3 during dev
-#if GAZEBO_MAJOR_VERSION < 4
+
+//#if GAZEBO_MAJOR_VERSION < 4
+// ConvertGzToDae is equal to ColladaExporter, except for ExportTextureSource,
+// which uses Collada indexation for UV coordinates
   TiXmlDocument outDae;
   outDae = ConvertGzToDae(inGz, outGz);
   outDae.SaveFile(filename+"_coarse.dae");
-#else
-  gazebo::common::MeshManager::Instance()->Export(outGz, filename+"_coarseNEW", "dae", false);
-#endif
+
+//#else
+//  outGz doesn't have texture coordinates, so exporting like this is incomplete
+//  gazebo::common::MeshManager::Instance()->
+//        Export(outGz, filename+"_coarseNEW", "dae", false);
+//#endif
 
   gts_object_destroy(GTS_OBJECT(in_out_Gts));
 
