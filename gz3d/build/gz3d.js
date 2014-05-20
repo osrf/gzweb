@@ -4389,6 +4389,7 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
   var dae;
   var mesh = null;
   /*
+  // Crashes: issue #36
   if (this.meshes[uri])
   {
     dae = this.meshes[uri];
