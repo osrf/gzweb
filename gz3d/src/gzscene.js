@@ -1060,6 +1060,7 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
 {
   var dae;
   var mesh = null;
+  /*
   if (this.meshes[uri])
   {
     dae = this.meshes[uri];
@@ -1068,6 +1069,7 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
     callback(dae);
     return;
   }
+  */
 
   var loader = new THREE.ColladaLoader();
   // var loader = new ColladaLoader2();
