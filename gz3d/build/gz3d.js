@@ -7,6 +7,11 @@ var GZ3D = GZ3D || {
 
 var guiEvents = new EventEmitter2({ verbose: true });
 
+var emUnits = function(value)
+    {
+      return value*parseFloat($('body').css('font-size'));
+    };
+
 // Bind events to buttons
 $(function()
 {
@@ -20,7 +25,7 @@ $(function()
   $('#notification-popup-screen').remove();
 
   // Panel starts open for wide screens
-  if ($(window).width() / parseFloat($('body').css('font-size')) > 35)
+  if ($(window).width() / emUnits(1) > 35)
   {
     $('#leftPanel').panel('open');
   }
@@ -179,6 +184,26 @@ $(function()
         .css('right', '0.5em')
         .css('top', '0em')
         .css('z-index', '1000');
+
+    // right-click
+    $('#container').mousedown(function(event)
+        {
+          event.preventDefault();
+          if(event.which === 3)
+          {
+            guiEvents.emit('right_click', event);
+          }
+        });
+
+    $('#model-popup').bind({popupafterclose: function()
+        {
+          guiEvents.emit('hide_boundingBox');
+        }});
+
+    $('#model-popup-screen').mousedown(function(event)
+        {
+          $('#model-popup').popup('close');
+        });
   }
 
   $('.header-button')
@@ -242,8 +267,8 @@ $(function()
         {
           var position = $('#clock').offset();
           $('#clock-touch').popup('open', {
-              x:position.left+1.6*parseFloat($('body').css('font-size')),
-              y:4*parseFloat($('body').css('font-size'))});
+              x:position.left+emUnits(1.6),
+              y:emUnits(4)});
         }
       });
 
@@ -304,6 +329,10 @@ $(function()
       }, press_time));
       guiEvents.emit('longpress_move',event);
     });
+
+  $( '#delete-entity' ).click(function() {
+    guiEvents.emit('delete_entity');
+  });
 });
 
 /**
@@ -460,7 +489,7 @@ GZ3D.Gui.prototype.init = function()
 
   guiEvents.on('close_panel', function()
       {
-        if ($(window).width() / parseFloat($('body').css('font-size')) < 35)
+        if ($(window).width() / emUnits(1)< 35)
         {
           $('#leftPanel').panel('close');
         }
@@ -574,6 +603,35 @@ GZ3D.Gui.prototype.init = function()
             $( '#notification-popup' ).popup('close');
           }, 2000);
         }
+      }
+  );
+
+  guiEvents.on('right_click', function (event)
+      {
+        that.scene.onRightClick(event, function(entity)
+            {
+              that.scene.selectedModel = entity;
+              that.scene.showBoundingBox(entity);
+              $('.ui-popup').popup('close');
+              $('#model-popup').popup('open',
+                  {x: event.clientX + emUnits(3),
+                   y: event.clientY + emUnits(1.5)});
+            });
+      }
+  );
+
+  guiEvents.on('delete_entity', function ()
+      {
+        that.emitter.emit('deleteEntity',that.scene.selectedModel);
+        guiEvents.emit('notification_popup','Model deleted');
+        $('#model-popup').popup('close');
+        that.scene.selectedModel = null;
+      }
+  );
+
+  guiEvents.on('hide_boundingBox', function ()
+      {
+        that.scene.hideBoundingBox();
       }
   );
 };
@@ -3295,6 +3353,7 @@ GZ3D.Scene.prototype.init = function()
 
   this.selectedEntity = null;
   this.mouseEntity = null;
+  this.selectedModel = null;
 
   this.manipulationMode = 'view';
 
@@ -3442,7 +3501,7 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
 {
   event.preventDefault();
 
-  var pointer;
+  var pointer, mainPointer = true;
   if (event.touches)
   {
     // Cancel in case of multitouch
@@ -3455,6 +3514,10 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
   else
   {
     pointer = event;
+    if (pointer.which !== 1)
+    {
+      mainPointer = false;
+    }
   }
 
   // X-Y coordinates of where mouse clicked
@@ -3494,7 +3557,7 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
     // Attach manipulator to model
     else if (model.name !== '')
     {
-      if (model.parent === this.scene)
+      if (mainPointer && model.parent === this.scene)
       {
         this.attachManipulator(model, this.manipulationMode);
       }
@@ -3533,9 +3596,9 @@ GZ3D.Scene.prototype.onPointerUp = function(event)
   // The mouse is not holding anything
   this.mouseEntity = null;
 
-  // Clicks (<100ms) outside any models trigger view mode
+  // Clicks (<150ms) outside any models trigger view mode
   var millisecs = new Date().getTime();
-  if (millisecs - this.timeDown < 100)
+  if (millisecs - this.timeDown < 150)
   {
     this.setManipulationMode('view');
     $( '#view-mode' ).click();
@@ -4767,6 +4830,26 @@ GZ3D.Scene.prototype.hideBoundingBox = function()
     this.boundingBox.parent.remove(this.boundingBox);
   }
   this.boundingBox.visible = false;
+};
+
+/**
+ * Mouse right click
+ * @param {} event
+ * @param {} callback - function to be executed to the clicked model
+ */
+GZ3D.Scene.prototype.onRightClick = function(event, callback)
+{
+  if(this.manipulationMode === 'view')
+  {
+    var pos = new THREE.Vector2(event.clientX, event.clientY);
+    var model = this.getRayCastModel(pos, new THREE.Vector3());
+
+    if(model && model.name !== '' && model.name !== 'plane' &&
+        this.modelManipulator.pickerNames.indexOf(model.name) === -1)
+    {
+      callback(model);
+    }
+  }
 };
 
 /**
