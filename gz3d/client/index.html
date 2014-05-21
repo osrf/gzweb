@@ -238,7 +238,7 @@
           <div class="insert-menu-title">
             <h3 style="margin:0em">Insert</h3>
           </div>
-          <ul style="list-style:none;background-color:#2a2a2a;height:9em;padding:0em;margin:0em;width:{{(categories.length+1)*9.8}}em">
+          <ul style="list-style:none;background-color:#2a2a2a;height:9em;padding:0em;padding-left:0.5em;margin:0em;width:{{(categories.length+1)*9.8}}em">
             <li style="float:left">
               <a href="#" ng-click="openCategory('simple_shapes')" data-role="button" data-inline="true" style="width:7em;height:6.5em" title="Shapes">
                 Shapes<br>
@@ -258,7 +258,7 @@
             <a href="#" class="insert-back" style="float:left"><img style="height:1.2em" src="style/images/back.png"></a>
             <h3 style="margin:0em"> &nbsp; Simple Shapes</h3>
           </div>
-          <ul style="list-style:none;background-color:#2a2a2a;height:9em;padding:0em;margin:0em;width:{{3*9.8}}em">
+          <ul style="list-style:none;background-color:#2a2a2a;height:9em;padding:0em;padding-left:0.5em;margin:0em;width:{{3*9.8}}em">
             <li style="float:left">
               <a href="#" id="insert-entity-box" ng-mousedown="spawnEntity('box')" data-role="button" data-inline="true" style="width:7em;height:6.5em" title="Box">
                 Box<br>
@@ -284,7 +284,7 @@
             <a href="#" class="insert-back" style="float:left"><img style="height:1.2em" src="style/images/back.png"></a>
             <h3 style="margin:0em"> &nbsp; {{category.title}}</h3>
           </div>
-          <ul style="list-style:none;background-color:#2a2a2a;height:9em;padding:0em;margin:0em;width:{{category.models.length*9.8}}em">
+          <ul style="list-style:none;background-color:#2a2a2a;height:9em;padding:0em;padding-left:0.5em;margin:0em;width:{{category.models.length*9.8}}em">
             <li style="float:left" ng-repeat="model in category.models">
               <a href="#" id="insert-entity-{{model.modelPath}}" ng-mousedown="spawnEntity(model.modelPath)" data-role="button" data-inline="true" style="width:7em;height:6.5em" title="{{model.modelTitle}}">
                 {{model.modelTitle}}<br>

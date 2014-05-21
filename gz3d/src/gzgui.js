@@ -214,12 +214,6 @@ $(function()
         .css('top', '0em')
         .css('z-index', '1000');
 
-    $('#insert-menu').find('*').touchmove(function(event){
-        var left = (event.pageX - this.offset().left);
-        $('#insert-menu').scrollLeft(left);
-        event.stopPropagation();
-    });
-
     $('#footer').touchstart(function(event){
         guiEvents.emit('killCameraControl');
     });
@@ -367,7 +361,7 @@ $(function()
   $('.insert-menus')
       .css('display', 'none')
       .css('background-color', '#2a2a2a')
-      .css('padding', '10px')
+      .css('padding', '0')
       .css('z-index', '1000')
       .css('width', '100%')
       .css('overflow', 'auto');
@@ -402,9 +396,9 @@ $(function()
 
   $( '#leftPanel' ).on('panelopen', function()
       {
-        if($('#insert-menu').is(':visible'))
+        if($('.insert-menus').is(':visible'))
         {
-          $('#insert-menu').hide();
+          $('.insert-menus').hide();
         }
       });
 
