@@ -20,5 +20,11 @@ do
               $DIR/../http/client/assets/${dir##*/}/thumbnails/0.png \
           \( +clone -background black  -shadow 100x10+0+0 \) +swap \
           -background none   -layers merge +repage  $DIR/../http/client/assets/${dir##*/}/thumbnails/0.png
+	# remove extra files
+	rm $DIR/../http/client/assets/${dir##*/}/thumbnails/1.png
+	rm $DIR/../http/client/assets/${dir##*/}/thumbnails/2.png
+	rm $DIR/../http/client/assets/${dir##*/}/thumbnails/3.png
+	rm $DIR/../http/client/assets/${dir##*/}/thumbnails/4.png
+	rm $DIR/../http/client/assets/${dir##*/}/thumbnails/5.png
     fi
 done
