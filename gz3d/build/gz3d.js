@@ -1348,7 +1348,6 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
           var checkModel = new XMLHttpRequest();
           checkModel.open('HEAD', modelUri+'_coarse.dae', false);
           checkModel.send();
-          console.log('status: '+checkModel.status);
           if (checkModel.status === 404)
           {
             modelUri = modelUri+'.dae';

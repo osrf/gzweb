@@ -709,8 +709,6 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
       var submesh = geom.mesh.submesh;
       var centerSubmesh = geom.mesh.center_submesh;
 
-      console.log(geom.mesh.filename + ' ' + submesh);
-
       var uriType = meshUri.substring(0, meshUri.indexOf('://'));
       if (uriType === 'file' || uriType === 'model')
       {
@@ -731,7 +729,6 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
           var checkModel = new XMLHttpRequest();
           checkModel.open('HEAD', modelUri+'_coarse.dae', false);
           checkModel.send();
-          console.log('status: '+checkModel.status);
           if (checkModel.status === 404)
           {
             modelUri = modelUri+'.dae';
