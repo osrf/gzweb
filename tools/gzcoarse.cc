@@ -368,12 +368,18 @@ void ExportTextureSource(const gazebo::common::SubMesh *_outSubMesh,
 
   char sourceId[100], sourceArrayId[100];
   unsigned int inCount = _inSubMesh->GetVertexCount();
+
+  //assert(inCount%3 == 0);
+  if (inCount%3 != 0)
+  {
+    inCount = floor(inCount/3)*3;
+  }
+
   std::ostringstream fillData;
   fillData.precision(5);
   fillData<<std::fixed;
 
   // Fill the point cloud with vertices from the original mesh
-  //assert(inCount%3 == 0);
   PointCloud<double> cloud;
   cloud.pts.resize(inCount);
   gazebo::math::Vector3 inVertex;
