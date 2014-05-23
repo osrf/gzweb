@@ -1326,8 +1326,6 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
       var submesh = geom.mesh.submesh;
       var centerSubmesh = geom.mesh.center_submesh;
 
-      console.log(geom.mesh.filename + ' ' + submesh);
-
       var uriType = meshUri.substring(0, meshUri.indexOf('://'));
       if (uriType === 'file' || uriType === 'model')
       {
