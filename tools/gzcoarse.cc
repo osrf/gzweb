@@ -174,18 +174,14 @@ void MergeVertices(GPtrArray *_vertices, double _epsilon)
 }
 
 //////////////////////////////////////////////////
-void ConvertGtsToGz(GtsSurface *_surface, const gazebo::common::Mesh *_inGz,
-    gazebo::common::Mesh *_outGz)
+void ConvertGtsToGz(GtsSurface *_surface, gazebo::common::SubMesh *_subMesh)
 {
-  gazebo::common::SubMesh *outSubMesh = new gazebo::common::SubMesh();
-  _outGz->AddSubMesh(outSubMesh);
-
   unsigned int n;
   gpointer data[3];
   GHashTable *vIndex = g_hash_table_new(NULL, NULL);
 
   n = 0;
-  data[0] = outSubMesh;
+  data[0] = _subMesh;
   data[1] = &n;
   data[2] = vIndex;
   n = 0;
@@ -193,145 +189,117 @@ void ConvertGtsToGz(GtsSurface *_surface, const gazebo::common::Mesh *_inGz,
   n = 0;
   gts_surface_foreach_face(_surface, (GtsFunc)FillFace, data);
   g_hash_table_destroy(vIndex);
-
-  // Calculate normals
-  _outGz->RecalculateNormals();
-
-  // Add material
-  for (unsigned int m = 0; m < _inGz->GetMaterialCount(); ++m)
-  {
-    const gazebo::common::Material *inMaterial = _inGz->GetMaterial(m);
-    gazebo::common::Material *outMaterial = new gazebo::common::Material();
-
-    outMaterial->SetTextureImage(inMaterial->GetTextureImage());
-    outMaterial->SetAmbient(inMaterial->GetAmbient());
-    outMaterial->SetDiffuse(inMaterial->GetDiffuse());
-    outMaterial->SetSpecular(inMaterial->GetSpecular());
-    outMaterial->SetEmissive(inMaterial->GetEmissive());
-    outMaterial->SetTransparency(inMaterial->GetTransparency());
-    outMaterial->SetShininess(inMaterial->GetShininess());
-
-    _outGz->AddMaterial(outMaterial);
-  }
 }
 
 //////////////////////////////////////////////////
-void ConvertGzToGts(const gazebo::common::Mesh *_mesh, GtsSurface *_surface)
+void ConvertGzToGts(const gazebo::common::SubMesh *_subMesh,
+    GtsSurface *_surface)
 {
   if (!_surface)
   {
-    gzerr << _mesh->GetName() << ": Surface is NULL\n";
+    std::cout << ": Surface is NULL\n";
     return;
   }
 
-  std::vector<GtsSurface *> subSurfaces;
-  for (unsigned int i = 0; i < _mesh->GetSubMeshCount(); ++i)
+  GtsSurface *subSurface = gts_surface_new(
+    gts_surface_class(), gts_face_class(), gts_edge_class(),
+    gts_vertex_class());
+
+  unsigned int indexCount = _subMesh->GetIndexCount();
+  if (_subMesh->GetVertexCount() <= 2)
+    return;
+
+  GPtrArray *vertices = g_ptr_array_new();
+  for (unsigned int j = 0; j < _subMesh->GetVertexCount(); ++j)
   {
-    GtsSurface *subSurface = gts_surface_new(
-      gts_surface_class(), gts_face_class(), gts_edge_class(),
-      gts_vertex_class());
-
-    const gazebo::common::SubMesh *subMesh = _mesh->GetSubMesh(i);
-    unsigned int indexCount = subMesh->GetIndexCount();
-    if (subMesh->GetVertexCount() <= 2)
-      continue;
-
-    GPtrArray *vertices = g_ptr_array_new();
-    for (unsigned int j = 0; j < subMesh->GetVertexCount(); ++j)
-    {
-      gazebo::math::Vector3 vertex = subMesh->GetVertex(j);
-      g_ptr_array_add(vertices, gts_vertex_new(gts_vertex_class(), vertex.x,
-          vertex.y, vertex.z));
-    }
-
-    MergeVertices(vertices, 1e-7);
-
-    GtsVertex **verticesData =
-        reinterpret_cast<GtsVertex **>(vertices->pdata);
-    for (unsigned int j = 0; j < indexCount/3; ++j)
-    {
-      // if vertices on the same GtsSegment, this segment. Else, NULL.
-      GtsEdge *e1 = GTS_EDGE(gts_vertices_are_connected(
-          verticesData[subMesh->GetIndex(3*j)],
-          verticesData[subMesh->GetIndex(3*j+1)]));
-      GtsEdge *e2 = GTS_EDGE(gts_vertices_are_connected(
-          verticesData[subMesh->GetIndex(3*j+1)],
-          verticesData[subMesh->GetIndex(3*j+2)]));
-      GtsEdge *e3 = GTS_EDGE(gts_vertices_are_connected(
-          verticesData[subMesh->GetIndex(3*j+2)],
-          verticesData[subMesh->GetIndex(3*j)]));
-
-      // If vertices are different and not connected
-      if (e1 == NULL && verticesData[subMesh->GetIndex(3*j)]
-          != verticesData[subMesh->GetIndex(3*j+1)])
-      {
-
-        e1 = gts_edge_new(subSurface->edge_class,
-            verticesData[subMesh->GetIndex(3*j)],
-            verticesData[subMesh->GetIndex(3*j+1)]);
-      }
-      if (e2 == NULL && verticesData[subMesh->GetIndex(3*j+1)]
-          != verticesData[subMesh->GetIndex(3*j+2)])
-      {
-        e2 = gts_edge_new(subSurface->edge_class,
-            verticesData[subMesh->GetIndex(3*j+1)],
-            verticesData[subMesh->GetIndex(3*j+2)]);
-      }
-      if (e3 == NULL && verticesData[subMesh->GetIndex(3*j+2)]
-          != verticesData[subMesh->GetIndex(3*j)])
-      {
-        e3 = gts_edge_new(subSurface->edge_class,
-            verticesData[subMesh->GetIndex(3*j+2)],
-            verticesData[subMesh->GetIndex(3*j)]);
-      }
-
-      // If all 3 edges are defined and different
-      if (e1 != NULL && e2 != NULL && e3 != NULL &&
-          e1 != e2 && e2 != e3 && e1 != e3)
-      {
-        if (GTS_SEGMENT (e1)->v1 == GTS_SEGMENT (e2)->v1)
-        {
-          if (!gts_segment_connect (GTS_SEGMENT (e3),
-              GTS_SEGMENT (e1)->v2,
-              GTS_SEGMENT (e2)->v2))
-            continue;
-        }
-        else if (GTS_SEGMENT (e1)->v2 == GTS_SEGMENT (e2)->v1)
-        {
-          if (!gts_segment_connect (GTS_SEGMENT (e3),
-              GTS_SEGMENT (e1)->v1,
-              GTS_SEGMENT (e2)->v2))
-            continue;
-        }
-        else if (GTS_SEGMENT (e1)->v2 == GTS_SEGMENT (e2)->v2)
-        {
-          if (!gts_segment_connect (GTS_SEGMENT (e3),
-              GTS_SEGMENT (e1)->v1,
-              GTS_SEGMENT (e2)->v1))
-            continue;
-        }
-        else if (GTS_SEGMENT (e1)->v1 == GTS_SEGMENT (e2)->v2)
-        {
-          if (!gts_segment_connect (GTS_SEGMENT (e3),
-              GTS_SEGMENT (e1)->v2,
-              GTS_SEGMENT (e2)->v1))
-            continue;
-        }
-
-        GtsFace *face = gts_face_new(subSurface->face_class, e1, e2, e3);
-        if (!gts_triangle_is_duplicate(&face->triangle))
-          gts_surface_add_face(subSurface, face);
-      }
-      else
-      {
-        gzwarn << _mesh->GetName() << ": Ignoring degenerate facet!\n";
-      }
-    }
-    subSurfaces.push_back(subSurface);
+    gazebo::math::Vector3 vertex = _subMesh->GetVertex(j);
+    g_ptr_array_add(vertices, gts_vertex_new(gts_vertex_class(), vertex.x,
+        vertex.y, vertex.z));
   }
 
-  for (unsigned int i = 0; i < subSurfaces.size(); ++i)
-    gts_surface_merge(_surface, subSurfaces[i]);
+  MergeVertices(vertices, 1e-7);
+
+  GtsVertex **verticesData =
+      reinterpret_cast<GtsVertex **>(vertices->pdata);
+  for (unsigned int j = 0; j < indexCount/3; ++j)
+  {
+    // if vertices on the same GtsSegment, this segment. Else, NULL.
+    GtsEdge *e1 = GTS_EDGE(gts_vertices_are_connected(
+        verticesData[_subMesh->GetIndex(3*j)],
+        verticesData[_subMesh->GetIndex(3*j+1)]));
+    GtsEdge *e2 = GTS_EDGE(gts_vertices_are_connected(
+        verticesData[_subMesh->GetIndex(3*j+1)],
+        verticesData[_subMesh->GetIndex(3*j+2)]));
+    GtsEdge *e3 = GTS_EDGE(gts_vertices_are_connected(
+        verticesData[_subMesh->GetIndex(3*j+2)],
+        verticesData[_subMesh->GetIndex(3*j)]));
+
+    // If vertices are different and not connected
+    if (e1 == NULL && verticesData[_subMesh->GetIndex(3*j)]
+        != verticesData[_subMesh->GetIndex(3*j+1)])
+    {
+      e1 = gts_edge_new(subSurface->edge_class,
+          verticesData[_subMesh->GetIndex(3*j)],
+          verticesData[_subMesh->GetIndex(3*j+1)]);
+    }
+    if (e2 == NULL && verticesData[_subMesh->GetIndex(3*j+1)]
+        != verticesData[_subMesh->GetIndex(3*j+2)])
+    {
+      e2 = gts_edge_new(subSurface->edge_class,
+          verticesData[_subMesh->GetIndex(3*j+1)],
+          verticesData[_subMesh->GetIndex(3*j+2)]);
+    }
+    if (e3 == NULL && verticesData[_subMesh->GetIndex(3*j+2)]
+        != verticesData[_subMesh->GetIndex(3*j)])
+    {
+      e3 = gts_edge_new(subSurface->edge_class,
+          verticesData[_subMesh->GetIndex(3*j+2)],
+          verticesData[_subMesh->GetIndex(3*j)]);
+    }
+
+    // If all 3 edges are defined and different
+    if (e1 != NULL && e2 != NULL && e3 != NULL &&
+        e1 != e2 && e2 != e3 && e1 != e3)
+    {
+      if (GTS_SEGMENT (e1)->v1 == GTS_SEGMENT (e2)->v1)
+      {
+        if (!gts_segment_connect (GTS_SEGMENT (e3),
+            GTS_SEGMENT (e1)->v2,
+            GTS_SEGMENT (e2)->v2))
+          continue;
+      }
+      else if (GTS_SEGMENT (e1)->v2 == GTS_SEGMENT (e2)->v1)
+      {
+        if (!gts_segment_connect (GTS_SEGMENT (e3),
+            GTS_SEGMENT (e1)->v1,
+            GTS_SEGMENT (e2)->v2))
+          continue;
+      }
+      else if (GTS_SEGMENT (e1)->v2 == GTS_SEGMENT (e2)->v2)
+      {
+        if (!gts_segment_connect (GTS_SEGMENT (e3),
+            GTS_SEGMENT (e1)->v1,
+            GTS_SEGMENT (e2)->v1))
+          continue;
+      }
+      else if (GTS_SEGMENT (e1)->v1 == GTS_SEGMENT (e2)->v2)
+      {
+        if (!gts_segment_connect (GTS_SEGMENT (e3),
+            GTS_SEGMENT (e1)->v2,
+            GTS_SEGMENT (e2)->v1))
+          continue;
+      }
+
+      GtsFace *face = gts_face_new(subSurface->face_class, e1, e2, e3);
+      if (!gts_triangle_is_duplicate(&face->triangle))
+        gts_surface_add_face(subSurface, face);
+    }
+    else
+    {
+      std::cout << ": Ignoring degenerate facet!\n";
+    }
+  }
+  gts_surface_merge(_surface, subSurface);
 }
 
 /////////////////////////////////////////////////
@@ -984,18 +952,18 @@ void ExportGeometries(TiXmlElement *_libraryGeometriesXml,
     TiXmlElement *meshXml = new TiXmlElement("mesh");
     geometryXml->LinkEndChild(meshXml);
 
-    const gazebo::common::SubMesh *subMesh =
+    const gazebo::common::SubMesh *outSubMesh =
         _outMesh->GetSubMesh(i);
     const gazebo::common::SubMesh *inSubMesh =
         _inMesh->GetSubMesh(i);
 
-    ExportGeometrySource(subMesh, meshXml, POSITION, meshId);
-    ExportGeometrySource(subMesh, meshXml, NORMAL, meshId);
-    if (inSubMesh->GetTexCoordCount() != 0)
+    ExportGeometrySource(outSubMesh, meshXml, POSITION, meshId);
+    ExportGeometrySource(outSubMesh, meshXml, NORMAL, meshId);
+    if (materialCount != 0)
     {
       // Diff from ColladaExporter
-      // ExportGeometrySource(subMesh, meshXml, UVMAP, meshId);
-      ExportTextureSource(subMesh, inSubMesh, meshXml, meshId);
+      // ExportGeometrySource(outSubMesh, meshXml, UVMAP, meshId);
+      ExportTextureSource(outSubMesh, inSubMesh, meshXml, meshId);
     }
 
     char attributeValue[100];
@@ -1012,7 +980,7 @@ void ExportGeometries(TiXmlElement *_libraryGeometriesXml,
     snprintf(attributeValue, sizeof(attributeValue), "#%s-Positions", meshId);
     inputXml->SetAttribute("source", attributeValue);
 
-    unsigned int indexCount = subMesh->GetIndexCount();
+    unsigned int indexCount = outSubMesh->GetIndexCount();
 
     TiXmlElement *trianglesXml = new TiXmlElement("triangles");
     meshXml->LinkEndChild(trianglesXml);
@@ -1036,7 +1004,7 @@ void ExportGeometries(TiXmlElement *_libraryGeometriesXml,
     snprintf(attributeValue, sizeof(attributeValue), "#%s-Normals", meshId);
     inputXml->SetAttribute("source", attributeValue);
 
-    if (inSubMesh->GetTexCoordCount() != 0)
+    if (materialCount != 0)
     {
       inputXml = new TiXmlElement("input");
       trianglesXml->LinkEndChild(inputXml);
@@ -1049,12 +1017,12 @@ void ExportGeometries(TiXmlElement *_libraryGeometriesXml,
     std::ostringstream fillData;
     for (unsigned int j = 0; j < indexCount; ++j)
     {
-      fillData << subMesh->GetIndex(j) << " "
-               << subMesh->GetIndex(j) << " ";
-      if (inSubMesh->GetTexCoordCount() != 0)
+      fillData << outSubMesh->GetIndex(j) << " "
+               << outSubMesh->GetIndex(j) << " ";
+      if (materialCount != 0)
       {
         // Diff from ColladaExporter
-        // fillData << subMesh->GetIndex(j) << " ";
+        // fillData << outSubMesh->GetIndex(j) << " ";
         fillData << j << " ";
       }
     }
@@ -1148,22 +1116,22 @@ int main(int argc, char **argv)
 {
   if (argc < 3)
   {
-    gzerr << "Missing argument. Please specify a collada file and "
-          << "the desired percentage of edges. For 20%, write 20."
-          << std::endl;
+    std::cout << "Missing argument. Please specify a collada file and "
+              << "the desired percentage of edges. For 20%, write 20."
+              << std::endl;
     return -1;
   }
   if (atoi(argv[2]) < 0 || atoi(argv[2]) > 100)
   {
-    gzerr << "The percentage must be between 0 and 100"
-        << std::endl;
+    std::cout << "The percentage must be between 0 and 100"
+              << std::endl;
     return -1;
   }
 
   TiXmlDocument inDae(argv[1]);
   if (!inDae.LoadFile())
   {
-    gzerr << "Could not open dae file." << std::endl;
+    std::cout << "Could not open dae file." << std::endl;
     return -1;
   }
 
@@ -1179,68 +1147,99 @@ int main(int argc, char **argv)
   exportInDae = ConvertGzToDae(inGz,inGz);
   exportInDae.SaveFile(filename+"_original.dae");
 
-  //return 0;
+  return 0;
 */
 
-  // GAZEBO to GTS
-  GtsSurface *in_out_Gts;
-  in_out_Gts = gts_surface_new(gts_surface_class(), gts_face_class(),
-      gts_edge_class(), gts_vertex_class());
-  ConvertGzToGts(inGz, in_out_Gts);
-
-  // SIMPLIFICATION
-  // Number of edges
-  guint edgesBefore = gts_surface_edge_number(in_out_Gts);
-  std::cout << "Edges before: " << edgesBefore << std::endl;
-
-  if (edgesBefore < 300)
-  {
-    gzwarn << "There are less than 300 edges. Not simplifying.\n";
-    return -1;
-  }
-
-  // default cost function COST_OPTIMIZED
-  GtsKeyFunc cost_func = (GtsKeyFunc) gts_volume_optimized_cost;
-  GtsVolumeOptimizedParams params = { 0.5, 0.5, 0. };
-  gpointer cost_data = &params;
-
-  // default coarsen function OPTIMIZED
-  GtsCoarsenFunc coarsen_func = (GtsCoarsenFunc) gts_volume_optimized_vertex;
-  gpointer coarsen_data = &params;
-
-  // set stop to number
-  GtsStopFunc stop_func = (GtsStopFunc) stop_number_verbose;
-  double desiredPercentage = atoi (argv[2]);
-  guint number = edgesBefore *desiredPercentage/100;
-  gpointer stop_data = &number;
-  gdouble fold = PI/180.;
-
-  // coarsen
-  gts_surface_coarsen (in_out_Gts,
-      cost_func, cost_data,
-      coarsen_func, coarsen_data,
-      stop_func, stop_data, fold);
-
-  // Number of edges
-  guint edgesAfter = gts_surface_edge_number(in_out_Gts);
-  double obtainedPercentage = (double)100*edgesAfter/edgesBefore;
-  std::cout << "Edges after: " << edgesAfter << " (" << obtainedPercentage
-      << "%)" << std::endl;
-
-  if (obtainedPercentage > desiredPercentage*1.5)
-  {
-    std::cout << "It wasn't possible to significantly reduce the mesh. "
-              << "Not simplifying." << std::endl;
-    return 0;
-  }
-
-  // GTS to GAZEBO
-  // Vertices:  in_out_Gts
-  // Normals:   RecalculateNormals
-  // TexCoords: none
-  // Materials: inGz
   gazebo::common::Mesh *outGz = new gazebo::common::Mesh();
-  ConvertGtsToGz(in_out_Gts, inGz, outGz);
+
+  for (int s = 0; s < inGz->GetSubMeshCount(); ++s)
+  {
+    const gazebo::common::SubMesh *inSubMesh = inGz->GetSubMesh(s);
+
+    // GAZEBO to GTS
+    GtsSurface *in_out_Gts;
+    in_out_Gts = gts_surface_new(gts_surface_class(), gts_face_class(),
+        gts_edge_class(), gts_vertex_class());
+    ConvertGzToGts(inSubMesh, in_out_Gts);
+
+    // SIMPLIFICATION
+    // Number of edges
+    guint edgesBefore = gts_surface_edge_number(in_out_Gts);
+    std::cout << "Edges before: " << edgesBefore << std::endl;
+
+    if (edgesBefore < 300)
+    {
+      std::cout << "There are less than 300 edges. Not simplifying.\n";
+      return -1;
+    }
+
+    // default cost function COST_OPTIMIZED
+    GtsKeyFunc cost_func = (GtsKeyFunc) gts_volume_optimized_cost;
+    GtsVolumeOptimizedParams params = { 0.5, 0.5, 0. };
+    gpointer cost_data = &params;
+
+    // default coarsen function OPTIMIZED
+    GtsCoarsenFunc coarsen_func = (GtsCoarsenFunc) gts_volume_optimized_vertex;
+    gpointer coarsen_data = &params;
+
+    // set stop to number
+    GtsStopFunc stop_func = (GtsStopFunc) stop_number_verbose;
+    double desiredPercentage = atoi (argv[2]);
+    guint number = edgesBefore *desiredPercentage/100;
+    gpointer stop_data = &number;
+    gdouble fold = PI/180.;
+
+    // coarsen
+    gts_surface_coarsen (in_out_Gts,
+        cost_func, cost_data,
+        coarsen_func, coarsen_data,
+        stop_func, stop_data, fold);
+
+    // Number of edges
+    guint edgesAfter = gts_surface_edge_number(in_out_Gts);
+    double obtainedPercentage = (double)100*edgesAfter/edgesBefore;
+    std::cout << "Edges after: " << edgesAfter << " (" << obtainedPercentage
+        << "%)" << std::endl;
+
+    if (obtainedPercentage > desiredPercentage*1.5)
+    {
+      std::cout << "It wasn't possible to significantly reduce the mesh. "
+                << "Not simplifying." << std::endl;
+      return 0;
+    }
+
+    // GTS to GAZEBO
+    // Vertices:  in_out_Gts
+    // Normals:   RecalculateNormals
+    // TexCoords: none
+    // Materials: inGz
+    gazebo::common::SubMesh *outSubMesh = new gazebo::common::SubMesh();
+    outGz->AddSubMesh(outSubMesh);
+    ConvertGtsToGz(in_out_Gts, outSubMesh);
+
+    gts_object_destroy(GTS_OBJECT(in_out_Gts));
+  }
+
+  // Calculate normals
+  outGz->RecalculateNormals();
+
+  // Add material
+  for (unsigned int m = 0; m < inGz->GetMaterialCount(); ++m)
+  {
+    const gazebo::common::Material *inMaterial = inGz->GetMaterial(m);
+    gazebo::common::Material *outMaterial = new gazebo::common::Material();
+
+    outMaterial->SetTextureImage(inMaterial->GetTextureImage());
+    outMaterial->SetAmbient(inMaterial->GetAmbient());
+    outMaterial->SetDiffuse(inMaterial->GetDiffuse());
+    outMaterial->SetSpecular(inMaterial->GetSpecular());
+    outMaterial->SetEmissive(inMaterial->GetEmissive());
+    outMaterial->SetTransparency(inMaterial->GetTransparency());
+    outMaterial->SetShininess(inMaterial->GetShininess());
+
+    outGz->AddMaterial(outMaterial);
+  }
+
 
   // GAZEBO to COLLADA
 
@@ -1256,8 +1255,6 @@ int main(int argc, char **argv)
 //  gazebo::common::MeshManager::Instance()->
 //        Export(outGz, filename+"_coarseNEW", "dae", false);
 //#endif
-
-  gts_object_destroy(GTS_OBJECT(in_out_Gts));
 
   return 0;
 }
