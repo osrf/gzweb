@@ -723,6 +723,24 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
         }
 
         var modelUri = uriPath + '/' + modelName;
+        // Use coarse version on touch devices
+        if (modelUri.indexOf('.dae') !== -1 && this.scene.isTouchDevice)
+        {
+          modelUri = modelUri.substring(0,modelUri.indexOf('.dae'));
+
+          var checkModel = new XMLHttpRequest();
+          checkModel.open('HEAD', modelUri+'_coarse.dae', false);
+          checkModel.send();
+          console.log('status: '+checkModel.status);
+          if (checkModel.status === 404)
+          {
+            modelUri = modelUri+'.dae';
+          }
+          else
+          {
+            modelUri = modelUri+'_coarse.dae';
+          }
+        }
 
         var materialName = parent.name + '::' + modelUri;
         this.entityMaterial[materialName] = mat;
