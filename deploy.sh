@@ -117,7 +117,7 @@ fi
 # build a local model database
 if [[ $COARSE ]]
 then
-  ./coarse_meshes.sh 30 http/client/assets/
+  ./coarse_meshes.sh 50 http/client/assets/
 fi
 
 echo "Done"

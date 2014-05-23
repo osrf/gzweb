@@ -927,7 +927,7 @@ int ExportImages(TiXmlElement *_libraryImagesXml,
 
       TiXmlElement *initFromXml = new TiXmlElement("init_from");
       initFromXml->LinkEndChild(new TiXmlText(
-        imageString.substr(imageString.find("meshes/")+7)));
+        imageString.substr(imageString.find(".."))));
       imageXml->LinkEndChild(initFromXml);
 
       imageCount++;
@@ -1145,8 +1145,8 @@ int main(int argc, char **argv)
   filename = filename.substr(0, filename.find(".dae"));
 
   // COLLADA to GAZEBO
-  const gazebo::common::Mesh *inGz =
-      gazebo::common::MeshManager::Instance()->Load(argv[1]);
+  gazebo::common::ColladaLoader loader;
+  gazebo::common::Mesh *inGz = loader.Load(argv[1]);
 /*
   // export original Gz mesh to Dae
   TiXmlDocument exportInDae;
@@ -1211,7 +1211,7 @@ int main(int argc, char **argv)
     {
       std::cout << "It wasn't possible to significantly reduce the mesh. "
                 << "Not simplifying." << std::endl;
-      return 0;
+      return -1;
     }
 
     // GTS to GAZEBO
