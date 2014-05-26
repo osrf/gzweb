@@ -43,7 +43,6 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
   this.callback = callback;
 
   this.obj = new THREE.Object3D();
-
   var mesh;
   if (entity === 'box')
   {
@@ -69,8 +68,6 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
   }
 
   this.obj.add(mesh);
-
-  // TODOin: add all meshes like GZIface.createModelFromMsg
 
   // temp model appears within current view
   var pos = new THREE.Vector2(window.window.innerWidth/2, window.innerHeight/2);

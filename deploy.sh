@@ -59,6 +59,8 @@ if [ "$1" == "-m" ]; then  # build a local model database
     ./get_local_models.py $DIR/http/client/assets
     ./webify_models_v2.py $DIR/http/client/assets
 
+    echo "generate thumbnails"
+    ./tools/gzthumbnails.sh
 
 else
   echo "Not cloning the model repo"

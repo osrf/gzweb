@@ -328,15 +328,15 @@ void GazeboInterface::ProcessMessages()
           std::string type = get_value(msg, "msg:type");
 
           gazebo::math::Vector3 pos(
-                atof(get_value(msg, "msg:position:x").c_str()),
-                atof(get_value(msg, "msg:position:y").c_str()),
-                atof(get_value(msg, "msg:position:z").c_str()));
-            gazebo::math::Quaternion quat(
-                atof(get_value(msg, "msg:orientation:w").c_str()),
-                atof(get_value(msg, "msg:orientation:x").c_str()),
-                atof(get_value(msg, "msg:orientation:y").c_str()),
-                atof(get_value(msg, "msg:orientation:z").c_str()));
-            gazebo::math::Vector3 rpy = quat.GetAsEuler();
+              atof(get_value(msg, "msg:position:x").c_str()),
+              atof(get_value(msg, "msg:position:y").c_str()),
+              atof(get_value(msg, "msg:position:z").c_str()));
+          gazebo::math::Quaternion quat(
+              atof(get_value(msg, "msg:orientation:w").c_str()),
+              atof(get_value(msg, "msg:orientation:x").c_str()),
+              atof(get_value(msg, "msg:orientation:y").c_str()),
+              atof(get_value(msg, "msg:orientation:z").c_str()));
+          gazebo::math::Vector3 rpy = quat.GetAsEuler();
 
           if(type == "box" || type == "sphere" || type == "cylinder")
           {
@@ -431,7 +431,6 @@ void GazeboInterface::ProcessMessages()
 
               file.close();
             }
-
           }
 
           // Spawn the model in the physics server
