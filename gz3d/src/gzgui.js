@@ -329,10 +329,12 @@ $(function()
 
   // Object menu
   $( '#view-transparent' ).click(function() {
+    $('#model-popup').popup('close');
     guiEvents.emit('view_transparent');
   });
 
   $( '#view-wireframe' ).click(function() {
+    $('#model-popup').popup('close');
     guiEvents.emit('view_wireframe');
   });
 
@@ -562,6 +564,17 @@ GZ3D.Gui.prototype.init = function()
                   $('input[type="radio"]').checkboxradio('refresh');
                   that.scene.attachManipulator(entity,type);
                 }
+                else if (type === 'transparent')
+                {
+                  that.scene.selectedModel = entity;
+                  guiEvents.emit('view_transparent');
+                }
+                else if (type === 'wireframe')
+                {
+                  that.scene.selectedModel = entity;
+                  guiEvents.emit('view_wireframe');
+                }
+
               });
           }
         }
@@ -647,7 +660,6 @@ GZ3D.Gui.prototype.init = function()
   guiEvents.on('view_transparent', function ()
       {
         that.scene.toggleTransparency(that.scene.selectedModel);
-        $('#model-popup').popup('close');
         that.scene.selectedModel = null;
       }
   );
@@ -655,7 +667,6 @@ GZ3D.Gui.prototype.init = function()
   guiEvents.on('view_wireframe', function ()
       {
         that.scene.toggleWireframe(that.scene.selectedModel);
-        $('#model-popup').popup('close');
         that.scene.selectedModel = null;
       }
   );

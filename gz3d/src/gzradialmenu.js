@@ -49,6 +49,8 @@ GZ3D.RadialMenu.prototype.init = function()
   this.addItem('delete','style/images/trash.png');
   this.addItem('translate','style/images/translate.png');
   this.addItem('rotate','style/images/rotate.png');
+  this.addItem('transparent','style/images/transparent.png');
+  this.addItem('wireframe','style/images/wireframe.png');
 
   this.numberOfItems = this.menu.children.length;
   this.offset = this.numberOfItems - 1 - Math.floor(this.numberOfItems/2);
@@ -268,7 +270,7 @@ GZ3D.RadialMenu.prototype.onLongPressMove = function(event)
 /**
  * Create an item and add it to the menu.
  * Create them in order
- * @param {string} type - delete/translate/rotate
+ * @param {string} type - delete/translate/rotate/transparent/wireframe
  * @param {string} itemTexture - icon's uri
  */
 GZ3D.RadialMenu.prototype.addItem = function(type,itemTexture)
