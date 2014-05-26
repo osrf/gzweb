@@ -14,6 +14,7 @@ $(function()
   // Toggle items
   $('#view-collisions').buttonMarkup({icon: 'false'});
   $('#snap-to-grid').buttonMarkup({icon: 'false'});
+  $('#view-transparent').buttonMarkup({icon: 'false'});
   guiEvents.emit('toggle_notifications');
 
   $( '#clock-touch' ).popup('option', 'arrow', 't');
@@ -325,6 +326,11 @@ $(function()
       guiEvents.emit('longpress_move',event);
     });
 
+  // Object menu
+  $( '#view-transparent' ).click(function() {
+    guiEvents.emit('view_transparent');
+  });
+
   $( '#delete-entity' ).click(function() {
     guiEvents.emit('delete_entity');
   });
@@ -608,10 +614,28 @@ GZ3D.Gui.prototype.init = function()
               that.scene.selectedModel = entity;
               that.scene.showBoundingBox(entity);
               $('.ui-popup').popup('close');
+              if (that.scene.selectedModel.isTransparent)
+              {
+                $('#view-transparent').buttonMarkup({icon: 'check'});
+              }
+              else
+              {
+                $('#view-transparent').buttonMarkup({icon: 'false'});
+              }
+
               $('#model-popup').popup('open',
-                  {x: event.clientX + emUnits(3),
-                   y: event.clientY + emUnits(1.5)});
+                  {x: event.clientX + emUnits(6),
+                   y: event.clientY + emUnits(3)});
             });
+      }
+  );
+
+  guiEvents.on('view_transparent', function ()
+      {
+        that.scene.toggleTransparency(that.scene.selectedModel);
+        guiEvents.emit('notification_popup','Model transparent');
+        $('#model-popup').popup('close');
+        that.scene.selectedModel = null;
       }
   );
 

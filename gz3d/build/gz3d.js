@@ -19,6 +19,7 @@ $(function()
   // Toggle items
   $('#view-collisions').buttonMarkup({icon: 'false'});
   $('#snap-to-grid').buttonMarkup({icon: 'false'});
+  $('#view-transparent').buttonMarkup({icon: 'false'});
   guiEvents.emit('toggle_notifications');
 
   $( '#clock-touch' ).popup('option', 'arrow', 't');
@@ -330,6 +331,11 @@ $(function()
       guiEvents.emit('longpress_move',event);
     });
 
+  // Object menu
+  $( '#view-transparent' ).click(function() {
+    guiEvents.emit('view_transparent');
+  });
+
   $( '#delete-entity' ).click(function() {
     guiEvents.emit('delete_entity');
   });
@@ -613,10 +619,28 @@ GZ3D.Gui.prototype.init = function()
               that.scene.selectedModel = entity;
               that.scene.showBoundingBox(entity);
               $('.ui-popup').popup('close');
+              if (that.scene.selectedModel.isTransparent)
+              {
+                $('#view-transparent').buttonMarkup({icon: 'check'});
+              }
+              else
+              {
+                $('#view-transparent').buttonMarkup({icon: 'false'});
+              }
+
               $('#model-popup').popup('open',
-                  {x: event.clientX + emUnits(3),
-                   y: event.clientY + emUnits(1.5)});
+                  {x: event.clientX + emUnits(6),
+                   y: event.clientY + emUnits(3)});
             });
+      }
+  );
+
+  guiEvents.on('view_transparent', function ()
+      {
+        that.scene.toggleTransparency(that.scene.selectedModel);
+        guiEvents.emit('notification_popup','Model transparent');
+        $('#model-popup').popup('close');
+        that.scene.selectedModel = null;
       }
   );
 
@@ -3843,6 +3867,7 @@ GZ3D.Scene.prototype.setWindowSize = function(width, height)
  */
 GZ3D.Scene.prototype.add = function(model)
 {
+  model.isTransparent = false;
   this.scene.add(model);
 };
 
@@ -4853,6 +4878,39 @@ GZ3D.Scene.prototype.onRightClick = function(event, callback)
       callback(model);
     }
   }
+};
+
+/**
+ * Toggle model transparency
+ * @param {} model
+ */
+GZ3D.Scene.prototype.toggleTransparency = function(model)
+{
+  var descendants = [];
+  model.getDescendants(descendants);
+  for (var i = 0; i < descendants.length; ++i)
+  {
+    if (descendants[i].material &&
+        descendants[i].name.indexOf('boundingBox') === -1 &&
+        descendants[i].name.indexOf('COLLISION') === -1 &&
+        descendants[i].parent.name.indexOf('COLLISION') === -1)
+    {
+      descendants[i].material.transparent = true;
+      if (model.isTransparent)
+      {
+        descendants[i].material.opacity =
+            descendants[i].material.originalOpacity ?
+            descendants[i].material.originalOpacity : 1.0;
+      }
+      else
+      {
+        descendants[i].material.originalOpacity =
+            descendants[i].material.opacity;
+        descendants[i].material.opacity = 0.5;
+      }
+    }
+  }
+  model.isTransparent = !model.isTransparent;
 };
 
 /**
