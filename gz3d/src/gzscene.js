@@ -25,6 +25,7 @@ GZ3D.Scene.prototype.init = function()
 
   this.selectedEntity = null;
   this.mouseEntity = null;
+  this.selectedModel = null;
 
   this.manipulationMode = 'view';
 
@@ -172,7 +173,7 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
 {
   event.preventDefault();
 
-  var pointer;
+  var pointer, mainPointer = true;
   if (event.touches)
   {
     // Cancel in case of multitouch
@@ -185,6 +186,10 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
   else
   {
     pointer = event;
+    if (pointer.which !== 1)
+    {
+      mainPointer = false;
+    }
   }
 
   // X-Y coordinates of where mouse clicked
@@ -224,7 +229,7 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
     // Attach manipulator to model
     else if (model.name !== '')
     {
-      if (model.parent === this.scene)
+      if (mainPointer && model.parent === this.scene)
       {
         this.attachManipulator(model, this.manipulationMode);
       }
@@ -263,9 +268,9 @@ GZ3D.Scene.prototype.onPointerUp = function(event)
   // The mouse is not holding anything
   this.mouseEntity = null;
 
-  // Clicks (<100ms) outside any models trigger view mode
+  // Clicks (<150ms) outside any models trigger view mode
   var millisecs = new Date().getTime();
-  if (millisecs - this.timeDown < 100)
+  if (millisecs - this.timeDown < 150)
   {
     this.setManipulationMode('view');
     $( '#view-mode' ).click();
@@ -1055,59 +1060,77 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
 {
   var dae;
   var mesh = null;
+  /*
+  // Crashes: issue #36
   if (this.meshes[uri])
   {
     dae = this.meshes[uri];
-    if (submesh)
-    {
-      mesh = this.prepareColladaMesh(dae, submesh, centerSubmesh);
-    }
-    else
-    {
-      mesh = this.prepareColladaMesh(dae, null, null);
-    }
+    dae = dae.clone();
+    this.useColladaSubMesh(dae, submesh, centerSubmesh);
     callback(dae);
+    return;
   }
+  */
 
-  if (!mesh)
+  var loader = new THREE.ColladaLoader();
+  // var loader = new ColladaLoader2();
+  // loader.options.convertUpAxis = true;
+  var thatURI = uri;
+  var thatSubmesh = submesh;
+  var thatCenterSubmesh = centerSubmesh;
+
+  loader.load(uri, function(collada)
   {
-    var loader = new THREE.ColladaLoader();
-    // var loader = new ColladaLoader2();
-    // loader.options.convertUpAxis = true;
-    var thatURI = uri;
-    var thatSubmesh = submesh;
-    var thatCenterSubmesh = centerSubmesh;
-
-    loader.load(uri, function(collada)
+    // check for a scale factor
+    /*if(collada.dae.asset.unit)
     {
-      // check for a scale factor
-      /*if(collada.dae.asset.unit)
-      {
-        var scale = collada.dae.asset.unit;
-        collada.scene.scale = new THREE.Vector3(scale, scale, scale);
-      }*/
+      var scale = collada.dae.asset.unit;
+      collada.scene.scale = new THREE.Vector3(scale, scale, scale);
+    }*/
 
-      dae = collada.scene;
-      dae.updateMatrix();
-      this.scene.meshes[thatURI] = dae;
-      mesh = this.scene.prepareColladaMesh(dae, thatSubmesh, centerSubmesh);
+    dae = collada.scene;
+    dae.updateMatrix();
+    this.scene.prepareColladaMesh(dae);
+    this.scene.meshes[thatURI] = dae;
+    dae = dae.clone();
+    this.scene.useColladaSubMesh(dae, thatSubmesh, centerSubmesh);
 
-      dae.name = uri;
-      callback(dae);
-    });
+    dae.name = uri;
+    callback(dae);
+  });
+};
+
+/**
+ * Prepare collada by removing other non-mesh entities such as lights
+ * @param {} dae
+ */
+GZ3D.Scene.prototype.prepareColladaMesh = function(dae)
+{
+  var allChildren = [];
+  dae.getDescendants(allChildren);
+  for (var i = 0; i < allChildren.length; ++i)
+  {
+    if (allChildren[i] instanceof THREE.Light)
+    {
+      allChildren[i].parent.remove(allChildren[i]);
+    }
   }
 };
 
 /**
- * Prepare collada by handling submesh-only loading and removing other
- * non-mesh entities such as lights
+ * Prepare collada by handling submesh-only loading
  * @param {} dae
  * @param {} submesh
  * @param {} centerSubmesh
  * @returns {THREE.Mesh} mesh
  */
-GZ3D.Scene.prototype.prepareColladaMesh = function(dae, submesh, centerSubmesh)
+GZ3D.Scene.prototype.useColladaSubMesh = function(dae, submesh, centerSubmesh)
 {
+  if (!submesh)
+  {
+    return null;
+  }
+
   var mesh;
   var allChildren = [];
   dae.getDescendants(allChildren);
@@ -1175,10 +1198,6 @@ GZ3D.Scene.prototype.prepareColladaMesh = function(dae, submesh, centerSubmesh)
           allChildren[i].parent.remove(allChildren[i]);
         }
       }
-    }
-    else if (allChildren[i] instanceof THREE.Light)
-    {
-      allChildren[i].parent.remove(allChildren[i]);
     }
   }
   return mesh;
@@ -1486,4 +1505,24 @@ GZ3D.Scene.prototype.hideBoundingBox = function()
     this.boundingBox.parent.remove(this.boundingBox);
   }
   this.boundingBox.visible = false;
+};
+
+/**
+ * Mouse right click
+ * @param {} event
+ * @param {} callback - function to be executed to the clicked model
+ */
+GZ3D.Scene.prototype.onRightClick = function(event, callback)
+{
+  if(this.manipulationMode === 'view')
+  {
+    var pos = new THREE.Vector2(event.clientX, event.clientY);
+    var model = this.getRayCastModel(pos, new THREE.Vector3());
+
+    if(model && model.name !== '' && model.name !== 'plane' &&
+        this.modelManipulator.pickerNames.indexOf(model.name) === -1)
+    {
+      callback(model);
+    }
+  }
 };

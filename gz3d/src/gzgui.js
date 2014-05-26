@@ -2,6 +2,11 @@
 
 var guiEvents = new EventEmitter2({ verbose: true });
 
+var emUnits = function(value)
+    {
+      return value*parseFloat($('body').css('font-size'));
+    };
+
 // Bind events to buttons
 $(function()
 {
@@ -15,7 +20,7 @@ $(function()
   $('#notification-popup-screen').remove();
 
   // Panel starts open for wide screens
-  if ($(window).width() / parseFloat($('body').css('font-size')) > 35)
+  if ($(window).width() / emUnits(1) > 35)
   {
     $('#leftPanel').panel('open');
   }
@@ -174,6 +179,26 @@ $(function()
         .css('right', '0.5em')
         .css('top', '0em')
         .css('z-index', '1000');
+
+    // right-click
+    $('#container').mousedown(function(event)
+        {
+          event.preventDefault();
+          if(event.which === 3)
+          {
+            guiEvents.emit('right_click', event);
+          }
+        });
+
+    $('#model-popup').bind({popupafterclose: function()
+        {
+          guiEvents.emit('hide_boundingBox');
+        }});
+
+    $('#model-popup-screen').mousedown(function(event)
+        {
+          $('#model-popup').popup('close');
+        });
   }
 
   $('.header-button')
@@ -237,8 +262,8 @@ $(function()
         {
           var position = $('#clock').offset();
           $('#clock-touch').popup('open', {
-              x:position.left+1.6*parseFloat($('body').css('font-size')),
-              y:4*parseFloat($('body').css('font-size'))});
+              x:position.left+emUnits(1.6),
+              y:emUnits(4)});
         }
       });
 
@@ -299,6 +324,10 @@ $(function()
       }, press_time));
       guiEvents.emit('longpress_move',event);
     });
+
+  $( '#delete-entity' ).click(function() {
+    guiEvents.emit('delete_entity');
+  });
 });
 
 /**
@@ -455,7 +484,7 @@ GZ3D.Gui.prototype.init = function()
 
   guiEvents.on('close_panel', function()
       {
-        if ($(window).width() / parseFloat($('body').css('font-size')) < 35)
+        if ($(window).width() / emUnits(1)< 35)
         {
           $('#leftPanel').panel('close');
         }
@@ -569,6 +598,35 @@ GZ3D.Gui.prototype.init = function()
             $( '#notification-popup' ).popup('close');
           }, 2000);
         }
+      }
+  );
+
+  guiEvents.on('right_click', function (event)
+      {
+        that.scene.onRightClick(event, function(entity)
+            {
+              that.scene.selectedModel = entity;
+              that.scene.showBoundingBox(entity);
+              $('.ui-popup').popup('close');
+              $('#model-popup').popup('open',
+                  {x: event.clientX + emUnits(3),
+                   y: event.clientY + emUnits(1.5)});
+            });
+      }
+  );
+
+  guiEvents.on('delete_entity', function ()
+      {
+        that.emitter.emit('deleteEntity',that.scene.selectedModel);
+        guiEvents.emit('notification_popup','Model deleted');
+        $('#model-popup').popup('close');
+        that.scene.selectedModel = null;
+      }
+  );
+
+  guiEvents.on('hide_boundingBox', function ()
+      {
+        that.scene.hideBoundingBox();
       }
   );
 };
