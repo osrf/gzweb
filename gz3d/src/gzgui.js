@@ -15,6 +15,7 @@ $(function()
   $('#view-collisions').buttonMarkup({icon: 'false'});
   $('#snap-to-grid').buttonMarkup({icon: 'false'});
   $('#view-transparent').buttonMarkup({icon: 'false'});
+  $('#view-wireframe').buttonMarkup({icon: 'false'});
   guiEvents.emit('toggle_notifications');
 
   $( '#clock-touch' ).popup('option', 'arrow', 't');
@@ -331,6 +332,10 @@ $(function()
     guiEvents.emit('view_transparent');
   });
 
+  $( '#view-wireframe' ).click(function() {
+    guiEvents.emit('view_wireframe');
+  });
+
   $( '#delete-entity' ).click(function() {
     guiEvents.emit('delete_entity');
   });
@@ -623,6 +628,15 @@ GZ3D.Gui.prototype.init = function()
                 $('#view-transparent').buttonMarkup({icon: 'false'});
               }
 
+              if (that.scene.selectedModel.isWireframe)
+              {
+                $('#view-wireframe').buttonMarkup({icon: 'check'});
+              }
+              else
+              {
+                $('#view-wireframe').buttonMarkup({icon: 'false'});
+              }
+
               $('#model-popup').popup('open',
                   {x: event.clientX + emUnits(6),
                    y: event.clientY + emUnits(3)});
@@ -633,7 +647,14 @@ GZ3D.Gui.prototype.init = function()
   guiEvents.on('view_transparent', function ()
       {
         that.scene.toggleTransparency(that.scene.selectedModel);
-        guiEvents.emit('notification_popup','Model transparent');
+        $('#model-popup').popup('close');
+        that.scene.selectedModel = null;
+      }
+  );
+
+  guiEvents.on('view_wireframe', function ()
+      {
+        that.scene.toggleWireframe(that.scene.selectedModel);
         $('#model-popup').popup('close');
         that.scene.selectedModel = null;
       }

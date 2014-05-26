@@ -20,6 +20,7 @@ $(function()
   $('#view-collisions').buttonMarkup({icon: 'false'});
   $('#snap-to-grid').buttonMarkup({icon: 'false'});
   $('#view-transparent').buttonMarkup({icon: 'false'});
+  $('#view-wireframe').buttonMarkup({icon: 'false'});
   guiEvents.emit('toggle_notifications');
 
   $( '#clock-touch' ).popup('option', 'arrow', 't');
@@ -336,6 +337,10 @@ $(function()
     guiEvents.emit('view_transparent');
   });
 
+  $( '#view-wireframe' ).click(function() {
+    guiEvents.emit('view_wireframe');
+  });
+
   $( '#delete-entity' ).click(function() {
     guiEvents.emit('delete_entity');
   });
@@ -628,6 +633,15 @@ GZ3D.Gui.prototype.init = function()
                 $('#view-transparent').buttonMarkup({icon: 'false'});
               }
 
+              if (that.scene.selectedModel.isWireframe)
+              {
+                $('#view-wireframe').buttonMarkup({icon: 'check'});
+              }
+              else
+              {
+                $('#view-wireframe').buttonMarkup({icon: 'false'});
+              }
+
               $('#model-popup').popup('open',
                   {x: event.clientX + emUnits(6),
                    y: event.clientY + emUnits(3)});
@@ -638,7 +652,14 @@ GZ3D.Gui.prototype.init = function()
   guiEvents.on('view_transparent', function ()
       {
         that.scene.toggleTransparency(that.scene.selectedModel);
-        guiEvents.emit('notification_popup','Model transparent');
+        $('#model-popup').popup('close');
+        that.scene.selectedModel = null;
+      }
+  );
+
+  guiEvents.on('view_wireframe', function ()
+      {
+        that.scene.toggleWireframe(that.scene.selectedModel);
         $('#model-popup').popup('close');
         that.scene.selectedModel = null;
       }
@@ -3868,6 +3889,7 @@ GZ3D.Scene.prototype.setWindowSize = function(width, height)
 GZ3D.Scene.prototype.add = function(model)
 {
   model.isTransparent = false;
+  model.isWireframe = false;
   this.scene.add(model);
 };
 
@@ -4893,7 +4915,8 @@ GZ3D.Scene.prototype.toggleTransparency = function(model)
     if (descendants[i].material &&
         descendants[i].name.indexOf('boundingBox') === -1 &&
         descendants[i].name.indexOf('COLLISION') === -1 &&
-        descendants[i].parent.name.indexOf('COLLISION') === -1)
+        descendants[i].parent.name.indexOf('COLLISION') === -1 &&
+        descendants[i].name.indexOf('wireframe') === -1)
     {
       descendants[i].material.transparent = true;
       if (model.isTransparent)
@@ -4911,6 +4934,55 @@ GZ3D.Scene.prototype.toggleTransparency = function(model)
     }
   }
   model.isTransparent = !model.isTransparent;
+};
+
+/**
+ * Toggle model wireframe
+ * @param {} model
+ */
+GZ3D.Scene.prototype.toggleWireframe = function(model)
+{
+  var wireframe;
+  var descendants = [];
+  model.getDescendants(descendants);
+  for (var i = 0; i < descendants.length; ++i)
+  {
+    if (descendants[i].material &&
+        descendants[i].geometry &&
+        descendants[i].name.indexOf('boundingBox') === -1 &&
+        descendants[i].name.indexOf('COLLISION') === -1 &&
+        descendants[i].parent.name.indexOf('COLLISION') === -1 &&
+        descendants[i].name.indexOf('wireframe') === -1)
+    {
+      if (model.isWireframe)
+      {
+        wireframe = descendants[i].getObjectByName('wireframe');
+        if (wireframe)
+        {
+          wireframe.visible = false;
+        }
+        descendants[i].material.visible = true;
+      }
+      else
+      {
+        wireframe = descendants[i].getObjectByName('wireframe');
+        if (wireframe)
+        {
+          wireframe.visible = true;
+        }
+        else
+        {
+          var mesh = new THREE.Mesh( descendants[i].geometry,
+              new THREE.MeshBasicMaterial({color: 0xffffff}));
+          wireframe = new THREE.WireframeHelper( mesh );
+          wireframe.name = 'wireframe';
+          descendants[i].add( wireframe );
+        }
+        descendants[i].material.visible = false;
+      }
+    }
+  }
+  model.isWireframe = !model.isWireframe;
 };
 
 /**
