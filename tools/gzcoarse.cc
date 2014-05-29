@@ -945,13 +945,13 @@ void ConvertGtsToGz(GtsSurface *_surface, gazebo::common::SubMesh *_subMesh)
 
 /////////////////////////////////////////////////
 /// \brief Coarsen GTS mesh
-/// \param[in] _in_out_Gts Pointer to GTS surface
+/// \param[in] _inOutGts Pointer to GTS surface
 /// \param[in] _desiredPercentage Desired percentage of edges
 /// \return Success or failure
-int CoarsenGts(GtsSurface *_in_out_Gts, double _desiredPercentage)
+int CoarsenGts(GtsSurface *_inOutGts, double _desiredPercentage)
 {
   // Number of edges
-  guint edgesBefore = gts_surface_edge_number(_in_out_Gts);
+  guint edgesBefore = gts_surface_edge_number(_inOutGts);
   std::cout << "Edges before: " << edgesBefore << std::endl;
 
   if (edgesBefore < 300)
@@ -976,14 +976,14 @@ int CoarsenGts(GtsSurface *_in_out_Gts, double _desiredPercentage)
   gdouble fold = PI/180.;
 
   // Coarsen
-  gts_surface_coarsen (_in_out_Gts,
+  gts_surface_coarsen (_inOutGts,
       cost_func,    cost_data,
       coarsen_func, coarsen_data,
       stop_func,    stop_data,
       fold);
 
   // Number of edges
-  guint edgesAfter = gts_surface_edge_number(_in_out_Gts);
+  guint edgesAfter = gts_surface_edge_number(_inOutGts);
   double obtainedPercentage = (double)100*edgesAfter/edgesBefore;
   std::cout << "Edges after: " << edgesAfter << " ("
             << obtainedPercentage << "%)" << std::endl;
@@ -1232,27 +1232,27 @@ int main(int argc, char **argv)
     const gazebo::common::SubMesh *inSubMesh = inGz->GetSubMesh(s);
 
     // GAZEBO to GTS
-    GtsSurface *in_out_Gts;
-    in_out_Gts = gts_surface_new(gts_surface_class(), gts_face_class(),
+    GtsSurface *inOutGts;
+    inOutGts = gts_surface_new(gts_surface_class(), gts_face_class(),
         gts_edge_class(), gts_vertex_class());
-    ConvertGzToGts(inSubMesh, in_out_Gts);
+    ConvertGzToGts(inSubMesh, inOutGts);
 
     // SIMPLIFICATION
-    if (!CoarsenGts(in_out_Gts, desiredPercentage))
+    if (!CoarsenGts(inOutGts, desiredPercentage))
     {
       return -1;
     }
 
     // GTS to GAZEBO
-    // Vertices:  in_out_Gts
+    // Vertices:  inOutGts
     // Normals:   RecalculateNormals
     // TexCoords: none
     // Materials: inGz
     gazebo::common::SubMesh *outSubMesh = new gazebo::common::SubMesh();
     outGz->AddSubMesh(outSubMesh);
-    ConvertGtsToGz(in_out_Gts, outSubMesh);
+    ConvertGtsToGz(inOutGts, outSubMesh);
 
-    gts_object_destroy(GTS_OBJECT(in_out_Gts));
+    gts_object_destroy(GTS_OBJECT(inOutGts));
   }
 
   // Calculate normals

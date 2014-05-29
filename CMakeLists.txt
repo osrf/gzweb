@@ -44,7 +44,8 @@ if (PKG_CONFIG_FOUND)
     set (HAVE_GTS TRUE)
   else ()
     set (HAVE_GTS FALSE)
-    BUILD_WARNING ("GNU Triangulation Surface library not found")
+    BUILD_WARNING ("GNU Triangulation Surface library not found,
+	gzcoarse/mesh simplification functionality will be disabled.")
   endif ()
 
 else()

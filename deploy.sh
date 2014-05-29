@@ -30,7 +30,7 @@ GetOpts()
           echo "Build a local model database."
           if [ $# -eq 0 -o "${1:0:1}" = "-" ]
           then
-            echo "Downlaod from gazebo_models repository."
+            echo "Download from gazebo_models repository."
           fi
           if [[ "$1" == "local" ]]
           then
@@ -82,7 +82,7 @@ then
     TMP_DIR=`mktemp -d`
     cd $TMP_DIR
   
-  # If no arg given then downlaod from gazebo_models repo
+  # If no arg given then download from gazebo_models repo
   if [[ -z $LOCAL ]]
   then
     echo -n "Downloading gazebo_models..."
@@ -108,7 +108,7 @@ then
   echo "Gather all models on the local machine"
 
   ./get_local_models.py $DIR/http/client/assets
-  ./webify_models.py $DIR/http/client/assets
+  ./webify_models_v2.py $DIR/http/client/assets
 
 else
   echo "Not cloning the model repo"
