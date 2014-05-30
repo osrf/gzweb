@@ -1645,8 +1645,6 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
       var submesh = geom.mesh.submesh;
       var centerSubmesh = geom.mesh.center_submesh;
 
-      console.log(geom.mesh.filename + ' ' + submesh);
-
       var uriType = meshUri.substring(0, meshUri.indexOf('://'));
       if (uriType === 'file' || uriType === 'model')
       {
@@ -1659,6 +1657,23 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
         }
 
         var modelUri = uriPath + '/' + modelName;
+        // Use coarse version on touch devices
+        if (modelUri.indexOf('.dae') !== -1 && this.scene.isTouchDevice)
+        {
+          modelUri = modelUri.substring(0,modelUri.indexOf('.dae'));
+
+          var checkModel = new XMLHttpRequest();
+          checkModel.open('HEAD', modelUri+'_coarse.dae', false);
+          checkModel.send();
+          if (checkModel.status === 404)
+          {
+            modelUri = modelUri+'.dae';
+          }
+          else
+          {
+            modelUri = modelUri+'_coarse.dae';
+          }
+        }
 
         var materialName = parent.name + '::' + modelUri;
         this.entityMaterial[materialName] = mat;
