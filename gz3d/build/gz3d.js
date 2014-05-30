@@ -3103,6 +3103,8 @@ GZ3D.RadialMenu.prototype.init = function()
   this.iconProportion = 0.6;
   this.bgShape = THREE.ImageUtils.loadTexture(
       'style/images/icon_background.png' );
+  this.bgPressedShape = THREE.ImageUtils.loadTexture(
+      'style/images/icon_pressed_background.png' );
 
   // For the opening motion
   this.moving = false;
@@ -3113,7 +3115,8 @@ GZ3D.RadialMenu.prototype.init = function()
 
   // Colors
   this.selectedColor = new THREE.Color( 0x22aadd );
-  this.plainColor = new THREE.Color( 0x333333 );
+  this.plainColor = new THREE.Color( 0x505050 );
+  this.pressedColor = new THREE.Color( 0xb0b0b0 );
 
   // Selected item
   this.selected = null;
@@ -3149,7 +3152,7 @@ GZ3D.RadialMenu.prototype.hide = function(event,callback)
   {
     this.menu.children[i].children[0].visible = false;
     this.menu.children[i].children[1].visible = false;
-    this.menu.children[i].children[1].material.color = this.plainColor;
+    this.setPressedColor(this.menu.children[i]);
     this.menu.children[i].children[0].scale.set(
         this.bgSize*this.iconProportion,
         this.bgSize*this.iconProportion, 1.0 );
@@ -3171,7 +3174,6 @@ GZ3D.RadialMenu.prototype.hide = function(event,callback)
     }
   }
   this.selected = null;
-
 };
 
 /**
@@ -3181,12 +3183,21 @@ GZ3D.RadialMenu.prototype.hide = function(event,callback)
  */
 GZ3D.RadialMenu.prototype.show = function(event,model)
 {
+  if (this.showing)
+  {
+    return;
+  }
+
   this.model = model;
   var pointer = this.getPointer(event);
   this.startPosition = pointer;
 
+  this.menu.getObjectByName('transparent').isPressed = this.model.isTransparent;
+  this.menu.getObjectByName('wireframe').isPressed = this.model.isWireframe;
+
   for ( var i in this.menu.children )
   {
+    this.setPressedColor(this.menu.children[i]);
     this.menu.children[i].children[0].visible = true;
     this.menu.children[i].children[1].visible = true;
     this.menu.children[i].children[0].position.set(pointer.x,pointer.y,0);
@@ -3335,7 +3346,7 @@ GZ3D.RadialMenu.prototype.onLongPressMove = function(event)
     }
     else
     {
-      this.menu.children[i].children[1].material.color = this.plainColor;
+      this.setPressedColor(this.menu.children[i]);
       this.menu.children[i].children[0].scale.set(
           this.bgSize*this.iconProportion,
           this.bgSize*this.iconProportion, 1.0 );
@@ -3379,10 +3390,29 @@ GZ3D.RadialMenu.prototype.addItem = function(type,itemTexture)
   var item = new THREE.Object3D();
   item.add(iconItem);
   item.add(bgItem);
+  item.isPressed = false;
+  item.name = type;
 
   this.menu.add(item);
 };
 
+/**
+ * Choose item style according to pressed state
+ * @param {} item
+ */
+GZ3D.RadialMenu.prototype.setPressedColor = function(item)
+{
+  if (item.isPressed)
+  {
+    item.children[1].material.color = this.pressedColor;
+    item.children[1].material.map = this.bgPressedShape;
+  }
+  else
+  {
+    item.children[1].material.color = this.plainColor;
+    item.children[1].material.map = this.bgShape;
+  }
+};
 
 /**
  * The scene is where everything is placed, from objects, to lights and cameras.
