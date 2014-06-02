@@ -1092,7 +1092,7 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
     dae.updateMatrix();
     this.scene.prepareColladaMesh(dae);
     this.scene.meshes[thatURI] = dae;
-    dae = dae.clone();
+    //dae = dae.clone();
     this.scene.useColladaSubMesh(dae, thatSubmesh, centerSubmesh);
 
     dae.name = uri;
