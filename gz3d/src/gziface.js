@@ -551,7 +551,9 @@ GZ3D.GZIface.prototype.createVisualFromMsg = function(visual)
 
 GZ3D.GZIface.prototype.createLightFromMsg = function(light)
 {
+  var obj = new THREE.Object3D();
   var lightObj;
+  var helper, helperGeometry, helperMaterial;
 
   var color = new THREE.Color();
   color.r = light.diffuse.r;
@@ -571,6 +573,9 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
     lightObj.distance = light.range;
     this.scene.setPose(lightObj, light.pose.position,
         light.pose.orientation);
+    helperGeometry = new THREE.CylinderGeometry( 0, 0.3, 0.2, 4, 1, true );
+    helperGeometry.applyMatrix( new THREE.Matrix4().makeTranslation( 0, 1, 0 ) );
+    helperGeometry.applyMatrix( new THREE.Matrix4().makeRotationX( Math.PI / 2 ) );
   }
   else if (light.type === 3)
   {
@@ -608,9 +613,16 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
   lightObj.intensity = light.attenuation_constant;
   lightObj.castShadow = light.cast_shadows;
   lightObj.shadowDarkness = 0.3;
-  lightObj.name = light.name;
+  obj.name = light.name;
 
-  return lightObj;
+  helperMaterial = new THREE.MeshBasicMaterial( { wireframe: true, color: 0x00ff00 } );
+  helper = new THREE.Mesh( helperGeometry, helperMaterial );
+
+  helper.name = obj.name + '_helper';
+
+  obj.add(lightObj);
+  obj.add(helper);
+  return obj;
 };
 
 GZ3D.GZIface.prototype.createRoadsFromMsg = function(roads)
