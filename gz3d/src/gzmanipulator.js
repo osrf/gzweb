@@ -787,35 +787,7 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
       tempVector.copy(offset).sub(worldPosition);
       tempVector.multiply(parentScale);
 
-      rotation.set(Math.atan2(point.z, point.y), Math.atan2(point.x, point.z),
-          Math.atan2(point.y, point.x));
-      offsetRotation.set(Math.atan2(tempVector.z, tempVector.y), Math.atan2(
-          tempVector.x, tempVector.z), Math.atan2(tempVector.y, tempVector.x));
-
-      tempQuaternion.setFromRotationMatrix(tempMatrix.getInverse(
-          parentRotationMatrix));
-
-      quaternionX.setFromAxisAngle(unitX, rotation.x - offsetRotation.x);
-      quaternionY.setFromAxisAngle(unitY, rotation.y - offsetRotation.y);
-      quaternionZ.setFromAxisAngle(unitZ, rotation.z - offsetRotation.z);
-      quaternionXYZ.setFromRotationMatrix(worldRotationMatrix);
-
-      if(scope.selected === 'RX')
-      {
-        tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionX);
-      }
-      if(scope.selected === 'RY')
-      {
-        tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionY);
-      }
-      if(scope.selected === 'RZ')
-      {
-        tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionZ);
-      }
-
-      tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionXYZ);
-
-      scope.object.quaternion.copy(tempQuaternion);
+      rotateObjectXYZ(point, tempVector);
     }
 
     scope.update();
@@ -978,6 +950,7 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
           tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionXYZ);
 
           scope.object.quaternion.copy(tempQuaternion);
+          moveLightTarget();
         }
         else if(scope.selected === 'RXYZE')
         {
@@ -991,35 +964,11 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
           tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionXYZ);
 
           scope.object.quaternion.copy(tempQuaternion);
+          moveLightTarget();
         }
         else
         {
-          rotation.set(Math.atan2(point.z, point.y), Math.atan2(point.x, point.z), Math.atan2(point.y, point.x));
-          offsetRotation.set(Math.atan2(tempVector.z, tempVector.y), Math.atan2(tempVector.x, tempVector.z), Math.atan2(tempVector.y, tempVector.x));
-
-          tempQuaternion.setFromRotationMatrix(tempMatrix.getInverse(parentRotationMatrix));
-
-          quaternionX.setFromAxisAngle(unitX, rotation.x - offsetRotation.x);
-          quaternionY.setFromAxisAngle(unitY, rotation.y - offsetRotation.y);
-          quaternionZ.setFromAxisAngle(unitZ, rotation.z - offsetRotation.z);
-          quaternionXYZ.setFromRotationMatrix(worldRotationMatrix);
-
-          if(scope.selected === 'RX')
-          {
-            tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionX);
-          }
-          if(scope.selected === 'RY')
-          {
-            tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionY);
-          }
-          if(scope.selected === 'RZ')
-          {
-            tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionZ);
-          }
-
-          tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionXYZ);
-
-          scope.object.quaternion.copy(tempQuaternion);
+          rotateObjectXYZ(point, tempVector);
         }
       }
     }
@@ -1093,7 +1042,8 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
 
   /*
    * Translate object
-   * @param {} object
+   * @param {} oldPosition
+   * @param {} point
    */
   function translateObject(oldPosition, point)
   {
@@ -1118,13 +1068,64 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
             scope.snapDist) * scope.snapDist;
       }
     }
+    moveLightTarget();
+  }
 
-    if (scope.object.name.indexOf('_lightObj') >= 0)
-      {
-        scope.object.children[0].target.position.copy(
-            scope.object.position);
-        scope.object.children[0].target.position.add(scope.object.direction);
-      }
+  /*
+   * Rotate object
+   * @param {} point
+   * @param {} tempVector
+   */
+  function rotateObjectXYZ(point, tempVector)
+  {
+    rotation.set(Math.atan2(point.z, point.y), Math.atan2(point.x, point.z),
+        Math.atan2(point.y, point.x));
+    offsetRotation.set(Math.atan2(tempVector.z, tempVector.y), Math.atan2(
+      tempVector.x, tempVector.z), Math.atan2(tempVector.y, tempVector.x));
+
+    tempQuaternion.setFromRotationMatrix(tempMatrix.getInverse(
+      parentRotationMatrix));
+
+    quaternionX.setFromAxisAngle(unitX, rotation.x - offsetRotation.x);
+    quaternionY.setFromAxisAngle(unitY, rotation.y - offsetRotation.y);
+    quaternionZ.setFromAxisAngle(unitZ, rotation.z - offsetRotation.z);
+    quaternionXYZ.setFromRotationMatrix(worldRotationMatrix);
+
+    if(scope.selected === 'RX')
+    {
+      tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionX);
+    }
+    if(scope.selected === 'RY')
+    {
+      tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionY);
+    }
+    if(scope.selected === 'RZ')
+    {
+      tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionZ);
+    }
+
+    tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionXYZ);
+
+    scope.object.quaternion.copy(tempQuaternion);
+
+    moveLightTarget();
+  }
+
+  /*
+   * Move light target
+   * @param {} object
+   */
+  function moveLightTarget()
+  {
+    if (scope.object.name.indexOf('_lightObj') === -1)
+    {
+      return;
+    }
+
+    var target = new THREE.Vector3(0,0,0);
+    target.add(scope.object.direction);
+    scope.object.localToWorld(target);
+    scope.object.children[0].target.position.copy(target);
   }
 };
 
