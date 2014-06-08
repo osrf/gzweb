@@ -634,6 +634,7 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
 
   helperMaterial = new THREE.MeshBasicMaterial( { wireframe: true, color: 0x00ff00 } );
   helper = new THREE.Mesh( helperGeometry, helperMaterial );
+  helper.visible = false;
 
   helper.name = light.name + '_lightHelper';
 

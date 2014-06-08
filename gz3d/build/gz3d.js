@@ -1309,6 +1309,7 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
 
   helperMaterial = new THREE.MeshBasicMaterial( { wireframe: true, color: 0x00ff00 } );
   helper = new THREE.Mesh( helperGeometry, helperMaterial );
+  helper.visible = false;
 
   helper.name = light.name + '_lightHelper';
 
@@ -4686,12 +4687,14 @@ GZ3D.Scene.prototype.setManipulationMode = function(mode)
     this.hideBoundingBox();
     this.modelManipulator.detach();
     this.scene.remove(this.modelManipulator.gizmo);
+    this.viewLightHelpers(false);
   }
   else
   {
     this.modelManipulator.mode = this.manipulationMode;
     this.modelManipulator.setMode( this.modelManipulator.mode );
     this.killCameraControl = false;
+    this.viewLightHelpers(true);
   }
 
 };
@@ -4900,6 +4903,30 @@ GZ3D.Scene.prototype.onRightClick = function(event, callback)
         this.modelManipulator.pickerNames.indexOf(model.name) === -1)
     {
       callback(model);
+    }
+  }
+};
+
+/**
+ * Show or hide light helpers
+ * @param {boolean} view
+ */
+GZ3D.Scene.prototype.viewLightHelpers = function(view)
+{
+  var allObjects = [];
+  this.scene.getDescendants(allObjects);
+  for (var l = 0; l < allObjects.length; ++l)
+  {
+    if (allObjects[l] instanceof THREE.SpotLight)
+    {
+      if (view)
+      {
+        allObjects[l].parent.children[1].visible = true;
+      }
+      else
+      {
+        allObjects[l].parent.children[1].visible = false;
+      }
     }
   }
 };
