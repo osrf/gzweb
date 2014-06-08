@@ -389,7 +389,7 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
     for (var i = 0; i < objects.length; ++i)
     {
       model = objects[i].object;
-      if (model.name.indexOf('_helper') >= 0)
+      if (model.name.indexOf('_lightHelper') >= 0)
       {
         model = model.parent;
         break;

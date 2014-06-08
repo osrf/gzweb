@@ -774,27 +774,7 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
 
       point.applyMatrix4(tempMatrix.getInverse(parentRotationMatrix));
 
-      scope.object.position.copy(oldPosition);
-      scope.object.position.add(point);
-
-      if(scope.snapDist)
-      {
-        if(isSelected('X'))
-        {
-          scope.object.position.x = Math.round(scope.object.position.x /
-              scope.snapDist) * scope.snapDist;
-        }
-        if(isSelected('Y'))
-        {
-          scope.object.position.y = Math.round(scope.object.position.y /
-              scope.snapDist) * scope.snapDist;
-        }
-        if(isSelected('Z'))
-        {
-          scope.object.position.z = Math.round(scope.object.position.z /
-              scope.snapDist) * scope.snapDist;
-        }
-      }
+      translateObject(oldPosition, point);
     }
 
     // rotate depends on a tap (= mouse click) to select the axis of rotation
@@ -972,24 +952,7 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
 
         point.applyMatrix4(tempMatrix.getInverse(parentRotationMatrix));
 
-        scope.object.position.copy(oldPosition);
-        scope.object.position.add(point);
-
-        if(scope.snapDist)
-        {
-            if(isSelected('X'))
-            {
-              scope.object.position.x = Math.round(scope.object.position.x / scope.snapDist) * scope.snapDist;
-            }
-            if(isSelected('Y'))
-            {
-              scope.object.position.y = Math.round(scope.object.position.y / scope.snapDist) * scope.snapDist;
-            }
-            if(isSelected('Z'))
-            {
-              scope.object.position.z = Math.round(scope.object.position.z / scope.snapDist) * scope.snapDist;
-            }
-        }
+        translateObject(oldPosition, point);
       }
       else if((scope.mode === 'rotate') && isSelected('R'))
       {
@@ -1126,6 +1089,42 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
     object.position.set(0, 0, 0);
     object.rotation.set(0, 0, 0);
     object.scale.set(1, 1, 1);
+  }
+
+  /*
+   * Translate object
+   * @param {} object
+   */
+  function translateObject(oldPosition, point)
+  {
+    scope.object.position.copy(oldPosition);
+    scope.object.position.add(point);
+
+    if(scope.snapDist)
+    {
+      if(isSelected('X'))
+      {
+        scope.object.position.x = Math.round(scope.object.position.x /
+            scope.snapDist) * scope.snapDist;
+      }
+      if(isSelected('Y'))
+      {
+        scope.object.position.y = Math.round(scope.object.position.y /
+            scope.snapDist) * scope.snapDist;
+      }
+      if(isSelected('Z'))
+      {
+        scope.object.position.z = Math.round(scope.object.position.z /
+            scope.snapDist) * scope.snapDist;
+      }
+    }
+
+    if (scope.object.name.indexOf('_lightObj') >= 0)
+      {
+        scope.object.children[0].target.position.copy(
+            scope.object.position);
+        scope.object.children[0].target.position.add(scope.object.direction);
+      }
   }
 };
 

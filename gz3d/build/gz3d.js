@@ -1229,6 +1229,7 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
   var obj = new THREE.Object3D();
   var lightObj;
   var helper, helperGeometry, helperMaterial;
+  var dir, target, negDir, factor;
 
   var color = new THREE.Color();
   color.r = light.diffuse.r;
@@ -1239,6 +1240,7 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
   {
     lightObj = new THREE.AmbientLight(color.getHex());
     lightObj.distance = light.range;
+    lightObj.intensity = light.attenuation_constant;
     this.scene.setPose(lightObj, light.pose.position,
         light.pose.orientation);
   }
@@ -1246,21 +1248,32 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
   {
     lightObj = new THREE.SpotLight(color.getHex());
     lightObj.distance = light.range;
+    factor = 5; // closer to gzclient
+    lightObj.intensity = light.attenuation_constant * factor;
     this.scene.setPose(lightObj, light.pose.position,
         light.pose.orientation);
-    helperGeometry = new THREE.CylinderGeometry( 0, 0.3, 0.2, 4, 1, true );
-    helperGeometry.applyMatrix( new THREE.Matrix4().makeTranslation( 0, 1, 0 ) );
-    helperGeometry.applyMatrix( new THREE.Matrix4().makeRotationX( Math.PI / 2 ) );
+
+    dir = new THREE.Vector3(light.direction.x, light.direction.y,
+        light.direction.z);
+    target = new THREE.Vector3();
+    target.copy(lightObj.position);
+    target.add(dir);
+    lightObj.target.position = target;
+
+    helperGeometry = new THREE.CylinderGeometry(0, 0.3, 0.2, 4, 1, true);
+    helperGeometry.applyMatrix(new THREE.Matrix4().makeTranslation(0, 1, 0));
+    helperGeometry.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI/2));
   }
   else if (light.type === 3)
   {
     lightObj = new THREE.DirectionalLight(color.getHex());
-    var dir = new THREE.Vector3(light.direction.x, light.direction.y,
+    lightObj.intensity = light.attenuation_constant;
+    dir = new THREE.Vector3(light.direction.x, light.direction.y,
         light.direction.z);
-    var target = dir;
-    var negDir = dir.negate();
+    target = dir;
+    negDir = dir.negate();
     negDir.normalize();
-    var factor = 10;
+    factor = 10;
     light.pose.position.x += factor * negDir.x;
     light.pose.position.y += factor * negDir.y;
     light.pose.position.z += factor * negDir.z;
@@ -1285,15 +1298,19 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
     this.scene.setPose(lightObj, light.pose.position,
         light.pose.orientation);
   }
-  lightObj.intensity = light.attenuation_constant;
   lightObj.castShadow = light.cast_shadows;
   lightObj.shadowDarkness = 0.3;
-  obj.name = light.name;
+  lightObj.name = light.name;
+  obj.name = light.name + '_lightObj';
+  if (dir)
+  {
+    obj.direction = dir;
+  }
 
   helperMaterial = new THREE.MeshBasicMaterial( { wireframe: true, color: 0x00ff00 } );
   helper = new THREE.Mesh( helperGeometry, helperMaterial );
 
-  helper.name = obj.name + '_helper';
+  helper.name = light.name + '_lightHelper';
 
   obj.add(lightObj);
   obj.add(helper);
@@ -2690,27 +2707,7 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
 
       point.applyMatrix4(tempMatrix.getInverse(parentRotationMatrix));
 
-      scope.object.position.copy(oldPosition);
-      scope.object.position.add(point);
-
-      if(scope.snapDist)
-      {
-        if(isSelected('X'))
-        {
-          scope.object.position.x = Math.round(scope.object.position.x /
-              scope.snapDist) * scope.snapDist;
-        }
-        if(isSelected('Y'))
-        {
-          scope.object.position.y = Math.round(scope.object.position.y /
-              scope.snapDist) * scope.snapDist;
-        }
-        if(isSelected('Z'))
-        {
-          scope.object.position.z = Math.round(scope.object.position.z /
-              scope.snapDist) * scope.snapDist;
-        }
-      }
+      translateObject(oldPosition, point);
     }
 
     // rotate depends on a tap (= mouse click) to select the axis of rotation
@@ -2888,24 +2885,7 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
 
         point.applyMatrix4(tempMatrix.getInverse(parentRotationMatrix));
 
-        scope.object.position.copy(oldPosition);
-        scope.object.position.add(point);
-
-        if(scope.snapDist)
-        {
-            if(isSelected('X'))
-            {
-              scope.object.position.x = Math.round(scope.object.position.x / scope.snapDist) * scope.snapDist;
-            }
-            if(isSelected('Y'))
-            {
-              scope.object.position.y = Math.round(scope.object.position.y / scope.snapDist) * scope.snapDist;
-            }
-            if(isSelected('Z'))
-            {
-              scope.object.position.z = Math.round(scope.object.position.z / scope.snapDist) * scope.snapDist;
-            }
-        }
+        translateObject(oldPosition, point);
       }
       else if((scope.mode === 'rotate') && isSelected('R'))
       {
@@ -3042,6 +3022,42 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
     object.position.set(0, 0, 0);
     object.rotation.set(0, 0, 0);
     object.scale.set(1, 1, 1);
+  }
+
+  /*
+   * Translate object
+   * @param {} object
+   */
+  function translateObject(oldPosition, point)
+  {
+    scope.object.position.copy(oldPosition);
+    scope.object.position.add(point);
+
+    if(scope.snapDist)
+    {
+      if(isSelected('X'))
+      {
+        scope.object.position.x = Math.round(scope.object.position.x /
+            scope.snapDist) * scope.snapDist;
+      }
+      if(isSelected('Y'))
+      {
+        scope.object.position.y = Math.round(scope.object.position.y /
+            scope.snapDist) * scope.snapDist;
+      }
+      if(isSelected('Z'))
+      {
+        scope.object.position.z = Math.round(scope.object.position.z /
+            scope.snapDist) * scope.snapDist;
+      }
+    }
+
+    if (scope.object.name.indexOf('_lightObj') >= 0)
+      {
+        scope.object.children[0].target.position.copy(
+            scope.object.position);
+        scope.object.children[0].target.position.add(scope.object.direction);
+      }
   }
 };
 
@@ -3744,7 +3760,7 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
     for (var i = 0; i < objects.length; ++i)
     {
       model = objects[i].object;
-      if (model.name.indexOf('_helper') >= 0)
+      if (model.name.indexOf('_lightHelper') >= 0)
       {
         model = model.parent;
         break;
