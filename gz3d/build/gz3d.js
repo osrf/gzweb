@@ -1263,6 +1263,8 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
     helperGeometry = new THREE.CylinderGeometry(0, 0.3, 0.2, 4, 1, true);
     helperGeometry.applyMatrix(new THREE.Matrix4().makeTranslation(0, 1, 0));
     helperGeometry.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI/2));
+    helperMaterial = new THREE.MeshBasicMaterial( { wireframe: true, color: 0x00ff00 } );
+    helper = new THREE.Mesh(helperGeometry, helperMaterial);
   }
   else if (light.type === 3)
   {
@@ -1297,6 +1299,22 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
     lightObj.position.set(negDir.x, negDir.y, negDir.z);
     this.scene.setPose(lightObj, light.pose.position,
         light.pose.orientation);
+
+    helperGeometry = new THREE.Geometry();
+    helperGeometry.vertices.push(new THREE.Vector3(-0.5, -0.5, 0));
+    helperGeometry.vertices.push(new THREE.Vector3(-0.5,  0.5, 0));
+    helperGeometry.vertices.push(new THREE.Vector3(-0.5,  0.5, 0));
+    helperGeometry.vertices.push(new THREE.Vector3( 0.5,  0.5, 0));
+    helperGeometry.vertices.push(new THREE.Vector3( 0.5,  0.5, 0));
+    helperGeometry.vertices.push(new THREE.Vector3( 0.5, -0.5, 0));
+    helperGeometry.vertices.push(new THREE.Vector3( 0.5, -0.5, 0));
+    helperGeometry.vertices.push(new THREE.Vector3(-0.5, -0.5, 0));
+    helperGeometry.vertices.push(new THREE.Vector3(   0,    0, 0));
+    helperGeometry.vertices.push(new THREE.Vector3(   0,    0, -0.5));
+    helperGeometry.applyMatrix(new THREE.Matrix4().makeTranslation(0, 0, 10));
+    helperMaterial = new THREE.LineBasicMaterial({color: 0x00ff00});
+    helper = new THREE.Line(helperGeometry, helperMaterial, THREE.LinePieces);
+    helper.lookAt(dir.negate());
   }
   lightObj.castShadow = light.cast_shadows;
   lightObj.shadowDarkness = 0.3;
@@ -1307,10 +1325,7 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
     obj.direction = dir;
   }
 
-  helperMaterial = new THREE.MeshBasicMaterial( { wireframe: true, color: 0x00ff00 } );
-  helper = new THREE.Mesh( helperGeometry, helperMaterial );
   helper.visible = false;
-
   helper.name = light.name + '_lightHelper';
 
   obj.add(lightObj);
@@ -4918,7 +4933,7 @@ GZ3D.Scene.prototype.viewLightHelpers = function(view)
   this.scene.getDescendants(allObjects);
   for (var l = 0; l < allObjects.length; ++l)
   {
-    if (allObjects[l] instanceof THREE.SpotLight)
+    if (allObjects[l] instanceof THREE.Light)
     {
       if (view)
       {

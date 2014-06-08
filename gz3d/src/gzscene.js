@@ -1545,7 +1545,7 @@ GZ3D.Scene.prototype.viewLightHelpers = function(view)
   this.scene.getDescendants(allObjects);
   for (var l = 0; l < allObjects.length; ++l)
   {
-    if (allObjects[l] instanceof THREE.SpotLight)
+    if (allObjects[l] instanceof THREE.Light)
     {
       if (view)
       {
