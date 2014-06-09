@@ -1125,7 +1125,11 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
     var lightObj = scope.object.children[0];
     var target = new THREE.Vector3(0,0,0);
 
-    if (lightObj instanceof THREE.SpotLight)
+    if (lightObj instanceof THREE.PointLight)
+    {
+      return;
+    }
+    else if (lightObj instanceof THREE.SpotLight)
     {
       target.add(scope.object.direction);
       scope.object.localToWorld(target);

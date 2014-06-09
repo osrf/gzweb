@@ -1238,11 +1238,18 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
 
   if (light.type === 1)
   {
-    lightObj = new THREE.AmbientLight(color.getHex());
+    lightObj = new THREE.PointLight(color.getHex());
     lightObj.distance = light.range;
-    lightObj.intensity = light.attenuation_constant;
+    factor = 5; // closer to gzclient
+    lightObj.intensity = light.attenuation_constant * factor;
     this.scene.setPose(lightObj, light.pose.position,
         light.pose.orientation);
+
+    helperGeometry = new THREE.OctahedronGeometry(0.3, 0);
+    helperGeometry.applyMatrix(new THREE.Matrix4().makeTranslation(0, 1, 0));
+    helperGeometry.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI/2));
+    helperMaterial = new THREE.MeshBasicMaterial( { wireframe: true, color: 0x00ff00 } );
+    helper = new THREE.Mesh(helperGeometry, helperMaterial);
   }
   if (light.type === 2)
   {
@@ -1269,8 +1276,7 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
   else if (light.type === 3)
   {
     // Direction: position to target.position
-    lightObj = new THREE.DirectionalLight(color.getHex(),
-        light.attenuation_constant);
+    lightObj = new THREE.DirectionalLight(color.getHex());
 
     negDir = new THREE.Vector3(light.direction.x, light.direction.y,
         light.direction.z);
@@ -1278,6 +1284,7 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
 
     lightObj.position.set(dir.x, dir.y, dir.z);
     lightObj.target.position = new THREE.Vector3(0, 0, 0);
+    lightObj.intensity = light.attenuation_constant;
     lightObj.shadowCameraNear = 1;
     lightObj.shadowCameraFar = 50;
     lightObj.shadowMapWidth = 4094;
@@ -3064,7 +3071,11 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
     var lightObj = scope.object.children[0];
     var target = new THREE.Vector3(0,0,0);
 
-    if (lightObj instanceof THREE.SpotLight)
+    if (lightObj instanceof THREE.PointLight)
+    {
+      return;
+    }
+    else if (lightObj instanceof THREE.SpotLight)
     {
       target.add(scope.object.direction);
       scope.object.localToWorld(target);
