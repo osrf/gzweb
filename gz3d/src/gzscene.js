@@ -82,16 +82,9 @@ GZ3D.Scene.prototype.init = function()
       function(event) {that.onPointerUp(event);}, false );
 
   // Handles for translating and rotating objects
-  if (this.isTouchDevice)
-  {
-    this.modelManipulator = new GZ3D.Manipulator(this.camera, true,
+  this.modelManipulator = new GZ3D.Manipulator(this.camera, this.isTouchDevice,
       this.getDomElement());
-  }
-  else
-  {
-    this.modelManipulator = new GZ3D.Manipulator(this.camera, false,
-      this.getDomElement());
-  }
+
   this.timeDown = null;
 
   this.controls = new THREE.OrbitControls(this.camera);
@@ -167,7 +160,7 @@ GZ3D.Scene.prototype.init = function()
 
 /**
  * Window event callback
- * @param {} event - click or tap events (select/deselect models and manipulators)
+ * @param {} event
  */
 GZ3D.Scene.prototype.onPointerDown = function(event)
 {

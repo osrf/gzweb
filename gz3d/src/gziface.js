@@ -563,15 +563,14 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
 
   if (light.type === 1)
   {
+    this.scene.setPose(obj, light.pose.position,
+        light.pose.orientation);
     lightObj = new THREE.PointLight(color.getHex());
     lightObj.distance = light.range;
     factor = 5; // closer to gzclient
     lightObj.intensity = light.attenuation_constant * factor;
-    this.scene.setPose(lightObj, light.pose.position,
-        light.pose.orientation);
 
     helperGeometry = new THREE.OctahedronGeometry(0.3, 0);
-    helperGeometry.applyMatrix(new THREE.Matrix4().makeTranslation(0, 1, 0));
     helperGeometry.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI/2));
     helperMaterial = new THREE.MeshBasicMaterial( { wireframe: true, color: 0x00ff00 } );
     helper = new THREE.Mesh(helperGeometry, helperMaterial);
@@ -641,17 +640,19 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
   lightObj.castShadow = light.cast_shadows;
   lightObj.shadowDarkness = 0.3;
   lightObj.name = light.name;
+
+  helper.visible = false;
+  helper.name = light.name + '_lightHelper';
+
   obj.name = light.name + '_lightObj';
   if (dir)
   {
     obj.direction = dir;
   }
-
-  helper.visible = false;
-  helper.name = light.name + '_lightHelper';
-
   obj.add(lightObj);
   obj.add(helper);
+
+  console.log(obj.position);
   return obj;
 };
 
