@@ -1113,7 +1113,6 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
 
   /*
    * Move light target
-   * @param {} object
    */
   function moveLightTarget()
   {
