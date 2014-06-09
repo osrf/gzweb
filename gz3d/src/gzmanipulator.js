@@ -1122,10 +1122,20 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
       return;
     }
 
+    var lightObj = scope.object.children[0];
     var target = new THREE.Vector3(0,0,0);
-    target.add(scope.object.direction);
-    scope.object.localToWorld(target);
-    scope.object.children[0].target.position.copy(target);
+
+    if (lightObj instanceof THREE.SpotLight)
+    {
+      target.add(scope.object.direction);
+      scope.object.localToWorld(target);
+    }
+    else if (lightObj instanceof THREE.DirectionalLight)
+    {
+      target.add(scope.object.position);
+      target.sub(scope.object.direction);
+    }
+    lightObj.target.position.copy(target);
   }
 };
 

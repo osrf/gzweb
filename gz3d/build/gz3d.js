@@ -1268,23 +1268,16 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
   }
   else if (light.type === 3)
   {
-    lightObj = new THREE.DirectionalLight(color.getHex());
-    lightObj.intensity = light.attenuation_constant;
-    dir = new THREE.Vector3(light.direction.x, light.direction.y,
+    // Direction: position to target.position
+    lightObj = new THREE.DirectionalLight(color.getHex(),
+        light.attenuation_constant);
+
+    negDir = new THREE.Vector3(light.direction.x, light.direction.y,
         light.direction.z);
-    target = dir;
-    negDir = dir.negate();
-    negDir.normalize();
-    factor = 10;
-    light.pose.position.x += factor * negDir.x;
-    light.pose.position.y += factor * negDir.y;
-    light.pose.position.z += factor * negDir.z;
+    dir = new THREE.Vector3(-negDir.x, -negDir.y, -negDir.z);
 
-    target.x -= light.pose.position.x;
-    target.y -= light.pose.position.y;
-    target.z -= light.pose.position.z;
-
-    lightObj.target.position = target;
+    lightObj.position.set(dir.x, dir.y, dir.z);
+    lightObj.target.position = new THREE.Vector3(0, 0, 0);
     lightObj.shadowCameraNear = 1;
     lightObj.shadowCameraFar = 50;
     lightObj.shadowMapWidth = 4094;
@@ -1295,10 +1288,6 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
     lightObj.shadowCameraRight = 100;
     lightObj.shadowCameraTop = 100;
     lightObj.shadowBias = 0.0001;
-
-    lightObj.position.set(negDir.x, negDir.y, negDir.z);
-    this.scene.setPose(lightObj, light.pose.position,
-        light.pose.orientation);
 
     helperGeometry = new THREE.Geometry();
     helperGeometry.vertices.push(new THREE.Vector3(-0.5, -0.5, 0));
@@ -1311,10 +1300,11 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
     helperGeometry.vertices.push(new THREE.Vector3(-0.5, -0.5, 0));
     helperGeometry.vertices.push(new THREE.Vector3(   0,    0, 0));
     helperGeometry.vertices.push(new THREE.Vector3(   0,    0, -0.5));
-    helperGeometry.applyMatrix(new THREE.Matrix4().makeTranslation(0, 0, 10));
+    helperGeometry.applyMatrix(new THREE.Matrix4().makeTranslation(
+        light.pose.position.x, light.pose.position.y,light.pose.position.z));
     helperMaterial = new THREE.LineBasicMaterial({color: 0x00ff00});
     helper = new THREE.Line(helperGeometry, helperMaterial, THREE.LinePieces);
-    helper.lookAt(dir.negate());
+    helper.lookAt(dir);
   }
   lightObj.castShadow = light.cast_shadows;
   lightObj.shadowDarkness = 0.3;
@@ -3071,10 +3061,20 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
       return;
     }
 
+    var lightObj = scope.object.children[0];
     var target = new THREE.Vector3(0,0,0);
-    target.add(scope.object.direction);
-    scope.object.localToWorld(target);
-    scope.object.children[0].target.position.copy(target);
+
+    if (lightObj instanceof THREE.SpotLight)
+    {
+      target.add(scope.object.direction);
+      scope.object.localToWorld(target);
+    }
+    else if (lightObj instanceof THREE.DirectionalLight)
+    {
+      target.add(scope.object.position);
+      target.sub(scope.object.direction);
+    }
+    lightObj.target.position.copy(target);
   }
 };
 
