@@ -1242,10 +1242,10 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
     lightObj.distance = light.range;
     this.scene.setPose(obj, light.pose.position,
         light.pose.orientation);
-    factor = 5; // closer to gzclient
+    factor = 1.5; // closer to gzclient
     lightObj.intensity = light.attenuation_constant * factor;
 
-    helperGeometry = new THREE.OctahedronGeometry(0.3, 0);
+    helperGeometry = new THREE.OctahedronGeometry(0.25, 0);
     helperGeometry.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI/2));
     helperMaterial = new THREE.MeshBasicMaterial(
         {wireframe: true, color: 0x00ff00});
@@ -1268,8 +1268,9 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
     lightObj.target.position = target;
 
     helperGeometry = new THREE.CylinderGeometry(0, 0.3, 0.2, 4, 1, true);
-    helperGeometry.applyMatrix(new THREE.Matrix4().makeTranslation(0, 1, 0));
     helperGeometry.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI/2));
+    helperGeometry.applyMatrix(new THREE.Matrix4().makeTranslation(
+        lightObj.position.x, lightObj.position.y, lightObj.position.z));
     helperMaterial = new THREE.MeshBasicMaterial(
         {wireframe: true, color: 0x00ff00});
     helper = new THREE.Mesh(helperGeometry, helperMaterial);
@@ -3079,8 +3080,9 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
     }
     else if (lightObj instanceof THREE.SpotLight)
     {
+      target.copy(scope.object.position);
+      target.add(lightObj.position);
       target.add(scope.object.direction);
-      scope.object.localToWorld(target);
     }
     else if (lightObj instanceof THREE.DirectionalLight)
     {
