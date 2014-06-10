@@ -3116,7 +3116,7 @@ GZ3D.RadialMenu.prototype.init = function()
   // Colors
   this.selectedColor = new THREE.Color( 0x22aadd );
   this.plainColor = new THREE.Color( 0x505050 );
-  this.pressedColor = new THREE.Color( 0xb0b0b0 );
+  this.pressedColor = new THREE.Color( 0x505050 );
 
   // Selected item
   this.selected = null;
