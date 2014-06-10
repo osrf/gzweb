@@ -1322,7 +1322,7 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
   helper.visible = false;
   helper.name = light.name + '_lightHelper';
 
-  obj.name = light.name + '_lightObj';
+  obj.name = light.name;
   if (dir)
   {
     obj.direction = dir;
@@ -3066,30 +3066,30 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
    */
   function moveLightTarget()
   {
-    if (scope.object.name.indexOf('_lightObj') === -1)
+    if (scope.object.children[0] &&
+        scope.object.children[0] instanceof THREE.Light)
     {
-      return;
-    }
 
-    var lightObj = scope.object.children[0];
-    var target = new THREE.Vector3(0,0,0);
+      var lightObj = scope.object.children[0];
+      var target = new THREE.Vector3(0,0,0);
 
-    if (lightObj instanceof THREE.PointLight)
-    {
-      return;
+      if (lightObj instanceof THREE.PointLight)
+      {
+        return;
+      }
+      else if (lightObj instanceof THREE.SpotLight)
+      {
+        target.copy(scope.object.position);
+        target.add(lightObj.position);
+        target.add(scope.object.direction);
+      }
+      else if (lightObj instanceof THREE.DirectionalLight)
+      {
+        target.add(scope.object.position);
+        target.sub(scope.object.direction);
+      }
+      lightObj.target.position.copy(target);
     }
-    else if (lightObj instanceof THREE.SpotLight)
-    {
-      target.copy(scope.object.position);
-      target.add(lightObj.position);
-      target.add(scope.object.direction);
-    }
-    else if (lightObj instanceof THREE.DirectionalLight)
-    {
-      target.add(scope.object.position);
-      target.sub(scope.object.direction);
-    }
-    lightObj.target.position.copy(target);
   }
 };
 
@@ -4918,16 +4918,20 @@ GZ3D.Scene.prototype.hideBoundingBox = function()
  */
 GZ3D.Scene.prototype.onRightClick = function(event, callback)
 {
-  if(this.manipulationMode === 'view')
+  if (this.modelManipulator.object)
   {
-    var pos = new THREE.Vector2(event.clientX, event.clientY);
-    var model = this.getRayCastModel(pos, new THREE.Vector3());
+    this.hideBoundingBox();
+    this.modelManipulator.detach();
+    this.scene.remove(this.modelManipulator.gizmo);
+  }
 
-    if(model && model.name !== '' && model.name !== 'plane' &&
-        this.modelManipulator.pickerNames.indexOf(model.name) === -1)
-    {
-      callback(model);
-    }
+  var pos = new THREE.Vector2(event.clientX, event.clientY);
+  var model = this.getRayCastModel(pos, new THREE.Vector3());
+
+  if(model && model.name !== '' && model.name !== 'plane' &&
+      this.modelManipulator.pickerNames.indexOf(model.name) === -1)
+  {
+    callback(model);
   }
 };
 

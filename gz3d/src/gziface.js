@@ -647,7 +647,7 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
   helper.visible = false;
   helper.name = light.name + '_lightHelper';
 
-  obj.name = light.name + '_lightObj';
+  obj.name = light.name;
   if (dir)
   {
     obj.direction = dir;
