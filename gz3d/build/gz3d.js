@@ -942,6 +942,13 @@ GZ3D.GZIface.prototype.init = function()
     messageType : 'model',
   });
 
+  // Light modify messages - for modifying light pose
+  this.lightTopic = new ROSLIB.Topic({
+    ros : this.webSocket,
+    name : '~/light',
+    messageType : 'light',
+  });
+
   var publishModelModify = function(model)
   {
     var matrix = model.matrixWorld;
@@ -968,7 +975,15 @@ GZ3D.GZIface.prototype.init = function()
         z: quaternion.z
       }
     };
-    that.modelModifyTopic.publish(modelMsg);
+    if (model.children[0] &&
+        model.children[0] instanceof THREE.Light)
+    {
+      that.lightTopic.publish(modelMsg);
+    }
+    else
+    {
+      that.modelModifyTopic.publish(modelMsg);
+    }
   };
 
   this.scene.emitter.on('poseChanged', publishModelModify);
@@ -3069,7 +3084,6 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
     if (scope.object.children[0] &&
         scope.object.children[0] instanceof THREE.Light)
     {
-
       var lightObj = scope.object.children[0];
       var target = new THREE.Vector3(0,0,0);
 

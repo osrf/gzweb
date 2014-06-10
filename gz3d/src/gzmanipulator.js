@@ -1119,7 +1119,6 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
     if (scope.object.children[0] &&
         scope.object.children[0] instanceof THREE.Light)
     {
-
       var lightObj = scope.object.children[0];
       var target = new THREE.Vector3(0,0,0);
 
