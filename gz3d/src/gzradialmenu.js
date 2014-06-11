@@ -21,11 +21,12 @@ GZ3D.RadialMenu.prototype.init = function()
   // Icon size
   this.bgSize = 40;
   this.bgSizeSelected = 70;
+  this.highlightSize = 55;
   this.iconProportion = 0.6;
   this.bgShape = THREE.ImageUtils.loadTexture(
       'style/images/icon_background.png' );
-  this.bgPressedShape = THREE.ImageUtils.loadTexture(
-      'style/images/icon_pressed_background.png' );
+  this.highlightShape = THREE.ImageUtils.loadTexture(
+      'style/images/icon_highlight.png' );
 
   // For the opening motion
   this.moving = false;
@@ -37,7 +38,6 @@ GZ3D.RadialMenu.prototype.init = function()
   // Colors
   this.selectedColor = new THREE.Color( 0x22aadd );
   this.plainColor = new THREE.Color( 0x505050 );
-  this.pressedColor = new THREE.Color( 0x505050 );
 
   // Selected item
   this.selected = null;
@@ -73,13 +73,15 @@ GZ3D.RadialMenu.prototype.hide = function(event,callback)
   {
     this.menu.children[i].children[0].visible = false;
     this.menu.children[i].children[1].visible = false;
-    this.setPressedColor(this.menu.children[i]);
+    this.menu.children[i].children[2].visible = false;
     this.menu.children[i].children[0].scale.set(
         this.bgSize*this.iconProportion,
         this.bgSize*this.iconProportion, 1.0 );
     this.menu.children[i].children[1].scale.set(
         this.bgSize,
         this.bgSize, 1.0 );
+    this.menu.children[i].children[1].material.color = this.plainColor;
+    this.menu.children[i].children[1].material.map = this.bgShape;
   }
 
   this.showing = false;
@@ -113,16 +115,17 @@ GZ3D.RadialMenu.prototype.show = function(event,model)
   var pointer = this.getPointer(event);
   this.startPosition = pointer;
 
-  this.menu.getObjectByName('transparent').isPressed = this.model.isTransparent;
-  this.menu.getObjectByName('wireframe').isPressed = this.model.isWireframe;
+  this.menu.getObjectByName('transparent').isHighlighted = this.model.isTransparent;
+  this.menu.getObjectByName('wireframe').isHighlighted = this.model.isWireframe;
 
   for ( var i in this.menu.children )
   {
-    this.setPressedColor(this.menu.children[i]);
     this.menu.children[i].children[0].visible = true;
     this.menu.children[i].children[1].visible = true;
+    this.menu.children[i].children[2].visible = this.menu.children[i].isHighlighted;
     this.menu.children[i].children[0].position.set(pointer.x,pointer.y,0);
     this.menu.children[i].children[1].position.set(pointer.x,pointer.y,0);
+    this.menu.children[i].children[2].position.set(pointer.x,pointer.y,0);
   }
 
   this.moving = true;
@@ -163,6 +166,8 @@ GZ3D.RadialMenu.prototype.update = function()
     this.menu.children[i].children[0].position.y = Y + this.startPosition.y;
     this.menu.children[i].children[1].position.x = X + this.startPosition.x;
     this.menu.children[i].children[1].position.y = Y + this.startPosition.y;
+    this.menu.children[i].children[2].position.x = X + this.startPosition.x;
+    this.menu.children[i].children[2].position.y = Y + this.startPosition.y;
 
   }
 
@@ -267,12 +272,13 @@ GZ3D.RadialMenu.prototype.onLongPressMove = function(event)
     }
     else
     {
-      this.setPressedColor(this.menu.children[i]);
       this.menu.children[i].children[0].scale.set(
           this.bgSize*this.iconProportion,
           this.bgSize*this.iconProportion, 1.0 );
       this.menu.children[i].children[1].scale.set(
           this.bgSize, this.bgSize, 1.0 );
+      this.menu.children[i].children[1].material.color = this.plainColor;
+      this.menu.children[i].children[1].material.map = this.bgShape;
     }
     counter++;
   }
@@ -308,29 +314,22 @@ GZ3D.RadialMenu.prototype.addItem = function(type,itemTexture)
   var bgItem = new THREE.Sprite( bgMaterial );
   bgItem.scale.set( this.bgSize, this.bgSize, 1.0 );
 
+  // Icon highlight
+  var highlightMaterial = new THREE.SpriteMaterial({
+      map: this.highlightShape,
+      useScreenCoordinates: true,
+      alignment: THREE.SpriteAlignment.center});
+
+  var highlightItem = new THREE.Sprite(highlightMaterial);
+  highlightItem.scale.set(this.highlightSize, this.highlightSize, 1.0);
+  highlightItem.visible = false;
+
   var item = new THREE.Object3D();
   item.add(iconItem);
   item.add(bgItem);
-  item.isPressed = false;
+  item.add(highlightItem);
+  item.isHighlighted = false;
   item.name = type;
 
   this.menu.add(item);
-};
-
-/**
- * Choose item style according to pressed state
- * @param {} item
- */
-GZ3D.RadialMenu.prototype.setPressedColor = function(item)
-{
-  if (item.isPressed)
-  {
-    item.children[1].material.color = this.pressedColor;
-    item.children[1].material.map = this.bgPressedShape;
-  }
-  else
-  {
-    item.children[1].material.color = this.plainColor;
-    item.children[1].material.map = this.bgShape;
-  }
 };
