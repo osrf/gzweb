@@ -16,9 +16,11 @@
 */
 
 #include <gts.h>
-#include <gazebo/gazebo.hh>
 #include <tinyxml.h>
 #include <math.h>
+#include <gazebo/common/Mesh.hh>
+#include <gazebo/common/Material.hh>
+#include <gazebo/common/ColladaLoader.hh>
 #include "nanoflann.hpp"
 
 #ifndef PI

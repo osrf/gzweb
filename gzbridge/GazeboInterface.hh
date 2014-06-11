@@ -20,9 +20,10 @@
 
 #include <string>
 #include <list>
-#include <boost/unordered/unordered_map.hpp>
+#include <map>
 
-#include <gazebo/gazebo.hh>
+#include <gazebo/msgs/msgs.hh>
+#include <gazebo/transport/TransportIface.hh>
 
 namespace boost
 {
@@ -325,7 +326,7 @@ namespace gzweb
 
     /// \def PoseMsgsFilter_M
     /// \brief Map of last pose messages used for filtering
-    typedef boost::unordered_map< std::string, TimedPose> PoseMsgsFilter_M;
+    typedef std::map< std::string, TimedPose> PoseMsgsFilter_M;
 
     private: PoseMsgsFilter_M poseMsgsFilterMap;
 
