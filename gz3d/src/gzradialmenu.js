@@ -37,7 +37,7 @@ GZ3D.RadialMenu.prototype.init = function()
 
   // Colors
   this.selectedColor = new THREE.Color( 0x22aadd );
-  this.plainColor = new THREE.Color( 0x505050 );
+  this.plainColor = new THREE.Color( 0x333333 );
 
   // Selected item
   this.selected = null;
@@ -74,14 +74,13 @@ GZ3D.RadialMenu.prototype.hide = function(event,callback)
     this.menu.children[i].children[0].visible = false;
     this.menu.children[i].children[1].visible = false;
     this.menu.children[i].children[2].visible = false;
+    this.menu.children[i].children[1].material.color = this.plainColor;
     this.menu.children[i].children[0].scale.set(
         this.bgSize*this.iconProportion,
         this.bgSize*this.iconProportion, 1.0 );
     this.menu.children[i].children[1].scale.set(
         this.bgSize,
         this.bgSize, 1.0 );
-    this.menu.children[i].children[1].material.color = this.plainColor;
-    this.menu.children[i].children[1].material.map = this.bgShape;
   }
 
   this.showing = false;
@@ -272,13 +271,12 @@ GZ3D.RadialMenu.prototype.onLongPressMove = function(event)
     }
     else
     {
+      this.menu.children[i].children[1].material.color = this.plainColor;
       this.menu.children[i].children[0].scale.set(
           this.bgSize*this.iconProportion,
           this.bgSize*this.iconProportion, 1.0 );
       this.menu.children[i].children[1].scale.set(
           this.bgSize, this.bgSize, 1.0 );
-      this.menu.children[i].children[1].material.color = this.plainColor;
-      this.menu.children[i].children[1].material.map = this.bgShape;
     }
     counter++;
   }
