@@ -1117,25 +1117,13 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
   function moveLightTarget()
   {
     if (scope.object.children[0] &&
-        scope.object.children[0] instanceof THREE.Light)
+       (scope.object.children[0] instanceof THREE.SpotLight ||
+        scope.object.children[0] instanceof THREE.DirectionalLight))
     {
       var lightObj = scope.object.children[0];
       var target = new THREE.Vector3(0,0,0);
-
-      if (lightObj instanceof THREE.PointLight)
-      {
-        return;
-      }
-      else if (lightObj instanceof THREE.SpotLight)
-      {
-        target.copy(scope.object.direction);
-        scope.object.localToWorld(target);
-      }
-      else if (lightObj instanceof THREE.DirectionalLight)
-      {
-        target.add(scope.object.position);
-        target.sub(scope.object.direction);
-      }
+      target.copy(scope.object.direction);
+      scope.object.localToWorld(target);
       lightObj.target.position.copy(target);
     }
   }

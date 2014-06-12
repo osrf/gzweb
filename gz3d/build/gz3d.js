@@ -1244,19 +1244,20 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
   var obj = new THREE.Object3D();
   var lightObj;
   var helper, helperGeometry, helperMaterial;
-  var dir, factor;
+  var dir, factor, target;
 
   var color = new THREE.Color();
   color.r = light.diffuse.r;
   color.g = light.diffuse.g;
   color.b = light.diffuse.b;
 
+  this.scene.setPose(obj, light.pose.position,
+        light.pose.orientation);
+
   if (light.type === 1)
   {
     lightObj = new THREE.PointLight(color.getHex());
     lightObj.distance = light.range;
-    this.scene.setPose(obj, light.pose.position,
-        light.pose.orientation);
     factor = 1.5; // closer to gzclient
     lightObj.intensity = light.attenuation_constant * factor;
 
@@ -1272,17 +1273,7 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
     lightObj.distance = light.range;
     factor = 5; // closer to gzclient
     lightObj.intensity = light.attenuation_constant * factor;
-    this.scene.setPose(obj, light.pose.position,
-        light.pose.orientation);
     lightObj.position.set(0,0,0);
-
-    dir = new THREE.Vector3(light.direction.x, light.direction.y,
-        light.direction.z);
-    obj.worldToLocal(dir);
-    var target = new THREE.Vector3();
-    target.copy(obj.position);
-    target.add(dir);
-    lightObj.target.position = target;
 
     helperGeometry = new THREE.CylinderGeometry(0, 0.3, 0.2, 4, 1, true);
     helperGeometry.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI/2));
@@ -1292,15 +1283,7 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
   }
   else if (light.type === 3)
   {
-    // Direction: position to target.position
     lightObj = new THREE.DirectionalLight(color.getHex());
-
-    var negDir = new THREE.Vector3(light.direction.x, light.direction.y,
-        light.direction.z);
-    dir = new THREE.Vector3(-negDir.x, -negDir.y, -negDir.z);
-
-    lightObj.position.set(dir.x, dir.y, dir.z);
-    lightObj.target.position = new THREE.Vector3(0, 0, 0);
     lightObj.intensity = light.attenuation_constant;
     lightObj.shadowCameraNear = 1;
     lightObj.shadowCameraFar = 50;
@@ -1312,6 +1295,7 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
     lightObj.shadowCameraRight = 100;
     lightObj.shadowCameraTop = 100;
     lightObj.shadowBias = 0.0001;
+    lightObj.position.set(0,0,0);
 
     helperGeometry = new THREE.Geometry();
     helperGeometry.vertices.push(new THREE.Vector3(-0.5, -0.5, 0));
@@ -1324,11 +1308,8 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
     helperGeometry.vertices.push(new THREE.Vector3(-0.5, -0.5, 0));
     helperGeometry.vertices.push(new THREE.Vector3(   0,    0, 0));
     helperGeometry.vertices.push(new THREE.Vector3(   0,    0, -0.5));
-    helperGeometry.applyMatrix(new THREE.Matrix4().makeTranslation(
-        light.pose.position.x, light.pose.position.y,light.pose.position.z));
     helperMaterial = new THREE.LineBasicMaterial({color: 0x00ff00});
     helper = new THREE.Line(helperGeometry, helperMaterial, THREE.LinePieces);
-    helper.lookAt(dir);
   }
   lightObj.castShadow = light.cast_shadows;
   lightObj.shadowDarkness = 0.3;
@@ -1338,8 +1319,15 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
   helper.name = light.name + '_lightHelper';
 
   obj.name = light.name;
-  if (dir)
+  if (light.type !== 1)
   {
+    dir = new THREE.Vector3(light.direction.x, light.direction.y,
+        light.direction.z);
+    obj.worldToLocal(dir);
+    target = new THREE.Vector3();
+    target.copy(obj.position);
+    target.add(dir);
+    lightObj.target.position = target;
     obj.direction = dir;
   }
 
@@ -3082,25 +3070,13 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
   function moveLightTarget()
   {
     if (scope.object.children[0] &&
-        scope.object.children[0] instanceof THREE.Light)
+       (scope.object.children[0] instanceof THREE.SpotLight ||
+        scope.object.children[0] instanceof THREE.DirectionalLight))
     {
       var lightObj = scope.object.children[0];
       var target = new THREE.Vector3(0,0,0);
-
-      if (lightObj instanceof THREE.PointLight)
-      {
-        return;
-      }
-      else if (lightObj instanceof THREE.SpotLight)
-      {
-        target.copy(scope.object.direction);
-        scope.object.localToWorld(target);
-      }
-      else if (lightObj instanceof THREE.DirectionalLight)
-      {
-        target.add(scope.object.position);
-        target.sub(scope.object.direction);
-      }
+      target.copy(scope.object.direction);
+      scope.object.localToWorld(target);
       lightObj.target.position.copy(target);
     }
   }
