@@ -3115,7 +3115,7 @@ GZ3D.RadialMenu.prototype.init = function()
   // Icon size
   this.bgSize = 40;
   this.bgSizeSelected = 70;
-  this.highlightSize = 55;
+  this.highlightSize = 45;
   this.iconProportion = 0.6;
   this.bgShape = THREE.ImageUtils.loadTexture(
       'style/images/icon_background.png' );
