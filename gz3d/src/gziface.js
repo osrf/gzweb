@@ -267,7 +267,7 @@ GZ3D.GZIface.prototype.init = function()
     messageType : 'model',
   });
 
-  // Light modify messages - for modifying light pose
+  // Light messages - for modifying light pose (repeated)
   this.lightTopic = new ROSLIB.Topic({
     ros : this.webSocket,
     name : '~/light',

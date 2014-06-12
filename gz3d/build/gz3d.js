@@ -942,7 +942,7 @@ GZ3D.GZIface.prototype.init = function()
     messageType : 'model',
   });
 
-  // Light modify messages - for modifying light pose
+  // Light messages - for modifying light pose (repeated)
   this.lightTopic = new ROSLIB.Topic({
     ros : this.webSocket,
     name : '~/light',
@@ -1244,7 +1244,7 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
   var obj = new THREE.Object3D();
   var lightObj;
   var helper, helperGeometry, helperMaterial;
-  var dir, factor, target;
+  var factor;
 
   var color = new THREE.Color();
   color.r = light.diffuse.r;
@@ -1318,18 +1318,18 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
   helper.visible = false;
   helper.name = light.name + '_lightHelper';
 
-  obj.name = light.name;
   if (light.type !== 1)
   {
-    dir = new THREE.Vector3(light.direction.x, light.direction.y,
+    var dir = new THREE.Vector3(light.direction.x, light.direction.y,
         light.direction.z);
     obj.worldToLocal(dir);
-    target = new THREE.Vector3();
+    var target = new THREE.Vector3();
     target.copy(obj.position);
     target.add(dir);
     lightObj.target.position = target;
     obj.direction = dir;
   }
+  obj.name = light.name;
 
   // Important: keep order
   obj.add(lightObj);
