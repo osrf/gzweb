@@ -597,20 +597,20 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
     lightObj.distance = light.range;
     factor = 5; // closer to gzclient
     lightObj.intensity = light.attenuation_constant * factor;
-    this.scene.setPose(lightObj, light.pose.position,
+    this.scene.setPose(obj, light.pose.position,
         light.pose.orientation);
+    lightObj.position.set(0,0,0);
 
     dir = new THREE.Vector3(light.direction.x, light.direction.y,
         light.direction.z);
+    obj.worldToLocal(dir);
     var target = new THREE.Vector3();
-    target.copy(lightObj.position);
+    target.copy(obj.position);
     target.add(dir);
     lightObj.target.position = target;
 
     helperGeometry = new THREE.CylinderGeometry(0, 0.3, 0.2, 4, 1, true);
     helperGeometry.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI/2));
-    helperGeometry.applyMatrix(new THREE.Matrix4().makeTranslation(
-        lightObj.position.x, lightObj.position.y, lightObj.position.z));
     helperMaterial = new THREE.MeshBasicMaterial(
         {wireframe: true, color: 0x00ff00});
     helper = new THREE.Mesh(helperGeometry, helperMaterial);
