@@ -20,7 +20,7 @@ GZ3D.RadialMenu.prototype.init = function()
   this.speed = 10;
   // Icon size
   this.bgSize = 40;
-  this.bgSizeSelected = 70;
+  this.bgSizeSelected = 68;
   this.highlightSize = 45;
   this.iconProportion = 0.6;
   this.bgShape = THREE.ImageUtils.loadTexture(
