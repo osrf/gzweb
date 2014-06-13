@@ -689,6 +689,18 @@ GZ3D.Scene.prototype.createBox = function(width, height, depth)
 };
 
 /**
+ * Create point light
+ * @param {double} radius
+ * @param {double} length
+ * @returns {THREE.Mesh}
+ */
+GZ3D.Scene.prototype.createPointLight = function(color, intensity)
+{
+  var lightObj = new THREE.PointLight(color, intensity);
+  return lightObj;
+};
+
+/**
  * Create roads
  * @param {} points
  * @param {} width

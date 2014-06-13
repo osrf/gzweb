@@ -59,6 +59,11 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
     mesh = this.scene.createCylinder(0.5, 1.0);
     this.obj.name = 'unit_cylinder_' + (new Date()).getTime();
   }
+  /*else if (entity === 'pointlight')
+  {
+    mesh = this.scene.createPointLight(0xffffff, 1000);
+    this.obj.name = 'pointlight_' + (new Date()).getTime();
+  }*/
   else
   {
     // temp box for now

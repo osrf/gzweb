@@ -238,11 +238,17 @@
           <div class="insert-menu-title">
             <h3 style="margin:0em">Insert</h3>
           </div>
-          <ul style="list-style:none;background-color:#2a2a2a;height:9em;padding:0em;padding-left:0.5em;margin:0em;width:{{(categories.length+1)*9.8}}em">
+          <ul style="list-style:none;background-color:#2a2a2a;height:9em;padding:0em;padding-left:0.5em;margin:0em;width:{{(categories.length+2)*9.8}}em">
             <li style="float:left">
               <a href="#" ng-click="openCategory('simple_shapes')" data-role="button" data-inline="true" style="width:7em;height:6.5em" title="Shapes">
                 Shapes<br>
                 <img style="height:5em;max-width:6em" src="style/images/box.png">
+              </a>
+            </li>
+            <li style="float:left">
+              <a href="#" ng-click="openCategory('lights')" data-role="button" data-inline="true" style="width:7em;height:6.5em" title="Lights">
+                Lights<br>
+                <img style="height:5em;max-width:6em" src="style/images/light_thumb.png">
               </a>
             </li>
             <li style="float:left" ng-repeat="category in categories">
@@ -274,6 +280,32 @@
             <li style="float:left">
               <a href="#" id="insert-entity-cylinder" ng-mousedown="spawnEntity('cylinder')" data-role="button" data-inline="true" style="width:7em;height:6.5em" title="Cylinder">
                 Cylinder<br>
+                <img style="height:5em;max-width:6em" src="style/images/cylinder.png">
+              </a>
+            </li>
+          </ul>
+        </div>
+        <div class="insert-menus" id="insert-menu-lights">
+          <div class="insert-menu-title" style="width:20em">
+            <a href="#" class="insert-back" style="float:left"><img style="height:1.2em" src="style/images/back.png"></a>
+            <h3 style="margin:0em"> &nbsp; Lights</h3>
+          </div>
+          <ul style="list-style:none;background-color:#2a2a2a;height:9em;padding:0em;padding-left:0.5em;margin:0em;width:{{3*9.8}}em">
+            <li style="float:left">
+              <a href="#" id="insert-entity-pointlight" ng-mousedown="spawnEntity('pointlight')" data-role="button" data-inline="true" style="width:7em;height:6.5em" title="Point Light">
+                Point<br>
+                <img style="height:5em;max-width:6em" src="style/images/box.png">
+              </a>
+            </li>
+            <li style="float:left">
+              <a href="#" id="insert-entity-spotlight" ng-mousedown="spawnEntity('spotlight')" data-role="button" data-inline="true" style="width:7em;height:6.5em" title="Spot Light">
+                Spot<br>
+                <img style="height:5em;max-width:6em" src="style/images/sphere.png">
+              </a>
+            </li>
+            <li style="float:left">
+              <a href="#" id="insert-entity-directionallight" ng-mousedown="spawnEntity('directionallight')" data-role="button" data-inline="true" style="width:7em;height:6.5em" title="Directional Light">
+                Directional<br>
                 <img style="height:5em;max-width:6em" src="style/images/cylinder.png">
               </a>
             </li>

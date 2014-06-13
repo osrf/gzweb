@@ -540,6 +540,18 @@ function getNameFromPath(path)
   {
     return 'Cylinder';
   }
+  if(path === 'pointlight')
+  {
+    return 'Point Light';
+  }
+  if(path === 'spotlight')
+  {
+    return 'Spot Light';
+  }
+  if(path === 'directionallight')
+  {
+    return 'Directional Light';
+  }
 
   for(var i = 0; i < modelList.length; ++i)
   {

@@ -545,6 +545,18 @@ function getNameFromPath(path)
   {
     return 'Cylinder';
   }
+  if(path === 'pointlight')
+  {
+    return 'Point Light';
+  }
+  if(path === 'spotlight')
+  {
+    return 'Spot Light';
+  }
+  if(path === 'directionallight')
+  {
+    return 'Directional Light';
+  }
 
   for(var i = 0; i < modelList.length; ++i)
   {
@@ -4341,6 +4353,18 @@ GZ3D.Scene.prototype.createBox = function(width, height, depth)
 };
 
 /**
+ * Create point light
+ * @param {double} radius
+ * @param {double} length
+ * @returns {THREE.Mesh}
+ */
+GZ3D.Scene.prototype.createPointLight = function(color, intensity)
+{
+  var lightObj = new THREE.PointLight(color, intensity);
+  return lightObj;
+};
+
+/**
  * Create roads
  * @param {} points
  * @param {} width
@@ -5243,6 +5267,11 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
     mesh = this.scene.createCylinder(0.5, 1.0);
     this.obj.name = 'unit_cylinder_' + (new Date()).getTime();
   }
+  /*else if (entity === 'pointlight')
+  {
+    mesh = this.scene.createPointLight(0xffffff, 1000);
+    this.obj.name = 'pointlight_' + (new Date()).getTime();
+  }*/
   else
   {
     // temp box for now
