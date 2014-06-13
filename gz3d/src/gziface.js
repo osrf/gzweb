@@ -640,7 +640,6 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
   lightObj.shadowDarkness = 0.3;
   lightObj.name = light.name;
 
-  helper.visible = false;
   helper.name = light.name + '_lightHelper';
 
   if (light.type !== 1)
