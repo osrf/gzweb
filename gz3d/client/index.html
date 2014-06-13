@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" ng-app>
   <head>
     <title>gz3d</title>
     <meta charset="utf-8">
@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="style/jquery-mobile/jquery.mobile-1.4.0.css" />
     <script src="js/include/jquery-1.9.1.js"></script>
     <script src="js/include/jquery.mobile-1.4.0.min.js"></script>
+    <script src="js/include/angular.min.js"></script>
     <script src="js/include/three.js"></script>
     <script src="js/include/OrbitControls.js"></script>
     <script src="js/include/Detector.js"></script>
@@ -34,14 +35,6 @@
         right: 0px;
         left: 0px;
       }
-      .insertItem {
-        line-height: 40px;
-        border-style:solid;
-        border-width:1px;
-        border-color:#242424;
-        background-color:#333333;
-        font-size:13px;
-      }
       @media (min-width:35em) {
         /* disable "dismiss" on wide viewports */
         .ui-panel-dismiss {
@@ -56,6 +49,11 @@
       }
       .ui-popup-screen {
         z-index: 999;
+      }
+      #footer {
+          width: 100%;
+          position: absolute;
+          bottom: 0;
       }
     </style>
   </head>
@@ -165,14 +163,6 @@
             </ul>
         </div>
         <div data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
-            <h3><span class="collapsible_header">Insert</span></h3>
-            <ul data-role="listview">
-              <li id="box" data-icon="false" class="insertItem"><a href="#"><span class="collapsible_item">Box</span></a></li>
-              <li id="sphere" data-icon="false" class="insertItem" style="border: none !important;"><a href="#"><span class="collapsible_item">Sphere</span></a></li>
-              <li id="cylinder" data-icon="false" class="insertItem"><a href="#"><span class="collapsible_item">Cylinder</span></a></li>
-            </ul>
-        </div>
-        <div data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
             <h3><span class="collapsible_header">Options</span></h3>
             <ul data-role="listview">
               <li id="snap-to-grid" data-icon="false" data-iconpos="right" style="border: none !important;"><a href="#"><span class="collapsible_item">Snap to Grid</span></a></li>
@@ -225,6 +215,10 @@
       <fieldset id="cylinder-header-fieldset">
         <a href="#" data-role="button" id="cylinder-header" class="header-button"><span><img style="height:1.45em" src="style/images/cylinder.png" title="Insert cylinder"></span></a>
       </fieldset>
+
+      <fieldset id="insert-header-fieldset">
+        <a href="#" data-role="button" class="header-button" id="insertButton"><span><img style="height:1.45em" src="style/images/insert.png" title="Insert model"></span></a>
+      </fieldset>
       <!-- header -->
 
       <!-- content -->
@@ -237,6 +231,70 @@
         </div>
       </div>
       <!-- content -->
+
+      <!-- insert menu -->
+      <div id="footer" ng-controller="insertControl">
+        <div id="insert-menu" class="insert-menus">
+          <div class="insert-menu-title">
+            <h3 style="margin:0em">Insert</h3>
+          </div>
+          <ul style="list-style:none;background-color:#2a2a2a;height:9em;padding:0em;padding-left:0.5em;margin:0em;width:{{(categories.length+1)*9.8}}em">
+            <li style="float:left">
+              <a href="#" ng-click="openCategory('simple_shapes')" data-role="button" data-inline="true" style="width:7em;height:6.5em" title="Shapes">
+                Shapes<br>
+                <img style="height:5em;max-width:6em" src="style/images/box.png">
+              </a>
+            </li>
+            <li style="float:left" ng-repeat="category in categories">
+              <a href="#" ng-click="openCategory(category.path)" data-role="button" data-inline="true" style="width:7em;height:6.5em" title="{{category.title}}">
+                {{category.title}}<br>
+                <img style="height:5em;max-width:6em" src="/assets/{{category.examplePath}}/thumbnails/0.png">
+              </a>
+            </li>
+          </ul>
+        </div>
+        <div class="insert-menus" id="insert-menu-simple_shapes">
+          <div class="insert-menu-title" style="width:20em">
+            <a href="#" class="insert-back" style="float:left"><img style="height:1.2em" src="style/images/back.png"></a>
+            <h3 style="margin:0em"> &nbsp; Simple Shapes</h3>
+          </div>
+          <ul style="list-style:none;background-color:#2a2a2a;height:9em;padding:0em;padding-left:0.5em;margin:0em;width:{{3*9.8}}em">
+            <li style="float:left">
+              <a href="#" id="insert-entity-box" ng-mousedown="spawnEntity('box')" data-role="button" data-inline="true" style="width:7em;height:6.5em" title="Box">
+                Box<br>
+                <img style="height:5em;max-width:6em" src="style/images/box.png">
+              </a>
+            </li>
+            <li style="float:left">
+              <a href="#" id="insert-entity-sphere" ng-mousedown="spawnEntity('sphere')" data-role="button" data-inline="true" style="width:7em;height:6.5em" title="Sphere">
+                Sphere<br>
+                <img style="height:5em;max-width:6em" src="style/images/sphere.png">
+              </a>
+            </li>
+            <li style="float:left">
+              <a href="#" id="insert-entity-cylinder" ng-mousedown="spawnEntity('cylinder')" data-role="button" data-inline="true" style="width:7em;height:6.5em" title="Cylinder">
+                Cylinder<br>
+                <img style="height:5em;max-width:6em" src="style/images/cylinder.png">
+              </a>
+            </li>
+          </ul>
+        </div>
+        <div ng-repeat="category in categories" class="insert-menus" id="insert-menu-{{category.path}}">
+          <div class="insert-menu-title" style="width:20em">
+            <a href="#" class="insert-back" style="float:left"><img style="height:1.2em" src="style/images/back.png"></a>
+            <h3 style="margin:0em"> &nbsp; {{category.title}}</h3>
+          </div>
+          <ul style="list-style:none;background-color:#2a2a2a;height:9em;padding:0em;padding-left:0.5em;margin:0em;width:{{category.models.length*9.8}}em">
+            <li style="float:left" ng-repeat="model in category.models">
+              <a href="#" id="insert-entity-{{model.modelPath}}" ng-mousedown="spawnEntity(model.modelPath)" data-role="button" data-inline="true" style="width:7em;height:6.5em" title="{{model.modelTitle}}">
+                {{model.modelTitle}}<br>
+                <img style="height:5em;max-width:6em" src="/assets/{{model.modelPath}}/thumbnails/0.png">
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <!-- insert menu -->
     </div>
     <!-- page -->
 

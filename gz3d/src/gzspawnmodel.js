@@ -59,13 +59,21 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
     mesh = this.scene.createCylinder(0.5, 1.0);
     this.obj.name = 'unit_cylinder_' + (new Date()).getTime();
   }
+  else
+  {
+    // temp box for now
+    mesh = this.scene.createBox(1, 1, 1);
+    this.obj.name = entity + '_' + (new Date()).getTime();
+
+  }
+
+  this.obj.add(mesh);
 
   // temp model appears within current view
   var pos = new THREE.Vector2(window.window.innerWidth/2, window.innerHeight/2);
   var intersect = new THREE.Vector3();
   this.scene.getRayCastModel(pos, intersect);
 
-  this.obj.add(mesh);
   this.obj.position.x = intersect.x;
   this.obj.position.y = intersect.y;
   this.obj.position.z += 0.5;
