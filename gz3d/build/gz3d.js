@@ -183,6 +183,9 @@ $(function()
   // Clicks/taps// Touch devices
   if ('ontouchstart' in window || 'onmsgesturechange' in window)
   {
+    $('.mouse-only')
+        .css('visibility','hidden');
+
     $('#play-header-fieldset')
         .css('position', 'absolute')
         .css('right', '15.8em')
@@ -195,23 +198,11 @@ $(function()
         .css('top', '0em')
         .css('z-index', '1000');
 
-    $('#clock-mouse')
-        .css('visibility','hidden');
-
     $('#mode-header-fieldset')
         .css('position', 'absolute')
         .css('right', '4.5em')
         .css('top', '0.15em')
         .css('z-index', '1000');
-
-    $('#box-header-fieldset')
-        .css('visibility','hidden');
-
-    $('#sphere-header-fieldset')
-        .css('visibility','hidden');
-
-    $('#cylinder-header-fieldset')
-        .css('visibility','hidden');
 
     $('#insert-header-fieldset')
         .css('position', 'absolute')
@@ -269,6 +260,9 @@ $(function()
   // Mouse devices
   else
   {
+    $('.touch-only')
+        .css('visibility','hidden');
+
     $('[id^="insert-entity-"]')
       .click(function(event) {
         var path = $(this).attr('id');
@@ -279,18 +273,15 @@ $(function()
         event.preventDefault();
       });
 
-    $('#clock-header-fieldset')
-        .css('visibility','hidden');
-
     $('#play-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '35.2em')
+        .css('right', '44.6em')
         .css('top', '0em')
         .css('z-index', '1000');
 
     $('#clock-mouse')
         .css('position', 'absolute')
-        .css('right', '22.4em')
+        .css('right', '31.6em')
         .css('top', '0.5em')
         .css('z-index', '100')
         .css('width', '12em')
@@ -301,23 +292,41 @@ $(function()
 
     $('#mode-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '16.4em')
+        .css('right', '28em')
         .css('top', '0.15em')
         .css('z-index', '1000');
 
     $('#box-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '9.5em')
+        .css('right', '18.5em')
         .css('top', '0em')
         .css('z-index', '1000');
 
     $('#sphere-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '6.5em')
+        .css('right', '15.5em')
         .css('top', '0em')
         .css('z-index', '1000');
 
     $('#cylinder-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '12.5em')
+        .css('top', '0em')
+        .css('z-index', '1000');
+
+    $('#pointlight-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '9.5em')
+        .css('top', '0em')
+        .css('z-index', '1000');
+
+    $('#spotlight-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '6.5em')
+        .css('top', '0em')
+        .css('z-index', '1000');
+
+    $('#directionallight-header-fieldset')
         .css('position', 'absolute')
         .css('right', '3.5em')
         .css('top', '0em')
@@ -328,6 +337,14 @@ $(function()
         .css('right', '0.5em')
         .css('top', '0em')
         .css('z-index', '1000');
+
+    $('[id^="header-insert-"]').click(function()
+        {
+          var entity = $(this).attr('id');
+          entity = entity.substring(14);
+          guiEvents.emit('close_panel');
+          guiEvents.emit('spawn_entity_start', entity);
+        });
 
     $('#footer').mouseenter(function(event){
         guiEvents.emit('killCameraControl');
@@ -361,6 +378,7 @@ $(function()
   $('.header-button')
       .css('float', 'left')
       .css('height', '1.45em')
+      .css('width', '1.45em')
       .css('padding', '0.65em');
 
   $('.insert-menus')
@@ -423,21 +441,6 @@ $(function()
   $('#rotate-mode').click(function()
       {
         guiEvents.emit('manipulation_mode', 'rotate');
-      });
-  $('#box-header').click(function()
-      {
-        guiEvents.emit('close_panel');
-        guiEvents.emit('spawn_entity_start', 'box');
-      });
-  $('#sphere-header').click(function()
-      {
-        guiEvents.emit('close_panel');
-        guiEvents.emit('spawn_entity_start', 'sphere');
-      });
-  $('#cylinder-header').click(function()
-      {
-        guiEvents.emit('close_panel');
-        guiEvents.emit('spawn_entity_start', 'cylinder');
       });
   $('#play').click(function()
       {
