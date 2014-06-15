@@ -19,6 +19,8 @@ $(function()
   // Toggle items
   $('#view-collisions').buttonMarkup({icon: 'false'});
   $('#snap-to-grid').buttonMarkup({icon: 'false'});
+  $('#view-transparent').buttonMarkup({icon: 'false'});
+  $('#view-wireframe').buttonMarkup({icon: 'false'});
   guiEvents.emit('toggle_notifications');
 
   $( '#clock-touch' ).popup('option', 'arrow', 't');
@@ -330,6 +332,17 @@ $(function()
       guiEvents.emit('longpress_move',event);
     });
 
+  // Object menu
+  $( '#view-transparent' ).click(function() {
+    $('#model-popup').popup('close');
+    guiEvents.emit('view_transparent');
+  });
+
+  $( '#view-wireframe' ).click(function() {
+    $('#model-popup').popup('close');
+    guiEvents.emit('view_wireframe');
+  });
+
   $( '#delete-entity' ).click(function() {
     guiEvents.emit('delete_entity');
   });
@@ -556,6 +569,17 @@ GZ3D.Gui.prototype.init = function()
                   $('input[type="radio"]').checkboxradio('refresh');
                   that.scene.attachManipulator(entity,type);
                 }
+                else if (type === 'transparent')
+                {
+                  that.scene.selectedModel = entity;
+                  guiEvents.emit('view_transparent');
+                }
+                else if (type === 'wireframe')
+                {
+                  that.scene.selectedModel = entity;
+                  guiEvents.emit('view_wireframe');
+                }
+
               });
           }
         }
@@ -613,10 +637,42 @@ GZ3D.Gui.prototype.init = function()
               that.scene.selectedModel = entity;
               that.scene.showBoundingBox(entity);
               $('.ui-popup').popup('close');
+              if (that.scene.selectedModel.isTransparent)
+              {
+                $('#view-transparent').buttonMarkup({icon: 'check'});
+              }
+              else
+              {
+                $('#view-transparent').buttonMarkup({icon: 'false'});
+              }
+
+              if (that.scene.selectedModel.isWireframe)
+              {
+                $('#view-wireframe').buttonMarkup({icon: 'check'});
+              }
+              else
+              {
+                $('#view-wireframe').buttonMarkup({icon: 'false'});
+              }
+
               $('#model-popup').popup('open',
-                  {x: event.clientX + emUnits(3),
-                   y: event.clientY + emUnits(1.5)});
+                  {x: event.clientX + emUnits(6),
+                   y: event.clientY + emUnits(3)});
             });
+      }
+  );
+
+  guiEvents.on('view_transparent', function ()
+      {
+        that.scene.toggleTransparency(that.scene.selectedModel);
+        that.scene.selectedModel = null;
+      }
+  );
+
+  guiEvents.on('view_wireframe', function ()
+      {
+        that.scene.toggleWireframe(that.scene.selectedModel);
+        that.scene.selectedModel = null;
       }
   );
 
@@ -3106,10 +3162,13 @@ GZ3D.RadialMenu.prototype.init = function()
   this.speed = 10;
   // Icon size
   this.bgSize = 40;
-  this.bgSizeSelected = 70;
+  this.bgSizeSelected = 68;
+  this.highlightSize = 45;
   this.iconProportion = 0.6;
   this.bgShape = THREE.ImageUtils.loadTexture(
       'style/images/icon_background.png' );
+  this.highlightShape = THREE.ImageUtils.loadTexture(
+      'style/images/icon_highlight.png' );
 
   // For the opening motion
   this.moving = false;
@@ -3135,6 +3194,8 @@ GZ3D.RadialMenu.prototype.init = function()
   this.addItem('delete','style/images/trash.png');
   this.addItem('translate','style/images/translate.png');
   this.addItem('rotate','style/images/rotate.png');
+  this.addItem('transparent','style/images/transparent.png');
+  this.addItem('wireframe','style/images/wireframe.png');
 
   this.numberOfItems = this.menu.children.length;
   this.offset = this.numberOfItems - 1 - Math.floor(this.numberOfItems/2);
@@ -3154,6 +3215,7 @@ GZ3D.RadialMenu.prototype.hide = function(event,callback)
   {
     this.menu.children[i].children[0].visible = false;
     this.menu.children[i].children[1].visible = false;
+    this.menu.children[i].children[2].visible = false;
     this.menu.children[i].children[1].material.color = this.plainColor;
     this.menu.children[i].children[0].scale.set(
         this.bgSize*this.iconProportion,
@@ -3176,7 +3238,6 @@ GZ3D.RadialMenu.prototype.hide = function(event,callback)
     }
   }
   this.selected = null;
-
 };
 
 /**
@@ -3186,16 +3247,26 @@ GZ3D.RadialMenu.prototype.hide = function(event,callback)
  */
 GZ3D.RadialMenu.prototype.show = function(event,model)
 {
+  if (this.showing)
+  {
+    return;
+  }
+
   this.model = model;
   var pointer = this.getPointer(event);
   this.startPosition = pointer;
+
+  this.menu.getObjectByName('transparent').isHighlighted = this.model.isTransparent;
+  this.menu.getObjectByName('wireframe').isHighlighted = this.model.isWireframe;
 
   for ( var i in this.menu.children )
   {
     this.menu.children[i].children[0].visible = true;
     this.menu.children[i].children[1].visible = true;
+    this.menu.children[i].children[2].visible = this.menu.children[i].isHighlighted;
     this.menu.children[i].children[0].position.set(pointer.x,pointer.y,0);
     this.menu.children[i].children[1].position.set(pointer.x,pointer.y,0);
+    this.menu.children[i].children[2].position.set(pointer.x,pointer.y,0);
   }
 
   this.moving = true;
@@ -3236,6 +3307,8 @@ GZ3D.RadialMenu.prototype.update = function()
     this.menu.children[i].children[0].position.y = Y + this.startPosition.y;
     this.menu.children[i].children[1].position.x = X + this.startPosition.x;
     this.menu.children[i].children[1].position.y = Y + this.startPosition.y;
+    this.menu.children[i].children[2].position.x = X + this.startPosition.x;
+    this.menu.children[i].children[2].position.y = Y + this.startPosition.y;
 
   }
 
@@ -3354,7 +3427,7 @@ GZ3D.RadialMenu.prototype.onLongPressMove = function(event)
 /**
  * Create an item and add it to the menu.
  * Create them in order
- * @param {string} type - delete/translate/rotate
+ * @param {string} type - delete/translate/rotate/transparent/wireframe
  * @param {string} itemTexture - icon's uri
  */
 GZ3D.RadialMenu.prototype.addItem = function(type,itemTexture)
@@ -3381,13 +3454,25 @@ GZ3D.RadialMenu.prototype.addItem = function(type,itemTexture)
   var bgItem = new THREE.Sprite( bgMaterial );
   bgItem.scale.set( this.bgSize, this.bgSize, 1.0 );
 
+  // Icon highlight
+  var highlightMaterial = new THREE.SpriteMaterial({
+      map: this.highlightShape,
+      useScreenCoordinates: true,
+      alignment: THREE.SpriteAlignment.center});
+
+  var highlightItem = new THREE.Sprite(highlightMaterial);
+  highlightItem.scale.set(this.highlightSize, this.highlightSize, 1.0);
+  highlightItem.visible = false;
+
   var item = new THREE.Object3D();
   item.add(iconItem);
   item.add(bgItem);
+  item.add(highlightItem);
+  item.isHighlighted = false;
+  item.name = type;
 
   this.menu.add(item);
 };
-
 
 /**
  * The scene is where everything is placed, from objects, to lights and cameras.
@@ -3905,6 +3990,8 @@ GZ3D.Scene.prototype.setWindowSize = function(width, height)
  */
 GZ3D.Scene.prototype.add = function(model)
 {
+  model.isTransparent = false;
+  model.isWireframe = false;
   this.scene.add(model);
 };
 
@@ -4919,6 +5006,89 @@ GZ3D.Scene.prototype.onRightClick = function(event, callback)
   {
     callback(model);
   }
+};
+
+/**
+ * Toggle model transparency
+ * @param {} model
+ */
+GZ3D.Scene.prototype.toggleTransparency = function(model)
+{
+  var descendants = [];
+  model.getDescendants(descendants);
+  for (var i = 0; i < descendants.length; ++i)
+  {
+    if (descendants[i].material &&
+        descendants[i].name.indexOf('boundingBox') === -1 &&
+        descendants[i].name.indexOf('COLLISION') === -1 &&
+        descendants[i].parent.name.indexOf('COLLISION') === -1 &&
+        descendants[i].name.indexOf('wireframe') === -1)
+    {
+      descendants[i].material.transparent = true;
+      if (model.isTransparent)
+      {
+        descendants[i].material.opacity =
+            descendants[i].material.originalOpacity ?
+            descendants[i].material.originalOpacity : 1.0;
+      }
+      else
+      {
+        descendants[i].material.originalOpacity =
+            descendants[i].material.opacity;
+        descendants[i].material.opacity = 0.5;
+      }
+    }
+  }
+  model.isTransparent = !model.isTransparent;
+};
+
+/**
+ * Toggle model wireframe
+ * @param {} model
+ */
+GZ3D.Scene.prototype.toggleWireframe = function(model)
+{
+  var wireframe;
+  var descendants = [];
+  model.getDescendants(descendants);
+  for (var i = 0; i < descendants.length; ++i)
+  {
+    if (descendants[i].material &&
+        descendants[i].geometry &&
+        descendants[i].name.indexOf('boundingBox') === -1 &&
+        descendants[i].name.indexOf('COLLISION') === -1 &&
+        descendants[i].parent.name.indexOf('COLLISION') === -1 &&
+        descendants[i].name.indexOf('wireframe') === -1)
+    {
+      if (model.isWireframe)
+      {
+        wireframe = descendants[i].getObjectByName('wireframe');
+        if (wireframe)
+        {
+          wireframe.visible = false;
+        }
+        descendants[i].material.visible = true;
+      }
+      else
+      {
+        wireframe = descendants[i].getObjectByName('wireframe');
+        if (wireframe)
+        {
+          wireframe.visible = true;
+        }
+        else
+        {
+          var mesh = new THREE.Mesh( descendants[i].geometry,
+              new THREE.MeshBasicMaterial({color: 0xffffff}));
+          wireframe = new THREE.WireframeHelper( mesh );
+          wireframe.name = 'wireframe';
+          descendants[i].add( wireframe );
+        }
+        descendants[i].material.visible = false;
+      }
+    }
+  }
+  model.isWireframe = !model.isWireframe;
 };
 
 /**
