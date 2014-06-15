@@ -20,6 +20,7 @@ $(function()
 
   $( '#clock-touch' ).popup('option', 'arrow', 't');
   $('#notification-popup-screen').remove();
+  $('#model-popup').height('0em');
 
   // Panel starts open for wide screens
   if ($(window).width() / emUnits(1) > 35)
@@ -632,27 +633,39 @@ GZ3D.Gui.prototype.init = function()
               that.scene.selectedModel = entity;
               that.scene.showBoundingBox(entity);
               $('.ui-popup').popup('close');
-              if (that.scene.selectedModel.isTransparent)
+              if (entity.children[0] instanceof THREE.Light)
               {
-                $('#view-transparent').buttonMarkup({icon: 'check'});
-              }
-              else
-              {
-                $('#view-transparent').buttonMarkup({icon: 'false'});
-              }
-
-              if (that.scene.selectedModel.isWireframe)
-              {
-                $('#view-wireframe').buttonMarkup({icon: 'check'});
-              }
-              else
-              {
-                $('#view-wireframe').buttonMarkup({icon: 'false'});
-              }
-
-              $('#model-popup').popup('open',
+                $('#view-transparent').css('visibility','collapse');
+                $('#view-wireframe').css('visibility','collapse');
+                $('#model-popup').popup('open',
                   {x: event.clientX + emUnits(6),
-                   y: event.clientY + emUnits(3)});
+                   y: event.clientY + emUnits(-5)});
+              }
+              else
+              {
+                if (that.scene.selectedModel.isTransparent)
+                {
+                  $('#view-transparent').buttonMarkup({icon: 'check'});
+                }
+                else
+                {
+                  $('#view-transparent').buttonMarkup({icon: 'false'});
+                }
+
+                if (that.scene.selectedModel.isWireframe)
+                {
+                  $('#view-wireframe').buttonMarkup({icon: 'check'});
+                }
+                else
+                {
+                  $('#view-wireframe').buttonMarkup({icon: 'false'});
+                }
+                $('#view-transparent').css('visibility','visible');
+                $('#view-wireframe').css('visibility','visible');
+                $('#model-popup').popup('open',
+                  {x: event.clientX + emUnits(6),
+                   y: event.clientY + emUnits(0)});
+              }
             });
       }
   );
