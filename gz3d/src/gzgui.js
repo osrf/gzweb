@@ -20,7 +20,6 @@ $(function()
 
   $( '#clock-touch' ).popup('option', 'arrow', 't');
   $('#notification-popup-screen').remove();
-  $('#model-popup').height('0em');
 
   // Panel starts open for wide screens
   if ($(window).width() / emUnits(1) > 35)

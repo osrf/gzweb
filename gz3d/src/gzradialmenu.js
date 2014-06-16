@@ -55,8 +55,7 @@ GZ3D.RadialMenu.prototype.init = function()
   this.addItem('transparent','style/images/transparent.png');
   this.addItem('wireframe','style/images/wireframe.png');
 
-  this.numberOfItems = this.menu.children.length;
-  this.offset = this.numberOfItems - 1 - Math.floor(this.numberOfItems/2);
+  this.setNumberOfItems(this.menu.children.length);
 
   // Start hidden
   this.hide();
@@ -69,7 +68,7 @@ GZ3D.RadialMenu.prototype.init = function()
  */
 GZ3D.RadialMenu.prototype.hide = function(event,callback)
 {
-  for ( var i in this.menu.children )
+  for (var i = 0; i < this.numberOfItems; i++)
   {
     this.menu.children[i].children[0].visible = false;
     this.menu.children[i].children[1].visible = false;
@@ -111,13 +110,23 @@ GZ3D.RadialMenu.prototype.show = function(event,model)
   }
 
   this.model = model;
+
+  if (model.children[0] instanceof THREE.Light)
+  {
+    this.setNumberOfItems(3);
+  }
+  else
+  {
+    this.setNumberOfItems(5);
+  }
+
   var pointer = this.getPointer(event);
   this.startPosition = pointer;
 
   this.menu.getObjectByName('transparent').isHighlighted = this.model.isTransparent;
   this.menu.getObjectByName('wireframe').isHighlighted = this.model.isWireframe;
 
-  for ( var i in this.menu.children )
+  for (var i = 0; i < this.numberOfItems; i++)
   {
     this.menu.children[i].children[0].visible = true;
     this.menu.children[i].children[1].visible = true;
@@ -142,7 +151,7 @@ GZ3D.RadialMenu.prototype.update = function()
   }
 
   // Move outwards
-  for ( var i in this.menu.children )
+  for (var i = 0; i < this.numberOfItems; i++)
   {
     var X = this.menu.children[i].children[0].position.x -
         this.startPosition.x;
@@ -256,7 +265,7 @@ GZ3D.RadialMenu.prototype.onLongPressMove = function(event)
   }
 
   var counter = 0;
-  for ( var i in this.menu.children )
+  for (var i = 0; i < this.numberOfItems; i++)
   {
     if (counter === Selected)
     {
@@ -330,4 +339,14 @@ GZ3D.RadialMenu.prototype.addItem = function(type,itemTexture)
   item.name = type;
 
   this.menu.add(item);
+};
+
+/**
+ * Set number of items (different for models and lights)
+ * @param {int} number
+ */
+GZ3D.RadialMenu.prototype.setNumberOfItems = function(number)
+{
+  this.numberOfItems = number;
+  this.offset = this.numberOfItems - 1 - Math.floor(this.numberOfItems/2);
 };
