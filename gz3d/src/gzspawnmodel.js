@@ -59,11 +59,21 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
     mesh = this.scene.createCylinder(0.5, 1.0);
     this.obj.name = 'unit_cylinder_' + (new Date()).getTime();
   }
-  /*else if (entity === 'pointlight')
+  else if (entity === 'pointlight')
   {
-    mesh = this.scene.createPointLight(0xffffff, 1000);
+    mesh = this.scene.createPointLight(0xffffff, 0.5);
     this.obj.name = 'pointlight_' + (new Date()).getTime();
-  }*/
+  }
+  else if (entity === 'spotlight')
+  {
+    mesh = this.scene.createSpotLight(0xffffff, 1);
+    this.obj.name = 'spotlight_' + (new Date()).getTime();
+  }
+  else if (entity === 'directionallight')
+  {
+    mesh = this.scene.createDirectionalLight(0xffffff, 1);
+    this.obj.name = 'directionallight_' + (new Date()).getTime();
+  }
   else
   {
     // temp box for now
@@ -83,6 +93,7 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
   this.obj.position.y = intersect.y;
   this.obj.position.z += 0.5;
   this.scene.add(this.obj);
+  this.scene.getByName('plane').material.needsUpdate = true;
 
   var that = this;
 
@@ -247,4 +258,13 @@ GZ3D.SpawnModel.prototype.moveSpawnedModel = function(positionX, positionY)
   }
 
   this.scene.setPose(this.obj, point, new THREE.Quaternion());
+
+  if (this.obj.children[0].children[0] &&
+     (this.obj.children[0].children[0] instanceof THREE.SpotLight ||
+      this.obj.children[0].children[0] instanceof THREE.DirectionalLight))
+  {
+    var lightObj = this.obj.children[0].children[0];
+    lightObj.target.position.copy(this.obj.position);
+    lightObj.target.position.add(new THREE.Vector3(0,0,-0.5));
+  }
 };
