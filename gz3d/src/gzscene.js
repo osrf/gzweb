@@ -514,6 +514,8 @@ GZ3D.Scene.prototype.setWindowSize = function(width, height)
  */
 GZ3D.Scene.prototype.add = function(model)
 {
+  model.isTransparent = false;
+  model.isWireframe = false;
   this.scene.add(model);
 };
 
@@ -1540,4 +1542,87 @@ GZ3D.Scene.prototype.onRightClick = function(event, callback)
   {
     callback(model);
   }
+};
+
+/**
+ * Toggle model transparency
+ * @param {} model
+ */
+GZ3D.Scene.prototype.toggleTransparency = function(model)
+{
+  var descendants = [];
+  model.getDescendants(descendants);
+  for (var i = 0; i < descendants.length; ++i)
+  {
+    if (descendants[i].material &&
+        descendants[i].name.indexOf('boundingBox') === -1 &&
+        descendants[i].name.indexOf('COLLISION') === -1 &&
+        descendants[i].parent.name.indexOf('COLLISION') === -1 &&
+        descendants[i].name.indexOf('wireframe') === -1)
+    {
+      descendants[i].material.transparent = true;
+      if (model.isTransparent)
+      {
+        descendants[i].material.opacity =
+            descendants[i].material.originalOpacity ?
+            descendants[i].material.originalOpacity : 1.0;
+      }
+      else
+      {
+        descendants[i].material.originalOpacity =
+            descendants[i].material.opacity;
+        descendants[i].material.opacity = 0.5;
+      }
+    }
+  }
+  model.isTransparent = !model.isTransparent;
+};
+
+/**
+ * Toggle model wireframe
+ * @param {} model
+ */
+GZ3D.Scene.prototype.toggleWireframe = function(model)
+{
+  var wireframe;
+  var descendants = [];
+  model.getDescendants(descendants);
+  for (var i = 0; i < descendants.length; ++i)
+  {
+    if (descendants[i].material &&
+        descendants[i].geometry &&
+        descendants[i].name.indexOf('boundingBox') === -1 &&
+        descendants[i].name.indexOf('COLLISION') === -1 &&
+        descendants[i].parent.name.indexOf('COLLISION') === -1 &&
+        descendants[i].name.indexOf('wireframe') === -1)
+    {
+      if (model.isWireframe)
+      {
+        wireframe = descendants[i].getObjectByName('wireframe');
+        if (wireframe)
+        {
+          wireframe.visible = false;
+        }
+        descendants[i].material.visible = true;
+      }
+      else
+      {
+        wireframe = descendants[i].getObjectByName('wireframe');
+        if (wireframe)
+        {
+          wireframe.visible = true;
+        }
+        else
+        {
+          var mesh = new THREE.Mesh( descendants[i].geometry,
+              new THREE.MeshBasicMaterial({color: 0xffffff}));
+          wireframe = new THREE.WireframeHelper( mesh );
+          wireframe.name = 'wireframe';
+          descendants[i].add( wireframe );
+        }
+        descendants[i].material.visible = false;
+      }
+    }
+  }
+  model.isWireframe = !model.isWireframe;
 };

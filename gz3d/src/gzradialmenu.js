@@ -20,10 +20,13 @@ GZ3D.RadialMenu.prototype.init = function()
   this.speed = 10;
   // Icon size
   this.bgSize = 40;
-  this.bgSizeSelected = 70;
+  this.bgSizeSelected = 68;
+  this.highlightSize = 45;
   this.iconProportion = 0.6;
   this.bgShape = THREE.ImageUtils.loadTexture(
       'style/images/icon_background.png' );
+  this.highlightShape = THREE.ImageUtils.loadTexture(
+      'style/images/icon_highlight.png' );
 
   // For the opening motion
   this.moving = false;
@@ -49,9 +52,10 @@ GZ3D.RadialMenu.prototype.init = function()
   this.addItem('delete','style/images/trash.png');
   this.addItem('translate','style/images/translate.png');
   this.addItem('rotate','style/images/rotate.png');
+  this.addItem('transparent','style/images/transparent.png');
+  this.addItem('wireframe','style/images/wireframe.png');
 
-  this.numberOfItems = this.menu.children.length;
-  this.offset = this.numberOfItems - 1 - Math.floor(this.numberOfItems/2);
+  this.setNumberOfItems(this.menu.children.length);
 
   // Start hidden
   this.hide();
@@ -64,10 +68,11 @@ GZ3D.RadialMenu.prototype.init = function()
  */
 GZ3D.RadialMenu.prototype.hide = function(event,callback)
 {
-  for ( var i in this.menu.children )
+  for (var i = 0; i < this.numberOfItems; i++)
   {
     this.menu.children[i].children[0].visible = false;
     this.menu.children[i].children[1].visible = false;
+    this.menu.children[i].children[2].visible = false;
     this.menu.children[i].children[1].material.color = this.plainColor;
     this.menu.children[i].children[0].scale.set(
         this.bgSize*this.iconProportion,
@@ -90,7 +95,6 @@ GZ3D.RadialMenu.prototype.hide = function(event,callback)
     }
   }
   this.selected = null;
-
 };
 
 /**
@@ -100,16 +104,36 @@ GZ3D.RadialMenu.prototype.hide = function(event,callback)
  */
 GZ3D.RadialMenu.prototype.show = function(event,model)
 {
+  if (this.showing)
+  {
+    return;
+  }
+
   this.model = model;
+
+  if (model.children[0] instanceof THREE.Light)
+  {
+    this.setNumberOfItems(3);
+  }
+  else
+  {
+    this.setNumberOfItems(5);
+  }
+
   var pointer = this.getPointer(event);
   this.startPosition = pointer;
 
-  for ( var i in this.menu.children )
+  this.menu.getObjectByName('transparent').isHighlighted = this.model.isTransparent;
+  this.menu.getObjectByName('wireframe').isHighlighted = this.model.isWireframe;
+
+  for (var i = 0; i < this.numberOfItems; i++)
   {
     this.menu.children[i].children[0].visible = true;
     this.menu.children[i].children[1].visible = true;
+    this.menu.children[i].children[2].visible = this.menu.children[i].isHighlighted;
     this.menu.children[i].children[0].position.set(pointer.x,pointer.y,0);
     this.menu.children[i].children[1].position.set(pointer.x,pointer.y,0);
+    this.menu.children[i].children[2].position.set(pointer.x,pointer.y,0);
   }
 
   this.moving = true;
@@ -127,7 +151,7 @@ GZ3D.RadialMenu.prototype.update = function()
   }
 
   // Move outwards
-  for ( var i in this.menu.children )
+  for (var i = 0; i < this.numberOfItems; i++)
   {
     var X = this.menu.children[i].children[0].position.x -
         this.startPosition.x;
@@ -150,6 +174,8 @@ GZ3D.RadialMenu.prototype.update = function()
     this.menu.children[i].children[0].position.y = Y + this.startPosition.y;
     this.menu.children[i].children[1].position.x = X + this.startPosition.x;
     this.menu.children[i].children[1].position.y = Y + this.startPosition.y;
+    this.menu.children[i].children[2].position.x = X + this.startPosition.x;
+    this.menu.children[i].children[2].position.y = Y + this.startPosition.y;
 
   }
 
@@ -239,7 +265,7 @@ GZ3D.RadialMenu.prototype.onLongPressMove = function(event)
   }
 
   var counter = 0;
-  for ( var i in this.menu.children )
+  for (var i = 0; i < this.numberOfItems; i++)
   {
     if (counter === Selected)
     {
@@ -268,7 +294,7 @@ GZ3D.RadialMenu.prototype.onLongPressMove = function(event)
 /**
  * Create an item and add it to the menu.
  * Create them in order
- * @param {string} type - delete/translate/rotate
+ * @param {string} type - delete/translate/rotate/transparent/wireframe
  * @param {string} itemTexture - icon's uri
  */
 GZ3D.RadialMenu.prototype.addItem = function(type,itemTexture)
@@ -295,10 +321,32 @@ GZ3D.RadialMenu.prototype.addItem = function(type,itemTexture)
   var bgItem = new THREE.Sprite( bgMaterial );
   bgItem.scale.set( this.bgSize, this.bgSize, 1.0 );
 
+  // Icon highlight
+  var highlightMaterial = new THREE.SpriteMaterial({
+      map: this.highlightShape,
+      useScreenCoordinates: true,
+      alignment: THREE.SpriteAlignment.center});
+
+  var highlightItem = new THREE.Sprite(highlightMaterial);
+  highlightItem.scale.set(this.highlightSize, this.highlightSize, 1.0);
+  highlightItem.visible = false;
+
   var item = new THREE.Object3D();
   item.add(iconItem);
   item.add(bgItem);
+  item.add(highlightItem);
+  item.isHighlighted = false;
+  item.name = type;
 
   this.menu.add(item);
 };
 
+/**
+ * Set number of items (different for models and lights)
+ * @param {int} number
+ */
+GZ3D.RadialMenu.prototype.setNumberOfItems = function(number)
+{
+  this.numberOfItems = number;
+  this.offset = this.numberOfItems - 1 - Math.floor(this.numberOfItems/2);
+};
