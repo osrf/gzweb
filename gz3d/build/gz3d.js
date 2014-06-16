@@ -5555,7 +5555,6 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
     // temp box for now
     mesh = this.scene.createBox(1, 1, 1);
     this.obj.name = entity + '_' + (new Date()).getTime();
-
   }
 
   this.obj.add(mesh);
@@ -5569,6 +5568,7 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
   this.obj.position.y = intersect.y;
   this.obj.position.z += 0.5;
   this.scene.add(this.obj);
+  // For the inserted light to have effect
   this.scene.getByName('plane').material.needsUpdate = true;
 
   var that = this;
