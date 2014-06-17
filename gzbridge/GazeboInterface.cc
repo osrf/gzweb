@@ -309,6 +309,8 @@ void GazeboInterface::ProcessMessages()
         else if (topic == this->lightTopic)
         {
           std::string name = get_value(msg, "msg:name");
+          std::string type = get_value(msg, "msg:type");
+          std::string createEntity = get_value(msg, "msg:createEntity");
 
           if (name == "")
             continue;
@@ -327,6 +329,35 @@ void GazeboInterface::ProcessMessages()
           gazebo::msgs::Light lightMsg;
           lightMsg.set_name(name);
           gazebo::msgs::Set(lightMsg.mutable_pose(), pose);
+
+          if (createEntity.compare("1") == 0)
+          {
+            if (type.compare("pointlight") == 0)
+            {
+              lightMsg.set_type(gazebo::msgs::Light::POINT);
+            }
+            else if (type.compare("spotlight") == 0)
+            {
+              lightMsg.set_type(gazebo::msgs::Light::SPOT);
+              gazebo::msgs::Set(lightMsg.mutable_direction(),
+                  gazebo::math::Vector3(0,0,-1));
+            }
+            else if (type.compare("directionallight") == 0)
+            {
+              lightMsg.set_type(gazebo::msgs::Light::DIRECTIONAL);
+              gazebo::msgs::Set(lightMsg.mutable_direction(),
+                  gazebo::math::Vector3(0,0,-1));
+            }
+
+            gazebo::msgs::Set(lightMsg.mutable_diffuse(),
+                gazebo::common::Color(0.5, 0.5, 0.5, 1));
+            gazebo::msgs::Set(lightMsg.mutable_specular(),
+                gazebo::common::Color(0.1, 0.1, 0.1, 1));
+            lightMsg.set_attenuation_constant(0.5);
+            lightMsg.set_attenuation_linear(0.01);
+            lightMsg.set_attenuation_quadratic(0.001);
+            lightMsg.set_range(20);
+          }
 
           this->lightPub->Publish(lightMsg);
         }
@@ -398,53 +429,6 @@ void GazeboInterface::ProcessMessages()
                 << "</link>"
                 << "</model>"
                 << "</sdf>";
-          }
-          else if(type == "pointlight" || type == "spotlight" ||
-              type == "directionallight")
-          {
-           /* gazebo::math::Vector3 pos(
-            atof(get_value(msg, "msg:position:x").c_str()),
-            atof(get_value(msg, "msg:position:y").c_str()),
-            atof(get_value(msg, "msg:position:z").c_str()));
-            gazebo::math::Quaternion quat(
-            atof(get_value(msg, "msg:orientation:w").c_str()),
-            atof(get_value(msg, "msg:orientation:x").c_str()),
-            atof(get_value(msg, "msg:orientation:y").c_str()),
-            atof(get_value(msg, "msg:orientation:z").c_str()));
-            gazebo::math::Pose pose(pos, quat);
-
-            gazebo::msgs::Light lightMsg;
-            gazebo::msgs::Set(lightMsg.mutable_pose(), pose);
-            gazebo::msgs::Set(lightMsg.mutable_diffuse(),
-                gazebo::common::Color(0.5, 0.5, 0.5, 1));
-            gazebo::msgs::Set(lightMsg.mutable_specular(),
-                gazebo::common::Color(0.1, 0.1, 0.1, 1));
-            lightMsg.set_name(name);
-            lightMsg.set_attenuation_constant(0.5);
-            lightMsg.set_attenuation_linear(0.01);
-            lightMsg.set_attenuation_quadratic(0.001);
-            lightMsg.set_range(20);*/
-
-
-            std::string lightType = type.substr(0,type.find("light"));
-
-            newModelStr << "<sdf version ='" << SDF_VERSION << "'>"
-              << "<light name='" << name << "' type='" << lightType << "'>"
-              << "<pose>" << pos.x << " " << pos.y << " " << pos.z << " "
-                          << rpy.x << " " << rpy.y << " " << rpy.z << "</pose>"
-              << "<diffuse>0.5 0.5 0.5 1</diffuse>"
-              << "<specular>.1 .1 .1 1</specular>"
-              << "<attenuation>"
-              <<   "<range>20</range>"
-              <<   "<linear>0.01</linear>"
-              <<   "<constant>0.5</constant>"
-              <<   "<quadratic>0.001</quadratic>"
-              << "</attenuation>"
-              << "<cast_shadows>false</cast_shadows>"
-              << "</light>"
-              << "</sdf>";
-
-              std::cout << newModelStr.str() << std::endl;
           }
           else
           {

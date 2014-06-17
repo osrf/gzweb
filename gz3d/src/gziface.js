@@ -267,8 +267,8 @@ GZ3D.GZIface.prototype.init = function()
     messageType : 'model',
   });
 
-  // Light messages - for modifying light pose (repeated)
-  this.lightTopic = new ROSLIB.Topic({
+  // Light messages - for modifying light pose
+  this.lightModifyTopic = new ROSLIB.Topic({
     ros : this.webSocket,
     name : '~/light',
     messageType : 'light',
@@ -286,6 +286,7 @@ GZ3D.GZIface.prototype.init = function()
     {
       name : model.name,
       id : model.userData,
+      createEntity : 0,
       position :
       {
         x : translation.x,
@@ -303,7 +304,7 @@ GZ3D.GZIface.prototype.init = function()
     if (model.children[0] &&
         model.children[0] instanceof THREE.Light)
     {
-      that.lightTopic.publish(modelMsg);
+      that.lightModifyTopic.publish(modelMsg);
     }
     else
     {
@@ -320,6 +321,13 @@ GZ3D.GZIface.prototype.init = function()
     messageType : 'factory',
   });
 
+  // Factory messages - for spawning new models
+  this.lightFactoryTopic = new ROSLIB.Topic({
+    ros : this.webSocket,
+    name : '~/light',
+    messageType : 'light',
+  });
+
   var publishFactory = function(model, type)
   {
     var matrix = model.matrixWorld;
@@ -331,6 +339,7 @@ GZ3D.GZIface.prototype.init = function()
     {
       name : model.name,
       type : type,
+      createEntity : 1,
       position :
       {
         x : translation.x,
@@ -345,7 +354,14 @@ GZ3D.GZIface.prototype.init = function()
         z: quaternion.z
       }
     };
-    that.factoryTopic.publish(modelMsg);
+    if (model.children[0].children[0] instanceof THREE.Light)
+    {
+      that.lightFactoryTopic.publish(modelMsg);
+    }
+    else
+    {
+      that.factoryTopic.publish(modelMsg);
+    }
   };
 
   // For deleting models
