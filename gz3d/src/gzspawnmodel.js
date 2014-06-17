@@ -219,8 +219,8 @@ GZ3D.SpawnModel.prototype.onKeyDown = function(event)
  */
 GZ3D.SpawnModel.prototype.moveSpawnedModel = function(positionX, positionY)
 {
-  var vector = new THREE.Vector3( (positionX / window.containerWidth) * 2 - 1,
-        -(positionY / window.containerHeight) * 2 + 1, 0.5);
+  var vector = new THREE.Vector3( (positionX / window.innerWidth) * 2 - 1,
+        -(positionY / window.innerHeight) * 2 + 1, 0.5);
   this.projector.unprojectVector(vector, this.scene.camera);
   this.ray.set(this.scene.camera.position,
       vector.sub(this.scene.camera.position).normalize());
