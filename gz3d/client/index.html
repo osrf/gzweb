@@ -248,10 +248,6 @@
       var container, stats;
       var scene;
 
-      // Container dimensions
-      window.containerHeight = window.innerHeight;
-      window.containerWidth = window.innerWidth;
-
       init();
       animate();
 
@@ -276,9 +272,8 @@
 
       function onWindowResize()
       {
-        window.containerHeight = window.innerHeight;
-        window.containerWidth = window.innerWidth;
-        scene.setWindowSize(window.containerWidth, window.containerHeight);
+        scene.setWindowSize(window.innerWidth, window.innerHeight);
+        $('#clock-touch').popup('close');
       }
 
       function animate()
