@@ -592,8 +592,24 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
   color.g = light.diffuse.g;
   color.b = light.diffuse.b;
 
+  var quaternion = new THREE.Quaternion(
+      light.pose.orientation.x,
+      light.pose.orientation.y,
+      light.pose.orientation.z,
+      light.pose.orientation.w);
+
+  var translation = new THREE.Vector3(
+      light.pose.position.x,
+      light.pose.position.y,
+      light.pose.position.z);
+
+  // obj matrix is not updated in time
+  var matrixWorld = new THREE.Matrix4();
+  matrixWorld.compose(translation, quaternion, new THREE.Vector3(1,1,1));
+
   this.scene.setPose(obj, light.pose.position,
         light.pose.orientation);
+  obj.matrixWorldNeedsUpdate = true;
 
   if (light.type === 1)
   {
@@ -662,12 +678,12 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
   {
     var dir = new THREE.Vector3(light.direction.x, light.direction.y,
         light.direction.z);
-    obj.worldToLocal(dir);
-    var target = new THREE.Vector3();
-    target.copy(obj.position);
-    target.add(dir);
-    lightObj.target.position = target;
-    obj.direction = dir;
+
+    obj.direction = new THREE.Vector3();
+    obj.direction.copy(dir);
+
+    dir.applyMatrix4(matrixWorld); // localToWorld
+    lightObj.target.position.copy(dir);
   }
   obj.name = light.name;
 
