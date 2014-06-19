@@ -723,7 +723,8 @@ GZ3D.Gui.prototype.init = function()
       function (event)
       {
         if (event.originalEvent.touches.length !== 1 ||
-            that.scene.modelManipulator.hovered)
+            that.scene.modelManipulator.hovered ||
+            that.spawnModel.active)
         {
           guiEvents.emit('longpress_container_end', event.originalEvent,true);
         }
