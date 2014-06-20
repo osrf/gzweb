@@ -215,11 +215,19 @@ $(function()
         .css('z-index', '1000');
 
     $('#footer').touchstart(function(event){
-        guiEvents.emit('killCameraControl');
+        guiEvents.emit('pointerOnMenu');
     });
 
     $('#footer').touchend(function(event){
-        guiEvents.emit('allowCameraControl');
+        guiEvents.emit('pointerOffMenu');
+    });
+
+    $('#leftPanel').touchstart(function(event){
+        guiEvents.emit('pointerOnMenu');
+    });
+
+    $('#leftPanel').touchend(function(event){
+        guiEvents.emit('pointerOffMenu');
     });
 
     // long press on canvas
@@ -325,11 +333,19 @@ $(function()
         .css('z-index', '1000');
 
     $('#footer').mouseenter(function(event){
-        guiEvents.emit('killCameraControl');
+        guiEvents.emit('pointerOnMenu');
     });
 
     $('#footer').mouseleave(function(event){
-        guiEvents.emit('allowCameraControl');
+        guiEvents.emit('pointerOffMenu');
+    });
+
+    $('#leftPanel').mouseenter(function(event){
+        guiEvents.emit('pointerOnMenu');
+    });
+
+    $('#leftPanel').mouseleave(function(event){
+        guiEvents.emit('pointerOffMenu');
     });
 
     // right-click
@@ -730,7 +746,6 @@ GZ3D.Gui.prototype.init = function()
         }
         else
         {
-          that.scene.killCameraControl = true;
           that.scene.showRadialMenu(event);
           that.longPressContainerState = 'START';
         }
@@ -749,7 +764,6 @@ GZ3D.Gui.prototype.init = function()
           return;
         }
         that.longPressContainerState = 'END';
-        that.scene.killCameraControl = false;
         if (that.scene.radialMenu.showing)
         {
           if (cancel)
@@ -798,12 +812,7 @@ GZ3D.Gui.prototype.init = function()
           {
             return;
           }
-          // Cancel long press in case of drag before it shows
-          if (!that.scene.radialMenu.showing)
-          {
-            that.scene.killCameraControl = false;
-          }
-          else
+          if (that.scene.radialMenu.showing)
           {
             that.scene.radialMenu.onLongPressMove(event);
           }
@@ -851,15 +860,15 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('killCameraControl', function ()
+  guiEvents.on('pointerOnMenu', function ()
       {
-        that.scene.killCameraControl = true;
+        that.scene.pointerOnMenu = true;
       }
   );
 
-  guiEvents.on('allowCameraControl', function ()
+  guiEvents.on('pointerOffMenu', function ()
       {
-        that.scene.killCameraControl = false;
+        that.scene.pointerOnMenu = false;
       }
   );
 
