@@ -48,6 +48,8 @@ GZ3D.Scene.prototype.init = function()
 
   this.showCollisions = false;
 
+  this.spawnModel = new GZ3D.SpawnModel(
+      this, this.getDomElement());
   // Material for simple shapes being spawned (grey transparent)
   this.spawnedShapeMaterial = new THREE.MeshPhongMaterial(
       {color:0xffffff, shading: THREE.SmoothShading} );
@@ -462,10 +464,11 @@ GZ3D.Scene.prototype.render = function()
   // -spawning
   // -manipulating
   // -using radial menu
-  // -pointer on menus
+  // -pointer over menus
   if (this.modelManipulator.hovered ||
       this.radialMenu.showing ||
-      this.pointerOnMenu) // SPAWN?
+      this.pointerOnMenu ||
+      this.spawnModel.active)
   {
     this.controls.enabled = false;
     this.controls.update();

@@ -588,8 +588,6 @@ GZ3D.Gui = function(scene)
  */
 GZ3D.Gui.prototype.init = function()
 {
-  this.spawnModel = new GZ3D.SpawnModel(
-      this.scene, this.scene.getDomElement());
   this.spawnState = null;
   this.longPressContainerState = null;
   this.longPressFooterState = null;
@@ -619,7 +617,7 @@ GZ3D.Gui.prototype.init = function()
         var name = getNameFromPath(entity);
 
         that.spawnState = 'START';
-        that.spawnModel.start(entity,function(obj)
+        that.scene.spawnModel.start(entity,function(obj)
             {
               that.emitter.emit('entityCreated', obj, entity);
 
@@ -635,7 +633,7 @@ GZ3D.Gui.prototype.init = function()
   guiEvents.on('spawn_entity_move', function(event)
       {
         that.spawnState = 'MOVE';
-        that.spawnModel.onTouchMove(event,false);
+        that.scene.spawnModel.onTouchMove(event,false);
       }
   );
   // Place temp model by touch
@@ -643,7 +641,7 @@ GZ3D.Gui.prototype.init = function()
       {
         if (that.spawnState === 'MOVE')
         {
-          that.spawnModel.onTouchEnd();
+          that.scene.spawnModel.onTouchEnd();
         }
         that.spawnState = null;
       }
@@ -699,14 +697,14 @@ GZ3D.Gui.prototype.init = function()
         {
           $('#snap-to-grid').buttonMarkup({icon: 'check'});
           that.scene.modelManipulator.snapDist = 0.5;
-          that.spawnModel.snapDist = that.scene.modelManipulator.snapDist;
+          that.scene.spawnModel.snapDist = that.scene.modelManipulator.snapDist;
           guiEvents.emit('notification_popup','Snapping to grid');
         }
         else
         {
           $('#snap-to-grid').buttonMarkup({icon: 'false'});
           that.scene.modelManipulator.snapDist = null;
-          that.spawnModel.snapDist = null;
+          that.scene.spawnModel.snapDist = null;
           guiEvents.emit('notification_popup','Not snapping to grid');
         }
       }
@@ -740,7 +738,7 @@ GZ3D.Gui.prototype.init = function()
       {
         if (event.originalEvent.touches.length !== 1 ||
             that.scene.modelManipulator.hovered ||
-            that.spawnModel.active)
+            that.scene.spawnModel.active)
         {
           guiEvents.emit('longpress_container_end', event.originalEvent,true);
         }
