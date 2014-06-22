@@ -402,6 +402,10 @@ $(function()
             .css('margin-left', '0px');
     });
 
+    $( '.insert-close' ).click(function() {
+      $('.insert-menus').hide();
+    });
+
   $('.insert-menus').on('scroll', function()
       {
         var id = $(this).attr('id');
