@@ -387,11 +387,15 @@ $(function()
         if($('#insert-menu').is(':visible'))
         {
           $('#insert-menu').hide();
+          $('.insert-menu-title')
+            .css('margin-left', '0px');
         }
         else
         {
           $('#insert-menu').show();
           $('[id^="insert-menu-"]').hide();
+          $('.insert-menu-title')
+            .css('margin-left', '0px');
         }
     });
 
@@ -404,6 +408,8 @@ $(function()
 
     $( '.insert-close' ).click(function() {
       $('.insert-menus').hide();
+      $('.insert-menu-title')
+            .css('margin-left', '0px');
     });
 
   $('.insert-menus').on('scroll', function()
