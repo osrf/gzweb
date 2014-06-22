@@ -3833,10 +3833,10 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
 
       while (model.parent !== this.scene)
       {
-        // Select handle instead of background object
-        if (this.mode !== 'view' &&
-            model.parent.parent === this.modelManipulator.gizmo &&
-            model.name !== '')
+        // Select current mode's handle
+        if (model.parent.parent === this.modelManipulator.gizmo &&
+            ((this.mode === 'translate' && model.name.indexOf('T') >=0) ||
+             (this.mode === 'rotate' && model.name.indexOf('R') >=0)))
         {
           break modelsloop;
         }
