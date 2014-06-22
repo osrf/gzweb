@@ -117,6 +117,14 @@ $(function()
 
     $('#cylinder-header-fieldset')
         .css('visibility','hidden');
+
+    $('#leftPanel').touchstart(function(event){
+        guiEvents.emit('pointerOnMenu');
+    });
+
+    $('#leftPanel').touchend(function(event){
+        guiEvents.emit('pointerOffMenu');
+    });
   }
   // Mouse devices
   else
@@ -199,6 +207,14 @@ $(function()
         {
           $('#model-popup').popup('close');
         });
+
+    $('#leftPanel').mouseenter(function(event){
+        guiEvents.emit('pointerOnMenu');
+    });
+
+    $('#leftPanel').mouseleave(function(event){
+        guiEvents.emit('pointerOffMenu');
+    });
   }
 
   $('.header-button')
@@ -348,8 +364,6 @@ GZ3D.Gui = function(scene)
  */
 GZ3D.Gui.prototype.init = function()
 {
-  this.spawnModel = new GZ3D.SpawnModel(
-      this.scene, this.scene.getDomElement());
   this.spawnState = null;
   this.longPressState = null;
   this.showNotifications = false;
@@ -375,7 +389,7 @@ GZ3D.Gui.prototype.init = function()
         $('#view-mode').prop('checked', true);
         $('input[type="radio"]').checkboxradio('refresh');
         that.spawnState = 'START';
-        that.spawnModel.start(entity,function(obj)
+        that.scene.spawnModel.start(entity,function(obj)
             {
               that.emitter.emit('entityCreated', obj, entity);
               guiEvents.emit('notification_popup',
@@ -391,7 +405,7 @@ GZ3D.Gui.prototype.init = function()
   guiEvents.on('spawn_entity_move', function(event)
       {
         that.spawnState = 'MOVE';
-        that.spawnModel.onTouchMove(event,false);
+        that.scene.spawnModel.onTouchMove(event,false);
       }
   );
   // Place temp model by touch
@@ -399,7 +413,7 @@ GZ3D.Gui.prototype.init = function()
       {
         if (that.spawnState === 'MOVE')
         {
-          that.spawnModel.onTouchEnd();
+          that.scene.spawnModel.onTouchEnd();
         }
         that.spawnState = null;
       }
@@ -455,14 +469,14 @@ GZ3D.Gui.prototype.init = function()
         {
           $('#snap-to-grid').buttonMarkup({icon: 'check'});
           that.scene.modelManipulator.snapDist = 0.5;
-          that.spawnModel.snapDist = that.scene.modelManipulator.snapDist;
+          that.scene.spawnModel.snapDist = that.scene.modelManipulator.snapDist;
           guiEvents.emit('notification_popup','Snapping to grid');
         }
         else
         {
           $('#snap-to-grid').buttonMarkup({icon: 'false'});
           that.scene.modelManipulator.snapDist = null;
-          that.spawnModel.snapDist = null;
+          that.scene.spawnModel.snapDist = null;
           guiEvents.emit('notification_popup','Not snapping to grid');
         }
       }
@@ -495,13 +509,13 @@ GZ3D.Gui.prototype.init = function()
       function (event)
       {
         if (event.originalEvent.touches.length !== 1 ||
-            that.scene.modelManipulator.hovered)
+            that.scene.modelManipulator.hovered ||
+            that.scene.spawnModel.active)
         {
           guiEvents.emit('longpress_end', event.originalEvent,true);
         }
         else
         {
-          that.scene.killCameraControl = true;
           that.scene.showRadialMenu(event);
           that.longPressState = 'START';
         }
@@ -520,7 +534,6 @@ GZ3D.Gui.prototype.init = function()
           return;
         }
         that.longPressState = 'END';
-        that.scene.killCameraControl = false;
         if (that.scene.radialMenu.showing)
         {
           if (cancel)
@@ -569,12 +582,7 @@ GZ3D.Gui.prototype.init = function()
           {
             return;
           }
-          // Cancel long press in case of drag before it shows
-          if (!that.scene.radialMenu.showing)
-          {
-            that.scene.killCameraControl = false;
-          }
-          else
+          if (that.scene.radialMenu.showing)
           {
             that.scene.radialMenu.onLongPressMove(event);
           }
@@ -629,6 +637,18 @@ GZ3D.Gui.prototype.init = function()
         that.scene.hideBoundingBox();
       }
   );
+
+  guiEvents.on('pointerOnMenu', function ()
+      {
+        that.scene.pointerOnMenu = true;
+      }
+  );
+
+  guiEvents.on('pointerOffMenu', function ()
+      {
+        that.scene.pointerOnMenu = false;
+      }
+   );
 };
 
 /**
