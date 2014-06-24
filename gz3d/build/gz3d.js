@@ -679,6 +679,9 @@ GZ3D.GZIface = function(scene, gui)
 {
   this.scene = scene;
   this.gui = gui;
+  
+  this.isConnected = false;
+  
   this.init();
   this.visualsToAdd = [];
 };
@@ -688,17 +691,42 @@ GZ3D.GZIface.prototype.init = function()
   this.material = [];
   this.entityMaterial = {};
 
-  // Set up initial scene
+  this.connect();
+};
+
+GZ3D.GZIface.prototype.connect = function()
+{
+  // connect to websocket
   this.webSocket = new ROSLIB.Ros({
     url : 'ws://' + location.hostname + ':7681'
   });
+  
+  var that = this;
+  this.webSocket.on('connection', function() {
+    that.onConnected();
+  });
+  this.webSocket.on('error', function() {
+    that.onError();
+  });
+};
 
+GZ3D.GZIface.prototype.onError = function()
+{
+//  this.emitter.emit('error');
+  this.scene.initScene();
+};
+
+GZ3D.GZIface.prototype.onConnected = function()
+{
+  this.isConnected = true;
+//this.emitter.emit('connection');
+  
   this.heartbeatTopic = new ROSLIB.Topic({
     ros : this.webSocket,
     name : '~/heartbeat',
     messageType : 'heartbeat',
   });
-
+  
   var that = this;
   var publishHeartbeat = function()
   {
@@ -708,65 +736,65 @@ GZ3D.GZIface.prototype.init = function()
     };
     that.heartbeatTopic.publish(hearbeatMsg);
   };
-
+  
   setInterval(publishHeartbeat, 5000);
-
+  
   var materialTopic = new ROSLIB.Topic({
     ros : this.webSocket,
     name : '~/material',
     messageType : 'material',
   });
-
+  
   var materialUpdate = function(message)
   {
     this.material = message;
   };
   materialTopic.subscribe(materialUpdate.bind(this));
-
+  
   this.sceneTopic = new ROSLIB.Topic({
     ros : this.webSocket,
     name : '~/scene',
     messageType : 'scene',
   });
-
+  
   var sceneUpdate = function(message)
   {
     if (message.name)
     {
       this.scene.name = message.name;
     }
-
+  
     if (message.grid === true)
     {
       this.scene.createGrid();
     }
-
+  
     for (var i = 0; i < message.light.length; ++i)
     {
       var light = message.light[i];
       var lightObj = this.createLightFromMsg(light);
       this.scene.add(lightObj);
     }
-
+  
     for (var j = 0; j < message.model.length; ++j)
     {
       var model = message.model[j];
       var modelObj = this.createModelFromMsg(model);
       this.scene.add(modelObj);
     }
-
+  
     this.sceneTopic.unsubscribe();
   };
   this.sceneTopic.subscribe(sceneUpdate.bind(this));
-
-
+  
+  
   // Update model pose
   var poseTopic = new ROSLIB.Topic({
     ros : this.webSocket,
     name : '~/pose/info',
     messageType : 'pose',
   });
-
+  
   var poseUpdate = function(message)
   {
     var entity = this.scene.getByName(message.name);
@@ -775,16 +803,16 @@ GZ3D.GZIface.prototype.init = function()
       this.scene.updatePose(entity, message.position, message.orientation);
     }
   };
-
+  
   poseTopic.subscribe(poseUpdate.bind(this));
-
+  
   // Requests - for deleting models
   var requestTopic = new ROSLIB.Topic({
     ros : this.webSocket,
     name : '~/request',
     messageType : 'request',
   });
-
+  
   var requestUpdate = function(message)
   {
     if (message.request === 'entity_delete')
@@ -796,16 +824,16 @@ GZ3D.GZIface.prototype.init = function()
       }
     }
   };
-
+  
   requestTopic.subscribe(requestUpdate.bind(this));
-
+  
   // Model info messages - currently used for spawning new models
   var modelInfoTopic = new ROSLIB.Topic({
     ros : this.webSocket,
     name : '~/model/info',
     messageType : 'model',
   });
-
+  
   var modelUpdate = function(message)
   {
     if (!this.scene.getByName(message.name))
@@ -815,7 +843,7 @@ GZ3D.GZIface.prototype.init = function()
       {
         this.scene.add(modelObj);
       }
-
+  
       // visuals may arrive out of order (before the model msg),
       // add the visual in if we find its parent here
       var len = this.visualsToAdd.length;
@@ -839,16 +867,16 @@ GZ3D.GZIface.prototype.init = function()
       }
     }
   };
-
+  
   modelInfoTopic.subscribe(modelUpdate.bind(this));
-
+  
   // Visual messages - currently just used for collision visuals
   var visualTopic = new ROSLIB.Topic({
     ros : this.webSocket,
     name : '~/visual',
     messageType : 'visual',
   });
-
+  
   var visualUpdate = function(message)
   {
     if (!this.scene.getByName(message.name))
@@ -858,7 +886,7 @@ GZ3D.GZIface.prototype.init = function()
       {
         return;
       }
-
+  
       // delay the add if parent not found, this array will checked in
       // modelUpdate function
       var parent = this.scene.getByName(message.parent_name);
@@ -873,30 +901,30 @@ GZ3D.GZIface.prototype.init = function()
       }
     }
   };
-
+  
   visualTopic.subscribe(visualUpdate.bind(this));
-
+  
   // world stats
   var worldStatsTopic = new ROSLIB.Topic({
     ros : this.webSocket,
     name : '~/world_stats',
     messageType : 'world_stats',
   });
-
+  
   var worldStatsUpdate = function(message)
   {
     this.updateStatsGuiFromMsg(message);
   };
-
+  
   worldStatsTopic.subscribe(worldStatsUpdate.bind(this));
-
+  
   // Lights
   var lightTopic = new ROSLIB.Topic({
     ros : this.webSocket,
     name : '~/light',
     messageType : 'light',
   });
-
+  
   var ligthtUpdate = function(message)
   {
     if (!this.scene.getByName(message.name))
@@ -905,28 +933,28 @@ GZ3D.GZIface.prototype.init = function()
       this.scene.add(lightObj);
     }
   };
-
+  
   lightTopic.subscribe(ligthtUpdate.bind(this));
-
-
+  
+  
   // heightmap
   this.heightmapDataService = new ROSLIB.Service({
     ros : this.webSocket,
     name : '~/heightmap_data',
     serviceType : 'heightmap_data'
   });
-
+  
   // road
   this.roadService = new ROSLIB.Service({
     ros : this.webSocket,
     name : '~/roads',
     serviceType : 'roads'
   });
-
+  
   var request = new ROSLIB.ServiceRequest({
       name : 'roads'
   });
-
+  
   // send service request and load road on response
   this.roadService.callService(request,
   function(result)
@@ -934,14 +962,14 @@ GZ3D.GZIface.prototype.init = function()
     var roadsObj = that.createRoadsFromMsg(result);
     this.scene.add(roadsObj);
   });
-
+  
   // Model modify messages - for modifying model pose
   this.modelModifyTopic = new ROSLIB.Topic({
     ros : this.webSocket,
     name : '~/model/modify',
     messageType : 'model',
   });
-
+  
   var publishModelModify = function(model)
   {
     var matrix = model.matrixWorld;
@@ -949,7 +977,7 @@ GZ3D.GZIface.prototype.init = function()
     var quaternion = new THREE.Quaternion();
     var scale = new THREE.Vector3();
     matrix.decompose(translation, quaternion, scale);
-
+  
     var modelMsg =
     {
       name : model.name,
@@ -970,16 +998,16 @@ GZ3D.GZIface.prototype.init = function()
     };
     that.modelModifyTopic.publish(modelMsg);
   };
-
+  
   this.scene.emitter.on('poseChanged', publishModelModify);
-
+  
   // Factory messages - for spawning new models
   this.factoryTopic = new ROSLIB.Topic({
     ros : this.webSocket,
     name : '~/factory',
     messageType : 'factory',
   });
-
+  
   var publishFactory = function(model, type)
   {
     var matrix = model.matrixWorld;
@@ -1007,38 +1035,38 @@ GZ3D.GZIface.prototype.init = function()
     };
     that.factoryTopic.publish(modelMsg);
   };
-
+  
   // For deleting models
   this.deleteTopic = new ROSLIB.Topic({
     ros : this.webSocket,
     name : '~/entity_delete',
     messageType : 'entity_delete',
   });
-
+  
   var publishDeleteEntity = function(entity)
   {
     var modelMsg =
     {
       name: entity.name
     };
-
+  
     that.deleteTopic.publish(modelMsg);
   };
-
+  
   this.gui.emitter.on('deleteEntity',
       function(entity)
       {
         publishDeleteEntity(entity);
       }
   );
-
+  
   // World control messages - for resetting world/models
   this.worldControlTopic = new ROSLIB.Topic({
     ros : this.webSocket,
     name : '~/world_control',
     messageType : 'world_control',
   });
-
+  
   var publishWorldControl = function(state, resetType)
   {
     var worldControlMsg = {};
@@ -1052,18 +1080,18 @@ GZ3D.GZIface.prototype.init = function()
     }
     that.worldControlTopic.publish(worldControlMsg);
   };
-
+  
   this.scene.emitter.on('poseChanged', publishModelModify);
-
+  
   this.gui.emitter.on('entityCreated', publishFactory);
-
+  
   this.gui.emitter.on('reset',
       function(resetType)
       {
         publishWorldControl(null, resetType);
       }
   );
-
+  
   this.gui.emitter.on('pause',
       function(paused)
       {
@@ -3506,6 +3534,61 @@ GZ3D.Scene.prototype.init = function()
       new THREE.LineBasicMaterial({color: 0xffffff}),
       THREE.LinePieces);
   this.boundingBox.visible = false;
+};
+
+GZ3D.Scene.prototype.initScene = function()
+{
+  this.createGrid();
+  
+  // create a sun light
+  var color = new THREE.Color();
+  color.r = 0.800000011920929;
+  color.b = 0.800000011920929;
+  color.g = 0.800000011920929;
+    
+  var lightObj = new THREE.DirectionalLight(color.getHex());
+  var dir = new THREE.Vector3(0.5, 0.1, -0.9);
+  var target = dir;
+  var negDir = dir.negate();
+  negDir.normalize();
+  var factor = 10;
+  target.x = 10 * negDir.x;
+  target.y = 10 * negDir.y;
+  target.z = 10 + 10 * negDir.z;
+  lightObj.target.position = target;
+  lightObj.shadowCameraNear = 1;
+  lightObj.shadowCameraFar = 50;
+  lightObj.shadowMapWidth = 4094;
+  lightObj.shadowMapHeight = 4094;
+  lightObj.shadowCameraVisible = false;
+  lightObj.shadowCameraBottom = -100;
+  lightObj.shadowCameraLeft = -100;
+  lightObj.shadowCameraRight = 100;
+  lightObj.shadowCameraTop = 100;
+  lightObj.shadowBias = 0.0001;
+
+  lightObj.position.set(negDir.x, negDir.y, negDir.z);
+  
+  var position = [];
+  position['x'] = 0;
+  position['y'] = 0;
+  position['z'] = 10;
+  
+  var orientation = [];
+  orientation['x'] = 0;
+  orientation['y'] = 0;
+  orientation['z'] = 0;
+  orientation['w'] = 1;
+  
+  this.setPose(lightObj, position, orientation);
+  
+  lightObj.intensity = 0.8999999761581421;
+  lightObj.castShadow = true;
+  lightObj.shadowDarkness = 0.3;
+  lightObj.name = 'sun';
+
+  this.add(lightObj);
+  
 };
 
 /**
