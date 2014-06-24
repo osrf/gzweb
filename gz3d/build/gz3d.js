@@ -346,6 +346,7 @@ GZ3D.Gui = function(scene)
   this.domElement = scene.getDomElement();
   this.init();
   this.emitter = new EventEmitter2({verbose: true});
+  this.guiEvents = guiEvents;
 };
 
 /**
@@ -714,6 +715,7 @@ GZ3D.GZIface.prototype.onError = function()
 {
 //  this.emitter.emit('error');
   this.scene.initScene();
+  this.gui.guiEvents.emit('notification_popup', 'GzWeb is currently running without a server');
 };
 
 GZ3D.GZIface.prototype.onConnected = function()
