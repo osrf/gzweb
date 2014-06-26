@@ -37,9 +37,6 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
     this.finish();
   }
 
-  // Kill camera controls
-  this.scene.killCameraControl  = true;
-
   this.callback = callback;
 
   this.obj = new THREE.Object3D();
@@ -98,8 +95,6 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
  */
 GZ3D.SpawnModel.prototype.finish = function()
 {
-  // Re-enable camera controls
-  this.scene.killCameraControl = false;
   var that = this;
 
   this.domElement.removeEventListener( 'mousedown', that.mouseDown, false);
@@ -219,8 +214,8 @@ GZ3D.SpawnModel.prototype.onKeyDown = function(event)
  */
 GZ3D.SpawnModel.prototype.moveSpawnedModel = function(positionX, positionY)
 {
-  var vector = new THREE.Vector3( (positionX / window.containerWidth) * 2 - 1,
-        -(positionY / window.containerHeight) * 2 + 1, 0.5);
+  var vector = new THREE.Vector3( (positionX / window.innerWidth) * 2 - 1,
+        -(positionY / window.innerHeight) * 2 + 1, 0.5);
   this.projector.unprojectVector(vector, this.scene.camera);
   this.ray.set(this.scene.camera.position,
       vector.sub(this.scene.camera.position).normalize());
