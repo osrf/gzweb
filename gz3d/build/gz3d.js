@@ -362,6 +362,7 @@ GZ3D.Gui = function(scene)
   this.domElement = scene.getDomElement();
   this.init();
   this.emitter = new EventEmitter2({verbose: true});
+  this.guiEvents = guiEvents;
 };
 
 /**
@@ -699,6 +700,9 @@ GZ3D.GZIface = function(scene, gui)
 {
   this.scene = scene;
   this.gui = gui;
+
+  this.isConnected = false;
+
   this.init();
   this.visualsToAdd = [];
 };
@@ -708,10 +712,36 @@ GZ3D.GZIface.prototype.init = function()
   this.material = [];
   this.entityMaterial = {};
 
-  // Set up initial scene
+  this.connect();
+};
+
+GZ3D.GZIface.prototype.connect = function()
+{
+  // connect to websocket
   this.webSocket = new ROSLIB.Ros({
     url : 'ws://' + location.hostname + ':7681'
   });
+  
+  var that = this;
+  this.webSocket.on('connection', function() {
+    that.onConnected();
+  });
+  this.webSocket.on('error', function() {
+    that.onError();
+  });
+};
+
+GZ3D.GZIface.prototype.onError = function()
+{
+//  this.emitter.emit('error');
+  this.scene.initScene();
+  this.gui.guiEvents.emit('notification_popup', 'GzWeb is currently running without a server');
+};
+
+GZ3D.GZIface.prototype.onConnected = function()
+{
+  this.isConnected = true;
+//this.emitter.emit('connection');
 
   this.heartbeatTopic = new ROSLIB.Topic({
     ros : this.webSocket,
@@ -3533,6 +3563,61 @@ GZ3D.Scene.prototype.init = function()
       new THREE.LineBasicMaterial({color: 0xffffff}),
       THREE.LinePieces);
   this.boundingBox.visible = false;
+};
+
+GZ3D.Scene.prototype.initScene = function()
+{
+  this.createGrid();
+  
+  // create a sun light
+  var color = new THREE.Color();
+  color.r = 0.800000011920929;
+  color.b = 0.800000011920929;
+  color.g = 0.800000011920929;
+    
+  var lightObj = new THREE.DirectionalLight(color.getHex());
+  var dir = new THREE.Vector3(0.5, 0.1, -0.9);
+  var target = dir;
+  var negDir = dir.negate();
+  negDir.normalize();
+  var factor = 10;
+  target.x = 10 * negDir.x;
+  target.y = 10 * negDir.y;
+  target.z = 10 + 10 * negDir.z;
+  lightObj.target.position = target;
+  lightObj.shadowCameraNear = 1;
+  lightObj.shadowCameraFar = 50;
+  lightObj.shadowMapWidth = 4094;
+  lightObj.shadowMapHeight = 4094;
+  lightObj.shadowCameraVisible = false;
+  lightObj.shadowCameraBottom = -100;
+  lightObj.shadowCameraLeft = -100;
+  lightObj.shadowCameraRight = 100;
+  lightObj.shadowCameraTop = 100;
+  lightObj.shadowBias = 0.0001;
+
+  lightObj.position.set(negDir.x, negDir.y, negDir.z);
+  
+  var position = [];
+  position['x'] = 0;
+  position['y'] = 0;
+  position['z'] = 10;
+  
+  var orientation = [];
+  orientation['x'] = 0;
+  orientation['y'] = 0;
+  orientation['z'] = 0;
+  orientation['w'] = 1;
+  
+  this.setPose(lightObj, position, orientation);
+  
+  lightObj.intensity = 0.8999999761581421;
+  lightObj.castShadow = true;
+  lightObj.shadowDarkness = 0.3;
+  lightObj.name = 'sun';
+
+  this.add(lightObj);
+  
 };
 
 /**

@@ -357,6 +357,7 @@ GZ3D.Gui = function(scene)
   this.domElement = scene.getDomElement();
   this.init();
   this.emitter = new EventEmitter2({verbose: true});
+  this.guiEvents = guiEvents;
 };
 
 /**
