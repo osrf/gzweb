@@ -19,10 +19,6 @@
 #include <unistd.h>
 
 #include "pb2json.hh"
-//#include "WebSocketServer.hh"
-#include <gazebo/rendering/RenderingIface.hh>
-#include <gazebo/rendering/Scene.hh>
-#include <gazebo/transport/TransportIface.hh>
 #include "OgreMaterialParser.hh"
 #include "GazeboInterface.hh"
 

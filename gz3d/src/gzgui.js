@@ -367,6 +367,14 @@ $(function()
         {
           $('#model-popup').popup('close');
         });
+
+    $('#leftPanel').mouseenter(function(event){
+        guiEvents.emit('pointerOnMenu');
+    });
+
+    $('#leftPanel').mouseleave(function(event){
+        guiEvents.emit('pointerOffMenu');
+    });
   }
 
   $('.header-button')
@@ -591,6 +599,7 @@ GZ3D.Gui = function(scene)
   this.domElement = scene.getDomElement();
   this.init();
   this.emitter = new EventEmitter2({verbose: true});
+  this.guiEvents = guiEvents;
 };
 
 /**
@@ -908,6 +917,18 @@ GZ3D.Gui.prototype.init = function()
         that.scene.hideBoundingBox();
       }
   );
+
+  guiEvents.on('pointerOnMenu', function ()
+      {
+        that.scene.pointerOnMenu = true;
+      }
+  );
+
+  guiEvents.on('pointerOffMenu', function ()
+      {
+        that.scene.pointerOnMenu = false;
+      }
+   );
 };
 
 /**
