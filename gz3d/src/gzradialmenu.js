@@ -114,8 +114,16 @@ GZ3D.RadialMenu.prototype.show = function(event,model)
   var pointer = this.getPointer(event);
   this.startPosition = pointer;
 
-  this.menu.getObjectByName('transparent').isHighlighted = this.model.isTransparent;
-  this.menu.getObjectByName('wireframe').isHighlighted = this.model.isWireframe;
+  this.menu.getObjectByName('transparent').isHighlighted = false;
+  this.menu.getObjectByName('wireframe').isHighlighted = false;
+  if (this.model.viewAs === 'transparent')
+  {
+    this.menu.getObjectByName('transparent').isHighlighted = true;
+  }
+  if (this.model.viewAs === 'wireframe')
+  {
+    this.menu.getObjectByName('wireframe').isHighlighted = true;
+  }
 
   for ( var i in this.menu.children )
   {
