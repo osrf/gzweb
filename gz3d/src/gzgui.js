@@ -382,7 +382,8 @@ $(function()
       .css('height', '1.45em')
       .css('padding', '0.65em');
 
-  $('#insertButton').click(function(){
+  $('#insertButton').click(function()
+      {
         $('#leftPanel').panel('close');
         if($('#insert-menu').is(':visible'))
         {
@@ -393,31 +394,34 @@ $(function()
           $('#insert-menu').show();
           $('[id^="insert-menu-"]').hide();
           $('.insert-menu-title')
+              .css('margin-left',
+                  document.getElementById('insert-menu').scrollLeft);
+        }
+      });
+
+  $('.insert-menu-back').click(function()
+      {
+        $('#insert-menu').show();
+        $('[id^="insert-menu-"]').hide();
+        $('.insert-menu-title')
             .css('margin-left',
                 document.getElementById('insert-menu').scrollLeft);
-        }
-    });
+      });
 
-    $( '.insert-menu-back' ).click(function() {
-      $('#insert-menu').show();
-      $('[id^="insert-menu-"]').hide();
-      $('.insert-menu-title')
-        .css('margin-left', document.getElementById('insert-menu').scrollLeft);
-    });
-
-    $( '.insert-menu-close' ).click(function() {
-      $('.insert-menus').hide();
-    });
+  $('.insert-menu-close').click(function()
+      {
+        $('.insert-menus').hide();
+      });
 
   $('.insert-menus').on('scroll', function()
       {
         var id = $(this).attr('id');
 
         $('.insert-menu-title')
-          .css('margin-left', document.getElementById(id).scrollLeft);
+            .css('margin-left', document.getElementById(id).scrollLeft);
       });
 
-  $( '#leftPanel' ).on('panelopen', function()
+  $('#leftPanel').on('panelopen', function()
       {
         if($('.insert-menus').is(':visible'))
         {
@@ -425,7 +429,7 @@ $(function()
         }
       });
 
-  $( '#leftPanel' ).on('panelclose', function()
+  $('#leftPanel').on('panelclose', function()
       {
         $('#panelButton').removeClass('ui-btn-active');
       });
@@ -540,7 +544,7 @@ function insertControl($scope)
     var categoryID = 'insert-menu-'+category;
     $('#' + categoryID).show();
     $('.insert-menu-title')
-      .css('margin-left', document.getElementById(categoryID).scrollLeft);
+        .css('margin-left', document.getElementById(categoryID).scrollLeft);
   };
 
   $scope.spawnEntity = function(path)
