@@ -260,7 +260,7 @@ $(function()
     $('[id^="insert-entity-"]')
       .on('touchstart', function (event) {
         var path = $(this).attr('id');
-        path = path.substring(14);
+        path = path.substring(14); // after 'insert-entity-'
         $(this).data('checkdown', setTimeout(function () {
           guiEvents.emit('longpress_footer_start', event, path);
         }, press_time_footer));
@@ -280,7 +280,7 @@ $(function()
     $('[id^="insert-entity-"]')
       .click(function(event) {
         var path = $(this).attr('id');
-        path = path.substring(14);
+        path = path.substring(14); // after 'insert-entity-'
         guiEvents.emit('spawn_entity_start', path);
       })
       .on('mousedown', function(event) {

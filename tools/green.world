@@ -6,27 +6,6 @@
       <shadows>0</shadows>
       <grid>0</grid>
     </scene>
-    <physics type='ode'>
-      <max_step_size>0.001</max_step_size>
-      <real_time_factor>1</real_time_factor>
-      <real_time_update_rate>1000</real_time_update_rate>
-      <gravity>0 0 -9.8</gravity>
-    </physics>
-    <audio>
-      <device>default</device>
-    </audio>
-    <spherical_coordinates>
-      <surface_model>EARTH_WGS84</surface_model>
-      <latitude_deg>0</latitude_deg>
-      <longitude_deg>0</longitude_deg>
-      <elevation>0</elevation>
-      <heading_deg>0</heading_deg>
-    </spherical_coordinates>
-    <state world_name='default'>
-      <sim_time>55 647000000</sim_time>
-      <real_time>55 950885796</real_time>
-      <wall_time>1400082588 514777540</wall_time>
-    </state>
     <gui fullscreen='0'>
       <camera name='user_camera'>
         <pose>5.65634 -4.1009 2.6069 0 0.275643 2.35619</pose>
