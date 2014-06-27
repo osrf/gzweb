@@ -614,7 +614,25 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
   {
     eye.copy(camPosition).sub(worldPosition).normalize();
 
-    if(isSelected('RX') || isSelected('TYZ'))
+    if (isSelected('TXYZ'))
+    {
+      if (Math.abs(eye.x) > Math.abs(eye.y) &&
+          Math.abs(eye.x) > Math.abs(eye.z))
+      {
+        currentPlane = 'YZ';
+      }
+      else if (Math.abs(eye.y) > Math.abs(eye.x) &&
+               Math.abs(eye.y) > Math.abs(eye.z))
+      {
+        currentPlane = 'XZ';
+      }
+      else if (Math.abs(eye.z) > Math.abs(eye.x) &&
+               Math.abs(eye.z) > Math.abs(eye.y))
+      {
+        currentPlane = 'XY';
+      }
+    }
+    else if (isSelected('RX') || isSelected('TYZ'))
     {
       currentPlane = 'YZ';
     }
@@ -626,9 +644,9 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
     {
       currentPlane = 'XY';
     }
-    else if(isSelected('X'))
+    else if (isSelected('X'))
     {
-      if(Math.abs(eye.y) > Math.abs(eye.z))
+      if (Math.abs(eye.y) > Math.abs(eye.z))
       {
         currentPlane = 'XZ';
       }
@@ -637,9 +655,9 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
         currentPlane = 'XY';
       }
     }
-    else if(isSelected('Y'))
+    else if (isSelected('Y'))
     {
-      if(Math.abs(eye.x) > Math.abs(eye.z))
+      if (Math.abs(eye.x) > Math.abs(eye.z))
       {
         currentPlane = 'YZ';
       }
@@ -648,9 +666,9 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
         currentPlane = 'XY';
       }
     }
-    else if(isSelected('Z'))
+    else if (isSelected('Z'))
     {
-      if(Math.abs(eye.x) > Math.abs(eye.y))
+      if (Math.abs(eye.x) > Math.abs(eye.y))
       {
         currentPlane = 'YZ';
       }
