@@ -1582,11 +1582,13 @@ GZ3D.Scene.prototype.onRightClick = function(event, callback)
 };
 
 /**
- * Toggle model transparency
+ * Set model's view mode
  * @param {} model
+ * @param {} viewAs (normal/transparent/wireframe)
  */
 GZ3D.Scene.prototype.setViewAs = function(model, viewAs)
 {
+  // Toggle
   if (model.viewAs === viewAs)
   {
     viewAs = 'normal';

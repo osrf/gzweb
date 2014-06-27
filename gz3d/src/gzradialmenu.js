@@ -25,8 +25,6 @@ GZ3D.RadialMenu.prototype.init = function()
   this.iconProportion = 0.6;
   this.bgShape = THREE.ImageUtils.loadTexture(
       'style/images/icon_background.png' );
-  this.highlightShape = THREE.ImageUtils.loadTexture(
-      'style/images/icon_highlight.png' );
 
   // For the opening motion
   this.moving = false;
@@ -38,6 +36,7 @@ GZ3D.RadialMenu.prototype.init = function()
   // Colors
   this.selectedColor = new THREE.Color( 0x22aadd );
   this.plainColor = new THREE.Color( 0x333333 );
+  this.highlightColor = new THREE.Color( 0x22aadd );
 
   // Selected item
   this.selected = null;
@@ -322,9 +321,10 @@ GZ3D.RadialMenu.prototype.addItem = function(type,itemTexture)
 
   // Icon highlight
   var highlightMaterial = new THREE.SpriteMaterial({
-      map: this.highlightShape,
+      map: this.bgShape,
       useScreenCoordinates: true,
-      alignment: THREE.SpriteAlignment.center});
+      alignment: THREE.SpriteAlignment.center,
+      color: this.highlightColor});
 
   var highlightItem = new THREE.Sprite(highlightMaterial);
   highlightItem.scale.set(this.highlightSize, this.highlightSize, 1.0);
