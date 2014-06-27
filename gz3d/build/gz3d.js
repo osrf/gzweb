@@ -5073,6 +5073,51 @@ GZ3D.Scene.prototype.setViewAs = function(model, viewAs)
     viewAs = 'normal';
   }
 
+  function materialViewAs(model, material)
+  {
+    material.transparent = true;
+    if (viewAs === 'transparent')
+    {
+      material.originalOpacity =
+          material.opacity ?
+          material.opacity : 1.0;
+      material.opacity = 0.25;
+    }
+    else
+    {
+      material.opacity =
+          material.originalOpacity ?
+          material.originalOpacity : 1.0;
+    }
+
+    if (viewAs === 'wireframe')
+    {
+      wireframe = model.getObjectByName('wireframe');
+      if (wireframe)
+      {
+        wireframe.visible = true;
+      }
+      else
+      {
+        var mesh = new THREE.Mesh( model.geometry,
+            new THREE.MeshBasicMaterial({color: 0xffffff}));
+        wireframe = new THREE.WireframeHelper( mesh );
+        wireframe.name = 'wireframe';
+        model.add( wireframe );
+      }
+      material.visible = false;
+    }
+    else
+    {
+      wireframe = model.getObjectByName('wireframe');
+      if (wireframe)
+      {
+        wireframe.visible = false;
+      }
+      material.visible = true;
+    }
+  }
+
   var wireframe;
   var descendants = [];
   model.getDescendants(descendants);
@@ -5084,45 +5129,16 @@ GZ3D.Scene.prototype.setViewAs = function(model, viewAs)
         descendants[i].parent.name.indexOf('COLLISION') === -1 &&
         descendants[i].name.indexOf('wireframe') === -1)
     {
-      descendants[i].material.transparent = true;
-      if (viewAs === 'transparent')
+      if (descendants[i].material instanceof THREE.MeshFaceMaterial)
       {
-        descendants[i].material.originalOpacity =
-            descendants[i].material.opacity;
-        descendants[i].material.opacity = 0.25;
+        for (var j = 0; j < descendants[i].material.materials.length; ++j)
+        {
+          materialViewAs(descendants[i], descendants[i].material.materials[j]);
+        }
       }
       else
       {
-        descendants[i].material.opacity =
-            descendants[i].material.originalOpacity ?
-            descendants[i].material.originalOpacity : 1.0;
-      }
-
-      if (viewAs === 'wireframe')
-      {
-        wireframe = descendants[i].getObjectByName('wireframe');
-        if (wireframe)
-        {
-          wireframe.visible = true;
-        }
-        else
-        {
-          var mesh = new THREE.Mesh( descendants[i].geometry,
-              new THREE.MeshBasicMaterial({color: 0xffffff}));
-          wireframe = new THREE.WireframeHelper( mesh );
-          wireframe.name = 'wireframe';
-          descendants[i].add( wireframe );
-        }
-        descendants[i].material.visible = false;
-      }
-      else
-      {
-        wireframe = descendants[i].getObjectByName('wireframe');
-        if (wireframe)
-        {
-          wireframe.visible = false;
-        }
-        descendants[i].material.visible = true;
+        materialViewAs(descendants[i], descendants[i].material);
       }
     }
   }
