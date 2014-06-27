@@ -7,6 +7,8 @@ GZ3D.GZIface = function(scene, gui)
 
   this.isConnected = false;
 
+  this.emitter = new EventEmitter2({ verbose: true });
+
   this.init();
   this.visualsToAdd = [];
 };
@@ -25,7 +27,7 @@ GZ3D.GZIface.prototype.connect = function()
   this.webSocket = new ROSLIB.Ros({
     url : 'ws://' + location.hostname + ':7681'
   });
-  
+
   var that = this;
   this.webSocket.on('connection', function() {
     that.onConnected();
@@ -37,15 +39,15 @@ GZ3D.GZIface.prototype.connect = function()
 
 GZ3D.GZIface.prototype.onError = function()
 {
-//  this.emitter.emit('error');
   this.scene.initScene();
   this.gui.guiEvents.emit('notification_popup', 'GzWeb is currently running without a server');
+  this.emitter.emit('error');
 };
 
 GZ3D.GZIface.prototype.onConnected = function()
 {
   this.isConnected = true;
-//this.emitter.emit('connection');
+  this.emitter.emit('connection');
 
   this.heartbeatTopic = new ROSLIB.Topic({
     ros : this.webSocket,

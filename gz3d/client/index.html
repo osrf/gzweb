@@ -20,6 +20,7 @@
     <script src="js/include/RenderPass.js"></script>
     <script src="js/include/MaskPass.js"></script>
     <script src="js/include/ShaderPass.js"></script>
+    <script src="js/include/xml2json.js"></script>
     <script src="gz3d.js"></script>
 
     <style>
@@ -256,6 +257,7 @@
         scene = new GZ3D.Scene();
         gui = new GZ3D.Gui(scene);
         iface = new GZ3D.GZIface(scene, gui);
+        sdfparser = new GZ3D.SdfParser(scene, gui, iface);
 
         container = document.getElementById( 'container' );
         container.appendChild(scene.getDomElement());
