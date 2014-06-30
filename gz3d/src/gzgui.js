@@ -7,6 +7,8 @@ var emUnits = function(value)
       return value*parseFloat($('body').css('font-size'));
     };
 
+var isTouchDevice = 'ontouchstart' in window || 'onmsgesturechange' in window;
+
 var modelList =
   [
     {path:'buildings', title:'Buildings', examplePath:'house_1', models:
@@ -176,7 +178,7 @@ $(function()
   }
 
   // Clicks/taps// Touch devices
-  if ('ontouchstart' in window || 'onmsgesturechange' in window)
+  if (isTouchDevice)
   {
     $('#play-header-fieldset')
         .css('position', 'absolute')
@@ -537,6 +539,13 @@ $(function()
 function insertControl($scope)
 {
   $scope.categories = modelList;
+
+  $scope.itemWidth = 9.8;
+  if (window.innerWidth / window.innerHeight > 2 ||
+      window.innerWidth < emUnits(35))
+  {
+    $scope.itemWidth = 7.4;
+  }
 
   $scope.openCategory = function(category)
   {

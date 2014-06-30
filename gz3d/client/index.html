@@ -103,6 +103,19 @@
           margin:0.1em;
           float:left;
       }
+      @media (min-aspect-ratio: 2/1), (max-width: 35em) {
+        .insert-menu-item {
+            width:4.6em;
+            height:4.3em
+        }
+        .insert-menu-item img {
+            height:3.3em;
+            max-width:4em;
+        }
+        .insert-menus ul {
+          height:6em;
+        }
+      }
     </style>
   </head>
 
@@ -287,7 +300,7 @@
             <h3>Insert</h3>
             <a href="#" class="insert-menu-close"><img src="style/images/close.png"></a>
           </div>
-          <ul style="width:{{(categories.length+1)*9.8}}em">
+          <ul style="width:{{(categories.length+1)*itemWidth}}em">
             <li>
               <a href="#" ng-click="openCategory('simple_shapes')" data-role="button" data-inline="true" class="insert-menu-item" title="Shapes">
                 Shapes<br>
@@ -308,7 +321,7 @@
             <h3> &nbsp; Simple Shapes</h3></a>
             <a href="#" class="insert-menu-close"><img src="style/images/close.png"></a>
           </div>
-          <ul style="width:{{3*9.8}}em">
+          <ul style="width:{{3*itemWidth}}em">
             <li>
               <a href="#" id="insert-entity-box" ng-mousedown="spawnEntity('box')" data-role="button" data-inline="true" class="insert-menu-item" title="Box">
                 Box<br>
@@ -335,7 +348,7 @@
             <h3> &nbsp; {{category.title}}</h3></a>
             <a href="#" class="insert-menu-close"><img src="style/images/close.png"></a>
           </div>
-          <ul style="width:{{category.models.length*9.8}}em">
+          <ul style="width:{{category.models.length*itemWidth}}em">
             <li ng-repeat="model in category.models">
               <a href="#" id="insert-entity-{{model.modelPath}}" ng-mousedown="spawnEntity(model.modelPath)" data-role="button" data-inline="true" class="insert-menu-item" title="{{model.modelTitle}}">
                 {{model.modelTitle}}<br>

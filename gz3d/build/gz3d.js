@@ -12,6 +12,8 @@ var emUnits = function(value)
       return value*parseFloat($('body').css('font-size'));
     };
 
+var isTouchDevice = 'ontouchstart' in window || 'onmsgesturechange' in window;
+
 var modelList =
   [
     {path:'buildings', title:'Buildings', examplePath:'house_1', models:
@@ -181,7 +183,7 @@ $(function()
   }
 
   // Clicks/taps// Touch devices
-  if ('ontouchstart' in window || 'onmsgesturechange' in window)
+  if (isTouchDevice)
   {
     $('#play-header-fieldset')
         .css('position', 'absolute')
@@ -542,6 +544,13 @@ $(function()
 function insertControl($scope)
 {
   $scope.categories = modelList;
+
+  $scope.itemWidth = 9.8;
+  if (window.innerWidth / window.innerHeight > 2 ||
+      window.innerWidth < emUnits(35))
+  {
+    $scope.itemWidth = 7.4;
+  }
 
   $scope.openCategory = function(category)
   {
@@ -1719,7 +1728,7 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
 
         var modelUri = uriPath + '/' + modelName;
         // Use coarse version on touch devices
-        if (modelUri.indexOf('.dae') !== -1 && this.scene.isTouchDevice)
+        if (modelUri.indexOf('.dae') !== -1 && isTouchDevice)
         {
           modelUri = modelUri.substring(0,modelUri.indexOf('.dae'));
 
@@ -3687,9 +3696,6 @@ GZ3D.Scene.prototype.init = function()
   // this.scene.name = this.name;
   this.meshes = {};
 
-  this.isTouchDevice = 'ontouchstart' in window // works on most browsers
-      || 'onmsgesturechange' in window; // works on ie10
-
   // only support one heightmap for now.
   this.heightmap = null;
 
@@ -3754,7 +3760,7 @@ GZ3D.Scene.prototype.init = function()
       function(event) {that.onPointerUp(event);}, false );
 
   // Handles for translating and rotating objects
-  if (this.isTouchDevice)
+  if (isTouchDevice)
   {
     this.modelManipulator = new GZ3D.Manipulator(this.camera, true,
       this.getDomElement());

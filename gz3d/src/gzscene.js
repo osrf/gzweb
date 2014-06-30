@@ -17,9 +17,6 @@ GZ3D.Scene.prototype.init = function()
   // this.scene.name = this.name;
   this.meshes = {};
 
-  this.isTouchDevice = 'ontouchstart' in window // works on most browsers
-      || 'onmsgesturechange' in window; // works on ie10
-
   // only support one heightmap for now.
   this.heightmap = null;
 
@@ -84,7 +81,7 @@ GZ3D.Scene.prototype.init = function()
       function(event) {that.onPointerUp(event);}, false );
 
   // Handles for translating and rotating objects
-  if (this.isTouchDevice)
+  if (isTouchDevice)
   {
     this.modelManipulator = new GZ3D.Manipulator(this.camera, true,
       this.getDomElement());
