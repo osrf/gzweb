@@ -2580,8 +2580,7 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
       {
         currentPlane = 'XZ';
       }
-      else if (Math.abs(eye.z) > Math.abs(eye.x) &&
-               Math.abs(eye.z) > Math.abs(eye.y))
+      else
       {
         currentPlane = 'XY';
       }
