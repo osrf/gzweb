@@ -14,7 +14,7 @@ then
 fi
 
 
-./node_modules/.bin/http-server http/client &
+http-server http/client &
 
-cd gzbridge
-./ws_server.js &
+#cd gzbridge
+#./ws_server.js &

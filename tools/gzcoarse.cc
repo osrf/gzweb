@@ -140,7 +140,7 @@ void ExportTextureSource(const gazebo::common::SubMesh *_outSubMesh,
 
     const double query_pt[3] = { outVertex.x, outVertex.y, outVertex.z};
     // Get nearest num_results
-    cloudIndex.knnSearch(&query_pt[0], num_results, &result_index[0],
+    cloudIndex.knnSearch(&query_pt[0], num_results, (unsigned int *)&result_index[0],
         &out_dist_sqr[0]);
 
     std::vector<long unsigned int> closestIndices;

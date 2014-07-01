@@ -5382,7 +5382,9 @@ GZ3D.SdfParser.prototype.spawnFromSDF = function(sdf)
   
   //convert SDF XML to Json string and parse JSON string to object
   //TODO: we need better xml 2 json object convertor
-  var sdfObj = JSON.parse(xml2json(sdfXML, '\t')).sdf;
+  var myjson = xml2json(sdfXML, '\t');
+  console.log(myjson);
+  var sdfObj = JSON.parse(myjson).sdf;
   // it is easier to manipulate json object
   
   if (sdfObj.model) {
@@ -5493,16 +5495,11 @@ GZ3D.SdfParser.prototype.addModelByType = function(model, type)
   } else if (type === 'model') {
     //TODO: testing
     var modelName = 'youbot';
-    modelName = 'house_2';
     modelName = model;
     sdf = this.loadModel(modelName);
 //    console.log(sdf);
   }
   
-  // testing
-//  var modelName = 'pr2';
-//  sdf = this.loadModel(modelName);
-//  console.log(sdf);
   this.spawnFromSDF(sdf);
 };
 

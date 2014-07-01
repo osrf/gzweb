@@ -215,8 +215,7 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
                 }
               }
             }
-            texture = this.MATERIAL_ROOT + textureUri + '/' + mat.texture;
-            console.log('TEXTURE:' + texture);
+            texture = this.MATERIAL_ROOT + textureUri + '/' + mat.texture;            
           }
         } else {
           //TODO: how to handle if material is not cached
@@ -315,8 +314,6 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
       var meshUri = geom.mesh.uri;
       var submesh = geom.mesh.submesh;
       var centerSubmesh = geom.mesh.center_submesh;
-
-      console.log(meshUri + ' ' + submesh);
 
       var uriType = meshUri.substring(0, meshUri.indexOf('://'));
       if (uriType === 'file' || uriType === 'model')
@@ -473,7 +470,8 @@ GZ3D.SdfParser.prototype.spawnFromSDF = function(sdf)
   
   //convert SDF XML to Json string and parse JSON string to object
   //TODO: we need better xml 2 json object convertor
-  var sdfObj = JSON.parse(xml2json(sdfXML, '\t')).sdf;
+  var myjson = xml2json(sdfXML, '\t');
+  var sdfObj = JSON.parse(myjson).sdf;
   // it is easier to manipulate json object
   
   if (sdfObj.model) {
@@ -489,7 +487,7 @@ GZ3D.SdfParser.prototype.spawnModelFromSDF = function(sdfObj)
   // create the model
   var modelObj = new THREE.Object3D();
   modelObj.name = sdfObj.model['@name'];
-  //FIXME: is that needed
+  //TODO: is that needed
   //modelObj.userData = sdfObj.model.@id;
 
   var pose;
@@ -549,6 +547,10 @@ GZ3D.SdfParser.prototype.createLink = function(link)
   {
     if (link.collision.visual)
     {
+      if (!(link.collision.visual instanceof Array)) {
+        link.collision.visual = [link.collision.visual];
+      }
+      
       for (var j = 0; j < link.collision.visual.length; j++) {
         visualObj = this.createVisual(link.collision.visual[j]);
         if (visualObj && !visualObj.parent)
@@ -584,16 +586,11 @@ GZ3D.SdfParser.prototype.addModelByType = function(model, type)
   } else if (type === 'model') {
     //TODO: testing
     var modelName = 'youbot';
-    modelName = 'house_2';
     modelName = model;
     sdf = this.loadModel(modelName);
 //    console.log(sdf);
   }
   
-  // testing
-//  var modelName = 'pr2';
-//  sdf = this.loadModel(modelName);
-//  console.log(sdf);
   this.spawnFromSDF(sdf);
 };
 
