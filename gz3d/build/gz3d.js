@@ -122,6 +122,14 @@ $(function()
 
     $('#cylinder-header-fieldset')
         .css('visibility','hidden');
+
+    $('#leftPanel').touchstart(function(event){
+        guiEvents.emit('pointerOnMenu');
+    });
+
+    $('#leftPanel').touchend(function(event){
+        guiEvents.emit('pointerOffMenu');
+    });
   }
   // Mouse devices
   else
@@ -195,15 +203,18 @@ $(function()
           }
         });
 
-    $('#model-popup').bind({popupafterclose: function()
-        {
-          guiEvents.emit('hide_boundingBox');
-        }});
-
     $('#model-popup-screen').mousedown(function(event)
         {
           $('#model-popup').popup('close');
         });
+
+    $('#leftPanel').mouseenter(function(event){
+        guiEvents.emit('pointerOnMenu');
+    });
+
+    $('#leftPanel').mouseleave(function(event){
+        guiEvents.emit('pointerOffMenu');
+    });
   }
 
   $('.header-button')
@@ -354,8 +365,6 @@ GZ3D.Gui = function(scene)
  */
 GZ3D.Gui.prototype.init = function()
 {
-  this.spawnModel = new GZ3D.SpawnModel(
-      this.scene, this.scene.getDomElement());
   this.spawnState = null;
   this.longPressState = null;
   this.showNotifications = false;
@@ -381,7 +390,7 @@ GZ3D.Gui.prototype.init = function()
         $('#view-mode').prop('checked', true);
         $('input[type="radio"]').checkboxradio('refresh');
         that.spawnState = 'START';
-        that.spawnModel.start(entity,function(obj)
+        that.scene.spawnModel.start(entity,function(obj)
             {
               that.emitter.emit('entityCreated', obj, entity);
               guiEvents.emit('notification_popup',
@@ -397,7 +406,7 @@ GZ3D.Gui.prototype.init = function()
   guiEvents.on('spawn_entity_move', function(event)
       {
         that.spawnState = 'MOVE';
-        that.spawnModel.onTouchMove(event,false);
+        that.scene.spawnModel.onTouchMove(event,false);
       }
   );
   // Place temp model by touch
@@ -405,7 +414,7 @@ GZ3D.Gui.prototype.init = function()
       {
         if (that.spawnState === 'MOVE')
         {
-          that.spawnModel.onTouchEnd();
+          that.scene.spawnModel.onTouchEnd();
         }
         that.spawnState = null;
       }
@@ -461,14 +470,14 @@ GZ3D.Gui.prototype.init = function()
         {
           $('#snap-to-grid').buttonMarkup({icon: 'check'});
           that.scene.modelManipulator.snapDist = 0.5;
-          that.spawnModel.snapDist = that.scene.modelManipulator.snapDist;
+          that.scene.spawnModel.snapDist = that.scene.modelManipulator.snapDist;
           guiEvents.emit('notification_popup','Snapping to grid');
         }
         else
         {
           $('#snap-to-grid').buttonMarkup({icon: 'false'});
           that.scene.modelManipulator.snapDist = null;
-          that.spawnModel.snapDist = null;
+          that.scene.spawnModel.snapDist = null;
           guiEvents.emit('notification_popup','Not snapping to grid');
         }
       }
@@ -501,13 +510,13 @@ GZ3D.Gui.prototype.init = function()
       function (event)
       {
         if (event.originalEvent.touches.length !== 1 ||
-            that.scene.modelManipulator.hovered)
+            that.scene.modelManipulator.hovered ||
+            that.scene.spawnModel.active)
         {
           guiEvents.emit('longpress_end', event.originalEvent,true);
         }
         else
         {
-          that.scene.killCameraControl = true;
           that.scene.showRadialMenu(event);
           that.longPressState = 'START';
         }
@@ -516,17 +525,12 @@ GZ3D.Gui.prototype.init = function()
 
   guiEvents.on('longpress_end', function(event,cancel)
       {
-        if (that.scene.modelManipulator.object === undefined)
-        {
-          that.scene.hideBoundingBox();
-        }
         if (that.longPressState !== 'START')
         {
           that.longPressState = 'END';
           return;
         }
         that.longPressState = 'END';
-        that.scene.killCameraControl = false;
         if (that.scene.radialMenu.showing)
         {
           if (cancel)
@@ -575,12 +579,7 @@ GZ3D.Gui.prototype.init = function()
           {
             return;
           }
-          // Cancel long press in case of drag before it shows
-          if (!that.scene.radialMenu.showing)
-          {
-            that.scene.killCameraControl = false;
-          }
-          else
+          if (that.scene.radialMenu.showing)
           {
             that.scene.radialMenu.onLongPressMove(event);
           }
@@ -611,7 +610,7 @@ GZ3D.Gui.prototype.init = function()
       {
         that.scene.onRightClick(event, function(entity)
             {
-              that.scene.selectedModel = entity;
+              that.scene.selectedEntity = entity;
               that.scene.showBoundingBox(entity);
               $('.ui-popup').popup('close');
               $('#model-popup').popup('open',
@@ -623,18 +622,24 @@ GZ3D.Gui.prototype.init = function()
 
   guiEvents.on('delete_entity', function ()
       {
-        that.emitter.emit('deleteEntity',that.scene.selectedModel);
+        that.emitter.emit('deleteEntity',that.scene.selectedEntity);
         guiEvents.emit('notification_popup','Model deleted');
         $('#model-popup').popup('close');
-        that.scene.selectedModel = null;
+        that.scene.selectedEntity = null;
       }
   );
 
-  guiEvents.on('hide_boundingBox', function ()
+  guiEvents.on('pointerOnMenu', function ()
       {
-        that.scene.hideBoundingBox();
+        that.scene.pointerOnMenu = true;
       }
   );
+
+  guiEvents.on('pointerOffMenu', function ()
+      {
+        that.scene.pointerOnMenu = false;
+      }
+   );
 };
 
 /**
@@ -2550,37 +2555,67 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
   {
     eye.copy(camPosition).sub(worldPosition).normalize();
 
-    if(isSelected('X'))
+    if (isSelected('TXYZ'))
     {
-      if(Math.abs(eye.y) > Math.abs(eye.z)) {currentPlane = 'XZ';}
-      else {currentPlane = 'XY';}
+      if (Math.abs(eye.x) > Math.abs(eye.y) &&
+          Math.abs(eye.x) > Math.abs(eye.z))
+      {
+        currentPlane = 'YZ';
+      }
+      else if (Math.abs(eye.y) > Math.abs(eye.x) &&
+               Math.abs(eye.y) > Math.abs(eye.z))
+      {
+        currentPlane = 'XZ';
+      }
+      else
+      {
+        currentPlane = 'XY';
+      }
     }
-
-    if(isSelected('Y'))
-    {
-      if(Math.abs(eye.x) > Math.abs(eye.z)) {currentPlane = 'YZ';}
-      else {currentPlane = 'XY';}
-    }
-
-    if(isSelected('Z'))
-    {
-      if(Math.abs(eye.x) > Math.abs(eye.y)) {currentPlane = 'YZ';}
-      else {currentPlane = 'XZ';}
-    }
-
-    if(isSelected('RX'))
+    else if (isSelected('RX') || isSelected('TYZ'))
     {
       currentPlane = 'YZ';
     }
-
-    if(isSelected('RY'))
+    else if (isSelected('RY') || isSelected('TXZ'))
     {
       currentPlane = 'XZ';
     }
-
-    if(isSelected('RZ'))
+    else if (isSelected('RZ') || isSelected('TXY'))
     {
       currentPlane = 'XY';
+    }
+    else if (isSelected('X'))
+    {
+      if (Math.abs(eye.y) > Math.abs(eye.z))
+      {
+        currentPlane = 'XZ';
+      }
+      else
+      {
+        currentPlane = 'XY';
+      }
+    }
+    else if (isSelected('Y'))
+    {
+      if (Math.abs(eye.x) > Math.abs(eye.z))
+      {
+        currentPlane = 'YZ';
+      }
+      else
+      {
+        currentPlane = 'XY';
+      }
+    }
+    else if (isSelected('Z'))
+    {
+      if (Math.abs(eye.x) > Math.abs(eye.y))
+      {
+        currentPlane = 'YZ';
+      }
+      else
+      {
+        currentPlane = 'XZ';
+      }
     }
   };
 
@@ -3170,6 +3205,11 @@ GZ3D.RadialMenu.prototype.hide = function(event,callback)
  */
 GZ3D.RadialMenu.prototype.show = function(event,model)
 {
+  if (this.showing)
+  {
+    return;
+  }
+
   this.model = model;
   var pointer = this.getPointer(event);
   this.startPosition = pointer;
@@ -3399,10 +3439,9 @@ GZ3D.Scene.prototype.init = function()
   this.heightmap = null;
 
   this.selectedEntity = null;
-  this.mouseEntity = null;
-  this.selectedModel = null;
 
   this.manipulationMode = 'view';
+  this.pointerOnMenu = false;
 
   this.renderer = new THREE.WebGLRenderer({antialias: true });
   this.renderer.setClearColor(0xb2b2b2, 1); // Sky
@@ -3419,10 +3458,11 @@ GZ3D.Scene.prototype.init = function()
       60, window.innerWidth / window.innerHeight, 0.1, 1000 );
   this.defaultCameraPosition = new THREE.Vector3(0, -5, 5);
   this.resetView();
-  this.killCameraControl = false;
 
   this.showCollisions = false;
 
+  this.spawnModel = new GZ3D.SpawnModel(
+      this, this.getDomElement());
   // Material for simple shapes being spawned (grey transparent)
   this.spawnedShapeMaterial = new THREE.MeshPhongMaterial(
       {color:0xffffff, shading: THREE.SmoothShading} );
@@ -3547,11 +3587,16 @@ GZ3D.Scene.prototype.initScene = function()
 
 /**
  * Window event callback
- * @param {} event - click or tap events (select/deselect models and manipulators)
+ * @param {} event - mousedown or touchdown events
  */
 GZ3D.Scene.prototype.onPointerDown = function(event)
 {
   event.preventDefault();
+
+  if (this.spawnModel.active)
+  {
+    return;
+  }
 
   var pointer, mainPointer = true;
   if (event.touches)
@@ -3584,13 +3629,6 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
     this.controls.target = intersect;
   }
 
-  // View mode
-  if (this.manipulationMode === 'view')
-  {
-    this.killCameraControl = false;
-    return;
-  }
-
   // Manipulation modes
   // Model found
   if (model)
@@ -3598,13 +3636,11 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
     // Do nothing to the floor plane
     if (model.name === 'plane')
     {
-      this.killCameraControl = false;
       this.timeDown = new Date().getTime();
     }
-    // Do not attach manipulator to itself
     else if (this.modelManipulator.pickerNames.indexOf(model.name) >= 0)
     {
-      this.killCameraControl = false;
+      // Do not attach manipulator to itself
     }
     // Attach manipulator to model
     else if (model.name !== '')
@@ -3619,20 +3655,16 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
     {
       this.modelManipulator.update();
       this.modelManipulator.object.updateMatrixWorld();
-      this.mouseEntity = this.selectedEntity;
-      this.killCameraControl = true;
     }
     // Sky
     else
     {
-      this.killCameraControl = false;
       this.timeDown = new Date().getTime();
     }
   }
   // Plane from below, for example
   else
   {
-    this.killCameraControl = false;
     this.timeDown = new Date().getTime();
   }
 };
@@ -3644,9 +3676,6 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
 GZ3D.Scene.prototype.onPointerUp = function(event)
 {
   event.preventDefault();
-
-  // The mouse is not holding anything
-  this.mouseEntity = null;
 
   // Clicks (<150ms) outside any models trigger view mode
   var millisecs = new Date().getTime();
@@ -3785,14 +3814,15 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
 
       while (model.parent !== this.scene)
       {
-        // Select handle instead of background object
-        if (this.mode !== 'view' &&
-            model.parent.parent === this.modelManipulator.gizmo &&
-            model.name !== '')
+        // Select current mode's handle
+        if (model.parent.parent === this.modelManipulator.gizmo &&
+            ((this.manipulationMode === 'translate' &&
+              model.name.indexOf('T') >=0) ||
+             (this.manipulationMode === 'rotate' &&
+               model.name.indexOf('R') >=0)))
         {
           break modelsloop;
         }
-
         model = model.parent;
       }
 
@@ -3845,10 +3875,14 @@ GZ3D.Scene.prototype.getDomElement = function()
 GZ3D.Scene.prototype.render = function()
 {
   // Kill camera control when:
-  // -spawning
   // -manipulating
   // -using radial menu
-  if (this.killCameraControl || this.modelManipulator.hovered)
+  // -pointer over menus
+  // -spawning
+  if (this.modelManipulator.hovered ||
+      this.radialMenu.showing ||
+      this.pointerOnMenu ||
+      this.spawnModel.active)
   {
     this.controls.enabled = false;
     this.controls.update();
@@ -3926,7 +3960,7 @@ GZ3D.Scene.prototype.getByName = function(name)
 GZ3D.Scene.prototype.updatePose = function(model, position, orientation)
 {
   if (this.modelManipulator && this.modelManipulator.object &&
-      this.modelManipulator.hovered && this.mouseEntity)
+      this.modelManipulator.hovered)
   {
     return;
   }
@@ -4681,20 +4715,24 @@ GZ3D.Scene.prototype.setManipulationMode = function(mode)
 
   if (mode === 'view')
   {
-    this.killCameraControl = false;
     if (this.modelManipulator.object)
     {
       this.emitter.emit('poseChanged', this.modelManipulator.object);
     }
     this.hideBoundingBox();
+
     this.modelManipulator.detach();
     this.scene.remove(this.modelManipulator.gizmo);
   }
   else
   {
     this.modelManipulator.mode = this.manipulationMode;
-    this.modelManipulator.setMode( this.modelManipulator.mode );
-    this.killCameraControl = false;
+    this.modelManipulator.setMode(this.modelManipulator.mode);
+    // model was selected during view mode
+    if (this.selectedEntity)
+    {
+      this.attachManipulator(this.selectedEntity, mode);
+    }
   }
 
 };
@@ -4748,15 +4786,16 @@ GZ3D.Scene.prototype.attachManipulator = function(model,mode)
     this.hideBoundingBox();
   }
 
-  this.modelManipulator.attach(model);
-  this.modelManipulator.mode = mode;
-  this.modelManipulator.setMode( this.modelManipulator.mode );
-
   this.selectedEntity = model;
-  this.mouseEntity = this.selectedEntity;
-  this.scene.add(this.modelManipulator.gizmo);
-  this.killCameraControl = false;
   this.showBoundingBox(model);
+
+  if (mode !== 'view')
+  {
+    this.modelManipulator.attach(model);
+    this.modelManipulator.mode = mode;
+    this.modelManipulator.setMode( this.modelManipulator.mode );
+    this.scene.add(this.modelManipulator.gizmo);
+  }
 };
 
 /**
@@ -4885,6 +4924,7 @@ GZ3D.Scene.prototype.hideBoundingBox = function()
     this.boundingBox.parent.remove(this.boundingBox);
   }
   this.boundingBox.visible = false;
+  this.selectedEntity = null;
 };
 
 /**
@@ -5625,9 +5665,6 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
     this.finish();
   }
 
-  // Kill camera controls
-  this.scene.killCameraControl  = true;
-
   this.callback = callback;
 
   this.obj = new THREE.Object3D();
@@ -5686,8 +5723,6 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
  */
 GZ3D.SpawnModel.prototype.finish = function()
 {
-  // Re-enable camera controls
-  this.scene.killCameraControl = false;
   var that = this;
 
   this.domElement.removeEventListener( 'mousedown', that.mouseDown, false);

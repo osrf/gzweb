@@ -100,6 +100,11 @@ GZ3D.RadialMenu.prototype.hide = function(event,callback)
  */
 GZ3D.RadialMenu.prototype.show = function(event,model)
 {
+  if (this.showing)
+  {
+    return;
+  }
+
   this.model = model;
   var pointer = this.getPointer(event);
   this.startPosition = pointer;
