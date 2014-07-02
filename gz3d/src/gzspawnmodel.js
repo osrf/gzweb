@@ -9,6 +9,7 @@ GZ3D.SpawnModel = function(scene, domElement)
   this.init();
   this.obj = undefined;
   this.callback = undefined;
+  this.sdfParser = undefined;
 };
 
 /**
@@ -59,9 +60,9 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
   else
   {
     // temp box for now
-    mesh = this.scene.createBox(1, 1, 1);
+    mesh = this.sdfParser.loadSDF(entity);
+//    mesh = this.scene.createBox(1, 1, 1);
     this.obj.name = entity + '_' + (new Date()).getTime();
-
   }
 
   this.obj.add(mesh);

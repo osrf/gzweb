@@ -40,8 +40,8 @@ GZ3D.GZIface.prototype.connect = function()
 GZ3D.GZIface.prototype.onError = function()
 {
   this.scene.initScene();
-  this.gui.guiEvents.emit('notification_popup', 'GzWeb is currently running without a server');
   this.emitter.emit('error');
+  this.gui.guiEvents.emit('notification_popup', 'GzWeb is currently running without a server');
 };
 
 GZ3D.GZIface.prototype.onConnected = function()

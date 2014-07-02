@@ -169,6 +169,11 @@ GZ3D.Scene.prototype.initScene = function()
   this.createGrid();
 };
 
+GZ3D.Scene.prototype.setSDFParser = function(sdfParser)
+{
+  this.spawnModel.sdfParser = sdfParser;
+};
+
 /**
  * Window event callback
  * @param {} event - click or tap events (select/deselect models and manipulators)

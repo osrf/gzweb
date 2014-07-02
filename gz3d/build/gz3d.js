@@ -1017,8 +1017,8 @@ GZ3D.GZIface.prototype.connect = function()
 GZ3D.GZIface.prototype.onError = function()
 {
   this.scene.initScene();
-  this.gui.guiEvents.emit('notification_popup', 'GzWeb is currently running without a server');
   this.emitter.emit('error');
+  this.gui.guiEvents.emit('notification_popup', 'GzWeb is currently running without a server');
 };
 
 GZ3D.GZIface.prototype.onConnected = function()
@@ -2851,37 +2851,67 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
   {
     eye.copy(camPosition).sub(worldPosition).normalize();
 
-    if(isSelected('X'))
+    if (isSelected('TXYZ'))
     {
-      if(Math.abs(eye.y) > Math.abs(eye.z)) {currentPlane = 'XZ';}
-      else {currentPlane = 'XY';}
+      if (Math.abs(eye.x) > Math.abs(eye.y) &&
+          Math.abs(eye.x) > Math.abs(eye.z))
+      {
+        currentPlane = 'YZ';
+      }
+      else if (Math.abs(eye.y) > Math.abs(eye.x) &&
+               Math.abs(eye.y) > Math.abs(eye.z))
+      {
+        currentPlane = 'XZ';
+      }
+      else
+      {
+        currentPlane = 'XY';
+      }
     }
-
-    if(isSelected('Y'))
-    {
-      if(Math.abs(eye.x) > Math.abs(eye.z)) {currentPlane = 'YZ';}
-      else {currentPlane = 'XY';}
-    }
-
-    if(isSelected('Z'))
-    {
-      if(Math.abs(eye.x) > Math.abs(eye.y)) {currentPlane = 'YZ';}
-      else {currentPlane = 'XZ';}
-    }
-
-    if(isSelected('RX'))
+    else if (isSelected('RX') || isSelected('TYZ'))
     {
       currentPlane = 'YZ';
     }
-
-    if(isSelected('RY'))
+    else if (isSelected('RY') || isSelected('TXZ'))
     {
       currentPlane = 'XZ';
     }
-
-    if(isSelected('RZ'))
+    else if (isSelected('RZ') || isSelected('TXY'))
     {
       currentPlane = 'XY';
+    }
+    else if (isSelected('X'))
+    {
+      if (Math.abs(eye.y) > Math.abs(eye.z))
+      {
+        currentPlane = 'XZ';
+      }
+      else
+      {
+        currentPlane = 'XY';
+      }
+    }
+    else if (isSelected('Y'))
+    {
+      if (Math.abs(eye.x) > Math.abs(eye.z))
+      {
+        currentPlane = 'YZ';
+      }
+      else
+      {
+        currentPlane = 'XY';
+      }
+    }
+    else if (isSelected('Z'))
+    {
+      if (Math.abs(eye.x) > Math.abs(eye.y))
+      {
+        currentPlane = 'YZ';
+      }
+      else
+      {
+        currentPlane = 'XZ';
+      }
     }
   };
 
@@ -3848,6 +3878,11 @@ GZ3D.Scene.prototype.init = function()
 GZ3D.Scene.prototype.initScene = function()
 {
   this.createGrid();
+};
+
+GZ3D.Scene.prototype.setSDFParser = function(sdfParser)
+{
+  this.spawnModel.sdfParser = sdfParser;
 };
 
 /**
@@ -5220,6 +5255,7 @@ GZ3D.SdfParser = function(scene, gui, gziface)
   };
 
   this.scene = scene;
+  this.scene.setSDFParser(this);
   this.gui = gui;
   this.gziface = gziface;
   this.init();
@@ -5252,8 +5288,10 @@ GZ3D.SdfParser.prototype.onConnectionError = function()
   };
   this.gui.emitter.on('entityCreated', entityCreated);
   
-  // add sun
-  this.addModelByType('sun', 'model');
+  // add sun to the scene
+  var sunModel = this.loadSDF('sun');
+  this.scene.add(sunModel);
+  
 };
 
 //TODO: for now gziface inits the scene
@@ -5354,7 +5392,8 @@ GZ3D.SdfParser.prototype.spawnLightFromSDF = function(sdfObj)
   lightObj.shadowDarkness = 0.3;
   lightObj.name = light['@name'];
 
-  this.scene.add(lightObj);
+//  this.scene.add(lightObj);
+  return lightObj;
 };
 
 GZ3D.SdfParser.prototype.parsePose = function(poseStr)
@@ -5426,7 +5465,6 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
               }
             }
             texture = this.MATERIAL_ROOT + textureUri + '/' + mat.texture;
-            console.log('TEXTURE:' + texture);
           }
         } else {
           //TODO: how to handle if material is not cached
@@ -5525,8 +5563,6 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
       var meshUri = geom.mesh.uri;
       var submesh = geom.mesh.submesh;
       var centerSubmesh = geom.mesh.center_submesh;
-
-      console.log(meshUri + ' ' + submesh);
 
       var uriType = meshUri.substring(0, meshUri.indexOf('://'));
       if (uriType === 'file' || uriType === 'model')
@@ -5684,16 +5720,21 @@ GZ3D.SdfParser.prototype.spawnFromSDF = function(sdf)
   //convert SDF XML to Json string and parse JSON string to object
   //TODO: we need better xml 2 json object convertor
   var myjson = xml2json(sdfXML, '\t');
-  console.log(myjson);
   var sdfObj = JSON.parse(myjson).sdf;
   // it is easier to manipulate json object
   
   if (sdfObj.model) {
-    this.spawnModelFromSDF(sdfObj);
+    return this.spawnModelFromSDF(sdfObj);
   } else if (sdfObj.light) {
-    this.spawnLightFromSDF(sdfObj);
+    return this.spawnLightFromSDF(sdfObj);
   }
   
+};
+
+GZ3D.SdfParser.prototype.loadSDF = function(modelName)
+{
+  var sdf = this.loadModel(modelName);
+  return this.spawnFromSDF(sdf);
 };
 
 GZ3D.SdfParser.prototype.spawnModelFromSDF = function(sdfObj)
@@ -5701,7 +5742,7 @@ GZ3D.SdfParser.prototype.spawnModelFromSDF = function(sdfObj)
   // create the model
   var modelObj = new THREE.Object3D();
   modelObj.name = sdfObj.model['@name'];
-  //FIXME: is that needed
+  //TODO: is that needed
   //modelObj.userData = sdfObj.model.@id;
 
   var pose;
@@ -5726,7 +5767,8 @@ GZ3D.SdfParser.prototype.spawnModelFromSDF = function(sdfObj)
     modelObj.add(linkObj);
   }
   
-  this.scene.add(modelObj);
+//  this.scene.add(modelObj);
+  return modelObj;
 
 };
 
@@ -5761,6 +5803,10 @@ GZ3D.SdfParser.prototype.createLink = function(link)
   {
     if (link.collision.visual)
     {
+      if (!(link.collision.visual instanceof Array)) {
+        link.collision.visual = [link.collision.visual];
+      }
+      
       for (var j = 0; j < link.collision.visual.length; j++) {
         visualObj = this.createVisual(link.collision.visual[j]);
         if (visualObj && !visualObj.parent)
@@ -5778,6 +5824,7 @@ GZ3D.SdfParser.prototype.createLink = function(link)
 GZ3D.SdfParser.prototype.addModelByType = function(model, type)
 {
   var sdf, translation, euler;
+  var modelObj;
   
   if (model.matrixWorld) {
     var matrix = model.matrixWorld;
@@ -5789,19 +5836,24 @@ GZ3D.SdfParser.prototype.addModelByType = function(model, type)
 
   if (type === 'box') {
     sdf = this.createBoxSDF(translation, euler);
+    modelObj = this.spawnFromSDF(sdf);
   } else if (type === 'sphere') {
     sdf = this.createSphereSDF(translation, euler);
+    modelObj = this.spawnFromSDF(sdf);
   } else if (type === 'cylinder') {
     sdf = this.createCylinderSDF(translation, euler);
-  } else if (type === 'model') {
-    //TODO: testing
-    var modelName = 'youbot';
-    modelName = model;
-    sdf = this.loadModel(modelName);
-//    console.log(sdf);
+    modelObj = this.spawnFromSDF(sdf);
+  } else {
+    var sdfObj = this.loadSDF(type);
+    modelObj = new THREE.Object3D();
+    modelObj.add(sdfObj);
+    modelObj.matrixWorld = modelObj.matrixWorld;
+    var quaternion = new THREE.Quaternion();
+    quaternion.setFromEuler(euler);
+    this.scene.setPose(modelObj, translation, quaternion);
   }
   
-  this.spawnFromSDF(sdf);
+  this.scene.add(modelObj);
 };
 
 GZ3D.SdfParser.prototype.createSimpleShapeSDF = function(type, translation, euler, geomSDF)
@@ -5895,6 +5947,7 @@ GZ3D.SpawnModel = function(scene, domElement)
   this.init();
   this.obj = undefined;
   this.callback = undefined;
+  this.sdfParser = undefined;
 };
 
 /**
@@ -5945,9 +5998,9 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
   else
   {
     // temp box for now
-    mesh = this.scene.createBox(1, 1, 1);
+    mesh = this.sdfParser.loadSDF(entity);
+//    mesh = this.scene.createBox(1, 1, 1);
     this.obj.name = entity + '_' + (new Date()).getTime();
-
   }
 
   this.obj.add(mesh);
