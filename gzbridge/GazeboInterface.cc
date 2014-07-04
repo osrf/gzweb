@@ -387,10 +387,10 @@ void GazeboInterface::ProcessMessages()
           {
             newModelStr << "<sdf version ='" << SDF_VERSION << "'>"
                   << "<model name='" << name << "'>"
+                  << "  <pose>" << pos.x << " " << pos.y << " "
+                                << pos.z << " " << rpy.x << " "
+                                << rpy.y << " " << rpy.z << "</pose>"
                   << "  <include>"
-                  << "    <pose>" << pos.x << " " << pos.y << " "
-                                  << pos.z << " " << rpy.x << " "
-                                  << rpy.y << " " << rpy.z << "</pose>"
                   << "    <uri>model://" << type << "</uri>"
                   << "  </include>"
                   << "</model>"
