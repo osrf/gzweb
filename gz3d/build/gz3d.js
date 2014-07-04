@@ -5097,38 +5097,44 @@ GZ3D.Scene.prototype.setViewAs = function(model, viewAs)
 
   function materialViewAs(material)
   {
-    material.transparent = true;
-    if (viewAs === 'transparent')
+    if (materials.indexOf(material.id) === -1)
     {
-      if (material.opacity)
+      materials.push(material.id);
+      material.transparent = true;
+
+      if (viewAs === 'transparent')
       {
-        material.originalOpacity = material.opacity;
+        if (material.opacity)
+        {
+          material.originalOpacity = material.opacity;
+        }
+        else
+        {
+          material.originalOpacity = 1.0;
+        }
+        material.opacity = 0.25;
       }
       else
       {
-        material.originalOpacity = 1.0;
+        material.opacity =
+            material.originalOpacity ?
+            material.originalOpacity : 1.0;
       }
-      material.opacity = 0.25;
-    }
-    else
-    {
-      material.opacity =
-          material.originalOpacity ?
-          material.originalOpacity : 1.0;
-    }
 
-    if (viewAs === 'wireframe')
-    {
-      material.visible = false;
-    }
-    else
-    {
-      material.visible = true;
+      if (viewAs === 'wireframe')
+      {
+        material.visible = false;
+      }
+      else
+      {
+        material.visible = true;
+      }
     }
   }
 
   var wireframe;
   var descendants = [];
+  var materials = [];
   model.getDescendants(descendants);
   for (var i = 0; i < descendants.length; ++i)
   {
