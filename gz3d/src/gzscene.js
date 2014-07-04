@@ -21,8 +21,6 @@ GZ3D.Scene.prototype.init = function()
   this.heightmap = null;
 
   this.selectedEntity = null;
-  this.mouseEntity = null;
-  this.selectedModel = null;
 
   this.manipulationMode = 'view';
   this.pointerOnMenu = false;
@@ -221,11 +219,16 @@ GZ3D.Scene.prototype.initScene = function()
 
 /**
  * Window event callback
- * @param {} event - click or tap events (select/deselect models and manipulators)
+ * @param {} event - mousedown or touchdown events
  */
 GZ3D.Scene.prototype.onPointerDown = function(event)
 {
   event.preventDefault();
+
+  if (this.spawnModel.active)
+  {
+    return;
+  }
 
   var pointer, mainPointer = true;
   if (event.touches)
@@ -258,12 +261,6 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
     this.controls.target = intersect;
   }
 
-  // View mode
-  if (this.manipulationMode === 'view')
-  {
-    return;
-  }
-
   // Manipulation modes
   // Model found
   if (model)
@@ -290,7 +287,6 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
     {
       this.modelManipulator.update();
       this.modelManipulator.object.updateMatrixWorld();
-      this.mouseEntity = this.selectedEntity;
     }
     // Sky
     else
@@ -312,9 +308,6 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
 GZ3D.Scene.prototype.onPointerUp = function(event)
 {
   event.preventDefault();
-
-  // The mouse is not holding anything
-  this.mouseEntity = null;
 
   // Clicks (<150ms) outside any models trigger view mode
   var millisecs = new Date().getTime();
@@ -599,7 +592,7 @@ GZ3D.Scene.prototype.getByName = function(name)
 GZ3D.Scene.prototype.updatePose = function(model, position, orientation)
 {
   if (this.modelManipulator && this.modelManipulator.object &&
-      this.modelManipulator.hovered && this.mouseEntity)
+      this.modelManipulator.hovered)
   {
     return;
   }
@@ -1359,13 +1352,19 @@ GZ3D.Scene.prototype.setManipulationMode = function(mode)
       this.emitter.emit('poseChanged', this.modelManipulator.object);
     }
     this.hideBoundingBox();
+
     this.modelManipulator.detach();
     this.scene.remove(this.modelManipulator.gizmo);
   }
   else
   {
     this.modelManipulator.mode = this.manipulationMode;
-    this.modelManipulator.setMode( this.modelManipulator.mode );
+    this.modelManipulator.setMode(this.modelManipulator.mode);
+    // model was selected during view mode
+    if (this.selectedEntity)
+    {
+      this.attachManipulator(this.selectedEntity, mode);
+    }
   }
 
 };
@@ -1419,14 +1418,16 @@ GZ3D.Scene.prototype.attachManipulator = function(model,mode)
     this.hideBoundingBox();
   }
 
-  this.modelManipulator.attach(model);
-  this.modelManipulator.mode = mode;
-  this.modelManipulator.setMode( this.modelManipulator.mode );
-
   this.selectedEntity = model;
-  this.mouseEntity = this.selectedEntity;
-  this.scene.add(this.modelManipulator.gizmo);
   this.showBoundingBox(model);
+
+  if (mode !== 'view')
+  {
+    this.modelManipulator.attach(model);
+    this.modelManipulator.mode = mode;
+    this.modelManipulator.setMode( this.modelManipulator.mode );
+    this.scene.add(this.modelManipulator.gizmo);
+  }
 };
 
 /**
@@ -1555,6 +1556,7 @@ GZ3D.Scene.prototype.hideBoundingBox = function()
     this.boundingBox.parent.remove(this.boundingBox);
   }
   this.boundingBox.visible = false;
+  this.selectedEntity = null;
 };
 
 /**
