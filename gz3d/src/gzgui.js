@@ -540,12 +540,25 @@ function insertControl($scope)
 {
   $scope.categories = modelList;
 
-  $scope.itemWidth = 9.8;
-  if (window.innerWidth / window.innerHeight > 2 ||
-      window.innerWidth < emUnits(35))
+  $scope.setItemWidth = function ()
   {
-    $scope.itemWidth = 7.4;
-  }
+    $scope.itemWidth = 9.8;
+    if (window.innerWidth / window.innerHeight > 2 ||
+        window.innerWidth < emUnits(35))
+    {
+      $scope.itemWidth = 7.4;
+    }
+  };
+
+  $scope.setItemWidth();
+
+  $(window).resize(function()
+  {
+    $scope.$apply(function()
+    {
+       $scope.setItemWidth();
+    });
+  });
 
   $scope.openCategory = function(category)
   {
