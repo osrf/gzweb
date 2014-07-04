@@ -1633,8 +1633,8 @@ GZ3D.Scene.prototype.setViewAs = function(model, viewAs)
   {
     if (descendants[i].material &&
         descendants[i].name.indexOf('boundingBox') === -1 &&
-        descendants[i].name.indexOf('COLLISION') === -1 &&
-        descendants[i].parent.name.indexOf('COLLISION') === -1 &&
+        descendants[i].name.indexOf('COLLISION_VISUAL') === -1 &&
+        !this.getParentByPartialName(descendants[i], 'COLLISION_VISUAL')&&
         descendants[i].name.indexOf('wireframe') === -1)
     {
       if (descendants[i].material instanceof THREE.MeshFaceMaterial)
@@ -1676,4 +1676,28 @@ GZ3D.Scene.prototype.setViewAs = function(model, viewAs)
     }
   }
   model.viewAs = viewAs;
+};
+
+/**
+ * Returns the closest parent whose name contains the given string
+ * @param {} object
+ * @param {} name
+ */
+GZ3D.Scene.prototype.getParentByPartialName = function(object, name)
+{
+  var parent = object.parent;
+  while (true)
+  {
+    if (parent.name.indexOf(name) !== -1)
+    {
+      return parent;
+    }
+
+    parent = parent.parent;
+
+    if (parent === this.scene)
+    {
+      return null;
+    }
+  }
 };
