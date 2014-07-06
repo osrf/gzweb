@@ -98,6 +98,10 @@
           height:5em;
           max-width:6em;
       }
+      .insert-menu-item h1 {
+          font-size:1em;
+          margin:0em;
+      }
       .insert-menu-back img {
           height:1.4em;
           margin:0.1em;
@@ -111,6 +115,9 @@
         .insert-menu-item img {
             height:3.3em;
             max-width:4em;
+        }
+        .insert-menu-item h1 {
+          font-size:0.8em;
         }
         .insert-menus ul {
           height:6em;
@@ -303,13 +310,13 @@
           <ul style="width:{{(categories.length+1)*itemWidth}}em">
             <li>
               <a href="#" ng-click="openCategory('simple_shapes')" data-role="button" data-inline="true" class="insert-menu-item" title="Shapes">
-                Shapes<br>
+                <h1>Shapes</h1>
                 <img src="style/images/box.png">
               </a>
             </li>
             <li ng-repeat="category in categories">
               <a href="#" ng-click="openCategory(category.path)" data-role="button" data-inline="true" class="insert-menu-item" title="{{category.title}}">
-                {{category.title}}<br>
+                <h1>{{category.title}}</h1>
                 <img src="/assets/{{category.examplePath}}/thumbnails/0.png">
               </a>
             </li>
@@ -324,19 +331,19 @@
           <ul style="width:{{3*itemWidth}}em">
             <li>
               <a href="#" id="insert-entity-box" ng-mousedown="spawnEntity('box')" data-role="button" data-inline="true" class="insert-menu-item" title="Box">
-                Box<br>
+                <h1>Box</h1>
                 <img src="style/images/box.png">
               </a>
             </li>
             <li>
               <a href="#" id="insert-entity-sphere" ng-mousedown="spawnEntity('sphere')" data-role="button" data-inline="true" class="insert-menu-item" title="Sphere">
-                Sphere<br>
+                <h1>Sphere</h1>
                 <img src="style/images/sphere.png">
               </a>
             </li>
             <li>
               <a href="#" id="insert-entity-cylinder" ng-mousedown="spawnEntity('cylinder')" data-role="button" data-inline="true" class="insert-menu-item" title="Cylinder">
-                Cylinder<br>
+                <h1>Cylinder</h1>
                 <img src="style/images/cylinder.png">
               </a>
             </li>
@@ -351,7 +358,7 @@
           <ul style="width:{{category.models.length*itemWidth}}em">
             <li ng-repeat="model in category.models">
               <a href="#" id="insert-entity-{{model.modelPath}}" ng-mousedown="spawnEntity(model.modelPath)" data-role="button" data-inline="true" class="insert-menu-item" title="{{model.modelTitle}}">
-                {{model.modelTitle}}<br>
+                <h1>{{model.modelTitle}}</h1>
                 <img src="/assets/{{model.modelPath}}/thumbnails/0.png">
               </a>
             </li>
