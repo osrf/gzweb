@@ -14,14 +14,15 @@ GZ3D.RadialMenu = function(domElement)
  */
 GZ3D.RadialMenu.prototype.init = function()
 {
+  var scale = 1.2;
   // Distance from starting point
-  this.radius = 70;
+  this.radius = 70*scale;
   // Speed to spread the menu
-  this.speed = 10;
+  this.speed = 10*scale;
   // Icon size
-  this.bgSize = 40;
-  this.bgSizeSelected = 68;
-  this.highlightSize = 45;
+  this.bgSize = 40*scale;
+  this.bgSizeSelected = 68*scale;
+  this.highlightSize = 45*scale;
   this.iconProportion = 0.6;
   this.bgShape = THREE.ImageUtils.loadTexture(
       'style/images/icon_background.png' );
@@ -173,7 +174,7 @@ GZ3D.RadialMenu.prototype.update = function()
 
     var d = Math.sqrt(Math.pow(X,2) + Math.pow(Y,2));
 
-    if ( d !== this.radius)
+    if ( d < this.radius)
     {
       X = X - ( this.speed * Math.sin( ( this.offset - i ) * Math.PI/4 ) );
       Y = Y - ( this.speed * Math.cos( ( this.offset - i ) * Math.PI/4 ) );
