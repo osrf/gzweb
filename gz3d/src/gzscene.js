@@ -1482,6 +1482,7 @@ GZ3D.Scene.prototype.showBoundingBox = function(model)
     else
     {
       this.hideBoundingBox();
+      this.selectedEntity = model;
     }
   }
   var box = new THREE.Box3();

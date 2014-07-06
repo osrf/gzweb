@@ -571,12 +571,12 @@ GZ3D.Gui.prototype.init = function()
                 }
                 else if (type === 'transparent')
                 {
-                  that.scene.selectedModel = entity;
+                  that.scene.selectedEntity = entity;
                   guiEvents.emit('set_view_as','transparent');
                 }
                 else if (type === 'wireframe')
                 {
-                  that.scene.selectedModel = entity;
+                  that.scene.selectedEntity = entity;
                   guiEvents.emit('set_view_as','wireframe');
                 }
 
@@ -632,7 +632,7 @@ GZ3D.Gui.prototype.init = function()
               that.scene.selectedEntity = entity;
               that.scene.showBoundingBox(entity);
               $('.ui-popup').popup('close');
-              if (that.scene.selectedModel.viewAs === 'transparent')
+              if (that.scene.selectedEntity.viewAs === 'transparent')
               {
                 $('#view-transparent').buttonMarkup({icon: 'check'});
               }
@@ -641,7 +641,7 @@ GZ3D.Gui.prototype.init = function()
                 $('#view-transparent').buttonMarkup({icon: 'false'});
               }
 
-              if (that.scene.selectedModel.viewAs === 'wireframe')
+              if (that.scene.selectedEntity.viewAs === 'wireframe')
               {
                 $('#view-wireframe').buttonMarkup({icon: 'check'});
               }
@@ -659,8 +659,8 @@ GZ3D.Gui.prototype.init = function()
 
   guiEvents.on('set_view_as', function (viewAs)
       {
-        that.scene.setViewAs(that.scene.selectedModel, viewAs);
-        that.scene.selectedModel = null;
+        that.scene.setViewAs(that.scene.selectedEntity, viewAs);
+        that.scene.selectedEntity = null;
       }
   );
 
