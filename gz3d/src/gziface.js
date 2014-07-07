@@ -831,7 +831,7 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
 
         var modelUri = uriPath + '/' + modelName;
         // Use coarse version on touch devices
-        if (modelUri.indexOf('.dae') !== -1 && this.scene.isTouchDevice)
+        if (modelUri.indexOf('.dae') !== -1 && isTouchDevice)
         {
           modelUri = modelUri.substring(0,modelUri.indexOf('.dae'));
 

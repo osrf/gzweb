@@ -12,6 +12,8 @@ var emUnits = function(value)
       return value*parseFloat($('body').css('font-size'));
     };
 
+var isTouchDevice = 'ontouchstart' in window || 'onmsgesturechange' in window;
+
 var modelList =
   [
     {path:'buildings', title:'Buildings', examplePath:'house_1', models:
@@ -182,8 +184,8 @@ $(function()
     $('#leftPanel').panel('open');
   }
 
-  // Clicks/taps// Touch devices
-  if ('ontouchstart' in window || 'onmsgesturechange' in window)
+  // Touch devices
+  if (isTouchDevice)
   {
     $('.mouse-only')
         .css('visibility','hidden');
@@ -382,11 +384,6 @@ $(function()
           }
         });
 
-    $('#model-popup').bind({popupafterclose: function()
-        {
-          guiEvents.emit('hide_boundingBox');
-        }});
-
     $('#model-popup-screen').mousedown(function(event)
         {
           $('#model-popup').popup('close');
@@ -407,7 +404,8 @@ $(function()
       .css('width', '1.45em')
       .css('padding', '0.65em');
 
-  $('#insertButton').click(function(){
+  $('#insertButton').click(function()
+      {
         $('#leftPanel').panel('close');
         if($('#insert-menu').is(':visible'))
         {
@@ -418,31 +416,34 @@ $(function()
           $('#insert-menu').show();
           $('[id^="insert-menu-"]').hide();
           $('.insert-menu-title')
+              .css('margin-left',
+                  document.getElementById('insert-menu').scrollLeft);
+        }
+      });
+
+  $('.insert-menu-back').click(function()
+      {
+        $('#insert-menu').show();
+        $('[id^="insert-menu-"]').hide();
+        $('.insert-menu-title')
             .css('margin-left',
                 document.getElementById('insert-menu').scrollLeft);
-        }
-    });
+      });
 
-    $( '.insert-menu-back' ).click(function() {
-      $('#insert-menu').show();
-      $('[id^="insert-menu-"]').hide();
-      $('.insert-menu-title')
-        .css('margin-left', document.getElementById('insert-menu').scrollLeft);
-    });
-
-    $( '.insert-menu-close' ).click(function() {
-      $('.insert-menus').hide();
-    });
+  $('.insert-menu-close').click(function()
+      {
+        $('.insert-menus').hide();
+      });
 
   $('.insert-menus').on('scroll', function()
       {
         var id = $(this).attr('id');
 
         $('.insert-menu-title')
-          .css('margin-left', document.getElementById(id).scrollLeft);
+            .css('margin-left', document.getElementById(id).scrollLeft);
       });
 
-  $( '#leftPanel' ).on('panelopen', function()
+  $('#leftPanel').on('panelopen', function()
       {
         if($('.insert-menus').is(':visible'))
         {
@@ -450,7 +451,7 @@ $(function()
         }
       });
 
-  $( '#leftPanel' ).on('panelclose', function()
+  $('#leftPanel').on('panelclose', function()
       {
         $('#panelButton').removeClass('ui-btn-active');
       });
@@ -555,13 +556,33 @@ function insertControl($scope)
 {
   $scope.categories = modelList;
 
+  $scope.setItemWidth = function ()
+  {
+    $scope.itemWidth = 9.8;
+    if (window.innerWidth / window.innerHeight > 2 ||
+        window.innerWidth < emUnits(35))
+    {
+      $scope.itemWidth = 7.4;
+    }
+  };
+
+  $scope.setItemWidth();
+
+  $(window).resize(function()
+  {
+    $scope.$apply(function()
+    {
+       $scope.setItemWidth();
+    });
+  });
+
   $scope.openCategory = function(category)
   {
     $('#insert-menu').hide();
     var categoryID = 'insert-menu-'+category;
     $('#' + categoryID).show();
     $('.insert-menu-title')
-      .css('margin-left', document.getElementById(categoryID).scrollLeft);
+        .css('margin-left', document.getElementById(categoryID).scrollLeft);
   };
 
   $scope.spawnEntity = function(path)
@@ -793,10 +814,6 @@ GZ3D.Gui.prototype.init = function()
 
   guiEvents.on('longpress_container_end', function(event,cancel)
       {
-        if (that.scene.modelManipulator.object === undefined)
-        {
-          that.scene.hideBoundingBox();
-        }
         if (that.longPressContainerState !== 'START')
         {
           that.longPressContainerState = 'END';
@@ -835,12 +852,12 @@ GZ3D.Gui.prototype.init = function()
                 }
                 else if (type === 'transparent')
                 {
-                  that.scene.selectedModel = entity;
+                  that.scene.selectedEntity = entity;
                   guiEvents.emit('view_transparent');
                 }
                 else if (type === 'wireframe')
                 {
-                  that.scene.selectedModel = entity;
+                  that.scene.selectedEntity = entity;
                   guiEvents.emit('view_wireframe');
                 }
 
@@ -926,7 +943,7 @@ GZ3D.Gui.prototype.init = function()
       {
         that.scene.onRightClick(event, function(entity)
             {
-              that.scene.selectedModel = entity;
+              that.scene.selectedEntity = entity;
               that.scene.showBoundingBox(entity);
               $('.ui-popup').popup('close');
               if (entity.children[0] instanceof THREE.Light)
@@ -939,7 +956,7 @@ GZ3D.Gui.prototype.init = function()
               }
               else
               {
-                if (that.scene.selectedModel.isTransparent)
+                if (that.scene.selectedEntity.isTransparent)
                 {
                   $('#view-transparent').buttonMarkup({icon: 'check'});
                 }
@@ -948,7 +965,7 @@ GZ3D.Gui.prototype.init = function()
                   $('#view-transparent').buttonMarkup({icon: 'false'});
                 }
 
-                if (that.scene.selectedModel.isWireframe)
+                if (that.scene.selectedEntity.isWireframe)
                 {
                   $('#view-wireframe').buttonMarkup({icon: 'check'});
                 }
@@ -968,30 +985,24 @@ GZ3D.Gui.prototype.init = function()
 
   guiEvents.on('view_transparent', function ()
       {
-        that.scene.toggleTransparency(that.scene.selectedModel);
-        that.scene.selectedModel = null;
+        that.scene.toggleTransparency(that.scene.selectedEntity);
+        that.scene.selectedEntity = null;
       }
   );
 
   guiEvents.on('view_wireframe', function ()
       {
-        that.scene.toggleWireframe(that.scene.selectedModel);
-        that.scene.selectedModel = null;
+        that.scene.toggleWireframe(that.scene.selectedEntity);
+        that.scene.selectedEntity = null;
       }
   );
 
   guiEvents.on('delete_entity', function ()
       {
-        that.emitter.emit('deleteEntity',that.scene.selectedModel);
+        that.emitter.emit('deleteEntity',that.scene.selectedEntity);
         guiEvents.emit('notification_popup','Model deleted');
         $('#model-popup').popup('close');
-        that.scene.selectedModel = null;
-      }
-  );
-
-  guiEvents.on('hide_boundingBox', function ()
-      {
-        that.scene.hideBoundingBox();
+        that.scene.selectedEntity = null;
       }
   );
 
@@ -1878,7 +1889,7 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
 
         var modelUri = uriPath + '/' + modelName;
         // Use coarse version on touch devices
-        if (modelUri.indexOf('.dae') !== -1 && this.scene.isTouchDevice)
+        if (modelUri.indexOf('.dae') !== -1 && isTouchDevice)
         {
           modelUri = modelUri.substring(0,modelUri.indexOf('.dae'));
 
@@ -2999,37 +3010,67 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
   {
     eye.copy(camPosition).sub(worldPosition).normalize();
 
-    if(isSelected('X'))
+    if (isSelected('TXYZ'))
     {
-      if(Math.abs(eye.y) > Math.abs(eye.z)) {currentPlane = 'XZ';}
-      else {currentPlane = 'XY';}
+      if (Math.abs(eye.x) > Math.abs(eye.y) &&
+          Math.abs(eye.x) > Math.abs(eye.z))
+      {
+        currentPlane = 'YZ';
+      }
+      else if (Math.abs(eye.y) > Math.abs(eye.x) &&
+               Math.abs(eye.y) > Math.abs(eye.z))
+      {
+        currentPlane = 'XZ';
+      }
+      else
+      {
+        currentPlane = 'XY';
+      }
     }
-
-    if(isSelected('Y'))
-    {
-      if(Math.abs(eye.x) > Math.abs(eye.z)) {currentPlane = 'YZ';}
-      else {currentPlane = 'XY';}
-    }
-
-    if(isSelected('Z'))
-    {
-      if(Math.abs(eye.x) > Math.abs(eye.y)) {currentPlane = 'YZ';}
-      else {currentPlane = 'XZ';}
-    }
-
-    if(isSelected('RX'))
+    else if (isSelected('RX') || isSelected('TYZ'))
     {
       currentPlane = 'YZ';
     }
-
-    if(isSelected('RY'))
+    else if (isSelected('RY') || isSelected('TXZ'))
     {
       currentPlane = 'XZ';
     }
-
-    if(isSelected('RZ'))
+    else if (isSelected('RZ') || isSelected('TXY'))
     {
       currentPlane = 'XY';
+    }
+    else if (isSelected('X'))
+    {
+      if (Math.abs(eye.y) > Math.abs(eye.z))
+      {
+        currentPlane = 'XZ';
+      }
+      else
+      {
+        currentPlane = 'XY';
+      }
+    }
+    else if (isSelected('Y'))
+    {
+      if (Math.abs(eye.x) > Math.abs(eye.z))
+      {
+        currentPlane = 'YZ';
+      }
+      else
+      {
+        currentPlane = 'XY';
+      }
+    }
+    else if (isSelected('Z'))
+    {
+      if (Math.abs(eye.x) > Math.abs(eye.y))
+      {
+        currentPlane = 'YZ';
+      }
+      else
+      {
+        currentPlane = 'XZ';
+      }
     }
   };
 
@@ -3889,15 +3930,10 @@ GZ3D.Scene.prototype.init = function()
   // this.scene.name = this.name;
   this.meshes = {};
 
-  this.isTouchDevice = 'ontouchstart' in window // works on most browsers
-      || 'onmsgesturechange' in window; // works on ie10
-
   // only support one heightmap for now.
   this.heightmap = null;
 
   this.selectedEntity = null;
-  this.mouseEntity = null;
-  this.selectedModel = null;
 
   this.manipulationMode = 'view';
   this.pointerOnMenu = false;
@@ -3956,7 +3992,7 @@ GZ3D.Scene.prototype.init = function()
       function(event) {that.onPointerUp(event);}, false );
 
   // Handles for translating and rotating objects
-  this.modelManipulator = new GZ3D.Manipulator(this.camera, this.isTouchDevice,
+  this.modelManipulator = new GZ3D.Manipulator(this.camera, isTouchDevice,
       this.getDomElement());
 
   this.timeDown = null;
@@ -4035,13 +4071,13 @@ GZ3D.Scene.prototype.init = function()
 GZ3D.Scene.prototype.initScene = function()
 {
   this.createGrid();
-  
+
   // create a sun light
   var color = new THREE.Color();
   color.r = 0.800000011920929;
   color.b = 0.800000011920929;
   color.g = 0.800000011920929;
-    
+
   var lightObj = new THREE.DirectionalLight(color.getHex());
   var dir = new THREE.Vector3(0.5, 0.1, -0.9);
   var target = dir;
@@ -4064,36 +4100,41 @@ GZ3D.Scene.prototype.initScene = function()
   lightObj.shadowBias = 0.0001;
 
   lightObj.position.set(negDir.x, negDir.y, negDir.z);
-  
+
   var position = [];
   position['x'] = 0;
   position['y'] = 0;
   position['z'] = 10;
-  
+
   var orientation = [];
   orientation['x'] = 0;
   orientation['y'] = 0;
   orientation['z'] = 0;
   orientation['w'] = 1;
-  
+
   this.setPose(lightObj, position, orientation);
-  
+
   lightObj.intensity = 0.8999999761581421;
   lightObj.castShadow = true;
   lightObj.shadowDarkness = 0.3;
   lightObj.name = 'sun';
 
   this.add(lightObj);
-  
+
 };
 
 /**
  * Window event callback
- * @param {} event
+ * @param {} event - mousedown or touchdown events
  */
 GZ3D.Scene.prototype.onPointerDown = function(event)
 {
   event.preventDefault();
+
+  if (this.spawnModel.active)
+  {
+    return;
+  }
 
   var pointer, mainPointer = true;
   if (event.touches)
@@ -4126,12 +4167,6 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
     this.controls.target = intersect;
   }
 
-  // View mode
-  if (this.manipulationMode === 'view')
-  {
-    return;
-  }
-
   // Manipulation modes
   // Model found
   if (model)
@@ -4158,7 +4193,6 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
     {
       this.modelManipulator.update();
       this.modelManipulator.object.updateMatrixWorld();
-      this.mouseEntity = this.selectedEntity;
     }
     // Sky
     else
@@ -4180,9 +4214,6 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
 GZ3D.Scene.prototype.onPointerUp = function(event)
 {
   event.preventDefault();
-
-  // The mouse is not holding anything
-  this.mouseEntity = null;
 
   // Clicks (<150ms) outside any models trigger view mode
   var millisecs = new Date().getTime();
@@ -4475,7 +4506,7 @@ GZ3D.Scene.prototype.getByName = function(name)
 GZ3D.Scene.prototype.updatePose = function(model, position, orientation)
 {
   if (this.modelManipulator && this.modelManipulator.object &&
-      this.modelManipulator.hovered && this.mouseEntity)
+      this.modelManipulator.hovered)
   {
     return;
   }
@@ -5311,13 +5342,19 @@ GZ3D.Scene.prototype.setManipulationMode = function(mode)
       this.emitter.emit('poseChanged', this.modelManipulator.object);
     }
     this.hideBoundingBox();
+
     this.modelManipulator.detach();
     this.scene.remove(this.modelManipulator.gizmo);
   }
   else
   {
     this.modelManipulator.mode = this.manipulationMode;
-    this.modelManipulator.setMode( this.modelManipulator.mode );
+    this.modelManipulator.setMode(this.modelManipulator.mode);
+    // model was selected during view mode
+    if (this.selectedEntity)
+    {
+      this.attachManipulator(this.selectedEntity, mode);
+    }
   }
 
 };
@@ -5371,14 +5408,16 @@ GZ3D.Scene.prototype.attachManipulator = function(model,mode)
     this.hideBoundingBox();
   }
 
-  this.modelManipulator.attach(model);
-  this.modelManipulator.mode = mode;
-  this.modelManipulator.setMode( this.modelManipulator.mode );
-
   this.selectedEntity = model;
-  this.mouseEntity = this.selectedEntity;
-  this.scene.add(this.modelManipulator.gizmo);
   this.showBoundingBox(model);
+
+  if (mode !== 'view')
+  {
+    this.modelManipulator.attach(model);
+    this.modelManipulator.mode = mode;
+    this.modelManipulator.setMode( this.modelManipulator.mode );
+    this.scene.add(this.modelManipulator.gizmo);
+  }
 };
 
 /**
@@ -5507,6 +5546,7 @@ GZ3D.Scene.prototype.hideBoundingBox = function()
     this.boundingBox.parent.remove(this.boundingBox);
   }
   this.boundingBox.visible = false;
+  this.selectedEntity = null;
 };
 
 /**

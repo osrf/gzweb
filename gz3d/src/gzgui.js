@@ -7,6 +7,8 @@ var emUnits = function(value)
       return value*parseFloat($('body').css('font-size'));
     };
 
+var isTouchDevice = 'ontouchstart' in window || 'onmsgesturechange' in window;
+
 var modelList =
   [
     {path:'buildings', title:'Buildings', examplePath:'house_1', models:
@@ -177,8 +179,8 @@ $(function()
     $('#leftPanel').panel('open');
   }
 
-  // Clicks/taps// Touch devices
-  if ('ontouchstart' in window || 'onmsgesturechange' in window)
+  // Touch devices
+  if (isTouchDevice)
   {
     $('.mouse-only')
         .css('visibility','hidden');
@@ -377,11 +379,6 @@ $(function()
           }
         });
 
-    $('#model-popup').bind({popupafterclose: function()
-        {
-          guiEvents.emit('hide_boundingBox');
-        }});
-
     $('#model-popup-screen').mousedown(function(event)
         {
           $('#model-popup').popup('close');
@@ -402,7 +399,8 @@ $(function()
       .css('width', '1.45em')
       .css('padding', '0.65em');
 
-  $('#insertButton').click(function(){
+  $('#insertButton').click(function()
+      {
         $('#leftPanel').panel('close');
         if($('#insert-menu').is(':visible'))
         {
@@ -413,31 +411,34 @@ $(function()
           $('#insert-menu').show();
           $('[id^="insert-menu-"]').hide();
           $('.insert-menu-title')
+              .css('margin-left',
+                  document.getElementById('insert-menu').scrollLeft);
+        }
+      });
+
+  $('.insert-menu-back').click(function()
+      {
+        $('#insert-menu').show();
+        $('[id^="insert-menu-"]').hide();
+        $('.insert-menu-title')
             .css('margin-left',
                 document.getElementById('insert-menu').scrollLeft);
-        }
-    });
+      });
 
-    $( '.insert-menu-back' ).click(function() {
-      $('#insert-menu').show();
-      $('[id^="insert-menu-"]').hide();
-      $('.insert-menu-title')
-        .css('margin-left', document.getElementById('insert-menu').scrollLeft);
-    });
-
-    $( '.insert-menu-close' ).click(function() {
-      $('.insert-menus').hide();
-    });
+  $('.insert-menu-close').click(function()
+      {
+        $('.insert-menus').hide();
+      });
 
   $('.insert-menus').on('scroll', function()
       {
         var id = $(this).attr('id');
 
         $('.insert-menu-title')
-          .css('margin-left', document.getElementById(id).scrollLeft);
+            .css('margin-left', document.getElementById(id).scrollLeft);
       });
 
-  $( '#leftPanel' ).on('panelopen', function()
+  $('#leftPanel').on('panelopen', function()
       {
         if($('.insert-menus').is(':visible'))
         {
@@ -445,7 +446,7 @@ $(function()
         }
       });
 
-  $( '#leftPanel' ).on('panelclose', function()
+  $('#leftPanel').on('panelclose', function()
       {
         $('#panelButton').removeClass('ui-btn-active');
       });
@@ -550,13 +551,33 @@ function insertControl($scope)
 {
   $scope.categories = modelList;
 
+  $scope.setItemWidth = function ()
+  {
+    $scope.itemWidth = 9.8;
+    if (window.innerWidth / window.innerHeight > 2 ||
+        window.innerWidth < emUnits(35))
+    {
+      $scope.itemWidth = 7.4;
+    }
+  };
+
+  $scope.setItemWidth();
+
+  $(window).resize(function()
+  {
+    $scope.$apply(function()
+    {
+       $scope.setItemWidth();
+    });
+  });
+
   $scope.openCategory = function(category)
   {
     $('#insert-menu').hide();
     var categoryID = 'insert-menu-'+category;
     $('#' + categoryID).show();
     $('.insert-menu-title')
-      .css('margin-left', document.getElementById(categoryID).scrollLeft);
+        .css('margin-left', document.getElementById(categoryID).scrollLeft);
   };
 
   $scope.spawnEntity = function(path)
@@ -788,10 +809,6 @@ GZ3D.Gui.prototype.init = function()
 
   guiEvents.on('longpress_container_end', function(event,cancel)
       {
-        if (that.scene.modelManipulator.object === undefined)
-        {
-          that.scene.hideBoundingBox();
-        }
         if (that.longPressContainerState !== 'START')
         {
           that.longPressContainerState = 'END';
@@ -830,12 +847,12 @@ GZ3D.Gui.prototype.init = function()
                 }
                 else if (type === 'transparent')
                 {
-                  that.scene.selectedModel = entity;
+                  that.scene.selectedEntity = entity;
                   guiEvents.emit('view_transparent');
                 }
                 else if (type === 'wireframe')
                 {
-                  that.scene.selectedModel = entity;
+                  that.scene.selectedEntity = entity;
                   guiEvents.emit('view_wireframe');
                 }
 
@@ -921,7 +938,7 @@ GZ3D.Gui.prototype.init = function()
       {
         that.scene.onRightClick(event, function(entity)
             {
-              that.scene.selectedModel = entity;
+              that.scene.selectedEntity = entity;
               that.scene.showBoundingBox(entity);
               $('.ui-popup').popup('close');
               if (entity.children[0] instanceof THREE.Light)
@@ -934,7 +951,7 @@ GZ3D.Gui.prototype.init = function()
               }
               else
               {
-                if (that.scene.selectedModel.isTransparent)
+                if (that.scene.selectedEntity.isTransparent)
                 {
                   $('#view-transparent').buttonMarkup({icon: 'check'});
                 }
@@ -943,7 +960,7 @@ GZ3D.Gui.prototype.init = function()
                   $('#view-transparent').buttonMarkup({icon: 'false'});
                 }
 
-                if (that.scene.selectedModel.isWireframe)
+                if (that.scene.selectedEntity.isWireframe)
                 {
                   $('#view-wireframe').buttonMarkup({icon: 'check'});
                 }
@@ -963,30 +980,24 @@ GZ3D.Gui.prototype.init = function()
 
   guiEvents.on('view_transparent', function ()
       {
-        that.scene.toggleTransparency(that.scene.selectedModel);
-        that.scene.selectedModel = null;
+        that.scene.toggleTransparency(that.scene.selectedEntity);
+        that.scene.selectedEntity = null;
       }
   );
 
   guiEvents.on('view_wireframe', function ()
       {
-        that.scene.toggleWireframe(that.scene.selectedModel);
-        that.scene.selectedModel = null;
+        that.scene.toggleWireframe(that.scene.selectedEntity);
+        that.scene.selectedEntity = null;
       }
   );
 
   guiEvents.on('delete_entity', function ()
       {
-        that.emitter.emit('deleteEntity',that.scene.selectedModel);
+        that.emitter.emit('deleteEntity',that.scene.selectedEntity);
         guiEvents.emit('notification_popup','Model deleted');
         $('#model-popup').popup('close');
-        that.scene.selectedModel = null;
-      }
-  );
-
-  guiEvents.on('hide_boundingBox', function ()
-      {
-        that.scene.hideBoundingBox();
+        that.scene.selectedEntity = null;
       }
   );
 

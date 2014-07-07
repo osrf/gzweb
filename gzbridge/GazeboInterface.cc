@@ -22,7 +22,6 @@
 #include "GazeboInterface.hh"
 
 #define MAX_NUM_MSG_SIZE 1000
-#define GZWEB_RESOURCE_PATH "../http/client/assets/"
 
 using namespace gzweb;
 
@@ -432,7 +431,6 @@ void GazeboInterface::ProcessMessages()
           }
           else
           {
-            /*
             newModelStr << "<sdf version ='" << SDF_VERSION << "'>"
                   << "<model name='" << name << "'>"
                   << "  <include>"
@@ -443,50 +441,6 @@ void GazeboInterface::ProcessMessages()
                   << "  </include>"
                   << "</model>"
                   << "</sdf>";
-            */
-
-            std::string path = GZWEB_RESOURCE_PATH + type + std::string("/model.sdf");
-
-            std::ifstream file(path.c_str());
-
-            if (file)
-            {
-              file.seekg(0,std::ios::end);
-              std::streampos length = file.tellg();
-              file.seekg(0,std::ios::beg);
-
-              std::vector<char> buffer(length);
-              file.read(&buffer[0],length);
-
-              std::stringstream modelXML;
-              modelXML.rdbuf()->pubsetbuf(&buffer[0],length);
-
-              // <sdf> and <model>
-              std::size_t begin = modelXML.str().find("<sdf");
-              std::size_t end = modelXML.str().find("\"",modelXML.str().find("model"))+1;
-
-              std::string headerSDF = modelXML.str().substr(begin, end-begin);
-
-              headerSDF += name + "\">";
-
-              // <pose>
-              std::stringstream poseSDF;
-              poseSDF << "    <pose>" << pos.x << " " << pos.y << " "
-                                      << pos.z << " " << rpy.x << " "
-                                      << rpy.y << " " << rpy.z << "</pose>";
-
-              // the rest
-              begin = modelXML.str().find(">",modelXML.str().find("model"))+1;
-
-              std::string modelSDF = modelXML.str().substr(begin);
-
-              newModelStr << headerSDF << std::endl;
-              newModelStr << poseSDF.str();
-              newModelStr << modelSDF;
-
-              file.close();
-            }
-
           }
 
           // Spawn the model in the physics server
