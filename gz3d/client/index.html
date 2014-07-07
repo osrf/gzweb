@@ -94,6 +94,11 @@
           width:7em;
           height:6.5em
       }
+      .insert-menu-item h1 {
+          font-size:1em;
+          margin:0em;
+          width:100%;
+      }
       .insert-menu-item img {
           height:5em;
           max-width:6em;
@@ -101,6 +106,19 @@
       .insert-menu-item-light img {
           height:4em;
           margin-top:0.6em;
+      }
+      .fade {
+          position: relative;
+          height: 1em;
+      }
+      .fade:after {
+          content: "";
+          text-align: right;
+          position: absolute;
+          bottom: -0.2em;
+          width: 100%;
+          height: 1.2em;
+          background: linear-gradient(to right, rgba(51, 51, 51, 0) 40%, rgba(51, 51, 51, 1) 60%);
       }
       .insert-menu-back img {
           height:1.4em;
@@ -112,6 +130,9 @@
             width:4.6em;
             height:4.3em
         }
+        .insert-menu-item h1 {
+            font-size:0.7em;
+        }
         .insert-menu-item img {
             height:3.3em;
             max-width:4em;
@@ -121,7 +142,12 @@
           margin-top:0.4em;
         }
         .insert-menus ul {
-          height:6em;
+            height:6em;
+        }
+        .fade:after {
+            bottom: 0em;
+            height: 1em;
+            background: linear-gradient(to right, rgba(51, 51, 51, 0) 50%, rgba(51, 51, 51, 1) 70%);
         }
       }
     </style>
@@ -323,19 +349,19 @@
           <ul style="width:{{(categories.length+2)*itemWidth}}em">
             <li>
               <a href="#" ng-click="openCategory('simple_shapes')" data-role="button" data-inline="true" class="insert-menu-item" title="Shapes">
-                Shapes<br>
+                <div class="fade"><h1>Shapes</h1></div>
                 <img src="style/images/box.png">
               </a>
             </li>
             <li>
               <a href="#" ng-click="openCategory('lights')" data-role="button" data-inline="true" class="insert-menu-item" title="Lights">
-                Lights<br>
+                <div class="fade"><h1>Lights</h1></div>
                 <img src="style/images/light_thumb.png">
               </a>
             </li>
             <li ng-repeat="category in categories">
               <a href="#" ng-click="openCategory(category.path)" data-role="button" data-inline="true" class="insert-menu-item" title="{{category.title}}">
-                {{category.title}}<br>
+                <div class="fade"><h1>{{category.title}}</h1></div>
                 <img src="/assets/{{category.examplePath}}/thumbnails/0.png">
               </a>
             </li>
@@ -350,19 +376,19 @@
           <ul style="width:{{3*itemWidth}}em">
             <li>
               <a href="#" id="insert-entity-box" ng-mousedown="spawnEntity('box')" data-role="button" data-inline="true" class="insert-menu-item" title="Box">
-                Box<br>
+                <div class="fade"><h1>Box</h1></div>
                 <img src="style/images/box.png">
               </a>
             </li>
             <li>
               <a href="#" id="insert-entity-sphere" ng-mousedown="spawnEntity('sphere')" data-role="button" data-inline="true" class="insert-menu-item" title="Sphere">
-                Sphere<br>
+                <div class="fade"><h1>Sphere</h1></div>
                 <img src="style/images/sphere.png">
               </a>
             </li>
             <li>
               <a href="#" id="insert-entity-cylinder" ng-mousedown="spawnEntity('cylinder')" data-role="button" data-inline="true" class="insert-menu-item" title="Cylinder">
-                Cylinder<br>
+                <div class="fade"><h1>Cylinder</h1></div>
                 <img src="style/images/cylinder.png">
               </a>
             </li>
@@ -377,19 +403,19 @@
           <ul style="width:{{3*9.8}}em">
             <li>
               <a href="#" id="insert-entity-pointlight" ng-mousedown="spawnEntity('pointlight')" data-role="button" data-inline="true" class="insert-menu-item insert-menu-item-light" title="Point Light">
-                Point<br>
+                <div class="fade"><h1>Point</h1></div>
                 <img src="style/images/pointlight.png">
               </a>
             </li>
             <li>
               <a href="#" id="insert-entity-spotlight" ng-mousedown="spawnEntity('spotlight')" data-role="button" data-inline="true" class="insert-menu-item insert-menu-item-light" title="Spot Light">
-                Spot<br>
+                <div class="fade"><h1>Spot</h1></div>
                 <img src="style/images/spotlight.png">
               </a>
             </li>
             <li>
               <a href="#" id="insert-entity-directionallight" ng-mousedown="spawnEntity('directionallight')" data-role="button" data-inline="true" class="insert-menu-item insert-menu-item-light" title="Directional Light">
-                Directional<br>
+                <div class="fade"><h1>Directional</h1></div>
                 <img src="style/images/directionallight.png">
               </a>
             </li>
@@ -404,7 +430,7 @@
           <ul style="width:{{category.models.length*itemWidth}}em">
             <li ng-repeat="model in category.models">
               <a href="#" id="insert-entity-{{model.modelPath}}" ng-mousedown="spawnEntity(model.modelPath)" data-role="button" data-inline="true" class="insert-menu-item" title="{{model.modelTitle}}">
-                {{model.modelTitle}}<br>
+                <div class="fade"><h1>{{model.modelTitle}}</h1></div>
                 <img src="/assets/{{model.modelPath}}/thumbnails/0.png">
               </a>
             </li>

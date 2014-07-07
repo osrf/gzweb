@@ -350,13 +350,15 @@ $(function()
         .css('top', '0em')
         .css('z-index', '1000');
 
-    $('[id^="header-insert-"]').click(function()
-        {
-          var entity = $(this).attr('id');
-          entity = entity.substring(14);
-          guiEvents.emit('close_panel');
-          guiEvents.emit('spawn_entity_start', entity);
-        });
+    $('#footer').bind('mousewheel', function(event){
+        event.originalEvent.preventDefault();
+        var id = $('.insert-menus:visible').attr('id');
+
+        var value = document.getElementById(id).scrollLeft;
+        value = value - event.originalEvent.wheelDelta/6;
+
+        $('.insert-menus:visible').scrollLeft(value);
+    });
 
     $('#footer').mouseenter(function(event){
         guiEvents.emit('pointerOnMenu');
@@ -388,14 +390,6 @@ $(function()
         {
           $('#model-popup').popup('close');
         });
-
-    $('#leftPanel').mouseenter(function(event){
-        guiEvents.emit('pointerOnMenu');
-    });
-
-    $('#leftPanel').mouseleave(function(event){
-        guiEvents.emit('pointerOffMenu');
-    });
   }
 
   $('.header-button')
