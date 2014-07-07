@@ -1,30 +1,30 @@
 #!/bin/bash
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-cd $DIR
+ASSETS="$DIR/../http/client/assets"
 
-for dir in $DIR/../http/client/assets/*/
+for dir in $ASSETS/*/
 do
     dir=${dir%*/}
     echo "Creating thumbnail for ${dir##*/}"
-    rm -rf $DIR/../http/client/assets/${dir##*/}/thumbnails
-    if [[ -f $DIR/../http/client/assets/${dir##*/}/model.sdf ]]; then
+    rm -rf $ASSETS/${dir##*/}/thumbnails
+    if [[ -f $ASSETS/${dir##*/}/model.sdf ]]; then
 	# generate thumbnails with green bg
-        gzserver -s libModelPropShop.so $DIR/green.world --propshop-save "$DIR/../http/client/assets/${dir##*/}/thumbnails" --propshop-model "$DIR/../http/client/assets/${dir##*/}/model.sdf"
+        gzserver -s libModelPropShop.so $DIR/green.world --propshop-save "$ASSETS/${dir##*/}/thumbnails" --propshop-model "$ASSETS/${dir##*/}/model.sdf"
 	# make green bg transparent
-	convert $DIR/../http/client/assets/${dir##*/}/thumbnails/1.png -fuzz 30% -transparent '#00ff00' $DIR/../http/client/assets/${dir##*/}/thumbnails/0.png
+	convert $ASSETS/${dir##*/}/thumbnails/1.png -fuzz 30% -transparent '#00ff00' $ASSETS/${dir##*/}/thumbnails/0.png
 	# crop transparent ends
-	convert $DIR/../http/client/assets/${dir##*/}/thumbnails/0.png -trim $DIR/../http/client/assets/${dir##*/}/thumbnails/0.png
+	convert $ASSETS/${dir##*/}/thumbnails/0.png -trim $ASSETS/${dir##*/}/thumbnails/0.png
 	# add shadow
 	convert -background none -fill black \
-              $DIR/../http/client/assets/${dir##*/}/thumbnails/0.png \
+              $ASSETS/${dir##*/}/thumbnails/0.png \
           \( +clone -background black  -shadow 100x10+0+0 \) +swap \
-          -background none   -layers merge +repage  $DIR/../http/client/assets/${dir##*/}/thumbnails/0.png
+          -background none   -layers merge +repage  $ASSETS/${dir##*/}/thumbnails/0.png
 	# remove extra files
-	rm $DIR/../http/client/assets/${dir##*/}/thumbnails/1.png
-	rm $DIR/../http/client/assets/${dir##*/}/thumbnails/2.png
-	rm $DIR/../http/client/assets/${dir##*/}/thumbnails/3.png
-	rm $DIR/../http/client/assets/${dir##*/}/thumbnails/4.png
-	rm $DIR/../http/client/assets/${dir##*/}/thumbnails/5.png
+	rm $ASSETS/${dir##*/}/thumbnails/1.png
+	rm $ASSETS/${dir##*/}/thumbnails/2.png
+	rm $ASSETS/${dir##*/}/thumbnails/3.png
+	rm $ASSETS/${dir##*/}/thumbnails/4.png
+	rm $ASSETS/${dir##*/}/thumbnails/5.png
     fi
 done

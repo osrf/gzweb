@@ -16,13 +16,13 @@
 */
 
 #include <boost/thread.hpp>
-#include <unistd.h>
 
 #include "pb2json.hh"
 #include "OgreMaterialParser.hh"
 #include "GazeboInterface.hh"
 
 #define MAX_NUM_MSG_SIZE 1000
+#define GZWEB_RESOURCE_PATH "../http/client/assets/"
 
 using namespace gzweb;
 
@@ -432,7 +432,20 @@ void GazeboInterface::ProcessMessages()
           }
           else
           {
-            std::string path = std::string("../http/client/assets/") + type + "/model.sdf";
+            /*
+            newModelStr << "<sdf version ='" << SDF_VERSION << "'>"
+                  << "<model name='" << name << "'>"
+                  << "  <include>"
+                  << "    <pose>" << pos.x << " " << pos.y << " "
+                                  << pos.z << " " << rpy.x << " "
+                                  << rpy.y << " " << rpy.z << "</pose>"
+                  << "    <uri>model://" << type << "</uri>"
+                  << "  </include>"
+                  << "</model>"
+                  << "</sdf>";
+            */
+
+            std::string path = GZWEB_RESOURCE_PATH + type + std::string("/model.sdf");
 
             std::ifstream file(path.c_str());
 
@@ -473,6 +486,7 @@ void GazeboInterface::ProcessMessages()
 
               file.close();
             }
+
           }
 
           // Spawn the model in the physics server

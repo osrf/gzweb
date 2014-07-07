@@ -55,6 +55,58 @@
           position: absolute;
           bottom: 0;
       }
+      .insert-menus {
+          display:none;
+          background-color:#2a2a2a;
+          padding:0;
+          z-index:1000;
+          width:100%;
+          overflow:auto;
+      }
+      .insert-menus ul {
+          list-style:none;
+          background-color:#2a2a2a;
+          height:9em;
+          padding:0em;
+          padding-left:0.5em;
+          margin:0em;
+          clear:both;
+      }
+      .insert-menus li {
+          float:left;
+      }
+      .insert-menu-title {
+          width:100%;
+      }
+      .insert-menu-title h3 {
+          margin:0.1em;
+          float:left;
+          color: white;
+      }
+      .insert-menu-close {
+          float:right;
+      }
+      .insert-menu-close img {
+          height:1.2em;
+          margin:0.1em;
+      }
+      .insert-menu-item {
+          width:7em;
+          height:6.5em
+      }
+      .insert-menu-item img {
+          height:5em;
+          max-width:6em;
+      }
+      .insert-menu-item-light img {
+          height:4em;
+          margin-top:0.6em;
+      }
+      .insert-menu-back img {
+          height:1.4em;
+          margin:0.1em;
+          float:left;
+      }
     </style>
   </head>
 
@@ -247,96 +299,96 @@
       <!-- insert menu -->
       <div id="footer" ng-controller="insertControl">
         <div id="insert-menu" class="insert-menus">
-          <div class="insert-menu-title" style="width:100%">
-            <h3 style="margin:0em;float:left">Insert</h3>
-            <a href="#" class="insert-close" style="float:right"><img style="height:1.2em;margin:0.1em" src="style/images/close.png"></a>
+          <div class="insert-menu-title">
+            <h3>Insert</h3>
+            <a href="#" class="insert-menu-close"><img src="style/images/close.png"></a>
           </div>
-          <ul style="list-style:none;background-color:#2a2a2a;height:9em;padding:0em;padding-left:0.5em;margin:0em;width:{{(categories.length+2)*9.8}}em;clear:both;">
-            <li style="float:left">
-              <a href="#" ng-click="openCategory('simple_shapes')" data-role="button" data-inline="true" style="width:7em;height:6.5em" title="Shapes">
+          <ul style="width:{{(categories.length+2)*9.8}}em">
+            <li>
+              <a href="#" ng-click="openCategory('simple_shapes')" data-role="button" data-inline="true" class="insert-menu-item" title="Shapes">
                 Shapes<br>
-                <img style="height:5em;max-width:6em" src="style/images/box.png">
+                <img src="style/images/box.png">
               </a>
             </li>
-            <li style="float:left">
-              <a href="#" ng-click="openCategory('lights')" data-role="button" data-inline="true" style="width:7em;height:6.5em" title="Lights">
+            <li>
+              <a href="#" ng-click="openCategory('lights')" data-role="button" data-inline="true" class="insert-menu-item" title="Lights">
                 Lights<br>
-                <img style="height:5em;max-width:6em;margin-top:0.3em" src="style/images/light_thumb.png">
+                <img src="style/images/light_thumb.png">
               </a>
             </li>
-            <li style="float:left" ng-repeat="category in categories">
-              <a href="#" ng-click="openCategory(category.path)" data-role="button" data-inline="true" style="width:7em;height:6.5em" title="{{category.title}}">
+            <li ng-repeat="category in categories">
+              <a href="#" ng-click="openCategory(category.path)" data-role="button" data-inline="true" class="insert-menu-item" title="{{category.title}}">
                 {{category.title}}<br>
-                <img style="height:5em;max-width:6em" src="/assets/{{category.examplePath}}/thumbnails/0.png">
+                <img src="/assets/{{category.examplePath}}/thumbnails/0.png">
               </a>
             </li>
           </ul>
         </div>
         <div class="insert-menus" id="insert-menu-simple_shapes">
-          <div class="insert-menu-title" style="width:100%">
-            <a href="#" class="insert-back"><img style="height:1.4em;margin:0.1em;float:left" src="style/images/back.png">
-            <h3 style="margin:0.1em;float:left;color:white"> &nbsp; Simple Shapes</h3></a>
-            <a href="#" class="insert-close" style="float:right"><img style="height:1.2em;margin:0.1em" src="style/images/close.png"></a>
+          <div class="insert-menu-title">
+            <a href="#" class="insert-menu-back"><img src="style/images/back.png">
+            <h3> &nbsp; Simple Shapes</h3></a>
+            <a href="#" class="insert-menu-close"><img src="style/images/close.png"></a>
           </div>
-          <ul style="list-style:none;background-color:#2a2a2a;height:9em;padding:0em;padding-left:0.5em;margin:0em;width:{{3*9.8}}em;clear:both;">
-            <li style="float:left">
-              <a href="#" id="insert-entity-box" ng-mousedown="spawnEntity('box')" data-role="button" data-inline="true" style="width:7em;height:6.5em" title="Box">
+          <ul style="width:{{3*9.8}}em">
+            <li>
+              <a href="#" id="insert-entity-box" ng-mousedown="spawnEntity('box')" data-role="button" data-inline="true" class="insert-menu-item" title="Box">
                 Box<br>
-                <img style="height:5em;max-width:6em" src="style/images/box.png">
+                <img src="style/images/box.png">
               </a>
             </li>
-            <li style="float:left">
-              <a href="#" id="insert-entity-sphere" ng-mousedown="spawnEntity('sphere')" data-role="button" data-inline="true" style="width:7em;height:6.5em" title="Sphere">
+            <li>
+              <a href="#" id="insert-entity-sphere" ng-mousedown="spawnEntity('sphere')" data-role="button" data-inline="true" class="insert-menu-item" title="Sphere">
                 Sphere<br>
-                <img style="height:5em;max-width:6em" src="style/images/sphere.png">
+                <img src="style/images/sphere.png">
               </a>
             </li>
-            <li style="float:left">
-              <a href="#" id="insert-entity-cylinder" ng-mousedown="spawnEntity('cylinder')" data-role="button" data-inline="true" style="width:7em;height:6.5em" title="Cylinder">
+            <li>
+              <a href="#" id="insert-entity-cylinder" ng-mousedown="spawnEntity('cylinder')" data-role="button" data-inline="true" class="insert-menu-item" title="Cylinder">
                 Cylinder<br>
-                <img style="height:5em;max-width:6em" src="style/images/cylinder.png">
+                <img src="style/images/cylinder.png">
               </a>
             </li>
           </ul>
         </div>
         <div class="insert-menus" id="insert-menu-lights">
-          <div class="insert-menu-title" style="width:100%">
-            <a href="#" class="insert-back"><img style="height:1.4em;margin:0.1em;float:left" src="style/images/back.png">
-            <h3 style="margin:0.1em;float:left;color:white"> &nbsp; Lights</h3></a>
-            <a href="#" class="insert-close" style="float:right"><img style="height:1.2em;margin:0.1em" src="style/images/close.png"></a>
+          <div class="insert-menu-title">
+            <a href="#" class="insert-menu-back"><img src="style/images/back.png">
+            <h3> &nbsp; Lights</h3></a>
+            <a href="#" class="insert-menu-close"><img src="style/images/close.png"></a>
           </div>
-          <ul style="list-style:none;background-color:#2a2a2a;height:9em;padding:0em;padding-left:0.5em;margin:0em;width:{{3*9.8}}em;clear:both;">
-            <li style="float:left">
-              <a href="#" id="insert-entity-pointlight" ng-mousedown="spawnEntity('pointlight')" data-role="button" data-inline="true" style="width:7em;height:6.5em" title="Point Light">
+          <ul style="width:{{3*9.8}}em">
+            <li>
+              <a href="#" id="insert-entity-pointlight" ng-mousedown="spawnEntity('pointlight')" data-role="button" data-inline="true" class="insert-menu-item insert-menu-item-light" title="Point Light">
                 Point<br>
-                <img style="height:4em;max-width:6em;margin-top:0.6em" src="style/images/pointlight.png">
+                <img src="style/images/pointlight.png">
               </a>
             </li>
-            <li style="float:left">
-              <a href="#" id="insert-entity-spotlight" ng-mousedown="spawnEntity('spotlight')" data-role="button" data-inline="true" style="width:7em;height:6.5em" title="Spot Light">
+            <li>
+              <a href="#" id="insert-entity-spotlight" ng-mousedown="spawnEntity('spotlight')" data-role="button" data-inline="true" class="insert-menu-item insert-menu-item-light" title="Spot Light">
                 Spot<br>
-                <img style="height:4em;max-width:6em;margin-top:0.6em" src="style/images/spotlight.png">
+                <img src="style/images/spotlight.png">
               </a>
             </li>
-            <li style="float:left">
-              <a href="#" id="insert-entity-directionallight" ng-mousedown="spawnEntity('directionallight')" data-role="button" data-inline="true" style="width:7em;height:6.5em" title="Directional Light">
+            <li>
+              <a href="#" id="insert-entity-directionallight" ng-mousedown="spawnEntity('directionallight')" data-role="button" data-inline="true" class="insert-menu-item insert-menu-item-light" title="Directional Light">
                 Directional<br>
-                <img style="height:4em;max-width:6em;margin-top:0.6em" src="style/images/directionallight.png">
+                <img src="style/images/directionallight.png">
               </a>
             </li>
           </ul>
         </div>
         <div ng-repeat="category in categories" class="insert-menus" id="insert-menu-{{category.path}}">
-          <div class="insert-menu-title" style="width:100%">
-            <a href="#" class="insert-back"><img style="height:1.4em;margin:0.1em;float:left" src="style/images/back.png">
-            <h3 style="margin:0.1em;float:left;color:white""> &nbsp; {{category.title}}</h3></a>
-            <a href="#" class="insert-close" style="float:right"><img style="height:1.2em;margin:0.1em" src="style/images/close.png"></a>
+          <div class="insert-menu-title">
+            <a href="#" class="insert-menu-back"><img src="style/images/back.png">
+            <h3> &nbsp; {{category.title}}</h3></a>
+            <a href="#" class="insert-menu-close"><img src="style/images/close.png"></a>
           </div>
-          <ul style="list-style:none;background-color:#2a2a2a;height:9em;padding:0em;padding-left:0.5em;margin:0em;width:{{category.models.length*9.8}}em;clear:both;">
-            <li style="float:left" ng-repeat="model in category.models">
-              <a href="#" id="insert-entity-{{model.modelPath}}" ng-mousedown="spawnEntity(model.modelPath)" data-role="button" data-inline="true" style="width:7em;height:6.5em" title="{{model.modelTitle}}">
+          <ul style="width:{{category.models.length*9.8}}em">
+            <li ng-repeat="model in category.models">
+              <a href="#" id="insert-entity-{{model.modelPath}}" ng-mousedown="spawnEntity(model.modelPath)" data-role="button" data-inline="true" class="insert-menu-item" title="{{model.modelTitle}}">
                 {{model.modelTitle}}<br>
-                <img style="height:5em;max-width:6em" src="/assets/{{model.modelPath}}/thumbnails/0.png">
+                <img src="/assets/{{model.modelPath}}/thumbnails/0.png">
               </a>
             </li>
           </ul>
