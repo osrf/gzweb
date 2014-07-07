@@ -386,6 +386,14 @@ $(function()
         {
           $('#model-popup').popup('close');
         });
+
+    $('#leftPanel').mouseenter(function(event){
+        guiEvents.emit('pointerOnMenu');
+    });
+
+    $('#leftPanel').mouseleave(function(event){
+        guiEvents.emit('pointerOffMenu');
+    });
   }
 
   $('.header-button')
@@ -407,11 +415,15 @@ $(function()
         if($('#insert-menu').is(':visible'))
         {
           $('#insert-menu').hide();
+          $('.insert-menu-title')
+            .css('margin-left', '0px');
         }
         else
         {
           $('#insert-menu').show();
           $('[id^="insert-menu-"]').hide();
+          $('.insert-menu-title')
+            .css('margin-left', '0px');
         }
     });
 
@@ -424,6 +436,8 @@ $(function()
 
     $( '.insert-close' ).click(function() {
       $('.insert-menus').hide();
+      $('.insert-menu-title')
+            .css('margin-left', '0px');
     });
 
   $('.insert-menus').on('scroll', function()
@@ -613,6 +627,7 @@ GZ3D.Gui = function(scene)
   this.domElement = scene.getDomElement();
   this.init();
   this.emitter = new EventEmitter2({verbose: true});
+  this.guiEvents = guiEvents;
 };
 
 /**
@@ -985,6 +1000,18 @@ GZ3D.Gui.prototype.init = function()
         that.scene.hideBoundingBox();
       }
   );
+
+  guiEvents.on('pointerOnMenu', function ()
+      {
+        that.scene.pointerOnMenu = true;
+      }
+  );
+
+  guiEvents.on('pointerOffMenu', function ()
+      {
+        that.scene.pointerOnMenu = false;
+      }
+   );
 };
 
 /**

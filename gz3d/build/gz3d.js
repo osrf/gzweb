@@ -391,6 +391,14 @@ $(function()
         {
           $('#model-popup').popup('close');
         });
+
+    $('#leftPanel').mouseenter(function(event){
+        guiEvents.emit('pointerOnMenu');
+    });
+
+    $('#leftPanel').mouseleave(function(event){
+        guiEvents.emit('pointerOffMenu');
+    });
   }
 
   $('.header-button')
@@ -412,11 +420,15 @@ $(function()
         if($('#insert-menu').is(':visible'))
         {
           $('#insert-menu').hide();
+          $('.insert-menu-title')
+            .css('margin-left', '0px');
         }
         else
         {
           $('#insert-menu').show();
           $('[id^="insert-menu-"]').hide();
+          $('.insert-menu-title')
+            .css('margin-left', '0px');
         }
     });
 
@@ -429,6 +441,8 @@ $(function()
 
     $( '.insert-close' ).click(function() {
       $('.insert-menus').hide();
+      $('.insert-menu-title')
+            .css('margin-left', '0px');
     });
 
   $('.insert-menus').on('scroll', function()
@@ -618,6 +632,7 @@ GZ3D.Gui = function(scene)
   this.domElement = scene.getDomElement();
   this.init();
   this.emitter = new EventEmitter2({verbose: true});
+  this.guiEvents = guiEvents;
 };
 
 /**
@@ -990,6 +1005,18 @@ GZ3D.Gui.prototype.init = function()
         that.scene.hideBoundingBox();
       }
   );
+
+  guiEvents.on('pointerOnMenu', function ()
+      {
+        that.scene.pointerOnMenu = true;
+      }
+  );
+
+  guiEvents.on('pointerOffMenu', function ()
+      {
+        that.scene.pointerOnMenu = false;
+      }
+   );
 };
 
 /**
@@ -1035,6 +1062,9 @@ GZ3D.GZIface = function(scene, gui)
 {
   this.scene = scene;
   this.gui = gui;
+
+  this.isConnected = false;
+
   this.init();
   this.visualsToAdd = [];
 };
@@ -1044,10 +1074,36 @@ GZ3D.GZIface.prototype.init = function()
   this.material = [];
   this.entityMaterial = {};
 
-  // Set up initial scene
+  this.connect();
+};
+
+GZ3D.GZIface.prototype.connect = function()
+{
+  // connect to websocket
   this.webSocket = new ROSLIB.Ros({
     url : 'ws://' + location.hostname + ':7681'
   });
+  
+  var that = this;
+  this.webSocket.on('connection', function() {
+    that.onConnected();
+  });
+  this.webSocket.on('error', function() {
+    that.onError();
+  });
+};
+
+GZ3D.GZIface.prototype.onError = function()
+{
+//  this.emitter.emit('error');
+  this.scene.initScene();
+  this.gui.guiEvents.emit('notification_popup', 'GzWeb is currently running without a server');
+};
+
+GZ3D.GZIface.prototype.onConnected = function()
+{
+  this.isConnected = true;
+//this.emitter.emit('connection');
 
   this.heartbeatTopic = new ROSLIB.Topic({
     ros : this.webSocket,
@@ -3855,6 +3911,7 @@ GZ3D.Scene.prototype.init = function()
   this.selectedModel = null;
 
   this.manipulationMode = 'view';
+  this.pointerOnMenu = false;
 
   this.renderer = new THREE.WebGLRenderer({antialias: true });
   this.renderer.setClearColor(0xb2b2b2, 1); // Sky
@@ -3871,7 +3928,6 @@ GZ3D.Scene.prototype.init = function()
       60, window.innerWidth / window.innerHeight, 0.1, 1000 );
   this.defaultCameraPosition = new THREE.Vector3(0, -5, 5);
   this.resetView();
-  this.pointerOnMenu = false;
 
   this.showCollisions = false;
 
@@ -3985,6 +4041,61 @@ GZ3D.Scene.prototype.init = function()
       new THREE.LineBasicMaterial({color: 0xffffff}),
       THREE.LinePieces);
   this.boundingBox.visible = false;
+};
+
+GZ3D.Scene.prototype.initScene = function()
+{
+  this.createGrid();
+  
+  // create a sun light
+  var color = new THREE.Color();
+  color.r = 0.800000011920929;
+  color.b = 0.800000011920929;
+  color.g = 0.800000011920929;
+    
+  var lightObj = new THREE.DirectionalLight(color.getHex());
+  var dir = new THREE.Vector3(0.5, 0.1, -0.9);
+  var target = dir;
+  var negDir = dir.negate();
+  negDir.normalize();
+  var factor = 10;
+  target.x = 10 * negDir.x;
+  target.y = 10 * negDir.y;
+  target.z = 10 + 10 * negDir.z;
+  lightObj.target.position = target;
+  lightObj.shadowCameraNear = 1;
+  lightObj.shadowCameraFar = 50;
+  lightObj.shadowMapWidth = 4094;
+  lightObj.shadowMapHeight = 4094;
+  lightObj.shadowCameraVisible = false;
+  lightObj.shadowCameraBottom = -100;
+  lightObj.shadowCameraLeft = -100;
+  lightObj.shadowCameraRight = 100;
+  lightObj.shadowCameraTop = 100;
+  lightObj.shadowBias = 0.0001;
+
+  lightObj.position.set(negDir.x, negDir.y, negDir.z);
+  
+  var position = [];
+  position['x'] = 0;
+  position['y'] = 0;
+  position['z'] = 10;
+  
+  var orientation = [];
+  orientation['x'] = 0;
+  orientation['y'] = 0;
+  orientation['z'] = 0;
+  orientation['w'] = 1;
+  
+  this.setPose(lightObj, position, orientation);
+  
+  lightObj.intensity = 0.8999999761581421;
+  lightObj.castShadow = true;
+  lightObj.shadowDarkness = 0.3;
+  lightObj.name = 'sun';
+
+  this.add(lightObj);
+  
 };
 
 /**
@@ -4227,14 +4338,15 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
 
       while (model.parent !== this.scene)
       {
-        // Select handle instead of background object
-        if (this.mode !== 'view' &&
-            model.parent.parent === this.modelManipulator.gizmo &&
-            model.name !== '')
+        // Select current mode's handle
+        if (model.parent.parent === this.modelManipulator.gizmo &&
+            ((this.manipulationMode === 'translate' &&
+              model.name.indexOf('T') >=0) ||
+             (this.manipulationMode === 'rotate' &&
+               model.name.indexOf('R') >=0)))
         {
           break modelsloop;
         }
-
         model = model.parent;
       }
 
@@ -4287,10 +4399,10 @@ GZ3D.Scene.prototype.getDomElement = function()
 GZ3D.Scene.prototype.render = function()
 {
   // Kill camera control when:
-  // -spawning
   // -manipulating
   // -using radial menu
   // -pointer over menus
+  // -spawning
   if (this.modelManipulator.hovered ||
       this.radialMenu.showing ||
       this.pointerOnMenu ||
@@ -5755,8 +5867,8 @@ GZ3D.SpawnModel.prototype.onKeyDown = function(event)
  */
 GZ3D.SpawnModel.prototype.moveSpawnedModel = function(positionX, positionY)
 {
-  var vector = new THREE.Vector3( (positionX / window.containerWidth) * 2 - 1,
-        -(positionY / window.containerHeight) * 2 + 1, 0.5);
+  var vector = new THREE.Vector3( (positionX / window.innerWidth) * 2 - 1,
+        -(positionY / window.innerHeight) * 2 + 1, 0.5);
   this.projector.unprojectVector(vector, this.scene.camera);
   this.ray.set(this.scene.camera.position,
       vector.sub(this.scene.camera.position).normalize());

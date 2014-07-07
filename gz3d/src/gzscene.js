@@ -28,6 +28,7 @@ GZ3D.Scene.prototype.init = function()
   this.selectedModel = null;
 
   this.manipulationMode = 'view';
+  this.pointerOnMenu = false;
 
   this.renderer = new THREE.WebGLRenderer({antialias: true });
   this.renderer.setClearColor(0xb2b2b2, 1); // Sky
@@ -44,7 +45,6 @@ GZ3D.Scene.prototype.init = function()
       60, window.innerWidth / window.innerHeight, 0.1, 1000 );
   this.defaultCameraPosition = new THREE.Vector3(0, -5, 5);
   this.resetView();
-  this.pointerOnMenu = false;
 
   this.showCollisions = false;
 
@@ -158,6 +158,61 @@ GZ3D.Scene.prototype.init = function()
       new THREE.LineBasicMaterial({color: 0xffffff}),
       THREE.LinePieces);
   this.boundingBox.visible = false;
+};
+
+GZ3D.Scene.prototype.initScene = function()
+{
+  this.createGrid();
+  
+  // create a sun light
+  var color = new THREE.Color();
+  color.r = 0.800000011920929;
+  color.b = 0.800000011920929;
+  color.g = 0.800000011920929;
+    
+  var lightObj = new THREE.DirectionalLight(color.getHex());
+  var dir = new THREE.Vector3(0.5, 0.1, -0.9);
+  var target = dir;
+  var negDir = dir.negate();
+  negDir.normalize();
+  var factor = 10;
+  target.x = 10 * negDir.x;
+  target.y = 10 * negDir.y;
+  target.z = 10 + 10 * negDir.z;
+  lightObj.target.position = target;
+  lightObj.shadowCameraNear = 1;
+  lightObj.shadowCameraFar = 50;
+  lightObj.shadowMapWidth = 4094;
+  lightObj.shadowMapHeight = 4094;
+  lightObj.shadowCameraVisible = false;
+  lightObj.shadowCameraBottom = -100;
+  lightObj.shadowCameraLeft = -100;
+  lightObj.shadowCameraRight = 100;
+  lightObj.shadowCameraTop = 100;
+  lightObj.shadowBias = 0.0001;
+
+  lightObj.position.set(negDir.x, negDir.y, negDir.z);
+  
+  var position = [];
+  position['x'] = 0;
+  position['y'] = 0;
+  position['z'] = 10;
+  
+  var orientation = [];
+  orientation['x'] = 0;
+  orientation['y'] = 0;
+  orientation['z'] = 0;
+  orientation['w'] = 1;
+  
+  this.setPose(lightObj, position, orientation);
+  
+  lightObj.intensity = 0.8999999761581421;
+  lightObj.castShadow = true;
+  lightObj.shadowDarkness = 0.3;
+  lightObj.name = 'sun';
+
+  this.add(lightObj);
+  
 };
 
 /**
@@ -400,14 +455,15 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
 
       while (model.parent !== this.scene)
       {
-        // Select handle instead of background object
-        if (this.mode !== 'view' &&
-            model.parent.parent === this.modelManipulator.gizmo &&
-            model.name !== '')
+        // Select current mode's handle
+        if (model.parent.parent === this.modelManipulator.gizmo &&
+            ((this.manipulationMode === 'translate' &&
+              model.name.indexOf('T') >=0) ||
+             (this.manipulationMode === 'rotate' &&
+               model.name.indexOf('R') >=0)))
         {
           break modelsloop;
         }
-
         model = model.parent;
       }
 
@@ -460,10 +516,10 @@ GZ3D.Scene.prototype.getDomElement = function()
 GZ3D.Scene.prototype.render = function()
 {
   // Kill camera control when:
-  // -spawning
   // -manipulating
   // -using radial menu
   // -pointer over menus
+  // -spawning
   if (this.modelManipulator.hovered ||
       this.radialMenu.showing ||
       this.pointerOnMenu ||
