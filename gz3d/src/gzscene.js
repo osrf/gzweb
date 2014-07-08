@@ -561,6 +561,7 @@ GZ3D.Scene.prototype.setWindowSize = function(width, height)
  */
 GZ3D.Scene.prototype.add = function(model)
 {
+  model.viewAs = 'normal';
   this.scene.add(model);
 };
 
@@ -1478,6 +1479,7 @@ GZ3D.Scene.prototype.showBoundingBox = function(model)
     else
     {
       this.hideBoundingBox();
+      this.selectedEntity = model;
     }
   }
   var box = new THREE.Box3();
@@ -1577,4 +1579,127 @@ GZ3D.Scene.prototype.onRightClick = function(event, callback)
       callback(model);
     }
   }
+};
+
+/**
+ * Set model's view mode
+ * @param {} model
+ * @param {} viewAs (normal/transparent/wireframe)
+ */
+GZ3D.Scene.prototype.setViewAs = function(model, viewAs)
+{
+  // Toggle
+  if (model.viewAs === viewAs)
+  {
+    viewAs = 'normal';
+  }
+
+  function materialViewAs(material)
+  {
+    if (materials.indexOf(material.id) === -1)
+    {
+      materials.push(material.id);
+      material.transparent = true;
+
+      if (viewAs === 'transparent')
+      {
+        if (material.opacity)
+        {
+          material.originalOpacity = material.opacity;
+        }
+        else
+        {
+          material.originalOpacity = 1.0;
+        }
+        material.opacity = 0.25;
+      }
+      else
+      {
+        material.opacity =
+            material.originalOpacity ?
+            material.originalOpacity : 1.0;
+      }
+
+      if (viewAs === 'wireframe')
+      {
+        material.visible = false;
+      }
+      else
+      {
+        material.visible = true;
+      }
+    }
+  }
+
+  var wireframe;
+  var descendants = [];
+  var materials = [];
+  model.getDescendants(descendants);
+  for (var i = 0; i < descendants.length; ++i)
+  {
+    if (descendants[i].material &&
+        descendants[i].name.indexOf('boundingBox') === -1 &&
+        descendants[i].name.indexOf('COLLISION_VISUAL') === -1 &&
+        !this.getParentByPartialName(descendants[i], 'COLLISION_VISUAL')&&
+        descendants[i].name.indexOf('wireframe') === -1)
+    {
+      if (descendants[i].material instanceof THREE.MeshFaceMaterial)
+      {
+        for (var j = 0; j < descendants[i].material.materials.length; ++j)
+        {
+          materialViewAs(descendants[i].material.materials[j]);
+        }
+      }
+      else
+      {
+        materialViewAs(descendants[i].material);
+      }
+
+      if (viewAs === 'wireframe')
+      {
+        wireframe = descendants[i].getObjectByName('wireframe');
+        if (wireframe)
+        {
+          wireframe.visible = true;
+        }
+        else
+        {
+          var mesh = new THREE.Mesh( descendants[i].geometry,
+              new THREE.MeshBasicMaterial({color: 0xffffff}));
+          wireframe = new THREE.WireframeHelper( mesh );
+          wireframe.name = 'wireframe';
+          descendants[i].add( wireframe );
+        }
+      }
+      else
+      {
+        wireframe = descendants[i].getObjectByName('wireframe');
+        if (wireframe)
+        {
+          wireframe.visible = false;
+        }
+      }
+    }
+  }
+  model.viewAs = viewAs;
+};
+
+/**
+ * Returns the closest parent whose name contains the given string
+ * @param {} object
+ * @param {} name
+ */
+GZ3D.Scene.prototype.getParentByPartialName = function(object, name)
+{
+  var parent = object.parent;
+  while (parent && parent !== this.scene)
+  {
+    if (parent.name.indexOf(name) !== -1)
+    {
+      return parent;
+    }
+
+    parent = parent.parent;
+  }
+  return null;
 };

@@ -166,6 +166,8 @@ $(function()
   // Toggle items
   $('#view-collisions').buttonMarkup({icon: 'false'});
   $('#snap-to-grid').buttonMarkup({icon: 'false'});
+  $('#view-transparent').buttonMarkup({icon: 'false'});
+  $('#view-wireframe').buttonMarkup({icon: 'false'});
   guiEvents.emit('toggle_notifications');
 
   $( '#clock-touch' ).popup('option', 'arrow', 't');
@@ -527,6 +529,17 @@ $(function()
         }
       });
 
+  // Object menu
+  $( '#view-transparent' ).click(function() {
+    $('#model-popup').popup('close');
+    guiEvents.emit('set_view_as','transparent');
+  });
+
+  $( '#view-wireframe' ).click(function() {
+    $('#model-popup').popup('close');
+    guiEvents.emit('set_view_as','wireframe');
+  });
+
   $( '#delete-entity' ).click(function() {
     guiEvents.emit('delete_entity');
   });
@@ -819,6 +832,17 @@ GZ3D.Gui.prototype.init = function()
                   $('input[type="radio"]').checkboxradio('refresh');
                   that.scene.attachManipulator(entity,type);
                 }
+                else if (type === 'transparent')
+                {
+                  that.scene.selectedEntity = entity;
+                  guiEvents.emit('set_view_as','transparent');
+                }
+                else if (type === 'wireframe')
+                {
+                  that.scene.selectedEntity = entity;
+                  guiEvents.emit('set_view_as','wireframe');
+                }
+
               });
           }
         }
@@ -904,10 +928,35 @@ GZ3D.Gui.prototype.init = function()
               that.scene.selectedEntity = entity;
               that.scene.showBoundingBox(entity);
               $('.ui-popup').popup('close');
+              if (that.scene.selectedEntity.viewAs === 'transparent')
+              {
+                $('#view-transparent').buttonMarkup({icon: 'check'});
+              }
+              else
+              {
+                $('#view-transparent').buttonMarkup({icon: 'false'});
+              }
+
+              if (that.scene.selectedEntity.viewAs === 'wireframe')
+              {
+                $('#view-wireframe').buttonMarkup({icon: 'check'});
+              }
+              else
+              {
+                $('#view-wireframe').buttonMarkup({icon: 'false'});
+              }
+
               $('#model-popup').popup('open',
-                  {x: event.clientX + emUnits(3),
-                   y: event.clientY + emUnits(1.5)});
+                  {x: event.clientX + emUnits(6),
+                   y: event.clientY + emUnits(3)});
             });
+      }
+  );
+
+  guiEvents.on('set_view_as', function (viewAs)
+      {
+        that.scene.setViewAs(that.scene.selectedEntity, viewAs);
+        that.scene.selectedEntity = null;
       }
   );
 
