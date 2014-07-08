@@ -57,6 +57,22 @@
       .ui-popup-screen {
         z-index: 999;
       }
+      .tab {
+        width: 0;
+        height: 4em;
+        border-left: 2em solid #333333;
+        border-top: 1em solid transparent;
+        border-bottom: 1em solid transparent;
+        position: absolute;
+        top: 0em;
+        left: 0em;
+        z-index:1000;
+      }
+      .tab img {
+        position: relative;
+        left: -1.7em;
+        top: 1.2em;
+      }
     </style>
   </head>
 
@@ -183,9 +199,7 @@
       <!-- panel -->
 
       <!-- header -->
-      <fieldset style="position:absolute;left:0.5em;top:0em;z-index:1000;">
-        <a href="#leftPanel" data-role="button" class="header-button" id="panelButton"><img style="height:1.45em" src="style/images/bars.png" title="Menu"></a>
-      </fieldset>
+      <div class="tab"><a href="#leftPanel" id="panelButton"><img style="height:1.45em" src="style/images/bars.png" title="Menu"></a></div>
 
       <fieldset id="play-header-fieldset">
         <a href="#" data-role="button" class="header-button" id="play"><span id="playText"><img style="height:1.45em" src="style/images/play.png" title="Play"></span></a>
