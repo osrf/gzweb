@@ -63,15 +63,46 @@
         border-left: 2em solid #333333;
         border-top: 1em solid transparent;
         border-bottom: 1em solid transparent;
-        position: absolute;
-        top: 0em;
-        left: 0em;
         z-index:1000;
       }
       .tab img {
         position: relative;
         left: -1.7em;
         top: 1.2em;
+      }
+      #menuTab {
+        position: absolute;
+        top: 0em;
+        left: 0em;
+      }
+      #leftPanel {
+        height: 100%;
+        position: absolute;
+        left: 0;
+        z-index:1000;
+      }
+      .leftPanels {
+        display:none;
+        background-color:#2a2a2a;
+        z-index:1000;
+        height:100%;
+        width:17em;
+        overflow:auto;
+      }
+      .leftPanels ul
+      {
+        list-style:none;
+        background-color:#2a2a2a;
+        width:15em;
+        padding:0em;
+        padding-left:1em;
+        margin:0em;
+      }
+      .leftPanels li
+      {
+        left:-1em;
+        padding:0;
+        width:17em;
       }
     </style>
   </head>
@@ -159,47 +190,49 @@
   <body>
     <div data-role="page" data-theme="b" data-content-theme="c">
 
-      <!-- panel -->
-      <div data-role="panel" id="leftPanel" data-display="overlay" data-swipe-close="false">
-        <ul data-role="listview" data-theme="b">
-          <li data-icon="delete"><a href="#" data-rel="close" title="Close Menu"></a></li>
-          <li data-role="list-divider">Menu</li>
-          <li data-role="list-divider"></li>
-        </ul>
-        <div data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
-            <h3><span class="collapsible_header">Edit</span></h3>
-            <ul data-role="listview">
-              <li id='reset-world' data-icon="false"><a href="#"><span class="collapsible_item">Reset World</span></a></li>
-              <li id='reset-model' data-icon="false"><a href="#"><span class="collapsible_item">Reset Model Poses</span></a></li>
-              <li id='reset-view' data-icon="false"><a href="#"><span class="collapsible_item">Reset View</span></a></li>
-            </ul>
-        </div>
-        <div data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
-            <h3><span class="collapsible_header">View</span></h3>
-            <ul data-role="listview">
-              <li id='view-collisions' data-icon="false" data-iconpos="right" style="border: none !important;"><a href="#"><span class="collapsible_item">Collisions</span></a></li>
-            </ul>
-        </div>
-        <div data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
-            <h3><span class="collapsible_header">Insert</span></h3>
-            <ul data-role="listview">
-              <li id="box" data-icon="false" class="insertItem"><a href="#"><span class="collapsible_item">Box</span></a></li>
-              <li id="sphere" data-icon="false" class="insertItem" style="border: none !important;"><a href="#"><span class="collapsible_item">Sphere</span></a></li>
-              <li id="cylinder" data-icon="false" class="insertItem"><a href="#"><span class="collapsible_item">Cylinder</span></a></li>
-            </ul>
-        </div>
-        <div data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
-            <h3><span class="collapsible_header">Options</span></h3>
-            <ul data-role="listview">
-              <li id="snap-to-grid" data-icon="false" data-iconpos="right" style="border: none !important;"><a href="#"><span class="collapsible_item">Snap to Grid</span></a></li>
-              <li id='toggle-notifications' data-icon="false" data-iconpos="right" style="border: none !important;"><a href="#"><span class="collapsible_item">Show Notifications</span></a></li>
-            </ul>
+      <!-- left panel -->
+      <div id="leftPanel">
+        <div id="mainMenu" class="leftPanels">
+          <ul>
+            <li style="width:16em">
+              <h4>Menu</h4>
+            </li>
+            <div data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
+              <h3><span class="collapsible_header">Edit</span></h3>
+              <ul data-role="listview">
+                <li id='reset-world' data-icon="false"><a href="#"><span class="collapsible_item">Reset World</span></a></li>
+                <li id='reset-model' data-icon="false"><a href="#"><span class="collapsible_item">Reset Model Poses</span></a></li>
+                <li id='reset-view' data-icon="false"><a href="#"><span class="collapsible_item">Reset View</span></a></li>
+              </ul>
+            </div>
+            <div data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
+                <h3><span class="collapsible_header">View</span></h3>
+                <ul data-role="listview">
+                  <li id='view-collisions' data-icon="false" data-iconpos="right" style="border: none !important;"><a href="#"><span class="collapsible_item">Collisions</span></a></li>
+                </ul>
+            </div>
+            <div data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
+                <h3><span class="collapsible_header">Insert</span></h3>
+                <ul data-role="listview">
+                  <li id="box" data-icon="false" class="insertItem"><a href="#"><span class="collapsible_item">Box</span></a></li>
+                  <li id="sphere" data-icon="false" class="insertItem" style="border: none !important;"><a href="#"><span class="collapsible_item">Sphere</span></a></li>
+                  <li id="cylinder" data-icon="false" class="insertItem"><a href="#"><span class="collapsible_item">Cylinder</span></a></li>
+                </ul>
+            </div>
+            <div data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
+                <h3><span class="collapsible_header">Options</span></h3>
+                <ul data-role="listview">
+                  <li id="snap-to-grid" data-icon="false" data-iconpos="right" style="border: none !important;"><a href="#"><span class="collapsible_item">Snap to Grid</span></a></li>
+                  <li id='toggle-notifications' data-icon="false" data-iconpos="right" style="border: none !important;"><a href="#"><span class="collapsible_item">Show Notifications</span></a></li>
+                </ul>
+            </div>
+          </ul>
         </div>
       </div>
-      <!-- panel -->
+      <!-- left panel -->
 
       <!-- header -->
-      <div class="tab"><a href="#leftPanel" id="panelButton"><img style="height:1.45em" src="style/images/bars.png" title="Menu"></a></div>
+      <a href="#" id="menuTab" class="tab"><img style="height:1.45em" src="style/images/bars.png" title="Menu"></a>
 
       <fieldset id="play-header-fieldset">
         <a href="#" data-role="button" class="header-button" id="play"><span id="playText"><img style="height:1.45em" src="style/images/play.png" title="Play"></span></a>

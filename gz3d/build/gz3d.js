@@ -25,13 +25,13 @@ $(function()
 
   $( '#clock-touch' ).popup('option', 'arrow', 't');
   $('#notification-popup-screen').remove();
-
+/*
   // Panel starts open for wide screens
   if ($(window).width() / emUnits(1) > 35)
   {
     $('#leftPanel').panel('open');
   }
-
+*/
   // Clicks/taps// Touch devices
   if ('ontouchstart' in window || 'onmsgesturechange' in window)
   {
@@ -224,9 +224,18 @@ $(function()
       .css('height', '1.45em')
       .css('padding', '0.65em');
 
-  $( '#leftPanel' ).on('panelclose', function()
+  $('#menuTab').click(function()
       {
-        $('#panelButton').removeClass('ui-btn-active');
+        if($('#mainMenu').is(':visible'))
+        {
+          $('#mainMenu').hide();
+          $('#menuTab').css('left', '0');
+        }
+        else
+        {
+          $('#mainMenu').show();
+          $('#menuTab').css('left', '17em');
+        }
       });
 
   $('#view-mode').click(function()
@@ -509,7 +518,7 @@ GZ3D.Gui.prototype.init = function()
         }
       }
   );
-
+/*
   guiEvents.on('close_panel', function()
       {
         if ($(window).width() / emUnits(1)< 35)
@@ -518,7 +527,7 @@ GZ3D.Gui.prototype.init = function()
         }
       }
   );
-
+*/
   guiEvents.on('longpress_start',
       function (event)
       {
