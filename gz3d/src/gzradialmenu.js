@@ -14,16 +14,23 @@ GZ3D.RadialMenu = function(domElement)
  */
 GZ3D.RadialMenu.prototype.init = function()
 {
+  var scale = 1.2;
   // Distance from starting point
-  this.radius = 70;
+  this.radius = 70*scale;
   // Speed to spread the menu
-  this.speed = 10;
+  this.speed = 10*scale;
   // Icon size
-  this.bgSize = 40;
-  this.bgSizeSelected = 70;
+  this.bgSize = 40*scale;
+  this.bgSizeSelected = 68*scale;
+  this.highlightSize = 45*scale;
   this.iconProportion = 0.6;
   this.bgShape = THREE.ImageUtils.loadTexture(
       'style/images/icon_background.png' );
+  this.layers = {
+    ICON: 0,
+    BACKGROUND : 1,
+    HIGHLIGHT : 2
+  };
 
   // For the opening motion
   this.moving = false;
@@ -35,6 +42,7 @@ GZ3D.RadialMenu.prototype.init = function()
   // Colors
   this.selectedColor = new THREE.Color( 0x22aadd );
   this.plainColor = new THREE.Color( 0x333333 );
+  this.highlightColor = new THREE.Color( 0x22aadd );
 
   // Selected item
   this.selected = null;
@@ -49,6 +57,8 @@ GZ3D.RadialMenu.prototype.init = function()
   this.addItem('delete','style/images/trash.png');
   this.addItem('translate','style/images/translate.png');
   this.addItem('rotate','style/images/rotate.png');
+  this.addItem('transparent','style/images/transparent.png');
+  this.addItem('wireframe','style/images/wireframe.png');
 
   this.numberOfItems = this.menu.children.length;
   this.offset = this.numberOfItems - 1 - Math.floor(this.numberOfItems/2);
@@ -66,15 +76,20 @@ GZ3D.RadialMenu.prototype.hide = function(event,callback)
 {
   for ( var i in this.menu.children )
   {
-    this.menu.children[i].children[0].visible = false;
-    this.menu.children[i].children[1].visible = false;
-    this.menu.children[i].children[1].material.color = this.plainColor;
-    this.menu.children[i].children[0].scale.set(
+    var item = this.menu.children[i];
+
+    item.children[this.layers.ICON].visible = false;
+    item.children[this.layers.ICON].scale.set(
         this.bgSize*this.iconProportion,
         this.bgSize*this.iconProportion, 1.0 );
-    this.menu.children[i].children[1].scale.set(
+
+    item.children[this.layers.BACKGROUND].visible = false;
+    item.children[this.layers.BACKGROUND].material.color = this.plainColor;
+    item.children[this.layers.BACKGROUND].scale.set(
         this.bgSize,
         this.bgSize, 1.0 );
+
+    item.children[this.layers.HIGHLIGHT].visible = false;
   }
 
   this.showing = false;
@@ -90,7 +105,6 @@ GZ3D.RadialMenu.prototype.hide = function(event,callback)
     }
   }
   this.selected = null;
-
 };
 
 /**
@@ -109,12 +123,29 @@ GZ3D.RadialMenu.prototype.show = function(event,model)
   var pointer = this.getPointer(event);
   this.startPosition = pointer;
 
+  this.menu.getObjectByName('transparent').isHighlighted = false;
+  this.menu.getObjectByName('wireframe').isHighlighted = false;
+  if (this.model.viewAs === 'transparent')
+  {
+    this.menu.getObjectByName('transparent').isHighlighted = true;
+  }
+  if (this.model.viewAs === 'wireframe')
+  {
+    this.menu.getObjectByName('wireframe').isHighlighted = true;
+  }
+
   for ( var i in this.menu.children )
   {
-    this.menu.children[i].children[0].visible = true;
-    this.menu.children[i].children[1].visible = true;
-    this.menu.children[i].children[0].position.set(pointer.x,pointer.y,0);
-    this.menu.children[i].children[1].position.set(pointer.x,pointer.y,0);
+    var item = this.menu.children[i];
+
+    item.children[this.layers.ICON].visible = true;
+    item.children[this.layers.ICON].position.set(pointer.x,pointer.y,0);
+
+    item.children[this.layers.BACKGROUND].visible = true;
+    item.children[this.layers.BACKGROUND].position.set(pointer.x,pointer.y,0);
+
+    item.children[this.layers.HIGHLIGHT].visible = item.isHighlighted;
+    item.children[this.layers.HIGHLIGHT].position.set(pointer.x,pointer.y,0);
   }
 
   this.moving = true;
@@ -134,14 +165,16 @@ GZ3D.RadialMenu.prototype.update = function()
   // Move outwards
   for ( var i in this.menu.children )
   {
-    var X = this.menu.children[i].children[0].position.x -
+    var item = this.menu.children[i];
+
+    var X = item.children[this.layers.ICON].position.x -
         this.startPosition.x;
-    var Y = this.menu.children[i].children[0].position.y -
+    var Y = item.children[this.layers.ICON].position.y -
         this.startPosition.y;
 
     var d = Math.sqrt(Math.pow(X,2) + Math.pow(Y,2));
 
-    if ( d !== this.radius)
+    if ( d < this.radius)
     {
       X = X - ( this.speed * Math.sin( ( this.offset - i ) * Math.PI/4 ) );
       Y = Y - ( this.speed * Math.cos( ( this.offset - i ) * Math.PI/4 ) );
@@ -151,11 +184,14 @@ GZ3D.RadialMenu.prototype.update = function()
       this.moving = false;
     }
 
-    this.menu.children[i].children[0].position.x = X + this.startPosition.x;
-    this.menu.children[i].children[0].position.y = Y + this.startPosition.y;
-    this.menu.children[i].children[1].position.x = X + this.startPosition.x;
-    this.menu.children[i].children[1].position.y = Y + this.startPosition.y;
+    item.children[this.layers.ICON].position.x = X + this.startPosition.x;
+    item.children[this.layers.ICON].position.y = Y + this.startPosition.y;
 
+    item.children[this.layers.BACKGROUND].position.x = X + this.startPosition.x;
+    item.children[this.layers.BACKGROUND].position.y = Y + this.startPosition.y;
+
+    item.children[this.layers.HIGHLIGHT].position.x = X + this.startPosition.x;
+    item.children[this.layers.HIGHLIGHT].position.y = Y + this.startPosition.y;
   }
 
 };
@@ -246,24 +282,29 @@ GZ3D.RadialMenu.prototype.onLongPressMove = function(event)
   var counter = 0;
   for ( var i in this.menu.children )
   {
+    var item = this.menu.children[i];
+
     if (counter === Selected)
     {
-      this.menu.children[i].children[1].material.color = this.selectedColor;
-      this.menu.children[i].children[0].scale.set(
+      item.children[this.layers.ICON].scale.set(
           this.bgSizeSelected*this.iconProportion,
           this.bgSizeSelected*this.iconProportion, 1.0 );
-      this.menu.children[i].children[1].scale.set(
+      this.selected = item.children[this.layers.ICON].name;
+
+      item.children[this.layers.BACKGROUND].material.color =
+          this.selectedColor;
+      item.children[this.layers.BACKGROUND].scale.set(
           this.bgSizeSelected,
           this.bgSizeSelected, 1.0 );
-      this.selected = this.menu.children[i].children[0].name;
     }
     else
     {
-      this.menu.children[i].children[1].material.color = this.plainColor;
-      this.menu.children[i].children[0].scale.set(
+      item.children[this.layers.ICON].scale.set(
           this.bgSize*this.iconProportion,
           this.bgSize*this.iconProportion, 1.0 );
-      this.menu.children[i].children[1].scale.set(
+
+      item.children[this.layers.BACKGROUND].material.color = this.plainColor;
+      item.children[this.layers.BACKGROUND].scale.set(
           this.bgSize, this.bgSize, 1.0 );
     }
     counter++;
@@ -273,37 +314,51 @@ GZ3D.RadialMenu.prototype.onLongPressMove = function(event)
 /**
  * Create an item and add it to the menu.
  * Create them in order
- * @param {string} type - delete/translate/rotate
- * @param {string} itemTexture - icon's uri
+ * @param {string} type - delete/translate/rotate/transparent/wireframe
+ * @param {string} iconTexture - icon's uri
  */
-GZ3D.RadialMenu.prototype.addItem = function(type,itemTexture)
+GZ3D.RadialMenu.prototype.addItem = function(type, iconTexture)
 {
-  // Load icon
-  itemTexture = THREE.ImageUtils.loadTexture( itemTexture );
+  // Icon
+  iconTexture = THREE.ImageUtils.loadTexture( iconTexture );
 
-  var itemMaterial = new THREE.SpriteMaterial( { useScreenCoordinates: true,
+  var iconMaterial = new THREE.SpriteMaterial( { useScreenCoordinates: true,
       alignment: THREE.SpriteAlignment.center } );
-  itemMaterial.map = itemTexture;
+  iconMaterial.map = iconTexture;
 
-  var iconItem = new THREE.Sprite( itemMaterial );
-  iconItem.scale.set( this.bgSize*this.iconProportion,
+  var icon = new THREE.Sprite( iconMaterial );
+  icon.scale.set( this.bgSize*this.iconProportion,
       this.bgSize*this.iconProportion, 1.0 );
-  iconItem.name = type;
+  icon.name = type;
 
-  // Icon background
+  // Background
   var bgMaterial = new THREE.SpriteMaterial( {
       map: this.bgShape,
       useScreenCoordinates: true,
       alignment: THREE.SpriteAlignment.center,
       color: this.plainColor } );
 
-  var bgItem = new THREE.Sprite( bgMaterial );
-  bgItem.scale.set( this.bgSize, this.bgSize, 1.0 );
+  var bg = new THREE.Sprite( bgMaterial );
+  bg.scale.set( this.bgSize, this.bgSize, 1.0 );
+
+  // Highlight
+  var highlightMaterial = new THREE.SpriteMaterial({
+      map: this.bgShape,
+      useScreenCoordinates: true,
+      alignment: THREE.SpriteAlignment.center,
+      color: this.highlightColor});
+
+  var highlight = new THREE.Sprite(highlightMaterial);
+  highlight.scale.set(this.highlightSize, this.highlightSize, 1.0);
+  highlight.visible = false;
 
   var item = new THREE.Object3D();
-  item.add(iconItem);
-  item.add(bgItem);
+  // Respect layer order
+  item.add(icon);
+  item.add(bg);
+  item.add(highlight);
+  item.isHighlighted = false;
+  item.name = type;
 
   this.menu.add(item);
 };
-
