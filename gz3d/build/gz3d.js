@@ -5212,7 +5212,7 @@ GZ3D.Scene.prototype.setViewAs = function(model, viewAs)
 GZ3D.Scene.prototype.getParentByPartialName = function(object, name)
 {
   var parent = object.parent;
-  while (true)
+  while (parent && parent !== this.scene)
   {
     if (parent.name.indexOf(name) !== -1)
     {
@@ -5220,12 +5220,8 @@ GZ3D.Scene.prototype.getParentByPartialName = function(object, name)
     }
 
     parent = parent.parent;
-
-    if (parent === this.scene)
-    {
-      return null;
-    }
   }
+  return null;
 };
 
 /**
