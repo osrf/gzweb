@@ -540,6 +540,17 @@ $(function()
     guiEvents.emit('view_wireframe');
   });
 
+  // Object menu
+  $( '#view-transparent' ).click(function() {
+    $('#model-popup').popup('close');
+    guiEvents.emit('set_view_as','transparent');
+  });
+
+  $( '#view-wireframe' ).click(function() {
+    $('#model-popup').popup('close');
+    guiEvents.emit('set_view_as','wireframe');
+  });
+
   $( '#delete-entity' ).click(function() {
     guiEvents.emit('delete_entity');
   });
@@ -847,12 +858,12 @@ GZ3D.Gui.prototype.init = function()
                 else if (type === 'transparent')
                 {
                   that.scene.selectedEntity = entity;
-                  guiEvents.emit('view_transparent');
+                  guiEvents.emit('set_view_as','transparent');
                 }
                 else if (type === 'wireframe')
                 {
                   that.scene.selectedEntity = entity;
-                  guiEvents.emit('view_wireframe');
+                  guiEvents.emit('set_view_as','wireframe');
                 }
 
               });
@@ -940,6 +951,7 @@ GZ3D.Gui.prototype.init = function()
               that.scene.selectedEntity = entity;
               that.scene.showBoundingBox(entity);
               $('.ui-popup').popup('close');
+
               if (entity.children[0] instanceof THREE.Light)
               {
                 $('#view-transparent').css('visibility','collapse');
@@ -950,7 +962,7 @@ GZ3D.Gui.prototype.init = function()
               }
               else
               {
-                if (that.scene.selectedEntity.isTransparent)
+                if (that.scene.selectedEntity.viewAs === 'transparent')
                 {
                   $('#view-transparent').buttonMarkup({icon: 'check'});
                 }
@@ -959,7 +971,7 @@ GZ3D.Gui.prototype.init = function()
                   $('#view-transparent').buttonMarkup({icon: 'false'});
                 }
 
-                if (that.scene.selectedEntity.isWireframe)
+                if (that.scene.selectedEntity.viewAs === 'wireframe')
                 {
                   $('#view-wireframe').buttonMarkup({icon: 'check'});
                 }
@@ -967,6 +979,7 @@ GZ3D.Gui.prototype.init = function()
                 {
                   $('#view-wireframe').buttonMarkup({icon: 'false'});
                 }
+
                 $('#view-transparent').css('visibility','visible');
                 $('#view-wireframe').css('visibility','visible');
                 $('#model-popup').popup('open',
@@ -977,16 +990,9 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('view_transparent', function ()
+  guiEvents.on('set_view_as', function (viewAs)
       {
-        that.scene.toggleTransparency(that.scene.selectedEntity);
-        that.scene.selectedEntity = null;
-      }
-  );
-
-  guiEvents.on('view_wireframe', function ()
-      {
-        that.scene.toggleWireframe(that.scene.selectedEntity);
+        that.scene.setViewAs(that.scene.selectedEntity, viewAs);
         that.scene.selectedEntity = null;
       }
   );
@@ -3568,19 +3574,23 @@ GZ3D.RadialMenu = function(domElement)
  */
 GZ3D.RadialMenu.prototype.init = function()
 {
+  var scale = 1.2;
   // Distance from starting point
-  this.radius = 70;
+  this.radius = 70*scale;
   // Speed to spread the menu
-  this.speed = 10;
+  this.speed = 10*scale;
   // Icon size
-  this.bgSize = 40;
-  this.bgSizeSelected = 68;
-  this.highlightSize = 45;
+  this.bgSize = 40*scale;
+  this.bgSizeSelected = 68*scale;
+  this.highlightSize = 45*scale;
   this.iconProportion = 0.6;
   this.bgShape = THREE.ImageUtils.loadTexture(
       'style/images/icon_background.png' );
-  this.highlightShape = THREE.ImageUtils.loadTexture(
-      'style/images/icon_highlight.png' );
+  this.layers = {
+    ICON: 0,
+    BACKGROUND : 1,
+    HIGHLIGHT : 2
+  };
 
   // For the opening motion
   this.moving = false;
@@ -3592,6 +3602,7 @@ GZ3D.RadialMenu.prototype.init = function()
   // Colors
   this.selectedColor = new THREE.Color( 0x22aadd );
   this.plainColor = new THREE.Color( 0x333333 );
+  this.highlightColor = new THREE.Color( 0x22aadd );
 
   // Selected item
   this.selected = null;
@@ -3624,16 +3635,20 @@ GZ3D.RadialMenu.prototype.hide = function(event,callback)
 {
   for (var i = 0; i < this.numberOfItems; i++)
   {
-    this.menu.children[i].children[0].visible = false;
-    this.menu.children[i].children[1].visible = false;
-    this.menu.children[i].children[2].visible = false;
-    this.menu.children[i].children[1].material.color = this.plainColor;
-    this.menu.children[i].children[0].scale.set(
+    var item = this.menu.children[i];
+
+    item.children[this.layers.ICON].visible = false;
+    item.children[this.layers.ICON].scale.set(
         this.bgSize*this.iconProportion,
         this.bgSize*this.iconProportion, 1.0 );
-    this.menu.children[i].children[1].scale.set(
+
+    item.children[this.layers.BACKGROUND].visible = false;
+    item.children[this.layers.BACKGROUND].material.color = this.plainColor;
+    item.children[this.layers.BACKGROUND].scale.set(
         this.bgSize,
         this.bgSize, 1.0 );
+
+    item.children[this.layers.HIGHLIGHT].visible = false;
   }
 
   this.showing = false;
@@ -3677,17 +3692,29 @@ GZ3D.RadialMenu.prototype.show = function(event,model)
   var pointer = this.getPointer(event);
   this.startPosition = pointer;
 
-  this.menu.getObjectByName('transparent').isHighlighted = this.model.isTransparent;
-  this.menu.getObjectByName('wireframe').isHighlighted = this.model.isWireframe;
+  this.menu.getObjectByName('transparent').isHighlighted = false;
+  this.menu.getObjectByName('wireframe').isHighlighted = false;
+  if (this.model.viewAs === 'transparent')
+  {
+    this.menu.getObjectByName('transparent').isHighlighted = true;
+  }
+  if (this.model.viewAs === 'wireframe')
+  {
+    this.menu.getObjectByName('wireframe').isHighlighted = true;
+  }
 
   for (var i = 0; i < this.numberOfItems; i++)
   {
-    this.menu.children[i].children[0].visible = true;
-    this.menu.children[i].children[1].visible = true;
-    this.menu.children[i].children[2].visible = this.menu.children[i].isHighlighted;
-    this.menu.children[i].children[0].position.set(pointer.x,pointer.y,0);
-    this.menu.children[i].children[1].position.set(pointer.x,pointer.y,0);
-    this.menu.children[i].children[2].position.set(pointer.x,pointer.y,0);
+    var item = this.menu.children[i];
+
+    item.children[this.layers.ICON].visible = true;
+    item.children[this.layers.ICON].position.set(pointer.x,pointer.y,0);
+
+    item.children[this.layers.BACKGROUND].visible = true;
+    item.children[this.layers.BACKGROUND].position.set(pointer.x,pointer.y,0);
+
+    item.children[this.layers.HIGHLIGHT].visible = item.isHighlighted;
+    item.children[this.layers.HIGHLIGHT].position.set(pointer.x,pointer.y,0);
   }
 
   this.moving = true;
@@ -3707,14 +3734,16 @@ GZ3D.RadialMenu.prototype.update = function()
   // Move outwards
   for (var i = 0; i < this.numberOfItems; i++)
   {
-    var X = this.menu.children[i].children[0].position.x -
+    var item = this.menu.children[i];
+
+    var X = item.children[this.layers.ICON].position.x -
         this.startPosition.x;
-    var Y = this.menu.children[i].children[0].position.y -
+    var Y = item.children[this.layers.ICON].position.y -
         this.startPosition.y;
 
     var d = Math.sqrt(Math.pow(X,2) + Math.pow(Y,2));
 
-    if ( d !== this.radius)
+    if ( d < this.radius)
     {
       X = X - ( this.speed * Math.sin( ( this.offset - i ) * Math.PI/4 ) );
       Y = Y - ( this.speed * Math.cos( ( this.offset - i ) * Math.PI/4 ) );
@@ -3724,13 +3753,14 @@ GZ3D.RadialMenu.prototype.update = function()
       this.moving = false;
     }
 
-    this.menu.children[i].children[0].position.x = X + this.startPosition.x;
-    this.menu.children[i].children[0].position.y = Y + this.startPosition.y;
-    this.menu.children[i].children[1].position.x = X + this.startPosition.x;
-    this.menu.children[i].children[1].position.y = Y + this.startPosition.y;
-    this.menu.children[i].children[2].position.x = X + this.startPosition.x;
-    this.menu.children[i].children[2].position.y = Y + this.startPosition.y;
+    item.children[this.layers.ICON].position.x = X + this.startPosition.x;
+    item.children[this.layers.ICON].position.y = Y + this.startPosition.y;
 
+    item.children[this.layers.BACKGROUND].position.x = X + this.startPosition.x;
+    item.children[this.layers.BACKGROUND].position.y = Y + this.startPosition.y;
+
+    item.children[this.layers.HIGHLIGHT].position.x = X + this.startPosition.x;
+    item.children[this.layers.HIGHLIGHT].position.y = Y + this.startPosition.y;
   }
 
 };
@@ -3821,24 +3851,29 @@ GZ3D.RadialMenu.prototype.onLongPressMove = function(event)
   var counter = 0;
   for (var i = 0; i < this.numberOfItems; i++)
   {
+    var item = this.menu.children[i];
+
     if (counter === Selected)
     {
-      this.menu.children[i].children[1].material.color = this.selectedColor;
-      this.menu.children[i].children[0].scale.set(
+      item.children[this.layers.ICON].scale.set(
           this.bgSizeSelected*this.iconProportion,
           this.bgSizeSelected*this.iconProportion, 1.0 );
-      this.menu.children[i].children[1].scale.set(
+      this.selected = item.children[this.layers.ICON].name;
+
+      item.children[this.layers.BACKGROUND].material.color =
+          this.selectedColor;
+      item.children[this.layers.BACKGROUND].scale.set(
           this.bgSizeSelected,
           this.bgSizeSelected, 1.0 );
-      this.selected = this.menu.children[i].children[0].name;
     }
     else
     {
-      this.menu.children[i].children[1].material.color = this.plainColor;
-      this.menu.children[i].children[0].scale.set(
+      item.children[this.layers.ICON].scale.set(
           this.bgSize*this.iconProportion,
           this.bgSize*this.iconProportion, 1.0 );
-      this.menu.children[i].children[1].scale.set(
+
+      item.children[this.layers.BACKGROUND].material.color = this.plainColor;
+      item.children[this.layers.BACKGROUND].scale.set(
           this.bgSize, this.bgSize, 1.0 );
     }
     counter++;
@@ -3849,46 +3884,48 @@ GZ3D.RadialMenu.prototype.onLongPressMove = function(event)
  * Create an item and add it to the menu.
  * Create them in order
  * @param {string} type - delete/translate/rotate/transparent/wireframe
- * @param {string} itemTexture - icon's uri
+ * @param {string} iconTexture - icon's uri
  */
-GZ3D.RadialMenu.prototype.addItem = function(type,itemTexture)
+GZ3D.RadialMenu.prototype.addItem = function(type, iconTexture)
 {
-  // Load icon
-  itemTexture = THREE.ImageUtils.loadTexture( itemTexture );
+  // Icon
+  iconTexture = THREE.ImageUtils.loadTexture( iconTexture );
 
-  var itemMaterial = new THREE.SpriteMaterial( { useScreenCoordinates: true,
+  var iconMaterial = new THREE.SpriteMaterial( { useScreenCoordinates: true,
       alignment: THREE.SpriteAlignment.center } );
-  itemMaterial.map = itemTexture;
+  iconMaterial.map = iconTexture;
 
-  var iconItem = new THREE.Sprite( itemMaterial );
-  iconItem.scale.set( this.bgSize*this.iconProportion,
+  var icon = new THREE.Sprite( iconMaterial );
+  icon.scale.set( this.bgSize*this.iconProportion,
       this.bgSize*this.iconProportion, 1.0 );
-  iconItem.name = type;
+  icon.name = type;
 
-  // Icon background
+  // Background
   var bgMaterial = new THREE.SpriteMaterial( {
       map: this.bgShape,
       useScreenCoordinates: true,
       alignment: THREE.SpriteAlignment.center,
       color: this.plainColor } );
 
-  var bgItem = new THREE.Sprite( bgMaterial );
-  bgItem.scale.set( this.bgSize, this.bgSize, 1.0 );
+  var bg = new THREE.Sprite( bgMaterial );
+  bg.scale.set( this.bgSize, this.bgSize, 1.0 );
 
-  // Icon highlight
+  // Highlight
   var highlightMaterial = new THREE.SpriteMaterial({
-      map: this.highlightShape,
+      map: this.bgShape,
       useScreenCoordinates: true,
-      alignment: THREE.SpriteAlignment.center});
+      alignment: THREE.SpriteAlignment.center,
+      color: this.highlightColor});
 
-  var highlightItem = new THREE.Sprite(highlightMaterial);
-  highlightItem.scale.set(this.highlightSize, this.highlightSize, 1.0);
-  highlightItem.visible = false;
+  var highlight = new THREE.Sprite(highlightMaterial);
+  highlight.scale.set(this.highlightSize, this.highlightSize, 1.0);
+  highlight.visible = false;
 
   var item = new THREE.Object3D();
-  item.add(iconItem);
-  item.add(bgItem);
-  item.add(highlightItem);
+  // Respect layer order
+  item.add(icon);
+  item.add(bg);
+  item.add(highlight);
   item.isHighlighted = false;
   item.name = type;
 
@@ -4467,8 +4504,7 @@ GZ3D.Scene.prototype.setWindowSize = function(width, height)
  */
 GZ3D.Scene.prototype.add = function(model)
 {
-  model.isTransparent = false;
-  model.isWireframe = false;
+  model.viewAs = 'normal';
   this.scene.add(model);
 };
 
@@ -5462,6 +5498,7 @@ GZ3D.Scene.prototype.showBoundingBox = function(model)
     else
     {
       this.hideBoundingBox();
+      this.selectedEntity = model;
     }
   }
   var box = new THREE.Box3();
@@ -5602,33 +5639,80 @@ GZ3D.Scene.prototype.toggleTransparency = function(model)
 };
 
 /**
- * Toggle model wireframe
+ * Set model's view mode
  * @param {} model
+ * @param {} viewAs (normal/transparent/wireframe)
  */
-GZ3D.Scene.prototype.toggleWireframe = function(model)
+GZ3D.Scene.prototype.setViewAs = function(model, viewAs)
 {
+  // Toggle
+  if (model.viewAs === viewAs)
+  {
+    viewAs = 'normal';
+  }
+
+  function materialViewAs(material)
+  {
+    if (materials.indexOf(material.id) === -1)
+    {
+      materials.push(material.id);
+      material.transparent = true;
+
+      if (viewAs === 'transparent')
+      {
+        if (material.opacity)
+        {
+          material.originalOpacity = material.opacity;
+        }
+        else
+        {
+          material.originalOpacity = 1.0;
+        }
+        material.opacity = 0.25;
+      }
+      else
+      {
+        material.opacity =
+            material.originalOpacity ?
+            material.originalOpacity : 1.0;
+      }
+
+      if (viewAs === 'wireframe')
+      {
+        material.visible = false;
+      }
+      else
+      {
+        material.visible = true;
+      }
+    }
+  }
+
   var wireframe;
   var descendants = [];
+  var materials = [];
   model.getDescendants(descendants);
   for (var i = 0; i < descendants.length; ++i)
   {
     if (descendants[i].material &&
-        descendants[i].geometry &&
         descendants[i].name.indexOf('boundingBox') === -1 &&
-        descendants[i].name.indexOf('COLLISION') === -1 &&
-        descendants[i].parent.name.indexOf('COLLISION') === -1 &&
+        descendants[i].name.indexOf('COLLISION_VISUAL') === -1 &&
+        !this.getParentByPartialName(descendants[i], 'COLLISION_VISUAL')&&
         descendants[i].name.indexOf('wireframe') === -1)
     {
-      if (model.isWireframe)
+      if (descendants[i].material instanceof THREE.MeshFaceMaterial)
       {
-        wireframe = descendants[i].getObjectByName('wireframe');
-        if (wireframe)
+        for (var j = 0; j < descendants[i].material.materials.length; ++j)
         {
-          wireframe.visible = false;
+          materialViewAs(descendants[i].material.materials[j]);
         }
-        descendants[i].material.visible = true;
       }
       else
+      {
+        materialViewAs(descendants[i].material);
+      }
+
+      if (viewAs === 'wireframe')
       {
         wireframe = descendants[i].getObjectByName('wireframe');
         if (wireframe)
@@ -5643,11 +5727,42 @@ GZ3D.Scene.prototype.toggleWireframe = function(model)
           wireframe.name = 'wireframe';
           descendants[i].add( wireframe );
         }
-        descendants[i].material.visible = false;
+      }
+      else
+      {
+        wireframe = descendants[i].getObjectByName('wireframe');
+        if (wireframe)
+        {
+          wireframe.visible = false;
+        }
       }
     }
   }
-  model.isWireframe = !model.isWireframe;
+  model.viewAs = viewAs;
+};
+
+/**
+ * Returns the closest parent whose name contains the given string
+ * @param {} object
+ * @param {} name
+ */
+GZ3D.Scene.prototype.getParentByPartialName = function(object, name)
+{
+  var parent = object.parent;
+  while (true)
+  {
+    if (parent.name.indexOf(name) !== -1)
+    {
+      return parent;
+    }
+
+    parent = parent.parent;
+
+    if (parent === this.scene)
+    {
+      return null;
+    }
+  }
 };
 
 /**

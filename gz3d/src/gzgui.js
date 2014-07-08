@@ -535,6 +535,17 @@ $(function()
     guiEvents.emit('view_wireframe');
   });
 
+  // Object menu
+  $( '#view-transparent' ).click(function() {
+    $('#model-popup').popup('close');
+    guiEvents.emit('set_view_as','transparent');
+  });
+
+  $( '#view-wireframe' ).click(function() {
+    $('#model-popup').popup('close');
+    guiEvents.emit('set_view_as','wireframe');
+  });
+
   $( '#delete-entity' ).click(function() {
     guiEvents.emit('delete_entity');
   });
@@ -842,12 +853,12 @@ GZ3D.Gui.prototype.init = function()
                 else if (type === 'transparent')
                 {
                   that.scene.selectedEntity = entity;
-                  guiEvents.emit('view_transparent');
+                  guiEvents.emit('set_view_as','transparent');
                 }
                 else if (type === 'wireframe')
                 {
                   that.scene.selectedEntity = entity;
-                  guiEvents.emit('view_wireframe');
+                  guiEvents.emit('set_view_as','wireframe');
                 }
 
               });
@@ -935,6 +946,7 @@ GZ3D.Gui.prototype.init = function()
               that.scene.selectedEntity = entity;
               that.scene.showBoundingBox(entity);
               $('.ui-popup').popup('close');
+
               if (entity.children[0] instanceof THREE.Light)
               {
                 $('#view-transparent').css('visibility','collapse');
@@ -945,7 +957,7 @@ GZ3D.Gui.prototype.init = function()
               }
               else
               {
-                if (that.scene.selectedEntity.isTransparent)
+                if (that.scene.selectedEntity.viewAs === 'transparent')
                 {
                   $('#view-transparent').buttonMarkup({icon: 'check'});
                 }
@@ -954,7 +966,7 @@ GZ3D.Gui.prototype.init = function()
                   $('#view-transparent').buttonMarkup({icon: 'false'});
                 }
 
-                if (that.scene.selectedEntity.isWireframe)
+                if (that.scene.selectedEntity.viewAs === 'wireframe')
                 {
                   $('#view-wireframe').buttonMarkup({icon: 'check'});
                 }
@@ -962,6 +974,7 @@ GZ3D.Gui.prototype.init = function()
                 {
                   $('#view-wireframe').buttonMarkup({icon: 'false'});
                 }
+
                 $('#view-transparent').css('visibility','visible');
                 $('#view-wireframe').css('visibility','visible');
                 $('#model-popup').popup('open',
@@ -972,16 +985,9 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('view_transparent', function ()
+  guiEvents.on('set_view_as', function (viewAs)
       {
-        that.scene.toggleTransparency(that.scene.selectedEntity);
-        that.scene.selectedEntity = null;
-      }
-  );
-
-  guiEvents.on('view_wireframe', function ()
-      {
-        that.scene.toggleWireframe(that.scene.selectedEntity);
+        that.scene.setViewAs(that.scene.selectedEntity, viewAs);
         that.scene.selectedEntity = null;
       }
   );
