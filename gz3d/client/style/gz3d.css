@@ -79,13 +79,13 @@
   display:none;
   background-color:#2a2a2a;
   height:100%;
-  width:14em;
+  width:15em;
 }
 .leftPanels ul
 {
   list-style:none;
   background-color:#2a2a2a;
-  width:12em;
+  width:13em;
   padding:0em;
   padding-left:1em;
   margin:0em;
@@ -95,7 +95,7 @@
   left:-1em;
   padding:0;
   margin:0;
-  width:12em;
+  width:13em;
 }
 .panelTitle
 {
@@ -135,7 +135,7 @@
 {
   width:7em;
   height:6.5em;
-  margin-left:1em;
+  margin-left:1.5em;
 }
 .insertMenuItem img
 {

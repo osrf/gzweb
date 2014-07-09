@@ -354,7 +354,7 @@ $(function()
         else
         {
           $('#mainMenu').show();
-          $('#menuTab').css('left', '14em');
+          $('#menuTab').css('left', '15em');
         }
       });
 
@@ -368,7 +368,7 @@ $(function()
         else
         {
           $('#insertMenu').show();
-          $('#insertTab').css('left', '14em');
+          $('#insertTab').css('left', '15em');
         }
       });
 
@@ -616,6 +616,8 @@ GZ3D.Gui.prototype.init = function()
             });
         guiEvents.emit('notification_popup',
             'Place '+name+' at the desired position');
+
+        guiEvents.emit('closeLeftPanel');
       }
   );
 
@@ -915,6 +917,17 @@ GZ3D.Gui.prototype.init = function()
         that.scene.pointerOnMenu = false;
       }
    );
+/* Not working for tap -> touchdown -> drag for some reason
+   guiEvents.on('closeLeftPanel', function ()
+      {
+        if (isTouchDevice)
+        {
+          $('.leftPanels').hide();
+          $('.tab').css('left', '0');
+        }
+      }
+   );
+*/
 };
 
 /**
