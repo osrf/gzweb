@@ -1,12 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" ng-app>
   <head>
     <title>gz3d</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0, initial-scale=1.0">
-    <link rel="stylesheet" href="style/jquery-mobile/jquery.mobile-1.4.0.css" />
+    <link rel="stylesheet" href="style/jquery-mobile/jquery.mobile-1.4.0.css"/>
     <script src="js/include/jquery-1.9.1.js"></script>
     <script src="js/include/jquery.mobile-1.4.0.min.js"></script>
+    <script src="js/include/angular.min.js"></script>
     <script src="js/include/three.js"></script>
     <script src="js/include/OrbitControls.js"></script>
     <script src="js/include/Detector.js"></script>
@@ -21,90 +22,7 @@
     <script src="js/include/MaskPass.js"></script>
     <script src="js/include/ShaderPass.js"></script>
     <script src="gz3d.js"></script>
-
-    <style>
-      .ui-content{
-        overflow:hidden;
-      }
-      #container {
-        padding: 0px;
-        position : absolute;
-        top: 0px;
-        bottom: 0px;
-        right: 0px;
-        left: 0px;
-      }
-      .insertItem {
-        line-height: 40px;
-        border-style:solid;
-        border-width:1px;
-        border-color:#242424;
-        background-color:#333333;
-        font-size:13px;
-      }
-      @media (min-width:35em) {
-        /* disable "dismiss" on wide viewports */
-        .ui-panel-dismiss {
-          display: none;
-        }
-      }
-      .collapsible_header {
-        font-size: 15px;
-      }
-      .collapsible_item {
-        font-size: 13px;
-      }
-      .ui-popup-screen {
-        z-index: 999;
-      }
-      .tab {
-        width: 0;
-        height: 4em;
-        border-left: 2em solid #333333;
-        border-top: 1em solid transparent;
-        border-bottom: 1em solid transparent;
-        z-index:1000;
-      }
-      .tab img {
-        position: relative;
-        left: -1.7em;
-        top: 1.2em;
-      }
-      #menuTab {
-        position: absolute;
-        top: 0em;
-        left: 0em;
-      }
-      #leftPanel {
-        height: 100%;
-        position: absolute;
-        left: 0;
-        z-index:1000;
-      }
-      .leftPanels {
-        display:none;
-        background-color:#2a2a2a;
-        z-index:1000;
-        height:100%;
-        width:17em;
-        overflow:auto;
-      }
-      .leftPanels ul
-      {
-        list-style:none;
-        background-color:#2a2a2a;
-        width:15em;
-        padding:0em;
-        padding-left:1em;
-        margin:0em;
-      }
-      .leftPanels li
-      {
-        left:-1em;
-        padding:0;
-        width:17em;
-      }
-    </style>
+    <link rel="stylesheet" href="style/gz3d.css"/>
   </head>
 
   <script id="heightmapVS" type="x-shader/x-vertex">
@@ -212,14 +130,6 @@
                 </ul>
             </div>
             <div data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
-                <h3><span class="collapsible_header">Insert</span></h3>
-                <ul data-role="listview">
-                  <li id="box" data-icon="false" class="insertItem"><a href="#"><span class="collapsible_item">Box</span></a></li>
-                  <li id="sphere" data-icon="false" class="insertItem" style="border: none !important;"><a href="#"><span class="collapsible_item">Sphere</span></a></li>
-                  <li id="cylinder" data-icon="false" class="insertItem"><a href="#"><span class="collapsible_item">Cylinder</span></a></li>
-                </ul>
-            </div>
-            <div data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
                 <h3><span class="collapsible_header">Options</span></h3>
                 <ul data-role="listview">
                   <li id="snap-to-grid" data-icon="false" data-iconpos="right" style="border: none !important;"><a href="#"><span class="collapsible_item">Snap to Grid</span></a></li>
@@ -231,9 +141,11 @@
       </div>
       <!-- left panel -->
 
-      <!-- header -->
+      <!-- tabs -->
       <a href="#" id="menuTab" class="tab"><img style="height:1.45em" src="style/images/bars.png" title="Menu"></a>
+      <!-- tabs -->
 
+      <!-- header -->
       <fieldset id="play-header-fieldset">
         <a href="#" data-role="button" class="header-button" id="play"><span id="playText"><img style="height:1.45em" src="style/images/play.png" title="Play"></span></a>
       </fieldset>
@@ -272,6 +184,10 @@
       <fieldset id="cylinder-header-fieldset">
         <a href="#" data-role="button" id="cylinder-header" class="header-button"><span><img style="height:1.45em" src="style/images/cylinder.png" title="Insert cylinder"></span></a>
       </fieldset>
+
+      <fieldset id="insert-header-fieldset">
+        <a href="#" data-role="button" class="header-button" id="insertButton"><span><img style="height:1.45em" src="style/images/insert.png" title="Insert model"></span></a>
+      </fieldset>
       <!-- header -->
 
       <!-- content -->
@@ -286,6 +202,73 @@
         </div>
       </div>
       <!-- content -->
+
+      <!-- insert menu -->
+      <div id="footer" ng-controller="insertControl">
+        <div id="insert-menu" class="insert-menus">
+          <div class="insert-menu-title">
+            <h3>Insert</h3>
+            <a href="#" class="insert-menu-close"><img src="style/images/close.png"></a>
+          </div>
+          <ul style="width:{{(categories.length+1)*itemWidth}}em">
+            <li>
+              <a href="#" ng-click="openCategory('simple_shapes')" data-role="button" data-inline="true" class="insert-menu-item" title="Shapes">
+                <div class="fade"><h1>Shapes</h1></div>
+                <img src="style/images/box.png">
+              </a>
+            </li>
+            <li ng-repeat="category in categories">
+              <a href="#" ng-click="openCategory(category.path)" data-role="button" data-inline="true" class="insert-menu-item" title="{{category.title}}">
+                <div class="fade"><h1>{{category.title}}</h1></div>
+                <img src="/assets/{{category.examplePath}}/thumbnails/0.png">
+              </a>
+            </li>
+          </ul>
+        </div>
+        <div class="insert-menus" id="insert-menu-simple_shapes">
+          <div class="insert-menu-title">
+            <a href="#" class="insert-menu-back"><img src="style/images/back.png">
+            <h3> &nbsp; Simple Shapes</h3></a>
+            <a href="#" class="insert-menu-close"><img src="style/images/close.png"></a>
+          </div>
+          <ul style="width:{{3*itemWidth}}em">
+            <li>
+              <a href="#" id="insert-entity-box" ng-mousedown="spawnEntity('box')" data-role="button" data-inline="true" class="insert-menu-item" title="Box">
+                <div class="fade"><h1>Box</h1></div>
+                <img src="style/images/box.png">
+              </a>
+            </li>
+            <li>
+              <a href="#" id="insert-entity-sphere" ng-mousedown="spawnEntity('sphere')" data-role="button" data-inline="true" class="insert-menu-item" title="Sphere">
+                <div class="fade"><h1>Sphere</h1></div>
+                <img src="style/images/sphere.png">
+              </a>
+            </li>
+            <li>
+              <a href="#" id="insert-entity-cylinder" ng-mousedown="spawnEntity('cylinder')" data-role="button" data-inline="true" class="insert-menu-item" title="Cylinder">
+                <div class="fade"><h1>Cylinder</h1></div>
+                <img src="style/images/cylinder.png">
+              </a>
+            </li>
+          </ul>
+        </div>
+        <div ng-repeat="category in categories" class="insert-menus" id="insert-menu-{{category.path}}">
+          <div class="insert-menu-title">
+            <a href="#" class="insert-menu-back"><img src="style/images/back.png">
+            <h3> &nbsp; {{category.title}}</h3></a>
+            <a href="#" class="insert-menu-close"><img src="style/images/close.png"></a>
+          </div>
+          <ul style="width:{{category.models.length*itemWidth}}em">
+            <li ng-repeat="model in category.models">
+              <a href="#" id="insert-entity-{{model.modelPath}}" ng-mousedown="spawnEntity(model.modelPath)" data-role="button" data-inline="true" class="insert-menu-item" title="{{model.modelTitle}}">
+                <div class="fade"><h1>{{model.modelTitle}}</h1></div>
+                <img src="/assets/{{model.modelPath}}/thumbnails/0.png">
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <!-- insert menu -->
     </div>
     <!-- page -->
 
