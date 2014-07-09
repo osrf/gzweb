@@ -21,11 +21,12 @@
 }
 .collapsible_header
 {
-  font-size: 15px;
+  font-size: 1.3em;
 }
 .collapsible_item
 {
-  font-size: 13px;
+  font-size: 1em;
+  color: #bdbdbd;
 }
 .ui-popup-screen
 {
