@@ -116,29 +116,31 @@
             <h3>Menu</h3>
             <img src="style/images/close.png">
           </div>
-          <ul>
-            <div data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
-              <h3><span class="collapsible_header">Edit</span></h3>
-              <ul data-role="listview">
-                <li id='reset-world' data-icon="false"><a href="#"><span class="collapsible_item">Reset World</span></a></li>
-                <li id='reset-model' data-icon="false"><a href="#"><span class="collapsible_item">Reset Model Poses</span></a></li>
-                <li id='reset-view' data-icon="false"><a href="#"><span class="collapsible_item">Reset View</span></a></li>
-              </ul>
-            </div>
-            <div data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
-                <h3><span class="collapsible_header">View</span></h3>
+          <div class="panelContent">
+            <ul>
+              <div data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
+                <h3><span class="collapsible_header">Edit</span></h3>
                 <ul data-role="listview">
-                  <li id='view-collisions' data-icon="false" data-iconpos="right" style="border: none !important;"><a href="#"><span class="collapsible_item">Collisions</span></a></li>
+                  <li id='reset-world' data-icon="false"><a href="#"><span class="collapsible_item">Reset World</span></a></li>
+                  <li id='reset-model' data-icon="false"><a href="#"><span class="collapsible_item">Reset Model Poses</span></a></li>
+                  <li id='reset-view' data-icon="false"><a href="#"><span class="collapsible_item">Reset View</span></a></li>
                 </ul>
-            </div>
-            <div data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
-                <h3><span class="collapsible_header">Options</span></h3>
-                <ul data-role="listview">
-                  <li id="snap-to-grid" data-icon="false" data-iconpos="right" style="border: none !important;"><a href="#"><span class="collapsible_item">Snap to Grid</span></a></li>
-                  <li id='toggle-notifications' data-icon="false" data-iconpos="right" style="border: none !important;"><a href="#"><span class="collapsible_item">Show Notifications</span></a></li>
-                </ul>
-            </div>
-          </ul>
+              </div>
+              <div data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
+                  <h3><span class="collapsible_header">View</span></h3>
+                  <ul data-role="listview">
+                    <li id='view-collisions' data-icon="false" data-iconpos="right" style="border: none !important;"><a href="#"><span class="collapsible_item">Collisions</span></a></li>
+                  </ul>
+              </div>
+              <div data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
+                  <h3><span class="collapsible_header">Options</span></h3>
+                  <ul data-role="listview">
+                    <li id="snap-to-grid" data-icon="false" data-iconpos="right" style="border: none !important;"><a href="#"><span class="collapsible_item">Snap to Grid</span></a></li>
+                    <li id='toggle-notifications' data-icon="false" data-iconpos="right" style="border: none !important;"><a href="#"><span class="collapsible_item">Show Notifications</span></a></li>
+                  </ul>
+              </div>
+            </ul>
+          </div>
         </div>
         <!-- insert menu -->
         <div id="insertMenu" class="leftPanels">
@@ -146,68 +148,74 @@
             <h3>Insert</h3>
             <img src="style/images/close.png">
           </div>
-          <ul>
-            <li>
-              <a href="#" ng-click="openCategory('simple_shapes')" data-role="button" class="insertMenuItem" title="Shapes">
-                <div class="fade"><h1>Shapes</h1></div>
-                <img src="style/images/box.png">
-              </a>
-            </li>
-            <li ng-repeat="category in categories">
-              <a href="#" ng-click="openCategory(category.path)" data-role="button" class="insertMenuItem" title="{{category.title}}">
-                <div class="fade"><h1>{{category.title}}</h1></div>
-                <img src="/assets/{{category.examplePath}}/thumbnails/0.png">
-              </a>
-            </li>
-          </ul>
+          <div class="panelContent">
+            <ul>
+              <li>
+                <a href="#" ng-click="openCategory('simple_shapes')" data-role="button" class="insertMenuItem" title="Shapes">
+                  <div class="fade"><h1>Shapes</h1></div>
+                  <img src="style/images/box.png">
+                </a>
+              </li>
+              <li ng-repeat="category in categories">
+                <a href="#" ng-click="openCategory(category.path)" data-role="button" class="insertMenuItem" title="{{category.title}}">
+                  <div class="fade"><h1>{{category.title}}</h1></div>
+                  <img src="/assets/{{category.examplePath}}/thumbnails/0.png">
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
         <div id="insertMenu-simple_shapes" class="leftPanels insertCategory">
           <div class="panelTitle">
             <h3>Insert</h3>
             <img src="style/images/close.png">
           </div>
-          <div class="insertSubTitle">
+          <div class="panelSubTitle">
             <h4>Simple Shapes</h4>
             <img src="style/images/back.png">
           </div>
-          <ul>
-            <li>
-              <a href="#" id="insert-entity-box" ng-mousedown="spawnEntity('box')" data-role="button" class="insertMenuItem" title="Box">
-                <div class="fade"><h1>Box</h1></div>
-                <img src="style/images/box.png">
-              </a>
-            </li>
-            <li>
-              <a href="#" id="insert-entity-sphere" ng-mousedown="spawnEntity('sphere')" data-role="button" class="insertMenuItem" title="Sphere">
-                <div class="fade"><h1>Sphere</h1></div>
-                <img src="style/images/sphere.png">
-              </a>
-            </li>
-            <li>
-              <a href="#" id="insert-entity-cylinder" ng-mousedown="spawnEntity('cylinder')" data-role="button" class="insertMenuItem" title="Cylinder">
-                <div class="fade"><h1>Cylinder</h1></div>
-                <img src="style/images/cylinder.png">
-              </a>
-            </li>
-          </ul>
+          <div class="panelSubContent">
+            <ul>
+              <li>
+                <a href="#" id="insert-entity-box" ng-mousedown="spawnEntity('box')" data-role="button" class="insertMenuItem" title="Box">
+                  <div class="fade"><h1>Box</h1></div>
+                  <img src="style/images/box.png">
+                </a>
+              </li>
+              <li>
+                <a href="#" id="insert-entity-sphere" ng-mousedown="spawnEntity('sphere')" data-role="button" class="insertMenuItem" title="Sphere">
+                  <div class="fade"><h1>Sphere</h1></div>
+                  <img src="style/images/sphere.png">
+                </a>
+              </li>
+              <li>
+                <a href="#" id="insert-entity-cylinder" ng-mousedown="spawnEntity('cylinder')" data-role="button" class="insertMenuItem" title="Cylinder">
+                  <div class="fade"><h1>Cylinder</h1></div>
+                  <img src="style/images/cylinder.png">
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
         <div ng-repeat="category in categories" id="insertMenu-{{category.path}}" class="leftPanels insertCategory">
           <div class="panelTitle">
             <h3>Insert</h3>
             <img src="style/images/close.png">
           </div>
-          <div class="insertSubTitle">
+          <div class="panelSubTitle">
             <h4>{{category.title}}</h4>
             <img src="style/images/back.png">
           </div>
-          <ul>
-            <li ng-repeat="model in category.models">
-              <a href="#" id="insert-entity-{{model.modelPath}}" ng-mousedown="spawnEntity(model.modelPath)" data-role="button" class="insertMenuItem" title="{{model.modelTitle}}">
-                <div class="fade"><h1>{{model.modelTitle}}</h1></div>
-                <img src="/assets/{{model.modelPath}}/thumbnails/0.png">
-              </a>
-            </li>
-          </ul>
+          <div class="panelSubContent">
+            <ul>
+              <li ng-repeat="model in category.models">
+                <a href="#" id="insert-entity-{{model.modelPath}}" ng-mousedown="spawnEntity(model.modelPath)" data-role="button" class="insertMenuItem" title="{{model.modelTitle}}">
+                  <div class="fade"><h1>{{model.modelTitle}}</h1></div>
+                  <img src="/assets/{{model.modelPath}}/thumbnails/0.png">
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
       <!-- left panel -->

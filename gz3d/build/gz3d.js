@@ -177,13 +177,7 @@ $(function()
 
   $( '#clock-touch' ).popup('option', 'arrow', 't');
   $('#notification-popup-screen').remove();
-/*
-  // Panel starts open for wide screens
-  if ($(window).width() / emUnits(1) > 35)
-  {
-    $('#leftPanel').panel('open');
-  }
-*/
+
   // Clicks/taps// Touch devices
   if (isTouchDevice)
   {
@@ -360,7 +354,7 @@ $(function()
         else
         {
           $('#mainMenu').show();
-          $('#menuTab').css('left', '17em');
+          $('#menuTab').css('left', '14em');
         }
       });
 
@@ -374,7 +368,7 @@ $(function()
         else
         {
           $('#insertMenu').show();
-          $('#insertTab').css('left', '17em');
+          $('#insertTab').css('left', '14em');
         }
       });
 
@@ -384,7 +378,7 @@ $(function()
         $('.tab').css('left', '0');
       });
 
-  $('.insertSubTitle').click(function()
+  $('.panelSubTitle').click(function()
       {
         $('.insertCategory').hide();
         $('#insertMenu').show();
@@ -530,8 +524,6 @@ function insertControl($scope)
     $('#insertMenu').hide();
     var categoryID = 'insertMenu-'+category;
     $('#' + categoryID).show();
-    //$('.insert-menu-title')
-    //    .css('margin-left', document.getElementById(categoryID).scrollLeft);
   };
 
   $scope.spawnEntity = function(path)
@@ -721,16 +713,16 @@ GZ3D.Gui.prototype.init = function()
         }
       }
   );
-/*
+
   guiEvents.on('close_panel', function()
       {
         if ($(window).width() / emUnits(1)< 35)
         {
-          $('#leftPanel').panel('close');
+          $('.leftPanels').hide();
         }
       }
   );
-*/
+
 
   guiEvents.on('longpress_container_start',
       function (event)
