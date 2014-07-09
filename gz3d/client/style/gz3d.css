@@ -35,10 +35,12 @@
 {
   width: 0;
   height: 4em;
-  border-left: 2em solid #333333;
+  border-left: 2em solid #2a2a2a;
   border-top: 1em solid transparent;
   border-bottom: 1em solid transparent;
-  z-index:1000;
+  z-index:1001;
+  position: absolute;
+  left: 0em;
 }
 .tab img
 {
@@ -48,22 +50,23 @@
 }
 #menuTab
 {
-  position: absolute;
   top: 0em;
-  left: 0em;
+}
+#insertTab
+{
+  top: 6em;
 }
 #leftPanel
 {
   height: 100%;
   position: absolute;
   left: 0;
-  z-index:1000;
+  z-index:1002;
 }
 .leftPanels
 {
   display:none;
   background-color:#2a2a2a;
-  z-index:1000;
   height:100%;
   width:17em;
   overflow:auto;
@@ -83,65 +86,51 @@
   padding:0;
   width:17em;
 }
-#footer
-{
-  width: 100%;
-  position: absolute;
-  bottom: 0;
-}
-.insert-menus
-{
-  display:none;
-  background-color:#2a2a2a;
-  padding:0;
-  z-index:1000;
-  width:100%;
-  overflow:auto;
-}
-.insert-menus ul
-{
-  list-style:none;
-  background-color:#2a2a2a;
-  height:9em;
-  padding:0em;
-  padding-left:0.5em;
-  margin:0em;
-  clear:both;
-}
-.insert-menus li
-{
-  float:left;
-}
-.insert-menu-title
+.panelTitle
 {
   width:100%;
+  height:1.8em;
+  background-color:#1d1d1d;
 }
-.insert-menu-title h3
+.panelTitle h3
 {
   margin:0.1em;
   float:left;
-  color: white;
 }
-.insert-menu-close
-{
-  float:right;
-}
-.insert-menu-close img
+.panelTitle img
 {
   height:1.2em;
   margin:0.1em;
+  float:right;
 }
-.insert-menu-item
+.insertSubTitle
+{
+  width:100%;
+  height:1.5em;
+  background-color:#333333;
+}
+.insertSubTitle h4
+{
+  margin:0.1em;
+  float:left;
+}
+.insertSubTitle img
+{
+  height:1.2em;
+  margin:0.1em;
+  float:right;
+}
+.insertMenuItem
 {
   width:7em;
-  height:6.5em
+  height:6.5em;
 }
-.insert-menu-item img
+.insertMenuItem img
 {
   height:5em;
   max-width:6em;
 }
-.insert-menu-item h1
+.insertMenuItem h1
 {
   font-size:1em;
   margin:0em;
@@ -162,32 +151,22 @@
   height: 1.2em;
   background: linear-gradient(to right, rgba(51, 51, 51, 0) 40%, rgba(51, 51, 51, 1) 60%);
 }
-.insert-menu-back img
-{
-  height:1.4em;
-  margin:0.1em;
-  float:left;
-}
 /* smaller insert menu for narrow screens */
 @media (min-aspect-ratio: 2/1), (max-width: 35em)
 {
-  .insert-menu-item
+  .insertMenuItem
   {
     width:4.6em;
     height:4.3em
   }
-  .insert-menu-item img
+  .insertMenuItem img
   {
     height:3.3em;
     max-width:4em;
   }
-  .insert-menu-item h1
+  .insertMenuItem h1
   {
     font-size:0.7em;
-  }
-  .insert-menus ul
-  {
-    height:6em;
   }
   .fade:after
   {

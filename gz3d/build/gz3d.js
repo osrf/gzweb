@@ -189,13 +189,13 @@ $(function()
   {
     $('#play-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '15.8em')
+        .css('right', '13.6em')
         .css('top', '0em')
         .css('z-index', '1000');
 
     $('#clock-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '12.8em')
+        .css('right', '10.2em')
         .css('top', '0em')
         .css('z-index', '1000');
 
@@ -204,7 +204,7 @@ $(function()
 
     $('#mode-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '4.5em')
+        .css('right', '0.5em')
         .css('top', '0.15em')
         .css('z-index', '1000');
 
@@ -216,20 +216,6 @@ $(function()
 
     $('#cylinder-header-fieldset')
         .css('visibility','hidden');
-
-    $('#insert-header-fieldset')
-        .css('position', 'absolute')
-        .css('right', '0.5em')
-        .css('top', '0em')
-        .css('z-index', '1000');
-
-    $('#footer').touchstart(function(event){
-        guiEvents.emit('pointerOnMenu');
-    });
-
-    $('#footer').touchend(function(event){
-        guiEvents.emit('pointerOffMenu');
-    });
 
     $('#leftPanel').touchstart(function(event){
         guiEvents.emit('pointerOnMenu');
@@ -260,22 +246,22 @@ $(function()
       });
 
     // long press on insert menu item
-    var press_time_footer = 400;
+    var press_time_insert = 400;
     $('[id^="insert-entity-"]')
       .on('touchstart', function (event) {
         var path = $(this).attr('id');
         path = path.substring(14); // after 'insert-entity-'
         $(this).data('checkdown', setTimeout(function () {
-          guiEvents.emit('longpress_footer_start', event, path);
-        }, press_time_footer));
+          guiEvents.emit('longpress_insert_start', event, path);
+        }, press_time_insert));
       })
       .on('touchend', function (event) {
         clearTimeout($(this).data('checkdown'));
-        guiEvents.emit('longpress_footer_end',event,false);
+        guiEvents.emit('longpress_insert_end',event,false);
       })
       .on('touchmove', function (event) {
         clearTimeout($(this).data('checkdown'));
-        guiEvents.emit('longpress_footer_move',event);
+        guiEvents.emit('longpress_insert_move',event);
       });
   }
   // Mouse devices
@@ -296,16 +282,16 @@ $(function()
 
     $('#play-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '35.2em')
+        .css('right', '31.2em')
         .css('top', '0em')
         .css('z-index', '1000');
 
     $('#clock-mouse')
         .css('position', 'absolute')
-        .css('right', '22.4em')
+        .css('right', '19.4em')
         .css('top', '0.5em')
         .css('z-index', '100')
-        .css('width', '12em')
+        .css('width', '11em')
         .css('height', '2.5em')
         .css('background-color', '#333333')
         .css('padding', '3px')
@@ -313,51 +299,27 @@ $(function()
 
     $('#mode-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '16.4em')
+        .css('right', '12.4em')
         .css('top', '0.15em')
         .css('z-index', '1000');
 
     $('#box-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '9.5em')
+        .css('right', '6.5em')
         .css('top', '0em')
         .css('z-index', '1000');
 
     $('#sphere-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '6.5em')
+        .css('right', '3.5em')
         .css('top', '0em')
         .css('z-index', '1000');
 
     $('#cylinder-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '3.5em')
-        .css('top', '0em')
-        .css('z-index', '1000');
-
-    $('#insert-header-fieldset')
-        .css('position', 'absolute')
         .css('right', '0.5em')
         .css('top', '0em')
         .css('z-index', '1000');
-
-    $('#footer').bind('mousewheel', function(event){
-        event.originalEvent.preventDefault();
-        var id = $('.insert-menus:visible').attr('id');
-
-        var value = document.getElementById(id).scrollLeft;
-        value = value - event.originalEvent.wheelDelta/6;
-
-        $('.insert-menus:visible').scrollLeft(value);
-    });
-
-    $('#footer').mouseenter(function(event){
-        guiEvents.emit('pointerOnMenu');
-    });
-
-    $('#footer').mouseleave(function(event){
-        guiEvents.emit('pointerOffMenu');
-    });
 
     $('#leftPanel').mouseenter(function(event){
         guiEvents.emit('pointerOnMenu');
@@ -388,44 +350,6 @@ $(function()
       .css('height', '1.45em')
       .css('padding', '0.65em');
 
-  $('#insertButton').click(function()
-      {
-        if($('#insert-menu').is(':visible'))
-        {
-          $('#insert-menu').hide();
-        }
-        else
-        {
-          $('#insert-menu').show();
-          $('[id^="insert-menu-"]').hide();
-          $('.insert-menu-title')
-              .css('margin-left',
-                  document.getElementById('insert-menu').scrollLeft);
-        }
-      });
-
-  $('.insert-menu-back').click(function()
-      {
-        $('#insert-menu').show();
-        $('[id^="insert-menu-"]').hide();
-        $('.insert-menu-title')
-            .css('margin-left',
-                document.getElementById('insert-menu').scrollLeft);
-      });
-
-  $('.insert-menu-close').click(function()
-      {
-        $('.insert-menus').hide();
-      });
-
-  $('.insert-menus').on('scroll', function()
-      {
-        var id = $(this).attr('id');
-
-        $('.insert-menu-title')
-            .css('margin-left', document.getElementById(id).scrollLeft);
-      });
-
   $('#menuTab').click(function()
       {
         if($('#mainMenu').is(':visible'))
@@ -438,6 +362,32 @@ $(function()
           $('#mainMenu').show();
           $('#menuTab').css('left', '17em');
         }
+      });
+
+  $('#insertTab').click(function()
+      {
+        if($('[id^="insertMenu"]').is(':visible'))
+        {
+          $('[id^="insertMenu"]').hide();
+          $('#insertTab').css('left', '0');
+        }
+        else
+        {
+          $('#insertMenu').show();
+          $('#insertTab').css('left', '17em');
+        }
+      });
+
+  $('.panelTitle').click(function()
+      {
+        $('.leftPanels').hide();
+        $('.tab').css('left', '0');
+      });
+
+  $('.insertSubTitle').click(function()
+      {
+        $('.insertCategory').hide();
+        $('#insertMenu').show();
       });
 
   $('#view-mode').click(function()
@@ -577,11 +527,11 @@ function insertControl($scope)
 
   $scope.openCategory = function(category)
   {
-    $('#insert-menu').hide();
-    var categoryID = 'insert-menu-'+category;
+    $('#insertMenu').hide();
+    var categoryID = 'insertMenu-'+category;
     $('#' + categoryID).show();
-    $('.insert-menu-title')
-        .css('margin-left', document.getElementById(categoryID).scrollLeft);
+    //$('.insert-menu-title')
+    //    .css('margin-left', document.getElementById(categoryID).scrollLeft);
   };
 
   $scope.spawnEntity = function(path)
@@ -639,7 +589,6 @@ GZ3D.Gui.prototype.init = function()
 {
   this.spawnState = null;
   this.longPressContainerState = null;
-  this.longPressFooterState = null;
   this.showNotifications = false;
 
   var that = this;
@@ -875,7 +824,7 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('longpress_footer_start', function (event, path)
+  guiEvents.on('longpress_insert_start', function (event, path)
       {
         navigator.vibrate(50);
         guiEvents.emit('spawn_entity_start', path);
@@ -883,13 +832,13 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('longpress_footer_end', function(event)
+  guiEvents.on('longpress_insert_end', function(event)
       {
         guiEvents.emit('spawn_entity_end');
       }
   );
 
-  guiEvents.on('longpress_footer_move', function(event)
+  guiEvents.on('longpress_insert_move', function(event)
       {
         guiEvents.emit('spawn_entity_move', event);
         event.stopPropagation();

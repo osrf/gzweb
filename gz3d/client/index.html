@@ -109,12 +109,14 @@
     <div data-role="page" data-theme="b" data-content-theme="c">
 
       <!-- left panel -->
-      <div id="leftPanel">
+      <div id="leftPanel" ng-controller="insertControl">
+        <!-- main menu -->
         <div id="mainMenu" class="leftPanels">
+          <div class="panelTitle">
+            <h3>Menu</h3>
+            <img src="style/images/close.png">
+          </div>
           <ul>
-            <li style="width:16em">
-              <h4>Menu</h4>
-            </li>
             <div data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
               <h3><span class="collapsible_header">Edit</span></h3>
               <ul data-role="listview">
@@ -138,11 +140,81 @@
             </div>
           </ul>
         </div>
+        <!-- insert menu -->
+        <div id="insertMenu" class="leftPanels">
+          <div class="panelTitle">
+            <h3>Insert</h3>
+            <img src="style/images/close.png">
+          </div>
+          <ul>
+            <li>
+              <a href="#" ng-click="openCategory('simple_shapes')" data-role="button" class="insertMenuItem" title="Shapes">
+                <div class="fade"><h1>Shapes</h1></div>
+                <img src="style/images/box.png">
+              </a>
+            </li>
+            <li ng-repeat="category in categories">
+              <a href="#" ng-click="openCategory(category.path)" data-role="button" class="insertMenuItem" title="{{category.title}}">
+                <div class="fade"><h1>{{category.title}}</h1></div>
+                <img src="/assets/{{category.examplePath}}/thumbnails/0.png">
+              </a>
+            </li>
+          </ul>
+        </div>
+        <div id="insertMenu-simple_shapes" class="leftPanels insertCategory">
+          <div class="panelTitle">
+            <h3>Insert</h3>
+            <img src="style/images/close.png">
+          </div>
+          <div class="insertSubTitle">
+            <h4>Simple Shapes</h4>
+            <img src="style/images/back.png">
+          </div>
+          <ul>
+            <li>
+              <a href="#" id="insert-entity-box" ng-mousedown="spawnEntity('box')" data-role="button" class="insertMenuItem" title="Box">
+                <div class="fade"><h1>Box</h1></div>
+                <img src="style/images/box.png">
+              </a>
+            </li>
+            <li>
+              <a href="#" id="insert-entity-sphere" ng-mousedown="spawnEntity('sphere')" data-role="button" class="insertMenuItem" title="Sphere">
+                <div class="fade"><h1>Sphere</h1></div>
+                <img src="style/images/sphere.png">
+              </a>
+            </li>
+            <li>
+              <a href="#" id="insert-entity-cylinder" ng-mousedown="spawnEntity('cylinder')" data-role="button" class="insertMenuItem" title="Cylinder">
+                <div class="fade"><h1>Cylinder</h1></div>
+                <img src="style/images/cylinder.png">
+              </a>
+            </li>
+          </ul>
+        </div>
+        <div ng-repeat="category in categories" id="insertMenu-{{category.path}}" class="leftPanels insertCategory">
+          <div class="panelTitle">
+            <h3>Insert</h3>
+            <img src="style/images/close.png">
+          </div>
+          <div class="insertSubTitle">
+            <h4>{{category.title}}</h4>
+            <img src="style/images/back.png">
+          </div>
+          <ul>
+            <li ng-repeat="model in category.models">
+              <a href="#" id="insert-entity-{{model.modelPath}}" ng-mousedown="spawnEntity(model.modelPath)" data-role="button" class="insertMenuItem" title="{{model.modelTitle}}">
+                <div class="fade"><h1>{{model.modelTitle}}</h1></div>
+                <img src="/assets/{{model.modelPath}}/thumbnails/0.png">
+              </a>
+            </li>
+          </ul>
+        </div>
       </div>
       <!-- left panel -->
 
       <!-- tabs -->
       <a href="#" id="menuTab" class="tab"><img style="height:1.45em" src="style/images/bars.png" title="Menu"></a>
+      <a href="#" id="insertTab" class="tab"><img style="height:1.45em" src="style/images/insert.png" title="Insert"></a>
       <!-- tabs -->
 
       <!-- header -->
@@ -184,10 +256,6 @@
       <fieldset id="cylinder-header-fieldset">
         <a href="#" data-role="button" id="cylinder-header" class="header-button"><span><img style="height:1.45em" src="style/images/cylinder.png" title="Insert cylinder"></span></a>
       </fieldset>
-
-      <fieldset id="insert-header-fieldset">
-        <a href="#" data-role="button" class="header-button" id="insertButton"><span><img style="height:1.45em" src="style/images/insert.png" title="Insert model"></span></a>
-      </fieldset>
       <!-- header -->
 
       <!-- content -->
@@ -203,72 +271,6 @@
       </div>
       <!-- content -->
 
-      <!-- insert menu -->
-      <div id="footer" ng-controller="insertControl">
-        <div id="insert-menu" class="insert-menus">
-          <div class="insert-menu-title">
-            <h3>Insert</h3>
-            <a href="#" class="insert-menu-close"><img src="style/images/close.png"></a>
-          </div>
-          <ul style="width:{{(categories.length+1)*itemWidth}}em">
-            <li>
-              <a href="#" ng-click="openCategory('simple_shapes')" data-role="button" data-inline="true" class="insert-menu-item" title="Shapes">
-                <div class="fade"><h1>Shapes</h1></div>
-                <img src="style/images/box.png">
-              </a>
-            </li>
-            <li ng-repeat="category in categories">
-              <a href="#" ng-click="openCategory(category.path)" data-role="button" data-inline="true" class="insert-menu-item" title="{{category.title}}">
-                <div class="fade"><h1>{{category.title}}</h1></div>
-                <img src="/assets/{{category.examplePath}}/thumbnails/0.png">
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div class="insert-menus" id="insert-menu-simple_shapes">
-          <div class="insert-menu-title">
-            <a href="#" class="insert-menu-back"><img src="style/images/back.png">
-            <h3> &nbsp; Simple Shapes</h3></a>
-            <a href="#" class="insert-menu-close"><img src="style/images/close.png"></a>
-          </div>
-          <ul style="width:{{3*itemWidth}}em">
-            <li>
-              <a href="#" id="insert-entity-box" ng-mousedown="spawnEntity('box')" data-role="button" data-inline="true" class="insert-menu-item" title="Box">
-                <div class="fade"><h1>Box</h1></div>
-                <img src="style/images/box.png">
-              </a>
-            </li>
-            <li>
-              <a href="#" id="insert-entity-sphere" ng-mousedown="spawnEntity('sphere')" data-role="button" data-inline="true" class="insert-menu-item" title="Sphere">
-                <div class="fade"><h1>Sphere</h1></div>
-                <img src="style/images/sphere.png">
-              </a>
-            </li>
-            <li>
-              <a href="#" id="insert-entity-cylinder" ng-mousedown="spawnEntity('cylinder')" data-role="button" data-inline="true" class="insert-menu-item" title="Cylinder">
-                <div class="fade"><h1>Cylinder</h1></div>
-                <img src="style/images/cylinder.png">
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div ng-repeat="category in categories" class="insert-menus" id="insert-menu-{{category.path}}">
-          <div class="insert-menu-title">
-            <a href="#" class="insert-menu-back"><img src="style/images/back.png">
-            <h3> &nbsp; {{category.title}}</h3></a>
-            <a href="#" class="insert-menu-close"><img src="style/images/close.png"></a>
-          </div>
-          <ul style="width:{{category.models.length*itemWidth}}em">
-            <li ng-repeat="model in category.models">
-              <a href="#" id="insert-entity-{{model.modelPath}}" ng-mousedown="spawnEntity(model.modelPath)" data-role="button" data-inline="true" class="insert-menu-item" title="{{model.modelTitle}}">
-                <div class="fade"><h1>{{model.modelTitle}}</h1></div>
-                <img src="/assets/{{model.modelPath}}/thumbnails/0.png">
-              </a>
-            </li>
-          </ul>
-        </div>
-      </div>
-      <!-- insert menu -->
     </div>
     <!-- page -->
 
