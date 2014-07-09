@@ -12,6 +12,158 @@ var emUnits = function(value)
       return value*parseFloat($('body').css('font-size'));
     };
 
+var isTouchDevice = 'ontouchstart' in window || 'onmsgesturechange' in window;
+
+var modelList =
+  [
+    {path:'buildings', title:'Buildings', examplePath:'house_1', models:
+    [
+      {modelPath:'fast_food', modelTitle:'Fast Food'},
+      {modelPath:'gas_station', modelTitle:'Gas Station'},
+      {modelPath:'house_1', modelTitle:'House 1'},
+      {modelPath:'house_2', modelTitle:'House 2'},
+      {modelPath:'house_3', modelTitle:'House 3'},
+      {modelPath:'iss', modelTitle:'International Space Station'},
+      {modelPath:'iss_half', modelTitle:'ISS half'},
+      {modelPath:'kitchen_dining', modelTitle:'Kitchen and Dining'},
+      {modelPath:'office_building', modelTitle:'Office Building'},
+      {modelPath:'powerplant', modelTitle:'Power Plant'},
+      {modelPath:'starting_pen', modelTitle:'Starting Pen'},
+      {modelPath:'willowgarage', modelTitle:'Willow Garage'}
+    ]},
+
+    {path:'furniture', title:'Furniture', examplePath:'table', models:
+    [
+      {modelPath:'bookshelf', modelTitle:'Book Shelf'},
+      {modelPath:'cabinet', modelTitle:'Cabinet'},
+      {modelPath:'drc_practice_door_4x8', modelTitle:'4x8 Doorway'},
+      {modelPath:'drc_practice_ladder', modelTitle:'Ladder'},
+      {modelPath:'hinged_door', modelTitle:'Hinged Door'},
+      {modelPath:'table', modelTitle:'Table'},
+      {modelPath:'table_marble', modelTitle:'Table Marble'},
+
+      {modelPath:'drc_practice_ball_valve', modelTitle:'Ball Valve'},
+      {modelPath:'drc_practice_handle_wheel_valve', modelTitle:'Handle Wheel Valve'},
+      {modelPath:'drc_practice_hand_wheel_valve', modelTitle:'Hand Wheel Valve'},
+      {modelPath:'drc_practice_wheel_valve', modelTitle:'Wheel Valve'},
+      {modelPath:'drc_practice_wheel_valve_large', modelTitle:'Wheel Valve Large'},
+      {modelPath:'door_handle', modelTitle:'Door Handle'},
+
+      {modelPath:'drc_practice_ball_valve_wall', modelTitle:'Wall (Ball Valve)'},
+      {modelPath:'drc_practice_handle_wheel_valve_wall', modelTitle:'Wall (Handle Wheel Valve)'},
+      {modelPath:'drc_practice_hand_wheel_valve_wall', modelTitle:'Wall (Hand Wheel Valve)'},
+      {modelPath:'drc_practice_valve_wall', modelTitle:'Wall (Valve)'},
+      {modelPath:'drc_practice_wheel_valve_wall', modelTitle:'Wall (Wheel Valve)'},
+      {modelPath:'drc_practice_wheel_valve_large_wall', modelTitle:'Wall (Wheel Valve Large)'},
+      {modelPath:'grey_wall', modelTitle:'Grey Wall'},
+      {modelPath:'asphalt_plane', modelTitle:'Asphalt Plane'},
+      {modelPath:'drc_practice_base_4x8', modelTitle:'Debris base'},
+      {modelPath:'ground_plane', modelTitle:'Ground Plane'},
+      {modelPath:'nist_maze_wall_120', modelTitle:'120 Maze Wall'},
+      {modelPath:'nist_maze_wall_240', modelTitle:'240 Maze Wall'},
+      {modelPath:'nist_maze_wall_triple_holes_120', modelTitle:'120 Maze Wall Triple Holes'},
+      {modelPath:'nist_simple_ramp_120', modelTitle:'Simple Ramp'},
+      {modelPath:'nist_stairs_120', modelTitle:'Stairs'}
+    ]},
+
+    {path:'kitchen', title:'Kitchen', examplePath:'bowl', models:
+    [
+      {modelPath:'beer', modelTitle:'Beer'},
+      {modelPath:'bowl', modelTitle:'Bowl'},
+      {modelPath:'coke_can', modelTitle:'Coke Can'},
+      {modelPath:'saucepan', modelTitle:'Saucepan'}
+    ]},
+
+    {path:'robocup', title:'Robocup', examplePath:'robocup09_spl_field', models:
+    [
+      {modelPath:'robocup09_spl_field', modelTitle:'2009 SPL Field'},
+      {modelPath:'robocup14_spl_field', modelTitle:'2014 SPL Field'},
+      {modelPath:'robocup_3Dsim_field', modelTitle:'3D Sim. Field'},
+      {modelPath:'robocup14_spl_goal', modelTitle:'SPL Goal'},
+      {modelPath:'robocup_3Dsim_goal', modelTitle:'3D Sim. Goal'},
+      {modelPath:'robocup_spl_ball', modelTitle:'SPL Ball'},
+      {modelPath:'robocup_3Dsim_ball', modelTitle:'3D Sim. Ball'}
+    ]},
+
+    {path:'robots', title:'Robots', examplePath:'pr2', models:
+    [
+      {modelPath:'create', modelTitle:'Create'},
+      {modelPath:'husky', modelTitle:'Husky'},
+      {modelPath:'irobot_hand', modelTitle:'iRobot Hand'},
+      {modelPath:'pioneer2dx', modelTitle:'Pioneer 2DX'},
+      {modelPath:'pioneer3at', modelTitle:'Pioneer 3AT'},
+      {modelPath:'pr2', modelTitle:'PR2'},
+      {modelPath:'robonaut', modelTitle:'Robonaut'},
+      {modelPath:'simple_arm', modelTitle:'Simple Arm'},
+      {modelPath:'simple_arm_gripper', modelTitle:'Simple Arm and Gripper'},
+      {modelPath:'simple_gripper', modelTitle:'Simple Gripper'},
+      {modelPath:'turtlebot', modelTitle:'TurtleBot'},
+      {modelPath:'youbot', modelTitle:'YouBot'}
+    ]},
+
+    {path:'sensors', title:'Sensors', examplePath:'kinect', models:
+    [
+      {modelPath:'camera', modelTitle:'Camera'},
+      {modelPath:'stereo_camera', modelTitle:'Stereo Camera'},
+      {modelPath:'hokuyo', modelTitle:'Hokuyo'},
+      {modelPath:'kinect', modelTitle:'Kinect'}
+    ]},
+
+    {path:'street', title:'Street', examplePath:'fire_hydrant', models:
+    [
+      {modelPath:'cinder_block', modelTitle:'Cinder Block'},
+      {modelPath:'cinder_block_2', modelTitle:'Cinder Block 2'},
+      {modelPath:'cinder_block_wide', modelTitle:'Cinder Block Wide'},
+      {modelPath:'construction_barrel', modelTitle:'Construction Barrel'},
+      {modelPath:'construction_cone', modelTitle:'Construction Cone'},
+      {modelPath:'drc_practice_angled_barrier_45', modelTitle:'Angled Barrier 45'},
+      {modelPath:'drc_practice_angled_barrier_135', modelTitle:'Angled Barrier 135'},
+      {modelPath:'drc_practice_block_wall', modelTitle:'Block Wall'},
+      {modelPath:'drc_practice_orange_jersey_barrier', modelTitle:'Jersey Barrier (Orange)'},
+      {modelPath:'drc_practice_white_jersey_barrier', modelTitle:'Jersey Barrier (White)'},
+      {modelPath:'drc_practice_truss', modelTitle:'Truss'},
+      {modelPath:'drc_practice_yellow_parking_block', modelTitle:'Parking Block'},
+      {modelPath:'dumpster', modelTitle:'Dumpster'},
+      {modelPath:'fire_hydrant', modelTitle:'Fire Hydrant'},
+      {modelPath:'jersey_barrier', modelTitle:'Jersey Barrier'},
+      {modelPath:'lamp_post', modelTitle:'Lamp Post'},
+      {modelPath:'mailbox', modelTitle:'Mailbox'},
+      {modelPath:'mud_box', modelTitle:'Mud Box'},
+      {modelPath:'nist_fiducial_barrel', modelTitle:'Fiducial Barrel'},
+      {modelPath:'speed_limit_sign', modelTitle:'Speed Limit Sign'},
+      {modelPath:'stop_sign', modelTitle:'Stop Sign'}
+
+    ]},
+
+    {path:'tools', title:'Tools', examplePath:'cordless_drill', models:
+    [
+      {modelPath:'cordless_drill', modelTitle:'Cordless Drill'},
+      {modelPath:'fire_hose_long', modelTitle:'Fire Hose'},
+      {modelPath:'fire_hose_long_curled', modelTitle:'Fire Hose Long Curled'},
+      {modelPath:'hammer', modelTitle:'Hammer'},
+      {modelPath:'monkey_wrench', modelTitle:'Monkey Wrench'},
+      {modelPath:'polaris_ranger_ev', modelTitle:'Polaris Ranger EV'},
+      {modelPath:'polaris_ranger_xp900', modelTitle:'Polaris Ranger XP900'},
+      {modelPath:'polaris_ranger_xp900_no_roll_cage', modelTitle:'Polaris Ranger without roll cage'},
+      {modelPath:'utility_cart', modelTitle:'Utility Cart'}
+    ]},
+
+    {path:'misc', title:'Misc.', examplePath:'double_pendulum_with_base', models:
+    [
+      {modelPath:'double_pendulum_with_base', modelTitle:'Double Pendulum With Base'},
+      {modelPath:'breakable_test', modelTitle:'Breakable_test'},
+      {modelPath:'brick_box_3x1x3', modelTitle:'Brick Box 3x1x3'},
+      {modelPath:'cube_20k', modelTitle:'Cube 20k'},
+      {modelPath:'drc_practice_2x4', modelTitle:'2x4 Lumber'},
+      {modelPath:'drc_practice_2x6', modelTitle:'2x6 Lumber'},
+      {modelPath:'drc_practice_4x4x20', modelTitle:'4x4x20 Lumber'},
+      {modelPath:'drc_practice_4x4x40', modelTitle:'4x4x40 Lumber'},
+      {modelPath:'drc_practice_blue_cylinder', modelTitle:'Blue Cylinder'},
+      {modelPath:'drc_practice_wood_slats', modelTitle:'Wood Slats'},
+      {modelPath:'nist_elevated_floor_120', modelTitle:'Elevated Floor 120'}
+    ]}
+  ];
+
 // Bind events to buttons
 $(function()
 {
@@ -19,6 +171,8 @@ $(function()
   // Toggle items
   $('#view-collisions').buttonMarkup({icon: 'false'});
   $('#snap-to-grid').buttonMarkup({icon: 'false'});
+  $('#view-transparent').buttonMarkup({icon: 'false'});
+  $('#view-wireframe').buttonMarkup({icon: 'false'});
   guiEvents.emit('toggle_notifications');
 
   $( '#clock-touch' ).popup('option', 'arrow', 't');
@@ -31,77 +185,17 @@ $(function()
   }
 
   // Clicks/taps// Touch devices
-  if ('ontouchstart' in window || 'onmsgesturechange' in window)
+  if (isTouchDevice)
   {
-    // swipe icon
-    $('#box').html('<b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Box</b>'+
-        '<div style="float: right;">'+
-        '<img src="style/images/box.png" '+
-        'style="vertical-align:middle;height:1.4em;">'+
-        '<img src="style/images/swipe.png" '+
-        'style="vertical-align:middle;margin-left:1em;"></div>');
-    $('#sphere').html('<b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sphere</b>'+
-        '<div style="float: right;">'+
-        '<img src="style/images/sphere.png" '+
-        'style="vertical-align:middle;;height:1.4em;">'+
-        '<img src="style/images/swipe.png" '+
-        'style="vertical-align:middle; margin-left:1em;"></div>');
-    $('#cylinder').html('<b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Cylinder</b>'+
-        '<div style="float: right;">'+
-        '<img src="style/images/cylinder.png" '+
-        'style="vertical-align:middle;;height:1.4em;">'+
-        '<img src="style/images/swipe.png" '+
-        'style="vertical-align:middle; margin-left:1em;"></div>');
-
-    // touchstart
-    $( '#box' ).bind('touchstart',function(event) {
-      guiEvents.emit('close_panel');
-      guiEvents.emit('spawn_entity_start', 'box');
-      event.stopPropagation();
-    });
-    $( '#sphere' ).bind('touchstart',function(event) {
-      guiEvents.emit('close_panel');
-      guiEvents.emit('spawn_entity_start', 'sphere');
-      event.stopPropagation();
-    });
-    $( '#cylinder' ).bind('touchstart',function(event) {
-      guiEvents.emit('close_panel');
-      guiEvents.emit('spawn_entity_start', 'cylinder');
-      event.stopPropagation();
-    });
-    // touchmove
-    $( '#box' ).bind('touchmove',function(event) {
-      guiEvents.emit('spawn_entity_move', event);
-      event.stopPropagation();
-    });
-    $( '#sphere' ).bind('touchmove',function(event) {
-      guiEvents.emit('spawn_entity_move', event);
-      event.stopPropagation();
-    });
-    $( '#cylinder' ).bind('touchmove',function(event) {
-      guiEvents.emit('spawn_entity_move', event);
-      event.stopPropagation();
-    });
-    // touchend
-    $( '#box' ).bind('touchend',function() {
-      guiEvents.emit('spawn_entity_end');
-    });
-    $( '#sphere' ).bind('touchend',function() {
-      guiEvents.emit('spawn_entity_end');
-    });
-    $( '#cylinder' ).bind('touchend',function() {
-      guiEvents.emit('spawn_entity_end');
-    });
-
     $('#play-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '13.2em')
+        .css('right', '15.8em')
         .css('top', '0em')
         .css('z-index', '1000');
 
     $('#clock-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '9.9em')
+        .css('right', '12.8em')
         .css('top', '0em')
         .css('z-index', '1000');
 
@@ -110,7 +204,7 @@ $(function()
 
     $('#mode-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '0.5em')
+        .css('right', '4.5em')
         .css('top', '0.15em')
         .css('z-index', '1000');
 
@@ -123,6 +217,20 @@ $(function()
     $('#cylinder-header-fieldset')
         .css('visibility','hidden');
 
+    $('#insert-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '0.5em')
+        .css('top', '0em')
+        .css('z-index', '1000');
+
+    $('#footer').touchstart(function(event){
+        guiEvents.emit('pointerOnMenu');
+    });
+
+    $('#footer').touchend(function(event){
+        guiEvents.emit('pointerOffMenu');
+    });
+
     $('#leftPanel').touchstart(function(event){
         guiEvents.emit('pointerOnMenu');
     });
@@ -130,37 +238,71 @@ $(function()
     $('#leftPanel').touchend(function(event){
         guiEvents.emit('pointerOffMenu');
     });
+
+    // long press on canvas
+    var press_time_container = 400;
+    $('#container')
+      .on('touchstart', function (event) {
+        $(this).data('checkdown', setTimeout(function () {
+          guiEvents.emit('longpress_container_start',event);
+        }, press_time_container));
+      })
+      .on('touchend', function (event) {
+        clearTimeout($(this).data('checkdown'));
+        guiEvents.emit('longpress_container_end',event,false);
+      })
+      .on('touchmove', function (event) {
+        clearTimeout($(this).data('checkdown'));
+        $(this).data('checkdown', setTimeout(function () {
+          guiEvents.emit('longpress_container_start',event);
+        }, press_time_container));
+        guiEvents.emit('longpress_container_move',event);
+      });
+
+    // long press on insert menu item
+    var press_time_footer = 400;
+    $('[id^="insert-entity-"]')
+      .on('touchstart', function (event) {
+        var path = $(this).attr('id');
+        path = path.substring(14); // after 'insert-entity-'
+        $(this).data('checkdown', setTimeout(function () {
+          guiEvents.emit('longpress_footer_start', event, path);
+        }, press_time_footer));
+      })
+      .on('touchend', function (event) {
+        clearTimeout($(this).data('checkdown'));
+        guiEvents.emit('longpress_footer_end',event,false);
+      })
+      .on('touchmove', function (event) {
+        clearTimeout($(this).data('checkdown'));
+        guiEvents.emit('longpress_footer_move',event);
+      });
   }
   // Mouse devices
   else
   {
-    $( '#box' ).click(function() {
-      guiEvents.emit('close_panel');
-      guiEvents.emit('spawn_entity_start', 'box');
-    });
-
-    $( '#sphere' ).click(function() {
-      guiEvents.emit('close_panel');
-      guiEvents.emit('spawn_entity_start', 'sphere');
-    });
-
-    $( '#cylinder' ).click(function() {
-      guiEvents.emit('close_panel');
-      guiEvents.emit('spawn_entity_start', 'cylinder');
-    });
+    $('[id^="insert-entity-"]')
+      .click(function(event) {
+        var path = $(this).attr('id');
+        path = path.substring(14); // after 'insert-entity-'
+        guiEvents.emit('spawn_entity_start', path);
+      })
+      .on('mousedown', function(event) {
+        event.preventDefault();
+      });
 
     $('#clock-header-fieldset')
         .css('visibility','hidden');
 
     $('#play-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '32.4em')
+        .css('right', '35.2em')
         .css('top', '0em')
         .css('z-index', '1000');
 
     $('#clock-mouse')
         .css('position', 'absolute')
-        .css('right', '19.5em')
+        .css('right', '22.4em')
         .css('top', '0.5em')
         .css('z-index', '100')
         .css('width', '12em')
@@ -171,27 +313,59 @@ $(function()
 
     $('#mode-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '12.6em')
+        .css('right', '16.4em')
         .css('top', '0.15em')
         .css('z-index', '1000');
 
     $('#box-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '6.5em')
+        .css('right', '9.5em')
         .css('top', '0em')
         .css('z-index', '1000');
 
     $('#sphere-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '3.5em')
+        .css('right', '6.5em')
         .css('top', '0em')
         .css('z-index', '1000');
 
     $('#cylinder-header-fieldset')
         .css('position', 'absolute')
+        .css('right', '3.5em')
+        .css('top', '0em')
+        .css('z-index', '1000');
+
+    $('#insert-header-fieldset')
+        .css('position', 'absolute')
         .css('right', '0.5em')
         .css('top', '0em')
         .css('z-index', '1000');
+
+    $('#footer').bind('mousewheel', function(event){
+        event.originalEvent.preventDefault();
+        var id = $('.insert-menus:visible').attr('id');
+
+        var value = document.getElementById(id).scrollLeft;
+        value = value - event.originalEvent.wheelDelta/6;
+
+        $('.insert-menus:visible').scrollLeft(value);
+    });
+
+    $('#footer').mouseenter(function(event){
+        guiEvents.emit('pointerOnMenu');
+    });
+
+    $('#footer').mouseleave(function(event){
+        guiEvents.emit('pointerOffMenu');
+    });
+
+    $('#leftPanel').mouseenter(function(event){
+        guiEvents.emit('pointerOnMenu');
+    });
+
+    $('#leftPanel').mouseleave(function(event){
+        guiEvents.emit('pointerOffMenu');
+    });
 
     // right-click
     $('#container').mousedown(function(event)
@@ -207,14 +381,6 @@ $(function()
         {
           $('#model-popup').popup('close');
         });
-
-    $('#leftPanel').mouseenter(function(event){
-        guiEvents.emit('pointerOnMenu');
-    });
-
-    $('#leftPanel').mouseleave(function(event){
-        guiEvents.emit('pointerOffMenu');
-    });
   }
 
   $('.header-button')
@@ -222,7 +388,54 @@ $(function()
       .css('height', '1.45em')
       .css('padding', '0.65em');
 
-  $( '#leftPanel' ).on('panelclose', function()
+  $('#insertButton').click(function()
+      {
+        $('#leftPanel').panel('close');
+        if($('#insert-menu').is(':visible'))
+        {
+          $('#insert-menu').hide();
+        }
+        else
+        {
+          $('#insert-menu').show();
+          $('[id^="insert-menu-"]').hide();
+          $('.insert-menu-title')
+              .css('margin-left',
+                  document.getElementById('insert-menu').scrollLeft);
+        }
+      });
+
+  $('.insert-menu-back').click(function()
+      {
+        $('#insert-menu').show();
+        $('[id^="insert-menu-"]').hide();
+        $('.insert-menu-title')
+            .css('margin-left',
+                document.getElementById('insert-menu').scrollLeft);
+      });
+
+  $('.insert-menu-close').click(function()
+      {
+        $('.insert-menus').hide();
+      });
+
+  $('.insert-menus').on('scroll', function()
+      {
+        var id = $(this).attr('id');
+
+        $('.insert-menu-title')
+            .css('margin-left', document.getElementById(id).scrollLeft);
+      });
+
+  $('#leftPanel').on('panelopen', function()
+      {
+        if($('.insert-menus').is(':visible'))
+        {
+          $('.insert-menus').hide();
+        }
+      });
+
+  $('#leftPanel').on('panelclose', function()
       {
         $('#panelButton').removeClass('ui-btn-active');
       });
@@ -321,30 +534,89 @@ $(function()
         }
       });
 
-  // long press on canvas
-  var press_time = 400;
-  $('#container')
-    .on('touchstart', function (event) {
-      $(this).data('checkdown', setTimeout(function () {
-        guiEvents.emit('longpress_start',event);
-      }, press_time));
-    })
-    .on('touchend', function (event) {
-      clearTimeout($(this).data('checkdown'));
-      guiEvents.emit('longpress_end',event,false);
-    })
-    .on('touchmove', function (event) {
-      clearTimeout($(this).data('checkdown'));
-      $(this).data('checkdown', setTimeout(function () {
-        guiEvents.emit('longpress_start',event);
-      }, press_time));
-      guiEvents.emit('longpress_move',event);
-    });
+  // Object menu
+  $( '#view-transparent' ).click(function() {
+    $('#model-popup').popup('close');
+    guiEvents.emit('set_view_as','transparent');
+  });
+
+  $( '#view-wireframe' ).click(function() {
+    $('#model-popup').popup('close');
+    guiEvents.emit('set_view_as','wireframe');
+  });
 
   $( '#delete-entity' ).click(function() {
     guiEvents.emit('delete_entity');
   });
 });
+
+// Insert menu
+function insertControl($scope)
+{
+  $scope.categories = modelList;
+
+  $scope.setItemWidth = function ()
+  {
+    $scope.itemWidth = 9.8;
+    if (window.innerWidth / window.innerHeight > 2 ||
+        window.innerWidth < emUnits(35))
+    {
+      $scope.itemWidth = 7.4;
+    }
+  };
+
+  $scope.setItemWidth();
+
+  $(window).resize(function()
+  {
+    $scope.$apply(function()
+    {
+       $scope.setItemWidth();
+    });
+  });
+
+  $scope.openCategory = function(category)
+  {
+    $('#insert-menu').hide();
+    var categoryID = 'insert-menu-'+category;
+    $('#' + categoryID).show();
+    $('.insert-menu-title')
+        .css('margin-left', document.getElementById(categoryID).scrollLeft);
+  };
+
+  $scope.spawnEntity = function(path)
+  {
+    guiEvents.emit('spawn_entity_start', path);
+  };
+}
+
+function getNameFromPath(path)
+{
+  if(path === 'box')
+  {
+    return 'Box';
+  }
+  if(path === 'sphere')
+  {
+    return 'Sphere';
+  }
+  if(path === 'cylinder')
+  {
+    return 'Cylinder';
+  }
+
+  for(var i = 0; i < modelList.length; ++i)
+  {
+    for(var j = 0; j < modelList[i].models.length; ++j)
+    {
+      if(modelList[i].models[j].modelPath === path)
+      {
+        return modelList[i].models[j].modelTitle;
+      }
+    }
+  }
+}
+
 
 /**
  * Graphical user interface
@@ -366,7 +638,8 @@ GZ3D.Gui = function(scene)
 GZ3D.Gui.prototype.init = function()
 {
   this.spawnState = null;
-  this.longPressState = null;
+  this.longPressContainerState = null;
+  this.longPressFooterState = null;
   this.showNotifications = false;
 
   var that = this;
@@ -389,16 +662,19 @@ GZ3D.Gui.prototype.init = function()
         that.scene.setManipulationMode('view');
         $('#view-mode').prop('checked', true);
         $('input[type="radio"]').checkboxradio('refresh');
+
+        var name = getNameFromPath(entity);
+
         that.spawnState = 'START';
         that.scene.spawnModel.start(entity,function(obj)
             {
               that.emitter.emit('entityCreated', obj, entity);
+
               guiEvents.emit('notification_popup',
-                  entity.charAt(0).toUpperCase()+
-                  entity.substring(1)+' inserted');
+                  name+' inserted');
             });
         guiEvents.emit('notification_popup',
-            'Place '+entity+' at the desired position');
+            'Place '+name+' at the desired position');
       }
   );
 
@@ -506,31 +782,31 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('longpress_start',
+  guiEvents.on('longpress_container_start',
       function (event)
       {
         if (event.originalEvent.touches.length !== 1 ||
             that.scene.modelManipulator.hovered ||
             that.scene.spawnModel.active)
         {
-          guiEvents.emit('longpress_end', event.originalEvent,true);
+          guiEvents.emit('longpress_container_end', event.originalEvent,true);
         }
         else
         {
           that.scene.showRadialMenu(event);
-          that.longPressState = 'START';
+          that.longPressContainerState = 'START';
         }
       }
   );
 
-  guiEvents.on('longpress_end', function(event,cancel)
+  guiEvents.on('longpress_container_end', function(event,cancel)
       {
-        if (that.longPressState !== 'START')
+        if (that.longPressContainerState !== 'START')
         {
-          that.longPressState = 'END';
+          that.longPressContainerState = 'END';
           return;
         }
-        that.longPressState = 'END';
+        that.longPressContainerState = 'END';
         if (that.scene.radialMenu.showing)
         {
           if (cancel)
@@ -561,21 +837,32 @@ GZ3D.Gui.prototype.init = function()
                   $('input[type="radio"]').checkboxradio('refresh');
                   that.scene.attachManipulator(entity,type);
                 }
+                else if (type === 'transparent')
+                {
+                  that.scene.selectedEntity = entity;
+                  guiEvents.emit('set_view_as','transparent');
+                }
+                else if (type === 'wireframe')
+                {
+                  that.scene.selectedEntity = entity;
+                  guiEvents.emit('set_view_as','wireframe');
+                }
+
               });
           }
         }
       }
   );
 
-  guiEvents.on('longpress_move', function(event)
+  guiEvents.on('longpress_container_move', function(event)
       {
         if (event.originalEvent.touches.length !== 1)
         {
-          guiEvents.emit('longpress_end',event.originalEvent,true);
+          guiEvents.emit('longpress_container_end',event.originalEvent,true);
         }
         else
         {
-          if (that.longPressState !== 'START')
+          if (that.longPressContainerState !== 'START')
           {
             return;
           }
@@ -584,6 +871,27 @@ GZ3D.Gui.prototype.init = function()
             that.scene.radialMenu.onLongPressMove(event);
           }
         }
+      }
+  );
+
+  guiEvents.on('longpress_footer_start', function (event, path)
+      {
+        navigator.vibrate(50);
+        guiEvents.emit('spawn_entity_start', path);
+        event.stopPropagation();
+      }
+  );
+
+  guiEvents.on('longpress_footer_end', function(event)
+      {
+        guiEvents.emit('spawn_entity_end');
+      }
+  );
+
+  guiEvents.on('longpress_footer_move', function(event)
+      {
+        guiEvents.emit('spawn_entity_move', event);
+        event.stopPropagation();
       }
   );
 
@@ -606,6 +914,18 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
+  guiEvents.on('pointerOnMenu', function ()
+      {
+        that.scene.pointerOnMenu = true;
+      }
+  );
+
+  guiEvents.on('pointerOffMenu', function ()
+      {
+        that.scene.pointerOnMenu = false;
+      }
+  );
+
   guiEvents.on('right_click', function (event)
       {
         that.scene.onRightClick(event, function(entity)
@@ -613,10 +933,35 @@ GZ3D.Gui.prototype.init = function()
               that.scene.selectedEntity = entity;
               that.scene.showBoundingBox(entity);
               $('.ui-popup').popup('close');
+              if (that.scene.selectedEntity.viewAs === 'transparent')
+              {
+                $('#view-transparent').buttonMarkup({icon: 'check'});
+              }
+              else
+              {
+                $('#view-transparent').buttonMarkup({icon: 'false'});
+              }
+
+              if (that.scene.selectedEntity.viewAs === 'wireframe')
+              {
+                $('#view-wireframe').buttonMarkup({icon: 'check'});
+              }
+              else
+              {
+                $('#view-wireframe').buttonMarkup({icon: 'false'});
+              }
+
               $('#model-popup').popup('open',
-                  {x: event.clientX + emUnits(3),
-                   y: event.clientY + emUnits(1.5)});
+                  {x: event.clientX + emUnits(6),
+                   y: event.clientY + emUnits(3)});
             });
+      }
+  );
+
+  guiEvents.on('set_view_as', function (viewAs)
+      {
+        that.scene.setViewAs(that.scene.selectedEntity, viewAs);
+        that.scene.selectedEntity = null;
       }
   );
 
@@ -1432,7 +1777,7 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
 
         var modelUri = uriPath + '/' + modelName;
         // Use coarse version on touch devices
-        if (modelUri.indexOf('.dae') !== -1 && this.scene.isTouchDevice)
+        if (modelUri.indexOf('.dae') !== -1 && isTouchDevice)
         {
           modelUri = modelUri.substring(0,modelUri.indexOf('.dae'));
 
@@ -3117,16 +3462,23 @@ GZ3D.RadialMenu = function(domElement)
  */
 GZ3D.RadialMenu.prototype.init = function()
 {
+  var scale = 1.2;
   // Distance from starting point
-  this.radius = 70;
+  this.radius = 70*scale;
   // Speed to spread the menu
-  this.speed = 10;
+  this.speed = 10*scale;
   // Icon size
-  this.bgSize = 40;
-  this.bgSizeSelected = 70;
+  this.bgSize = 40*scale;
+  this.bgSizeSelected = 68*scale;
+  this.highlightSize = 45*scale;
   this.iconProportion = 0.6;
   this.bgShape = THREE.ImageUtils.loadTexture(
       'style/images/icon_background.png' );
+  this.layers = {
+    ICON: 0,
+    BACKGROUND : 1,
+    HIGHLIGHT : 2
+  };
 
   // For the opening motion
   this.moving = false;
@@ -3138,6 +3490,7 @@ GZ3D.RadialMenu.prototype.init = function()
   // Colors
   this.selectedColor = new THREE.Color( 0x22aadd );
   this.plainColor = new THREE.Color( 0x333333 );
+  this.highlightColor = new THREE.Color( 0x22aadd );
 
   // Selected item
   this.selected = null;
@@ -3152,6 +3505,8 @@ GZ3D.RadialMenu.prototype.init = function()
   this.addItem('delete','style/images/trash.png');
   this.addItem('translate','style/images/translate.png');
   this.addItem('rotate','style/images/rotate.png');
+  this.addItem('transparent','style/images/transparent.png');
+  this.addItem('wireframe','style/images/wireframe.png');
 
   this.numberOfItems = this.menu.children.length;
   this.offset = this.numberOfItems - 1 - Math.floor(this.numberOfItems/2);
@@ -3169,15 +3524,20 @@ GZ3D.RadialMenu.prototype.hide = function(event,callback)
 {
   for ( var i in this.menu.children )
   {
-    this.menu.children[i].children[0].visible = false;
-    this.menu.children[i].children[1].visible = false;
-    this.menu.children[i].children[1].material.color = this.plainColor;
-    this.menu.children[i].children[0].scale.set(
+    var item = this.menu.children[i];
+
+    item.children[this.layers.ICON].visible = false;
+    item.children[this.layers.ICON].scale.set(
         this.bgSize*this.iconProportion,
         this.bgSize*this.iconProportion, 1.0 );
-    this.menu.children[i].children[1].scale.set(
+
+    item.children[this.layers.BACKGROUND].visible = false;
+    item.children[this.layers.BACKGROUND].material.color = this.plainColor;
+    item.children[this.layers.BACKGROUND].scale.set(
         this.bgSize,
         this.bgSize, 1.0 );
+
+    item.children[this.layers.HIGHLIGHT].visible = false;
   }
 
   this.showing = false;
@@ -3193,7 +3553,6 @@ GZ3D.RadialMenu.prototype.hide = function(event,callback)
     }
   }
   this.selected = null;
-
 };
 
 /**
@@ -3212,12 +3571,29 @@ GZ3D.RadialMenu.prototype.show = function(event,model)
   var pointer = this.getPointer(event);
   this.startPosition = pointer;
 
+  this.menu.getObjectByName('transparent').isHighlighted = false;
+  this.menu.getObjectByName('wireframe').isHighlighted = false;
+  if (this.model.viewAs === 'transparent')
+  {
+    this.menu.getObjectByName('transparent').isHighlighted = true;
+  }
+  if (this.model.viewAs === 'wireframe')
+  {
+    this.menu.getObjectByName('wireframe').isHighlighted = true;
+  }
+
   for ( var i in this.menu.children )
   {
-    this.menu.children[i].children[0].visible = true;
-    this.menu.children[i].children[1].visible = true;
-    this.menu.children[i].children[0].position.set(pointer.x,pointer.y,0);
-    this.menu.children[i].children[1].position.set(pointer.x,pointer.y,0);
+    var item = this.menu.children[i];
+
+    item.children[this.layers.ICON].visible = true;
+    item.children[this.layers.ICON].position.set(pointer.x,pointer.y,0);
+
+    item.children[this.layers.BACKGROUND].visible = true;
+    item.children[this.layers.BACKGROUND].position.set(pointer.x,pointer.y,0);
+
+    item.children[this.layers.HIGHLIGHT].visible = item.isHighlighted;
+    item.children[this.layers.HIGHLIGHT].position.set(pointer.x,pointer.y,0);
   }
 
   this.moving = true;
@@ -3237,14 +3613,16 @@ GZ3D.RadialMenu.prototype.update = function()
   // Move outwards
   for ( var i in this.menu.children )
   {
-    var X = this.menu.children[i].children[0].position.x -
+    var item = this.menu.children[i];
+
+    var X = item.children[this.layers.ICON].position.x -
         this.startPosition.x;
-    var Y = this.menu.children[i].children[0].position.y -
+    var Y = item.children[this.layers.ICON].position.y -
         this.startPosition.y;
 
     var d = Math.sqrt(Math.pow(X,2) + Math.pow(Y,2));
 
-    if ( d !== this.radius)
+    if ( d < this.radius)
     {
       X = X - ( this.speed * Math.sin( ( this.offset - i ) * Math.PI/4 ) );
       Y = Y - ( this.speed * Math.cos( ( this.offset - i ) * Math.PI/4 ) );
@@ -3254,11 +3632,14 @@ GZ3D.RadialMenu.prototype.update = function()
       this.moving = false;
     }
 
-    this.menu.children[i].children[0].position.x = X + this.startPosition.x;
-    this.menu.children[i].children[0].position.y = Y + this.startPosition.y;
-    this.menu.children[i].children[1].position.x = X + this.startPosition.x;
-    this.menu.children[i].children[1].position.y = Y + this.startPosition.y;
+    item.children[this.layers.ICON].position.x = X + this.startPosition.x;
+    item.children[this.layers.ICON].position.y = Y + this.startPosition.y;
 
+    item.children[this.layers.BACKGROUND].position.x = X + this.startPosition.x;
+    item.children[this.layers.BACKGROUND].position.y = Y + this.startPosition.y;
+
+    item.children[this.layers.HIGHLIGHT].position.x = X + this.startPosition.x;
+    item.children[this.layers.HIGHLIGHT].position.y = Y + this.startPosition.y;
   }
 
 };
@@ -3349,24 +3730,29 @@ GZ3D.RadialMenu.prototype.onLongPressMove = function(event)
   var counter = 0;
   for ( var i in this.menu.children )
   {
+    var item = this.menu.children[i];
+
     if (counter === Selected)
     {
-      this.menu.children[i].children[1].material.color = this.selectedColor;
-      this.menu.children[i].children[0].scale.set(
+      item.children[this.layers.ICON].scale.set(
           this.bgSizeSelected*this.iconProportion,
           this.bgSizeSelected*this.iconProportion, 1.0 );
-      this.menu.children[i].children[1].scale.set(
+      this.selected = item.children[this.layers.ICON].name;
+
+      item.children[this.layers.BACKGROUND].material.color =
+          this.selectedColor;
+      item.children[this.layers.BACKGROUND].scale.set(
           this.bgSizeSelected,
           this.bgSizeSelected, 1.0 );
-      this.selected = this.menu.children[i].children[0].name;
     }
     else
     {
-      this.menu.children[i].children[1].material.color = this.plainColor;
-      this.menu.children[i].children[0].scale.set(
+      item.children[this.layers.ICON].scale.set(
           this.bgSize*this.iconProportion,
           this.bgSize*this.iconProportion, 1.0 );
-      this.menu.children[i].children[1].scale.set(
+
+      item.children[this.layers.BACKGROUND].material.color = this.plainColor;
+      item.children[this.layers.BACKGROUND].scale.set(
           this.bgSize, this.bgSize, 1.0 );
     }
     counter++;
@@ -3376,40 +3762,54 @@ GZ3D.RadialMenu.prototype.onLongPressMove = function(event)
 /**
  * Create an item and add it to the menu.
  * Create them in order
- * @param {string} type - delete/translate/rotate
- * @param {string} itemTexture - icon's uri
+ * @param {string} type - delete/translate/rotate/transparent/wireframe
+ * @param {string} iconTexture - icon's uri
  */
-GZ3D.RadialMenu.prototype.addItem = function(type,itemTexture)
+GZ3D.RadialMenu.prototype.addItem = function(type, iconTexture)
 {
-  // Load icon
-  itemTexture = THREE.ImageUtils.loadTexture( itemTexture );
+  // Icon
+  iconTexture = THREE.ImageUtils.loadTexture( iconTexture );
 
-  var itemMaterial = new THREE.SpriteMaterial( { useScreenCoordinates: true,
+  var iconMaterial = new THREE.SpriteMaterial( { useScreenCoordinates: true,
       alignment: THREE.SpriteAlignment.center } );
-  itemMaterial.map = itemTexture;
+  iconMaterial.map = iconTexture;
 
-  var iconItem = new THREE.Sprite( itemMaterial );
-  iconItem.scale.set( this.bgSize*this.iconProportion,
+  var icon = new THREE.Sprite( iconMaterial );
+  icon.scale.set( this.bgSize*this.iconProportion,
       this.bgSize*this.iconProportion, 1.0 );
-  iconItem.name = type;
+  icon.name = type;
 
-  // Icon background
+  // Background
   var bgMaterial = new THREE.SpriteMaterial( {
       map: this.bgShape,
       useScreenCoordinates: true,
       alignment: THREE.SpriteAlignment.center,
       color: this.plainColor } );
 
-  var bgItem = new THREE.Sprite( bgMaterial );
-  bgItem.scale.set( this.bgSize, this.bgSize, 1.0 );
+  var bg = new THREE.Sprite( bgMaterial );
+  bg.scale.set( this.bgSize, this.bgSize, 1.0 );
+
+  // Highlight
+  var highlightMaterial = new THREE.SpriteMaterial({
+      map: this.bgShape,
+      useScreenCoordinates: true,
+      alignment: THREE.SpriteAlignment.center,
+      color: this.highlightColor});
+
+  var highlight = new THREE.Sprite(highlightMaterial);
+  highlight.scale.set(this.highlightSize, this.highlightSize, 1.0);
+  highlight.visible = false;
 
   var item = new THREE.Object3D();
-  item.add(iconItem);
-  item.add(bgItem);
+  // Respect layer order
+  item.add(icon);
+  item.add(bg);
+  item.add(highlight);
+  item.isHighlighted = false;
+  item.name = type;
 
   this.menu.add(item);
 };
-
 
 /**
  * The scene is where everything is placed, from objects, to lights and cameras.
@@ -3429,9 +3829,6 @@ GZ3D.Scene.prototype.init = function()
   this.scene = new THREE.Scene();
   // this.scene.name = this.name;
   this.meshes = {};
-
-  this.isTouchDevice = 'ontouchstart' in window // works on most browsers
-      || 'onmsgesturechange' in window; // works on ie10
 
   // only support one heightmap for now.
   this.heightmap = null;
@@ -3495,7 +3892,7 @@ GZ3D.Scene.prototype.init = function()
       function(event) {that.onPointerUp(event);}, false );
 
   // Handles for translating and rotating objects
-  if (this.isTouchDevice)
+  if (isTouchDevice)
   {
     this.modelManipulator = new GZ3D.Manipulator(this.camera, true,
       this.getDomElement());
@@ -3977,6 +4374,7 @@ GZ3D.Scene.prototype.setWindowSize = function(width, height)
  */
 GZ3D.Scene.prototype.add = function(model)
 {
+  model.viewAs = 'normal';
   this.scene.add(model);
 };
 
@@ -4894,6 +5292,7 @@ GZ3D.Scene.prototype.showBoundingBox = function(model)
     else
     {
       this.hideBoundingBox();
+      this.selectedEntity = model;
     }
   }
   var box = new THREE.Box3();
@@ -4996,6 +5395,129 @@ GZ3D.Scene.prototype.onRightClick = function(event, callback)
 };
 
 /**
+ * Set model's view mode
+ * @param {} model
+ * @param {} viewAs (normal/transparent/wireframe)
+ */
+GZ3D.Scene.prototype.setViewAs = function(model, viewAs)
+{
+  // Toggle
+  if (model.viewAs === viewAs)
+  {
+    viewAs = 'normal';
+  }
+
+  function materialViewAs(material)
+  {
+    if (materials.indexOf(material.id) === -1)
+    {
+      materials.push(material.id);
+      material.transparent = true;
+
+      if (viewAs === 'transparent')
+      {
+        if (material.opacity)
+        {
+          material.originalOpacity = material.opacity;
+        }
+        else
+        {
+          material.originalOpacity = 1.0;
+        }
+        material.opacity = 0.25;
+      }
+      else
+      {
+        material.opacity =
+            material.originalOpacity ?
+            material.originalOpacity : 1.0;
+      }
+
+      if (viewAs === 'wireframe')
+      {
+        material.visible = false;
+      }
+      else
+      {
+        material.visible = true;
+      }
+    }
+  }
+
+  var wireframe;
+  var descendants = [];
+  var materials = [];
+  model.getDescendants(descendants);
+  for (var i = 0; i < descendants.length; ++i)
+  {
+    if (descendants[i].material &&
+        descendants[i].name.indexOf('boundingBox') === -1 &&
+        descendants[i].name.indexOf('COLLISION_VISUAL') === -1 &&
+        !this.getParentByPartialName(descendants[i], 'COLLISION_VISUAL')&&
+        descendants[i].name.indexOf('wireframe') === -1)
+    {
+      if (descendants[i].material instanceof THREE.MeshFaceMaterial)
+      {
+        for (var j = 0; j < descendants[i].material.materials.length; ++j)
+        {
+          materialViewAs(descendants[i].material.materials[j]);
+        }
+      }
+      else
+      {
+        materialViewAs(descendants[i].material);
+      }
+
+      if (viewAs === 'wireframe')
+      {
+        wireframe = descendants[i].getObjectByName('wireframe');
+        if (wireframe)
+        {
+          wireframe.visible = true;
+        }
+        else
+        {
+          var mesh = new THREE.Mesh( descendants[i].geometry,
+              new THREE.MeshBasicMaterial({color: 0xffffff}));
+          wireframe = new THREE.WireframeHelper( mesh );
+          wireframe.name = 'wireframe';
+          descendants[i].add( wireframe );
+        }
+      }
+      else
+      {
+        wireframe = descendants[i].getObjectByName('wireframe');
+        if (wireframe)
+        {
+          wireframe.visible = false;
+        }
+      }
+    }
+  }
+  model.viewAs = viewAs;
+};
+
+/**
+ * Returns the closest parent whose name contains the given string
+ * @param {} object
+ * @param {} name
+ */
+GZ3D.Scene.prototype.getParentByPartialName = function(object, name)
+{
+  var parent = object.parent;
+  while (parent && parent !== this.scene)
+  {
+    if (parent.name.indexOf(name) !== -1)
+    {
+      return parent;
+    }
+
+    parent = parent.parent;
+  }
+  return null;
+};
+
+/**
  * Spawn a model into the scene
  * @constructor
  */
@@ -5053,13 +5575,21 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
     mesh = this.scene.createCylinder(0.5, 1.0);
     this.obj.name = 'unit_cylinder_' + (new Date()).getTime();
   }
+  else
+  {
+    // temp box for now
+    mesh = this.scene.createBox(1, 1, 1);
+    this.obj.name = entity + '_' + (new Date()).getTime();
+
+  }
+
+  this.obj.add(mesh);
 
   // temp model appears within current view
   var pos = new THREE.Vector2(window.window.innerWidth/2, window.innerHeight/2);
   var intersect = new THREE.Vector3();
   this.scene.getRayCastModel(pos, intersect);
 
-  this.obj.add(mesh);
   this.obj.position.x = intersect.x;
   this.obj.position.y = intersect.y;
   this.obj.position.z += 0.5;
