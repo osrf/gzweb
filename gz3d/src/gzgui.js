@@ -166,6 +166,8 @@ $(function()
   // Toggle items
   $('#view-collisions').buttonMarkup({icon: 'false'});
   $('#snap-to-grid').buttonMarkup({icon: 'false'});
+  $('#view-transparent').buttonMarkup({icon: 'false'});
+  $('#view-wireframe').buttonMarkup({icon: 'false'});
   guiEvents.emit('toggle_notifications');
 
   $( '#clock-touch' ).popup('option', 'arrow', 't');
@@ -334,6 +336,16 @@ $(function()
         .css('top', '0em')
         .css('z-index', '1000');
 
+    $('#footer').bind('mousewheel', function(event){
+        event.originalEvent.preventDefault();
+        var id = $('.insert-menus:visible').attr('id');
+
+        var value = document.getElementById(id).scrollLeft;
+        value = value - event.originalEvent.wheelDelta/6;
+
+        $('.insert-menus:visible').scrollLeft(value);
+    });
+
     $('#footer').mouseenter(function(event){
         guiEvents.emit('pointerOnMenu');
     });
@@ -360,23 +372,10 @@ $(function()
           }
         });
 
-    $('#model-popup').bind({popupafterclose: function()
-        {
-          guiEvents.emit('hide_boundingBox');
-        }});
-
     $('#model-popup-screen').mousedown(function(event)
         {
           $('#model-popup').popup('close');
         });
-
-    $('#leftPanel').mouseenter(function(event){
-        guiEvents.emit('pointerOnMenu');
-    });
-
-    $('#leftPanel').mouseleave(function(event){
-        guiEvents.emit('pointerOffMenu');
-    });
   }
 
   $('.header-button')
@@ -530,6 +529,17 @@ $(function()
         }
       });
 
+  // Object menu
+  $( '#view-transparent' ).click(function() {
+    $('#model-popup').popup('close');
+    guiEvents.emit('set_view_as','transparent');
+  });
+
+  $( '#view-wireframe' ).click(function() {
+    $('#model-popup').popup('close');
+    guiEvents.emit('set_view_as','wireframe');
+  });
+
   $( '#delete-entity' ).click(function() {
     guiEvents.emit('delete_entity');
   });
@@ -540,12 +550,25 @@ function insertControl($scope)
 {
   $scope.categories = modelList;
 
-  $scope.itemWidth = 9.8;
-  if (window.innerWidth / window.innerHeight > 2 ||
-      window.innerWidth < emUnits(35))
+  $scope.setItemWidth = function ()
   {
-    $scope.itemWidth = 7.4;
-  }
+    $scope.itemWidth = 9.8;
+    if (window.innerWidth / window.innerHeight > 2 ||
+        window.innerWidth < emUnits(35))
+    {
+      $scope.itemWidth = 7.4;
+    }
+  };
+
+  $scope.setItemWidth();
+
+  $(window).resize(function()
+  {
+    $scope.$apply(function()
+    {
+       $scope.setItemWidth();
+    });
+  });
 
   $scope.openCategory = function(category)
   {
@@ -773,10 +796,6 @@ GZ3D.Gui.prototype.init = function()
 
   guiEvents.on('longpress_container_end', function(event,cancel)
       {
-        if (that.scene.modelManipulator.object === undefined)
-        {
-          that.scene.hideBoundingBox();
-        }
         if (that.longPressContainerState !== 'START')
         {
           that.longPressContainerState = 'END';
@@ -813,6 +832,17 @@ GZ3D.Gui.prototype.init = function()
                   $('input[type="radio"]').checkboxradio('refresh');
                   that.scene.attachManipulator(entity,type);
                 }
+                else if (type === 'transparent')
+                {
+                  that.scene.selectedEntity = entity;
+                  guiEvents.emit('set_view_as','transparent');
+                }
+                else if (type === 'wireframe')
+                {
+                  that.scene.selectedEntity = entity;
+                  guiEvents.emit('set_view_as','wireframe');
+                }
+
               });
           }
         }
@@ -895,28 +925,47 @@ GZ3D.Gui.prototype.init = function()
       {
         that.scene.onRightClick(event, function(entity)
             {
-              that.scene.selectedModel = entity;
+              that.scene.selectedEntity = entity;
               that.scene.showBoundingBox(entity);
               $('.ui-popup').popup('close');
+              if (that.scene.selectedEntity.viewAs === 'transparent')
+              {
+                $('#view-transparent').buttonMarkup({icon: 'check'});
+              }
+              else
+              {
+                $('#view-transparent').buttonMarkup({icon: 'false'});
+              }
+
+              if (that.scene.selectedEntity.viewAs === 'wireframe')
+              {
+                $('#view-wireframe').buttonMarkup({icon: 'check'});
+              }
+              else
+              {
+                $('#view-wireframe').buttonMarkup({icon: 'false'});
+              }
+
               $('#model-popup').popup('open',
-                  {x: event.clientX + emUnits(3),
-                   y: event.clientY + emUnits(1.5)});
+                  {x: event.clientX + emUnits(6),
+                   y: event.clientY + emUnits(3)});
             });
+      }
+  );
+
+  guiEvents.on('set_view_as', function (viewAs)
+      {
+        that.scene.setViewAs(that.scene.selectedEntity, viewAs);
+        that.scene.selectedEntity = null;
       }
   );
 
   guiEvents.on('delete_entity', function ()
       {
-        that.emitter.emit('deleteEntity',that.scene.selectedModel);
+        that.emitter.emit('deleteEntity',that.scene.selectedEntity);
         guiEvents.emit('notification_popup','Model deleted');
         $('#model-popup').popup('close');
-        that.scene.selectedModel = null;
-      }
-  );
-
-  guiEvents.on('hide_boundingBox', function ()
-      {
-        that.scene.hideBoundingBox();
+        that.scene.selectedEntity = null;
       }
   );
 

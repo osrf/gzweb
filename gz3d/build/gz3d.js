@@ -171,6 +171,8 @@ $(function()
   // Toggle items
   $('#view-collisions').buttonMarkup({icon: 'false'});
   $('#snap-to-grid').buttonMarkup({icon: 'false'});
+  $('#view-transparent').buttonMarkup({icon: 'false'});
+  $('#view-wireframe').buttonMarkup({icon: 'false'});
   guiEvents.emit('toggle_notifications');
 
   $( '#clock-touch' ).popup('option', 'arrow', 't');
@@ -339,6 +341,16 @@ $(function()
         .css('top', '0em')
         .css('z-index', '1000');
 
+    $('#footer').bind('mousewheel', function(event){
+        event.originalEvent.preventDefault();
+        var id = $('.insert-menus:visible').attr('id');
+
+        var value = document.getElementById(id).scrollLeft;
+        value = value - event.originalEvent.wheelDelta/6;
+
+        $('.insert-menus:visible').scrollLeft(value);
+    });
+
     $('#footer').mouseenter(function(event){
         guiEvents.emit('pointerOnMenu');
     });
@@ -365,23 +377,10 @@ $(function()
           }
         });
 
-    $('#model-popup').bind({popupafterclose: function()
-        {
-          guiEvents.emit('hide_boundingBox');
-        }});
-
     $('#model-popup-screen').mousedown(function(event)
         {
           $('#model-popup').popup('close');
         });
-
-    $('#leftPanel').mouseenter(function(event){
-        guiEvents.emit('pointerOnMenu');
-    });
-
-    $('#leftPanel').mouseleave(function(event){
-        guiEvents.emit('pointerOffMenu');
-    });
   }
 
   $('.header-button')
@@ -535,6 +534,17 @@ $(function()
         }
       });
 
+  // Object menu
+  $( '#view-transparent' ).click(function() {
+    $('#model-popup').popup('close');
+    guiEvents.emit('set_view_as','transparent');
+  });
+
+  $( '#view-wireframe' ).click(function() {
+    $('#model-popup').popup('close');
+    guiEvents.emit('set_view_as','wireframe');
+  });
+
   $( '#delete-entity' ).click(function() {
     guiEvents.emit('delete_entity');
   });
@@ -545,12 +555,25 @@ function insertControl($scope)
 {
   $scope.categories = modelList;
 
-  $scope.itemWidth = 9.8;
-  if (window.innerWidth / window.innerHeight > 2 ||
-      window.innerWidth < emUnits(35))
+  $scope.setItemWidth = function ()
   {
-    $scope.itemWidth = 7.4;
-  }
+    $scope.itemWidth = 9.8;
+    if (window.innerWidth / window.innerHeight > 2 ||
+        window.innerWidth < emUnits(35))
+    {
+      $scope.itemWidth = 7.4;
+    }
+  };
+
+  $scope.setItemWidth();
+
+  $(window).resize(function()
+  {
+    $scope.$apply(function()
+    {
+       $scope.setItemWidth();
+    });
+  });
 
   $scope.openCategory = function(category)
   {
@@ -778,10 +801,6 @@ GZ3D.Gui.prototype.init = function()
 
   guiEvents.on('longpress_container_end', function(event,cancel)
       {
-        if (that.scene.modelManipulator.object === undefined)
-        {
-          that.scene.hideBoundingBox();
-        }
         if (that.longPressContainerState !== 'START')
         {
           that.longPressContainerState = 'END';
@@ -818,6 +837,17 @@ GZ3D.Gui.prototype.init = function()
                   $('input[type="radio"]').checkboxradio('refresh');
                   that.scene.attachManipulator(entity,type);
                 }
+                else if (type === 'transparent')
+                {
+                  that.scene.selectedEntity = entity;
+                  guiEvents.emit('set_view_as','transparent');
+                }
+                else if (type === 'wireframe')
+                {
+                  that.scene.selectedEntity = entity;
+                  guiEvents.emit('set_view_as','wireframe');
+                }
+
               });
           }
         }
@@ -900,28 +930,47 @@ GZ3D.Gui.prototype.init = function()
       {
         that.scene.onRightClick(event, function(entity)
             {
-              that.scene.selectedModel = entity;
+              that.scene.selectedEntity = entity;
               that.scene.showBoundingBox(entity);
               $('.ui-popup').popup('close');
+              if (that.scene.selectedEntity.viewAs === 'transparent')
+              {
+                $('#view-transparent').buttonMarkup({icon: 'check'});
+              }
+              else
+              {
+                $('#view-transparent').buttonMarkup({icon: 'false'});
+              }
+
+              if (that.scene.selectedEntity.viewAs === 'wireframe')
+              {
+                $('#view-wireframe').buttonMarkup({icon: 'check'});
+              }
+              else
+              {
+                $('#view-wireframe').buttonMarkup({icon: 'false'});
+              }
+
               $('#model-popup').popup('open',
-                  {x: event.clientX + emUnits(3),
-                   y: event.clientY + emUnits(1.5)});
+                  {x: event.clientX + emUnits(6),
+                   y: event.clientY + emUnits(3)});
             });
+      }
+  );
+
+  guiEvents.on('set_view_as', function (viewAs)
+      {
+        that.scene.setViewAs(that.scene.selectedEntity, viewAs);
+        that.scene.selectedEntity = null;
       }
   );
 
   guiEvents.on('delete_entity', function ()
       {
-        that.emitter.emit('deleteEntity',that.scene.selectedModel);
+        that.emitter.emit('deleteEntity',that.scene.selectedEntity);
         guiEvents.emit('notification_popup','Model deleted');
         $('#model-popup').popup('close');
-        that.scene.selectedModel = null;
-      }
-  );
-
-  guiEvents.on('hide_boundingBox', function ()
-      {
-        that.scene.hideBoundingBox();
+        that.scene.selectedEntity = null;
       }
   );
 
@@ -3647,24 +3696,29 @@ GZ3D.RadialMenu.prototype.onLongPressMove = function(event)
   var counter = 0;
   for ( var i in this.menu.children )
   {
+    var item = this.menu.children[i];
+
     if (counter === Selected)
     {
-      this.menu.children[i].children[1].material.color = this.selectedColor;
-      this.menu.children[i].children[0].scale.set(
+      item.children[this.layers.ICON].scale.set(
           this.bgSizeSelected*this.iconProportion,
           this.bgSizeSelected*this.iconProportion, 1.0 );
-      this.menu.children[i].children[1].scale.set(
+      this.selected = item.children[this.layers.ICON].name;
+
+      item.children[this.layers.BACKGROUND].material.color =
+          this.selectedColor;
+      item.children[this.layers.BACKGROUND].scale.set(
           this.bgSizeSelected,
           this.bgSizeSelected, 1.0 );
-      this.selected = this.menu.children[i].children[0].name;
     }
     else
     {
-      this.menu.children[i].children[1].material.color = this.plainColor;
-      this.menu.children[i].children[0].scale.set(
+      item.children[this.layers.ICON].scale.set(
           this.bgSize*this.iconProportion,
           this.bgSize*this.iconProportion, 1.0 );
-      this.menu.children[i].children[1].scale.set(
+
+      item.children[this.layers.BACKGROUND].material.color = this.plainColor;
+      item.children[this.layers.BACKGROUND].scale.set(
           this.bgSize, this.bgSize, 1.0 );
     }
     counter++;
@@ -3674,36 +3728,51 @@ GZ3D.RadialMenu.prototype.onLongPressMove = function(event)
 /**
  * Create an item and add it to the menu.
  * Create them in order
- * @param {string} type - delete/translate/rotate
- * @param {string} itemTexture - icon's uri
+ * @param {string} type - delete/translate/rotate/transparent/wireframe
+ * @param {string} iconTexture - icon's uri
  */
-GZ3D.RadialMenu.prototype.addItem = function(type,itemTexture)
+GZ3D.RadialMenu.prototype.addItem = function(type, iconTexture)
 {
-  // Load icon
-  itemTexture = THREE.ImageUtils.loadTexture( itemTexture );
+  // Icon
+  iconTexture = THREE.ImageUtils.loadTexture( iconTexture );
 
-  var itemMaterial = new THREE.SpriteMaterial( { useScreenCoordinates: true,
+  var iconMaterial = new THREE.SpriteMaterial( { useScreenCoordinates: true,
       alignment: THREE.SpriteAlignment.center } );
-  itemMaterial.map = itemTexture;
+  iconMaterial.map = iconTexture;
 
-  var iconItem = new THREE.Sprite( itemMaterial );
-  iconItem.scale.set( this.bgSize*this.iconProportion,
+  var icon = new THREE.Sprite( iconMaterial );
+  icon.scale.set( this.bgSize*this.iconProportion,
       this.bgSize*this.iconProportion, 1.0 );
-  iconItem.name = type;
+  icon.name = type;
 
-  // Icon background
+  // Background
   var bgMaterial = new THREE.SpriteMaterial( {
       map: this.bgShape,
       useScreenCoordinates: true,
       alignment: THREE.SpriteAlignment.center,
       color: this.plainColor } );
 
-  var bgItem = new THREE.Sprite( bgMaterial );
-  bgItem.scale.set( this.bgSize, this.bgSize, 1.0 );
+  var bg = new THREE.Sprite( bgMaterial );
+  bg.scale.set( this.bgSize, this.bgSize, 1.0 );
+
+  // Highlight
+  var highlightMaterial = new THREE.SpriteMaterial({
+      map: this.bgShape,
+      useScreenCoordinates: true,
+      alignment: THREE.SpriteAlignment.center,
+      color: this.highlightColor});
+
+  var highlight = new THREE.Sprite(highlightMaterial);
+  highlight.scale.set(this.highlightSize, this.highlightSize, 1.0);
+  highlight.visible = false;
 
   var item = new THREE.Object3D();
-  item.add(iconItem);
-  item.add(bgItem);
+  // Respect layer order
+  item.add(icon);
+  item.add(bg);
+  item.add(highlight);
+  item.isHighlighted = false;
+  item.name = type;
 
   this.menu.add(item);
 };
@@ -3732,8 +3801,6 @@ GZ3D.Scene.prototype.init = function()
   this.heightmap = null;
 
   this.selectedEntity = null;
-  this.mouseEntity = null;
-  this.selectedModel = null;
 
   this.manipulationMode = 'view';
   this.pointerOnMenu = false;
@@ -3924,11 +3991,6 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
     this.controls.target = intersect;
   }
 
-  // View mode
-  if (this.manipulationMode === 'view')
-  {
-    return;
-  }
 
   // Manipulation modes
   // Model found
@@ -3956,7 +4018,6 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
     {
       this.modelManipulator.update();
       this.modelManipulator.object.updateMatrixWorld();
-      this.mouseEntity = this.selectedEntity;
     }
     // Sky
     else
@@ -3978,9 +4039,6 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
 GZ3D.Scene.prototype.onPointerUp = function(event)
 {
   event.preventDefault();
-
-  // The mouse is not holding anything
-  this.mouseEntity = null;
 
   // Clicks (<150ms) outside any models trigger view mode
   var millisecs = new Date().getTime();
@@ -4234,6 +4292,7 @@ GZ3D.Scene.prototype.setWindowSize = function(width, height)
  */
 GZ3D.Scene.prototype.add = function(model)
 {
+  model.viewAs = 'normal';
   this.scene.add(model);
 };
 
@@ -4265,7 +4324,7 @@ GZ3D.Scene.prototype.getByName = function(name)
 GZ3D.Scene.prototype.updatePose = function(model, position, orientation)
 {
   if (this.modelManipulator && this.modelManipulator.object &&
-      this.modelManipulator.hovered && this.mouseEntity)
+      this.modelManipulator.hovered)
   {
     return;
   }
@@ -5025,13 +5084,19 @@ GZ3D.Scene.prototype.setManipulationMode = function(mode)
       this.emitter.emit('poseChanged', this.modelManipulator.object);
     }
     this.hideBoundingBox();
+
     this.modelManipulator.detach();
     this.scene.remove(this.modelManipulator.gizmo);
   }
   else
   {
     this.modelManipulator.mode = this.manipulationMode;
-    this.modelManipulator.setMode( this.modelManipulator.mode );
+    this.modelManipulator.setMode(this.modelManipulator.mode);
+    // model was selected during view mode
+    if (this.selectedEntity)
+    {
+      this.attachManipulator(this.selectedEntity, mode);
+    }
   }
 
 };
@@ -5085,14 +5150,16 @@ GZ3D.Scene.prototype.attachManipulator = function(model,mode)
     this.hideBoundingBox();
   }
 
-  this.modelManipulator.attach(model);
-  this.modelManipulator.mode = mode;
-  this.modelManipulator.setMode( this.modelManipulator.mode );
-
   this.selectedEntity = model;
-  this.mouseEntity = this.selectedEntity;
-  this.scene.add(this.modelManipulator.gizmo);
   this.showBoundingBox(model);
+
+  if (mode !== 'view')
+  {
+    this.modelManipulator.attach(model);
+    this.modelManipulator.mode = mode;
+    this.modelManipulator.setMode( this.modelManipulator.mode );
+    this.scene.add(this.modelManipulator.gizmo);
+  }
 };
 
 /**
@@ -5221,6 +5288,7 @@ GZ3D.Scene.prototype.hideBoundingBox = function()
     this.boundingBox.parent.remove(this.boundingBox);
   }
   this.boundingBox.visible = false;
+  this.selectedEntity = null;
 };
 
 /**
@@ -5241,6 +5309,129 @@ GZ3D.Scene.prototype.onRightClick = function(event, callback)
       callback(model);
     }
   }
+};
+
+/**
+ * Set model's view mode
+ * @param {} model
+ * @param {} viewAs (normal/transparent/wireframe)
+ */
+GZ3D.Scene.prototype.setViewAs = function(model, viewAs)
+{
+  // Toggle
+  if (model.viewAs === viewAs)
+  {
+    viewAs = 'normal';
+  }
+
+  function materialViewAs(material)
+  {
+    if (materials.indexOf(material.id) === -1)
+    {
+      materials.push(material.id);
+      material.transparent = true;
+
+      if (viewAs === 'transparent')
+      {
+        if (material.opacity)
+        {
+          material.originalOpacity = material.opacity;
+        }
+        else
+        {
+          material.originalOpacity = 1.0;
+        }
+        material.opacity = 0.25;
+      }
+      else
+      {
+        material.opacity =
+            material.originalOpacity ?
+            material.originalOpacity : 1.0;
+      }
+
+      if (viewAs === 'wireframe')
+      {
+        material.visible = false;
+      }
+      else
+      {
+        material.visible = true;
+      }
+    }
+  }
+
+  var wireframe;
+  var descendants = [];
+  var materials = [];
+  model.getDescendants(descendants);
+  for (var i = 0; i < descendants.length; ++i)
+  {
+    if (descendants[i].material &&
+        descendants[i].name.indexOf('boundingBox') === -1 &&
+        descendants[i].name.indexOf('COLLISION_VISUAL') === -1 &&
+        !this.getParentByPartialName(descendants[i], 'COLLISION_VISUAL')&&
+        descendants[i].name.indexOf('wireframe') === -1)
+    {
+      if (descendants[i].material instanceof THREE.MeshFaceMaterial)
+      {
+        for (var j = 0; j < descendants[i].material.materials.length; ++j)
+        {
+          materialViewAs(descendants[i].material.materials[j]);
+        }
+      }
+      else
+      {
+        materialViewAs(descendants[i].material);
+      }
+
+      if (viewAs === 'wireframe')
+      {
+        wireframe = descendants[i].getObjectByName('wireframe');
+        if (wireframe)
+        {
+          wireframe.visible = true;
+        }
+        else
+        {
+          var mesh = new THREE.Mesh( descendants[i].geometry,
+              new THREE.MeshBasicMaterial({color: 0xffffff}));
+          wireframe = new THREE.WireframeHelper( mesh );
+          wireframe.name = 'wireframe';
+          descendants[i].add( wireframe );
+        }
+      }
+      else
+      {
+        wireframe = descendants[i].getObjectByName('wireframe');
+        if (wireframe)
+        {
+          wireframe.visible = false;
+        }
+      }
+    }
+  }
+  model.viewAs = viewAs;
+};
+
+/**
+ * Returns the closest parent whose name contains the given string
+ * @param {} object
+ * @param {} name
+ */
+GZ3D.Scene.prototype.getParentByPartialName = function(object, name)
+{
+  var parent = object.parent;
+  while (parent && parent !== this.scene)
+  {
+    if (parent.name.indexOf(name) !== -1)
+    {
+      return parent;
+    }
+
+    parent = parent.parent;
+  }
+  return null;
 };
 
 GZ3D.SdfParser = function(scene, gui, gziface)

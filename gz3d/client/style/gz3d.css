@@ -1,0 +1,146 @@
+.ui-content
+{
+  overflow:hidden;
+}
+#container
+{
+  padding: 0px;
+  position : absolute;
+  top: 0px;
+  bottom: 0px;
+  right: 0px;
+  left: 0px;
+}
+@media (min-width:35em)
+{
+  /* disable "dismiss" on wide viewports */
+  .ui-panel-dismiss
+  {
+    display: none;
+  }
+}
+.collapsible_header
+{
+  font-size: 15px;
+}
+.collapsible_item
+{
+  font-size: 13px;
+}
+.ui-popup-screen
+{
+  z-index: 999;
+}
+#footer
+{
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+}
+.insert-menus
+{
+  display:none;
+  background-color:#2a2a2a;
+  padding:0;
+  z-index:1000;
+  width:100%;
+  overflow:auto;
+}
+.insert-menus ul
+{
+  list-style:none;
+  background-color:#2a2a2a;
+  height:9em;
+  padding:0em;
+  padding-left:0.5em;
+  margin:0em;
+  clear:both;
+}
+.insert-menus li
+{
+  float:left;
+}
+.insert-menu-title
+{
+  width:100%;
+}
+.insert-menu-title h3
+{
+  margin:0.1em;
+  float:left;
+  color: white;
+}
+.insert-menu-close
+{
+  float:right;
+}
+.insert-menu-close img
+{
+  height:1.2em;
+  margin:0.1em;
+}
+.insert-menu-item
+{
+  width:7em;
+  height:6.5em
+}
+.insert-menu-item img
+{
+  height:5em;
+  max-width:6em;
+}
+.insert-menu-item h1
+{
+  font-size:1em;
+  margin:0em;
+  width:100%;
+}
+.fade
+{
+  position: relative;
+  height: 1em;
+}
+.fade:after
+{
+  content: "";
+  text-align: right;
+  position: absolute;
+  bottom: -0.2em;
+  width: 100%;
+  height: 1.2em;
+  background: linear-gradient(to right, rgba(51, 51, 51, 0) 40%, rgba(51, 51, 51, 1) 60%);
+}
+.insert-menu-back img
+{
+  height:1.4em;
+  margin:0.1em;
+  float:left;
+}
+/* smaller insert menu for narrow screens */
+@media (min-aspect-ratio: 2/1), (max-width: 35em)
+{
+  .insert-menu-item
+  {
+    width:4.6em;
+    height:4.3em
+  }
+  .insert-menu-item img
+  {
+    height:3.3em;
+    max-width:4em;
+  }
+  .insert-menu-item h1
+  {
+    font-size:0.7em;
+  }
+  .insert-menus ul
+  {
+    height:6em;
+  }
+  .fade:after
+  {
+    bottom: 0em;
+    height: 1em;
+    background: linear-gradient(to right, rgba(51, 51, 51, 0) 50%, rgba(51, 51, 51, 1) 70%);
+  }
+}
