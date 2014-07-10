@@ -4267,6 +4267,7 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
 
       if (model.name === 'grid')
       {
+        point = objects[i].point;
         model = null;
         continue;
       }
