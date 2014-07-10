@@ -271,7 +271,7 @@ $(function()
 
     $('#play-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '31.2em')
+        .css('right', '32.2em')
         .css('top', '0em')
         .css('z-index', '1000');
 
@@ -280,7 +280,7 @@ $(function()
         .css('right', '19.4em')
         .css('top', '0.5em')
         .css('z-index', '100')
-        .css('width', '11em')
+        .css('width', '12em')
         .css('height', '2.5em')
         .css('background-color', '#333333')
         .css('padding', '3px')
