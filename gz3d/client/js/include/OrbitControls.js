@@ -39,6 +39,11 @@ THREE.OrbitControls = function ( object, domElement ) {
     // "target" sets the location of focus, where the control orbits around
     // and where it pans with respect to.
     this.target = new THREE.Vector3();
+    this.targetIndicator = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 20),
+        new THREE.MeshPhongMaterial({emissive: 0x333300,
+        ambient: 0xffff00,
+        shading: THREE.SmoothShading}));
+    this.targetIndicator.visible = false;
     // center is old, deprecated; use "target" instead
     this.center = this.target;
     this.object.lookAt( this.target );
@@ -100,6 +105,8 @@ THREE.OrbitControls = function ( object, domElement ) {
 
     var STATE = { NONE : -1, ROTATE : 0, DOLLY : 1, PAN : 2, TOUCH_ROTATE : 3, TOUCH_DOLLY_PAN : 4 };
     var state = STATE.NONE;
+
+    var scrollTime = null;
 
     // events
 
@@ -351,6 +358,22 @@ THREE.OrbitControls = function ( object, domElement ) {
 
         }
 
+        var millisecs = new Date().getTime();
+        if (scrollTime && millisecs - scrollTime > 400)
+        {
+          scope.targetIndicator.visible = false;
+          scrollTime = null;
+        }
+
+        if (scope.targetIndicator.visible)
+        {
+          var scaleVec = new THREE.Vector3();
+          scaleVec.copy(object.position).sub(scope.targetIndicator.position);
+          var indicatorScale = scaleVec.length()/100;
+          scope.targetIndicator.scale.set(
+              indicatorScale, indicatorScale, indicatorScale);
+        }
+
     };
 
 
@@ -399,6 +422,9 @@ THREE.OrbitControls = function ( object, domElement ) {
       panStart.set( event.clientX, event.clientY );
 
     }
+        scope.targetIndicator.position.set(scope.target.x,scope.target.y,
+            scope.target.z);
+        scope.targetIndicator.visible = true;
 
         // Greggman fix: https://github.com/greggman/three.js/commit/fde9f9917d6d8381f06bf22cdff766029d1761be
         scope.domElement.addEventListener( 'mousemove', onMouseMove, false );
@@ -479,12 +505,18 @@ THREE.OrbitControls = function ( object, domElement ) {
         scope.domElement.removeEventListener( 'mouseup', onMouseUp, false );
 
         state = STATE.NONE;
+        scope.targetIndicator.visible = false;
 
     }
 
     function onMouseWheel( event ) {
 
         if ( scope.enabled === false || scope.noZoom === true ) return;
+
+        scope.targetIndicator.position.set(scope.target.x,scope.target.y,
+            scope.target.z);
+        scope.targetIndicator.visible = true;
+        scrollTime = new Date().getTime();
 
         var delta = 0;
 
@@ -552,6 +584,10 @@ THREE.OrbitControls = function ( object, domElement ) {
     function touchstart( event ) {
 
         if ( scope.enabled === false ) { return; }
+
+        scope.targetIndicator.position.set(scope.target.x,scope.target.y,
+            scope.target.z);
+        scope.targetIndicator.visible = true;
 
         switch ( event.touches.length ) {
 
@@ -694,6 +730,8 @@ THREE.OrbitControls = function ( object, domElement ) {
         state = STATE.NONE;
         scope.noPan = false;
         scope.noZoom = false;
+
+        scope.targetIndicator.visible = false;
     }
 
     this.domElement.addEventListener( 'contextmenu', function ( event ) { event.preventDefault(); }, false );
