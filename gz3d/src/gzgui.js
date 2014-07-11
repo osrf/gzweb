@@ -367,6 +367,20 @@ $(function()
         }
       });
 
+  $('#treeTab').click(function()
+      {
+        if($('#worldTree').is(':visible'))
+        {
+          $('#worldTree').hide();
+          $('#treeTab').css('left', '0');
+        }
+        else
+        {
+          $('#worldTree').show();
+          $('#treeTab').css('left', '15em');
+        }
+      });
+
   $('.panelTitle').click(function()
       {
         $('.leftPanels').hide();
@@ -552,6 +566,15 @@ function getNameFromPath(path)
       }
     }
   }
+}
+
+// World tree list
+function treeControl($scope)
+{
+  $scope.updateModelStats = function()
+  {
+    $scope.models = modelStats;
+  };
 }
 
 
@@ -960,4 +983,23 @@ GZ3D.Gui.prototype.setRealTime = function(realTime)
 GZ3D.Gui.prototype.setSimTime = function(simTime)
 {
   $('.sim-time-value').text(simTime);
+};
+
+/**
+ * Update scene stats on property panel
+ * @param {} stats
+ */
+GZ3D.Gui.prototype.setSceneStats = function(stats)
+{
+  $('#sceneName').text('Name: '+stats.name);
+};
+
+var modelStats = [];
+/**
+ * Update model stats on property panel
+ * @param {} stats
+ */
+GZ3D.Gui.prototype.setModelStats = function(stats)
+{
+  modelStats.push(stats.name);
 };

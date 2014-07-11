@@ -217,12 +217,36 @@
             </ul>
           </div>
         </div>
+        <!-- world tree -->
+        <div id="worldTree" class="leftPanels ui-overlay-shadow" ng-controller="treeControl">
+          <div class="panelTitle">
+            <h3>World Tree</h3>
+            <img src="style/images/close.png">
+          </div>
+          <div class="panelContent">
+            <ul>
+              <div data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
+                <h3><span class="collapsible_header">Scene</span></h3>
+                <ul data-role="listview">
+                  <div id="sceneName">Name: aaa</div>
+                </ul>
+              </div>
+              <div data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
+                <h3><span class="collapsible_header" ng-mousedown="updateModelStats()">Models</span></h3>
+                <ul data-role="listview">
+                  <div ng-repeat="model in models">Name: {{model}}</div>
+                </ul>
+              </div>
+            </ul>
+          </div>
+        </div>
       </div>
       <!-- left panel -->
 
       <!-- tabs -->
       <a href="#" id="menuTab" class="tab"><img style="height:1.45em" src="style/images/bars.png" title="Menu"></a>
       <a href="#" id="insertTab" class="tab"><img style="height:1.45em" src="style/images/insert.png" title="Insert"></a>
+      <a href="#" id="treeTab" class="tab"><img style="height:1.45em" src="style/images/tree.png" title="World Tree"></a>
       <!-- tabs -->
 
       <!-- header -->
