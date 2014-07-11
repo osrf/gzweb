@@ -136,14 +136,14 @@
                   <h3><span class="collapsible_header">Options</span></h3>
                   <ul data-role="listview">
                     <li id="snap-to-grid" data-icon="false" data-iconpos="right" style="border: none !important;"><a href="#"><span class="collapsible_item">Snap to Grid</span></a></li>
-                    <li id='toggle-notifications' data-icon="false" data-iconpos="right" style="border: none !important;"><a href="#"><span class="collapsible_item">Show Notifications</span></a></li>
+                    <li id='toggle-notifications' data-icon="false" data-iconpos="right" style="border: none !important;"><a href="#"><span class="collapsible_item">Notifications</span></a></li>
                   </ul>
               </div>
             </ul>
           </div>
         </div>
         <!-- insert menu -->
-        <div id="insertMenu" class="leftPanels ui-overlay-shadow">
+        <div id="insertMenu" class="leftPanels insertMenus ui-overlay-shadow">
           <div class="panelTitle">
             <h3>Insert</h3>
             <img src="style/images/close.png">
@@ -165,7 +165,7 @@
             </ul>
           </div>
         </div>
-        <div id="insertMenu-simple_shapes" class="leftPanels ui-overlay-shadow insertCategory">
+        <div id="insertMenu-simple_shapes" class="leftPanels insertMenus insertCategory ui-overlay-shadow">
           <div class="panelTitle">
             <h3>Insert</h3>
             <img src="style/images/close.png">
@@ -197,7 +197,7 @@
             </ul>
           </div>
         </div>
-        <div ng-repeat="category in categories" id="insertMenu-{{category.path}}" class="leftPanels ui-overlay-shadow insertCategory">
+        <div ng-repeat="category in categories" id="insertMenu-{{category.path}}" class="leftPanels insertMenus insertCategory ui-overlay-shadow">
           <div class="panelTitle">
             <h3>Insert</h3>
             <img src="style/images/close.png">

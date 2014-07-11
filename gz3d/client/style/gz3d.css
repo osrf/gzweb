@@ -1,3 +1,6 @@
+body {
+  font-size-adjust:0.5;
+}
 .ui-content
 {
   overflow:hidden;
@@ -51,11 +54,11 @@
 }
 .tab:nth-of-type(1)
 {
-  top: 0em;
+  top: 1.8em;
 }
 .tab:nth-of-type(2)
 {
-  top: 6em;
+  top: 7.8em;
 }
 #leftPanel
 {
@@ -90,12 +93,12 @@
   padding-left:1em;
   margin:0em;
 }
-.leftPanels li
+#mainMenu li
 {
   left:-1em;
   padding:0;
   margin:0;
-  width:13em;
+  width:15em;
 }
 .panelTitle
 {
@@ -148,13 +151,30 @@
   margin:0em;
   width:100%;
 }
-/* smaller insert menu for narrow screens
+.insertMenus li
+{
+  width:0em;
+}
+/* smaller menu for narrow screens*/
 @media (max-width: 35em)
 {
+  .leftPanels
+  {
+    width:10.5em;
+  }
+  .leftPanels ul
+  {
+    width:8.5em;
+  }
+  #mainMenu li
+  {
+    width:10.5em;
+  }
   .insertMenuItem
   {
     width:4.6em;
-    height:4.3em
+    height:4.3em;
+    margin-left:0.5em;
   }
   .insertMenuItem img
   {
@@ -165,11 +185,5 @@
   {
     font-size:0.7em;
   }
-  .fade:after
-  {
-    bottom: 0em;
-    height: 1em;
-    background: linear-gradient(to right, rgba(51, 51, 51, 0) 50%, rgba(51, 51, 51, 1) 70%);
-  }
 }
-*/
+
