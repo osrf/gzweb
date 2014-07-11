@@ -152,13 +152,13 @@
             <ul>
               <li>
                 <a href="#" ng-click="openCategory('simple_shapes')" data-role="button" class="insertMenuItem" title="Shapes">
-                  <div class="fade"><h1>Shapes</h1></div>
+                  Shapes<br>
                   <img src="style/images/box.png">
                 </a>
               </li>
               <li ng-repeat="category in categories">
                 <a href="#" ng-click="openCategory(category.path)" data-role="button" class="insertMenuItem" title="{{category.title}}">
-                  <div class="fade"><h1>{{category.title}}</h1></div>
+                  {{category.title}}<br>
                   <img src="/assets/{{category.examplePath}}/thumbnails/0.png">
                 </a>
               </li>
@@ -178,19 +178,19 @@
             <ul>
               <li>
                 <a href="#" id="insert-entity-box" ng-mousedown="spawnEntity('box')" data-role="button" class="insertMenuItem" title="Box">
-                  <div class="fade"><h1>Box</h1></div>
+                  Box<br>
                   <img src="style/images/box.png">
                 </a>
               </li>
               <li>
                 <a href="#" id="insert-entity-sphere" ng-mousedown="spawnEntity('sphere')" data-role="button" class="insertMenuItem" title="Sphere">
-                  <div class="fade"><h1>Sphere</h1></div>
+                  Sphere<br>
                   <img src="style/images/sphere.png">
                 </a>
               </li>
               <li>
                 <a href="#" id="insert-entity-cylinder" ng-mousedown="spawnEntity('cylinder')" data-role="button" class="insertMenuItem" title="Cylinder">
-                  <div class="fade"><h1>Cylinder</h1></div>
+                  Cylinder<br>
                   <img src="style/images/cylinder.png">
                 </a>
               </li>
@@ -210,7 +210,7 @@
             <ul>
               <li ng-repeat="model in category.models">
                 <a href="#" id="insert-entity-{{model.modelPath}}" ng-mousedown="spawnEntity(model.modelPath)" data-role="button" class="insertMenuItem" title="{{model.modelTitle}}">
-                  <div class="fade"><h1>{{model.modelTitle}}</h1></div>
+                  {{model.modelTitle}}<br>
                   <img src="/assets/{{model.modelPath}}/thumbnails/0.png">
                 </a>
               </li>
