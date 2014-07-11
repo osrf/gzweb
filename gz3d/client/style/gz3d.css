@@ -49,11 +49,11 @@
   left: -1.7em;
   top: 1.2em;
 }
-#menuTab
+.tab:nth-of-type(1)
 {
   top: 0em;
 }
-#insertTab
+.tab:nth-of-type(2)
 {
   top: 6em;
 }
