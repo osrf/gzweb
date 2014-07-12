@@ -617,8 +617,6 @@ GZ3D.Gui.prototype.init = function()
             });
         guiEvents.emit('notification_popup',
             'Place '+name+' at the desired position');
-
-        guiEvents.emit('closeLeftPanel');
       }
   );
 
@@ -940,17 +938,6 @@ GZ3D.Gui.prototype.init = function()
         }
       }
   );
-/* Not working for tap -> touchdown -> drag for some reason
-   guiEvents.on('closeLeftPanel', function ()
-      {
-        if (isTouchDevice)
-        {
-          $('.leftPanels').hide();
-          $('.tab').css('left', '0');
-        }
-      }
-   );
-*/
 };
 
 /**
