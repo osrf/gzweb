@@ -294,13 +294,13 @@ $(function()
 
     $('#play-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '44.6em')
+        .css('right', '41.2em')
         .css('top', '0em')
         .css('z-index', '1000');
 
     $('#clock-mouse')
         .css('position', 'absolute')
-        .css('right', '31.6em')
+        .css('right', '29.0em')
         .css('top', '0.5em')
         .css('z-index', '100')
         .css('width', '11em')
@@ -311,37 +311,37 @@ $(function()
 
     $('#mode-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '28em')
+        .css('right', '24.4em')
         .css('top', '0.15em')
         .css('z-index', '1000');
 
     $('#box-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '18.5em')
+        .css('right', '15.5em')
         .css('top', '0em')
         .css('z-index', '1000');
 
     $('#sphere-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '15.5em')
+        .css('right', '12.5em')
         .css('top', '0em')
         .css('z-index', '1000');
 
     $('#cylinder-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '12.5em')
+        .css('right', '9.5em')
         .css('top', '0em')
         .css('z-index', '1000');
 
     $('#pointlight-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '9.5em')
+        .css('right', '6.5em')
         .css('top', '0em')
         .css('z-index', '1000');
 
     $('#spotlight-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '6.5em')
+        .css('right', '3.5em')
         .css('top', '0em')
         .css('z-index', '1000');
 
@@ -422,20 +422,12 @@ $(function()
         guiEvents.emit('manipulation_mode', 'rotate');
       });
 
-  $('#box-header').click(function()
+  $('[id^="header-insert-"]').click(function()
       {
+        var entity = $(this).attr('id');
+        entity = entity.substring(14); // after 'header-insert-'
         guiEvents.emit('closeTabs', false);
-        guiEvents.emit('spawn_entity_start', 'box');
-      });
-  $('#sphere-header').click(function()
-      {
-        guiEvents.emit('closeTabs', false);
-        guiEvents.emit('spawn_entity_start', 'sphere');
-      });
-  $('#cylinder-header').click(function()
-      {
-        guiEvents.emit('closeTabs', false);
-        guiEvents.emit('spawn_entity_start', 'cylinder');
+        guiEvents.emit('spawn_entity_start', entity);
       });
 
   $('#play').click(function()
