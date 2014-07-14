@@ -1,6 +1,11 @@
+/* general */
+body
+{
+  font-size-adjust: 0.5;
+}
 .ui-content
 {
-  overflow:hidden;
+  overflow: hidden;
 }
 #container
 {
@@ -11,27 +16,11 @@
   right: 0px;
   left: 0px;
 }
-@media (min-width:35em)
-{
-  /* disable "dismiss" on wide viewports */
-  .ui-panel-dismiss
-  {
-    display: none;
-  }
-}
-.collapsible_header
-{
-  font-size: 1.2em;
-}
-.collapsible_item
-{
-  font-size: 1em;
-  color: #bdbdbd;
-}
 .ui-popup-screen
 {
   z-index: 999;
 }
+/* tabs */
 .tab
 {
   width: 0;
@@ -39,7 +28,7 @@
   border-left: 2em solid #2a2a2a;
   border-top: 1em solid transparent;
   border-bottom: 1em solid transparent;
-  z-index:1001;
+  z-index: 1001;
   position: absolute;
   left: 0em;
 }
@@ -49,24 +38,32 @@
   left: -1.7em;
   top: 1.2em;
 }
-#menuTab
+.tab:nth-of-type(1)
 {
-  top: 0em;
+  top: 1.8em;
 }
-#insertTab
+.tab:nth-of-type(2)
 {
-  top: 6em;
+  top: 7.8em;
 }
-#treeTab
+.tab:nth-of-type(3)
 {
-  top: 12em;
+  top: 13.8em;
 }
+/* panel */
 #leftPanel
 {
   height: 100%;
   position: absolute;
   left: 0;
-  z-index:1002;
+  z-index: 1002;
+}
+.leftPanels
+{
+  display: none;
+  background-color: #2a2a2a;
+  height: 100%;
+  width: 15em;
 }
 .panelContent
 {
@@ -78,117 +75,119 @@
   height: calc(100% - 1.8em - 1.5em);
   overflow:auto;
 }
-.leftPanels
-{
-  display:none;
-  background-color:#2a2a2a;
-  height:100%;
-  width:15em;
-}
-.leftPanels ul
-{
-  list-style:none;
-  background-color:#2a2a2a;
-  width:13em;
-  padding:0em;
-  padding-left:1em;
-  margin:0em;
-}
-.leftPanels li
-{
-  left:-1em;
-  padding:0;
-  margin:0;
-  width:13em;
-}
 .panelTitle
 {
-  width:100%;
-  height:1.8em;
-  background-color:#1d1d1d;
+  width: 100%;
+  height: 1.8em;
+  background-color: #1d1d1d;
 }
 .panelTitle h3
 {
-  margin:0.1em;
-  float:left;
+  margin: 0.1em;
+  float: left;
 }
 .panelTitle img
 {
-  height:1.2em;
-  margin:0.1em;
-  float:right;
+  height: 1.2em;
+  margin: 0.1em;
+  float: right;
 }
 .panelSubTitle
 {
-  width:100%;
-  height:1.5em;
-  background-color:#333333;
+  width: 100%;
+  height: 1.5em;
+  background-color: #333333;
 }
 .panelSubTitle h4
 {
-  margin:0.1em;
-  float:left;
+  margin: 0.1em;
+  float: left;
 }
 .panelSubTitle img
 {
-  height:1.2em;
-  margin:0.1em;
-  float:right;
+  height: 1.2em;
+  margin: 0.1em;
+  float: right;
+}
+.leftPanels ul
+{
+  list-style: none;
+  width: 13em;
+  padding: 0em;
+  padding-left: 1em;
+  margin: 0em;
+}
+/* main menu*/
+#mainMenu li
+{
+  left: -1em;
+  padding: 0;
+  margin: 0;
+  width: 15em;
+}
+.collapsible_header
+{
+  font-size: 1.2em;
+}
+.collapsible_item
+{
+  font-size: 0.9em;
+  color: #bdbdbd;
+}
+/* insert menu */
+.insertMenus li
+{
+  width: 0em;
 }
 .insertMenuItem
 {
-  width:7em;
-  height:6.5em;
-  margin-left:1.5em;
+  width: 7em;
+  height: 6.5em;
+  margin-left: 1.5em;
 }
 .insertMenuItem img
 {
-  height:5em;
-  max-width:6em;
+  height: 5em;
+  max-width: 6em;
 }
 .insertMenuItem h1
 {
-  font-size:1em;
-  margin:0em;
-  width:100%;
-}
-.fade
-{
-  position: relative;
-  height: 1em;
-}
-.fade:after
-{
-  content: "";
-  text-align: right;
-  position: absolute;
-  bottom: -0.2em;
+  font-size: 1em;
+  margin: 0em;
   width: 100%;
-  height: 1.2em;
-  background: linear-gradient(to right, rgba(51, 51, 51, 0) 40%, rgba(51, 51, 51, 1) 60%);
 }
-/* smaller insert menu for narrow screens
+/* smaller panel for narrow screens*/
 @media (max-width: 35em)
 {
+  /* panel */
+  .leftPanels
+  {
+    width: 10.5em;
+  }
+  .leftPanels ul
+  {
+    width: 8.5em;
+  }
+  /* main menu */
+  #mainMenu li
+  {
+    width: 10.5em;
+  }
+  /* insert menu */
   .insertMenuItem
   {
-    width:4.6em;
-    height:4.3em
+    width: 4.6em;
+    height: 4.3em;
+    margin-left: 0.5em;
   }
   .insertMenuItem img
   {
-    height:3.3em;
-    max-width:4em;
+    height: 3.3em;
+    max-width: 4em;
   }
   .insertMenuItem h1
   {
-    font-size:0.7em;
-  }
-  .fade:after
-  {
-    bottom: 0em;
-    height: 1em;
-    background: linear-gradient(to right, rgba(51, 51, 51, 0) 50%, rgba(51, 51, 51, 1) 70%);
+    font-size: 0.7em;
   }
 }
-*/
+

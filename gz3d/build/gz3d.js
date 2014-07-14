@@ -13,6 +13,14 @@ var emUnits = function(value)
     };
 
 var isTouchDevice = 'ontouchstart' in window || 'onmsgesturechange' in window;
+var isWideScreen = function()
+    {
+      return $(window).width() / emUnits(1) > 35;
+    };
+var isTallScreen = function()
+    {
+      return $(window).height() / emUnits(1) > 35;
+    };
 
 var modelList =
   [
@@ -178,6 +186,16 @@ $(function()
   $( '#clock-touch' ).popup('option', 'arrow', 't');
   $('#notification-popup-screen').remove();
 
+  if (isWideScreen())
+  {
+    guiEvents.emit('openTab','mainMenu');
+  }
+
+  if (isTallScreen())
+  {
+    $('.collapsible_header').click();
+  }
+
   // Clicks/taps// Touch devices
   if (isTouchDevice)
   {
@@ -276,7 +294,7 @@ $(function()
 
     $('#play-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '32.2em')
+        .css('right', '31.2em')
         .css('top', '0em')
         .css('z-index', '1000');
 
@@ -285,7 +303,7 @@ $(function()
         .css('right', '19.4em')
         .css('top', '0.5em')
         .css('z-index', '100')
-        .css('width', '12em')
+        .css('width', '11em')
         .css('height', '2.5em')
         .css('background-color', '#333333')
         .css('padding', '3px')
@@ -344,54 +362,28 @@ $(function()
       .css('height', '1.45em')
       .css('padding', '0.65em');
 
-  $('#menuTab').click(function()
+  $('.tab').click(function()
       {
-        if($('#mainMenu').is(':visible'))
-        {
-          $('#mainMenu').hide();
-          $('#menuTab').css('left', '0');
-        }
-        else
-        {
-          $('#mainMenu').show();
-          $('#menuTab').css('left', '15em');
-        }
-      });
+        var idTab = $(this).attr('id');
+        var idMenu = idTab.substring(0,idTab.indexOf('Tab'));
 
-  $('#insertTab').click(function()
-      {
-        if($('[id^="insertMenu"]').is(':visible'))
+        if($('#'+idMenu).is(':visible')  ||
+           $('[id^="'+idMenu+'-"]').is(':visible'))
         {
-          $('[id^="insertMenu"]').hide();
-          $('#insertTab').css('left', '0');
+          guiEvents.emit('closeTabs', true);
         }
         else
         {
-          $('#insertMenu').show();
-          $('#insertTab').css('left', '15em');
-        }
-      });
-
-  $('#treeTab').click(function()
-      {
-        if($('#worldTree').is(':visible'))
-        {
-          $('#worldTree').hide();
-          $('#treeTab').css('left', '0');
-        }
-        else
-        {
-          $('#worldTree').show();
-          $('#treeTab').css('left', '15em');
+          guiEvents.emit('openTab',idMenu);
         }
       });
 
   $('.panelTitle').click(function()
       {
-        $('.leftPanels').hide();
-        $('.tab').css('left', '0');
+        guiEvents.emit('closeTabs', true);
       });
 
+  // Only for insert for now
   $('.panelSubTitle').click(function()
       {
         $('.insertCategory').hide();
@@ -412,17 +404,17 @@ $(function()
       });
   $('#box-header').click(function()
       {
-        guiEvents.emit('close_panel');
+        guiEvents.emit('closeTabs', false);
         guiEvents.emit('spawn_entity_start', 'box');
       });
   $('#sphere-header').click(function()
       {
-        guiEvents.emit('close_panel');
+        guiEvents.emit('closeTabs', false);
         guiEvents.emit('spawn_entity_start', 'sphere');
       });
   $('#cylinder-header').click(function()
       {
-        guiEvents.emit('close_panel');
+        guiEvents.emit('closeTabs', false);
         guiEvents.emit('spawn_entity_start', 'cylinder');
       });
   $('#play').click(function()
@@ -457,30 +449,30 @@ $(function()
   $('#reset-model').click(function()
       {
         guiEvents.emit('model_reset');
-        guiEvents.emit('close_panel');
+        guiEvents.emit('closeTabs', false);
       });
   $('#reset-world').click(function()
       {
         guiEvents.emit('world_reset');
-        guiEvents.emit('close_panel');
+        guiEvents.emit('closeTabs', false);
       });
   $('#reset-view').click(function()
       {
         guiEvents.emit('view_reset');
-        guiEvents.emit('close_panel');
+        guiEvents.emit('closeTabs', false);
       });
   $('#view-collisions').click(function()
       {
         guiEvents.emit('show_collision');
-        guiEvents.emit('close_panel');
+        guiEvents.emit('closeTabs', false);
       });
   $( '#snap-to-grid' ).click(function() {
     guiEvents.emit('snap_to_grid');
-    guiEvents.emit('close_panel');
+    guiEvents.emit('closeTabs', false);
   });
   $( '#toggle-notifications' ).click(function() {
     guiEvents.emit('toggle_notifications');
-    guiEvents.emit('close_panel');
+    guiEvents.emit('closeTabs', false);
   });
 
   // Disable Esc key to close panel
@@ -506,32 +498,27 @@ $(function()
   $( '#delete-entity' ).click(function() {
     guiEvents.emit('delete_entity');
   });
+
+  $(window).resize(function()
+  {
+    if ($('.leftPanels').is(':visible'))
+    {
+      if (isWideScreen())
+      {
+        $('.tab').css('left', '15em');
+      }
+      else
+      {
+        $('.tab').css('left', '10.5em');
+      }
+    }
+  });
 });
 
 // Insert menu
 function insertControl($scope)
 {
   $scope.categories = modelList;
-
-  $scope.setItemWidth = function ()
-  {
-    $scope.itemWidth = 9.8;
-    if (window.innerWidth / window.innerHeight > 2 ||
-        window.innerWidth < emUnits(35))
-    {
-      $scope.itemWidth = 7.4;
-    }
-  };
-
-  $scope.setItemWidth();
-
-  $(window).resize(function()
-  {
-    $scope.$apply(function()
-    {
-       $scope.setItemWidth();
-    });
-  });
 
   $scope.openCategory = function(category)
   {
@@ -639,8 +626,6 @@ GZ3D.Gui.prototype.init = function()
             });
         guiEvents.emit('notification_popup',
             'Place '+name+' at the desired position');
-
-        guiEvents.emit('closeLeftPanel');
       }
   );
 
@@ -735,15 +720,6 @@ GZ3D.Gui.prototype.init = function()
         else
         {
             $('#toggle-notifications').buttonMarkup({ icon: 'check' });
-        }
-      }
-  );
-
-  guiEvents.on('close_panel', function()
-      {
-        if ($(window).width() / emUnits(1)< 35)
-        {
-          $('.leftPanels').hide();
         }
       }
   );
@@ -939,18 +915,38 @@ GZ3D.Gui.prototype.init = function()
       {
         that.scene.pointerOnMenu = false;
       }
-   );
-/* Not working for tap -> touchdown -> drag for some reason
-   guiEvents.on('closeLeftPanel', function ()
+  );
+
+  guiEvents.on('openTab', function (id)
       {
-        if (isTouchDevice)
+        $('.leftPanels').hide();
+        $('#'+id).show();
+
+        if (isWideScreen())
+        {
+          $('.tab').css('left', '15em');
+        }
+        else
+        {
+          $('.tab').css('left', '10.5em');
+        }
+
+        $('.tab').css('border-left', '2em solid #2a2a2a');
+        $('#'+id+'Tab').css('border-left', '2em solid #aaaaaa');
+      }
+  );
+
+  guiEvents.on('closeTabs', function (force)
+      {
+        // Close for narrow viewports, force to always close
+        if (force || !isWideScreen())
         {
           $('.leftPanels').hide();
-          $('.tab').css('left', '0');
+          $('.tab').css('left', '0em');
+          $('.tab').css('border-left', '2em solid #2a2a2a');
         }
       }
-   );
-*/
+  );
 };
 
 /**
