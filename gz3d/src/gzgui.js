@@ -994,8 +994,64 @@ var modelStats = [];
 /**
  * Update model stats on property panel
  * @param {} stats
+ * @param {} action: update / delete
  */
-GZ3D.Gui.prototype.setModelStats = function(stats)
+GZ3D.Gui.prototype.setModelStats = function(stats, action)
 {
-  modelStats.push(stats.name);
+  var name = stats.name;
+
+  if (action === 'update')
+  {
+    var thumbnail = this.findThumbnail(name);
+    if (modelStats.indexOf(name) <= 0)
+    {
+      modelStats.push({name: name, thumbnail: thumbnail});
+    }
+  }
+  else if (action === 'delete')
+  {
+    for (var i = 0; i < modelStats.length; ++i)
+    {
+      if (modelStats[i].name === name)
+      {
+        modelStats.splice(i, 1);
+      }
+    }
+  }
+
+  // Click triggers updateModelStats, there must be a better way to do it
+  $('#modelsTree').click();
+  $('#modelsTree').click();
+};
+
+/**
+ * Find thumbnail
+ * @param {} instanceName
+ */
+GZ3D.Gui.prototype.findThumbnail = function(instanceName)
+{
+  for(var i = 0; i < modelList.length; ++i)
+  {
+    for(var j = 0; j < modelList[i].models.length; ++j)
+    {
+      var path = modelList[i].models[j].modelPath;
+      if(instanceName.indexOf(path) >= 0)
+      {
+        return '/assets/'+path+'/thumbnails/0.png';
+      }
+    }
+  }
+  if(instanceName.indexOf('box') >= 0)
+  {
+    return 'style/images/box.png';
+  }
+  if(instanceName.indexOf('sphere') >= 0)
+  {
+    return 'style/images/sphere.png';
+  }
+  if(instanceName.indexOf('cylinder') >= 0)
+  {
+    return 'style/images/cylinder.png';
+  }
+  return 'style/images/box.png';
 };

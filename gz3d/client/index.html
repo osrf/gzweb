@@ -232,9 +232,12 @@
                 </ul>
               </div>
               <div data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
-                <h3><span class="collapsible_header" ng-mousedown="updateModelStats()">Models</span></h3>
+                <h3><span id="modelsTree" class="collapsible_header" ng-click="updateModelStats()">Models</span></h3>
                 <ul data-role="listview">
-                  <div ng-repeat="model in models">Name: {{model}}</div>
+                  <div class="treeElement" ng-repeat="model in models" title="{{model.name}}">
+                    <div class="treeElementImg"><img src="{{model.thumbnail}}"></div>
+                    <div class="treeElementTitle">{{model.name}}</div><br>
+                  </div>
                 </ul>
               </div>
             </ul>

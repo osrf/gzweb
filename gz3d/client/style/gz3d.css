@@ -156,6 +156,34 @@ body
   margin: 0em;
   width: 100%;
 }
+/* world tree */
+.treeElement
+{
+  font-size: 0.8em;
+  line-height: 1em;
+  padding: 0;
+  width: 100%;
+  clear: both;
+}
+.treeElementImg
+{
+  height: 1em;
+  width: 3em;
+  text-align: center;
+  float: left;
+}
+.treeElementImg img
+{
+  height: 1em;
+}
+.treeElementTitle
+{
+  height: 1em;
+  width: 13em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  float: left;
+}
 /* smaller panel for narrow screens*/
 @media (max-width: 35em)
 {

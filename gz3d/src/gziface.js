@@ -107,9 +107,10 @@ GZ3D.GZIface.prototype.onConnected = function()
       var model = message.model[j];
       var modelObj = this.createModelFromMsg(model);
       this.scene.add(modelObj);
+      this.gui.setModelStats(model, 'update');
     }
 
-    this.updateSceneStatsFromMsg(message);
+    this.gui.setSceneStats(message);
 
     this.sceneTopic.unsubscribe();
   };
@@ -149,6 +150,7 @@ GZ3D.GZIface.prototype.onConnected = function()
       if (entity)
       {
         this.scene.remove(entity);
+        this.gui.setModelStats({name: message.data}, 'delete');
       }
     }
   };
@@ -194,7 +196,7 @@ GZ3D.GZIface.prototype.onConnected = function()
         i++;
       }
     }
-    this.updateModelStatsFromMsg(message);
+    this.gui.setModelStats(message, 'update');
   };
 
   modelInfoTopic.subscribe(modelUpdate.bind(this));
@@ -508,16 +510,6 @@ GZ3D.GZIface.prototype.updateStatsGuiFromMsg = function(stats)
 
   this.gui.setRealTime(realTimeValue);
   this.gui.setSimTime(simTimeValue);
-};
-
-GZ3D.GZIface.prototype.updateSceneStatsFromMsg = function(stats)
-{
-  this.gui.setSceneStats(stats);
-};
-
-GZ3D.GZIface.prototype.updateModelStatsFromMsg = function(stats)
-{
-  this.gui.setModelStats(stats);
 };
 
 GZ3D.GZIface.prototype.createModelFromMsg = function(model)
