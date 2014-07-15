@@ -1005,6 +1005,7 @@ GZ3D.Gui.prototype.init = function()
         {
           if (modelStats[i].name === object)
           {
+            $('#modelsTree').collapsible({collapsed: false});
             modelStats[i].selected = 'selectedTreeItem';
           }
           else
@@ -1016,6 +1017,7 @@ GZ3D.Gui.prototype.init = function()
         {
           if (lightStats[i].name === object)
           {
+            $('#lightsTree').collapsible({collapsed: false});
             lightStats[i].selected = 'selectedTreeItem';
           }
           else
@@ -1043,7 +1045,8 @@ GZ3D.Gui.prototype.init = function()
 
   guiEvents.on('selectEntity', function (name)
       {
-        that.scene.selectEntity(name);
+        var object = that.scene.getByName(name);
+        that.scene.selectEntity(object);
       }
   );
 };

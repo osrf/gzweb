@@ -1964,11 +1964,6 @@ GZ3D.Scene.prototype.selectEntity = function(object)
 {
   if (object)
   {
-    if (typeof object === 'string')
-    {
-      object = this.scene.getObjectByName(object);
-    }
-
     if (object !== this.selectedEntity)
     {
       this.showBoundingBox(object);
