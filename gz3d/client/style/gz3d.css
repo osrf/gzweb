@@ -243,5 +243,14 @@ body
     height:2.7em;
     margin-top:0.4em;
   }
+  /* world tree */
+  .treeItem
+  {
+    width: 10.5em;
+  }
+  .treeItemTitle
+  {
+    width: 6.5em;
+  }
 }
 

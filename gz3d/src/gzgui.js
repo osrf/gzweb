@@ -997,7 +997,10 @@ GZ3D.Gui.prototype.init = function()
 
   guiEvents.on('setTreeSelected', function (object)
       {
-        guiEvents.emit('openTab', 'treeMenu');
+        if (isWideScreen())
+        {
+          guiEvents.emit('openTab', 'treeMenu');
+        }
         for (var i = 0; i < modelStats.length; ++i)
         {
           if (modelStats[i].name === object)
