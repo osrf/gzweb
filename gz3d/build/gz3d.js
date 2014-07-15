@@ -597,9 +597,10 @@ function getNameFromPath(path)
 // World tree list
 function treeControl($scope)
 {
-  //$scope.updateModelStats = function()
+  //$scope.updateStats = function()
   //{
     $scope.models = modelStats;
+    $scope.lights = lightStats;
   //};
 
   $scope.selectEntity = function (name)
@@ -1013,7 +1014,18 @@ GZ3D.Gui.prototype.init = function()
             modelStats[i].selected = 'unselectedTreeItem';
           }
         }
-        that.updateModelStats();
+        for (i = 0; i < lightStats.length; ++i)
+        {
+          if (lightStats[i].name === object)
+          {
+            lightStats[i].selected = 'selectedTreeItem';
+          }
+          else
+          {
+            lightStats[i].selected = 'unselectedTreeItem';
+          }
+        }
+        that.updateStats();
       }
   );
 
@@ -1023,7 +1035,11 @@ GZ3D.Gui.prototype.init = function()
         {
           modelStats[i].selected = 'unselectedTreeItem';
         }
-        that.updateModelStats();
+        for (i = 0; i < lightStats.length; ++i)
+        {
+          lightStats[i].selected = 'unselectedTreeItem';
+        }
+        that.updateStats();
       }
   );
 
@@ -1092,7 +1108,7 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
 
   if (action === 'update')
   {
-    var thumbnail = this.findThumbnail(name);
+    var thumbnail = this.findModelThumbnail(name);
 
     var model = $.grep(modelStats, function(e)
         {
@@ -1120,14 +1136,70 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
     }
   }
 
-  this.updateModelStats();
+  this.updateStats();
+};
+
+var lightStats = [];
+/**
+ * Update light stats on property panel
+ * @param {} stats
+ * @param {} action: update / delete
+ */
+GZ3D.Gui.prototype.setLightStats = function(stats, action)
+{
+  var name = stats.name;
+
+  if (action === 'update')
+  {
+    var type = stats.type;
+
+    var thumbnail;
+    switch(type)
+    {
+      case 2:
+          thumbnail = 'style/images/spotlight.png';
+          break;
+      case 3:
+          thumbnail = 'style/images/directionallight.png';
+          break;
+      default:
+          thumbnail = 'style/images/pointlight.png';
+    }
+
+    var light = $.grep(lightStats, function(e)
+        {
+          return e.name === name;
+        });
+
+    if (light.length === 0)
+    {
+      lightStats.push(
+          {
+            name: name,
+            thumbnail: thumbnail,
+            selected: 'unselectedTreeItem'
+          });
+    }
+  }
+  else if (action === 'delete')
+  {
+    for (var i = 0; i < lightStats.length; ++i)
+    {
+      if (lightStats[i].name === name)
+      {
+        lightStats.splice(i, 1);
+      }
+    }
+  }
+
+  this.updateStats();
 };
 
 /**
  * Find thumbnail
  * @param {} instanceName
  */
-GZ3D.Gui.prototype.findThumbnail = function(instanceName)
+GZ3D.Gui.prototype.findModelThumbnail = function(instanceName)
 {
   for(var i = 0; i < modelList.length; ++i)
   {
@@ -1158,9 +1230,10 @@ GZ3D.Gui.prototype.findThumbnail = function(instanceName)
 /**
  * Update model stats
  */
-GZ3D.Gui.prototype.updateModelStats = function()
+GZ3D.Gui.prototype.updateStats = function()
 {
-  // Click triggers updateModelStats, there must be a better way to do it
+  // Click triggers updateStats, there must be a better way to do it
+  // actually even without defining $scope.updateStats it works :O
   $('#clickToUpdate').click();
 };
 
@@ -1266,6 +1339,7 @@ GZ3D.GZIface.prototype.onConnected = function()
       var light = message.light[i];
       var lightObj = this.createLightFromMsg(light);
       this.scene.add(lightObj);
+      this.gui.setLightStats(light, 'update');
     }
 
     for (var j = 0; j < message.model.length; ++j)
@@ -1315,8 +1389,15 @@ GZ3D.GZIface.prototype.onConnected = function()
       var entity = this.scene.getByName(message.data);
       if (entity)
       {
+        if (entity.children[0] instanceof THREE.Light)
+        {
+          this.gui.setLightStats({name: message.data}, 'delete');
+        }
+        else
+        {
+          this.gui.setModelStats({name: message.data}, 'delete');
+        }
         this.scene.remove(entity);
-        this.gui.setModelStats({name: message.data}, 'delete');
       }
     }
   };
@@ -1422,16 +1503,17 @@ GZ3D.GZIface.prototype.onConnected = function()
     messageType : 'light',
   });
 
-  var ligthtUpdate = function(message)
+  var lightUpdate = function(message)
   {
     if (!this.scene.getByName(message.name))
     {
       var lightObj = this.createLightFromMsg(message);
       this.scene.add(lightObj);
+      this.gui.setLightStats(message, 'update');
     }
   };
 
-  lightTopic.subscribe(ligthtUpdate.bind(this));
+  lightTopic.subscribe(lightUpdate.bind(this));
 
 
   // heightmap

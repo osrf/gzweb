@@ -100,6 +100,7 @@ GZ3D.GZIface.prototype.onConnected = function()
       var light = message.light[i];
       var lightObj = this.createLightFromMsg(light);
       this.scene.add(lightObj);
+      this.gui.setLightStats(light, 'update');
     }
 
     for (var j = 0; j < message.model.length; ++j)
@@ -149,8 +150,15 @@ GZ3D.GZIface.prototype.onConnected = function()
       var entity = this.scene.getByName(message.data);
       if (entity)
       {
+        if (entity.children[0] instanceof THREE.Light)
+        {
+          this.gui.setLightStats({name: message.data}, 'delete');
+        }
+        else
+        {
+          this.gui.setModelStats({name: message.data}, 'delete');
+        }
         this.scene.remove(entity);
-        this.gui.setModelStats({name: message.data}, 'delete');
       }
     }
   };
@@ -256,16 +264,17 @@ GZ3D.GZIface.prototype.onConnected = function()
     messageType : 'light',
   });
 
-  var ligthtUpdate = function(message)
+  var lightUpdate = function(message)
   {
     if (!this.scene.getByName(message.name))
     {
       var lightObj = this.createLightFromMsg(message);
       this.scene.add(lightObj);
+      this.gui.setLightStats(message, 'update');
     }
   };
 
-  lightTopic.subscribe(ligthtUpdate.bind(this));
+  lightTopic.subscribe(lightUpdate.bind(this));
 
 
   // heightmap
