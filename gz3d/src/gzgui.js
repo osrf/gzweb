@@ -191,7 +191,7 @@ $(function()
     $('.collapsible_header').click();
   }
 
-  // Clicks/taps// Touch devices
+  // Touch devices
   if (isTouchDevice)
   {
     $('#play-header-fieldset')
@@ -222,6 +222,15 @@ $(function()
         .css('visibility','hidden');
 
     $('#cylinder-header-fieldset')
+        .css('visibility','hidden');
+
+    $('#pointlight-header-fieldset')
+        .css('visibility','hidden');
+
+    $('#spotlight-header-fieldset')
+        .css('visibility','hidden');
+
+    $('#directionallight-header-fieldset')
         .css('visibility','hidden');
 
     $('#leftPanel').touchstart(function(event){
@@ -289,13 +298,13 @@ $(function()
 
     $('#play-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '31.2em')
+        .css('right', '41.2em')
         .css('top', '0em')
         .css('z-index', '1000');
 
     $('#clock-mouse')
         .css('position', 'absolute')
-        .css('right', '19.4em')
+        .css('right', '29.0em')
         .css('top', '0.5em')
         .css('z-index', '100')
         .css('width', '11em')
@@ -306,23 +315,41 @@ $(function()
 
     $('#mode-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '12.4em')
+        .css('right', '24.4em')
         .css('top', '0.15em')
         .css('z-index', '1000');
 
     $('#box-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '6.5em')
+        .css('right', '15.5em')
         .css('top', '0em')
         .css('z-index', '1000');
 
     $('#sphere-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '3.5em')
+        .css('right', '12.5em')
         .css('top', '0em')
         .css('z-index', '1000');
 
     $('#cylinder-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '9.5em')
+        .css('top', '0em')
+        .css('z-index', '1000');
+
+    $('#pointlight-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '6.5em')
+        .css('top', '0em')
+        .css('z-index', '1000');
+
+    $('#spotlight-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '3.5em')
+        .css('top', '0em')
+        .css('z-index', '1000');
+
+    $('#directionallight-header-fieldset')
         .css('position', 'absolute')
         .css('right', '0.5em')
         .css('top', '0em')
@@ -355,6 +382,7 @@ $(function()
   $('.header-button')
       .css('float', 'left')
       .css('height', '1.45em')
+      .css('width', '1.45em')
       .css('padding', '0.65em');
 
   $('.tab').click(function()
@@ -397,21 +425,15 @@ $(function()
       {
         guiEvents.emit('manipulation_mode', 'rotate');
       });
-  $('#box-header').click(function()
+
+  $('[id^="header-insert-"]').click(function()
       {
+        var entity = $(this).attr('id');
+        entity = entity.substring(14); // after 'header-insert-'
         guiEvents.emit('closeTabs', false);
-        guiEvents.emit('spawn_entity_start', 'box');
+        guiEvents.emit('spawn_entity_start', entity);
       });
-  $('#sphere-header').click(function()
-      {
-        guiEvents.emit('closeTabs', false);
-        guiEvents.emit('spawn_entity_start', 'sphere');
-      });
-  $('#cylinder-header').click(function()
-      {
-        guiEvents.emit('closeTabs', false);
-        guiEvents.emit('spawn_entity_start', 'cylinder');
-      });
+
   $('#play').click(function()
       {
         if ( $('#playText').html().indexOf('Play') !== -1 )
@@ -541,6 +563,18 @@ function getNameFromPath(path)
   if(path === 'cylinder')
   {
     return 'Cylinder';
+  }
+  if(path === 'pointlight')
+  {
+    return 'Point Light';
+  }
+  if(path === 'spotlight')
+  {
+    return 'Spot Light';
+  }
+  if(path === 'directionallight')
+  {
+    return 'Directional Light';
   }
 
   for(var i = 0; i < modelList.length; ++i)
@@ -863,27 +897,40 @@ GZ3D.Gui.prototype.init = function()
             {
               that.scene.selectEntity(entity);
               $('.ui-popup').popup('close');
-              if (that.scene.selectedEntity.viewAs === 'transparent')
-              {
-                $('#view-transparent').buttonMarkup({icon: 'check'});
-              }
-              else
-              {
-                $('#view-transparent').buttonMarkup({icon: 'false'});
-              }
 
-              if (that.scene.selectedEntity.viewAs === 'wireframe')
+              if (entity.children[0] instanceof THREE.Light)
               {
-                $('#view-wireframe').buttonMarkup({icon: 'check'});
-              }
-              else
-              {
-                $('#view-wireframe').buttonMarkup({icon: 'false'});
-              }
-
-              $('#model-popup').popup('open',
+                $('#view-transparent').css('visibility','collapse');
+                $('#view-wireframe').css('visibility','collapse');
+                $('#model-popup').popup('open',
                   {x: event.clientX + emUnits(6),
-                   y: event.clientY + emUnits(3)});
+                   y: event.clientY + emUnits(-5)});
+              }
+              else
+              {
+                if (that.scene.selectedEntity.viewAs === 'transparent')
+                {
+                  $('#view-transparent').buttonMarkup({icon: 'check'});
+                }
+                else
+                {
+                  $('#view-transparent').buttonMarkup({icon: 'false'});
+                }
+
+                if (that.scene.selectedEntity.viewAs === 'wireframe')
+                {
+                  $('#view-wireframe').buttonMarkup({icon: 'check'});
+                }
+                else
+                {
+                  $('#view-wireframe').buttonMarkup({icon: 'false'});
+                }
+                $('#view-transparent').css('visibility','visible');
+                $('#view-wireframe').css('visibility','visible');
+                $('#model-popup').popup('open',
+                  {x: event.clientX + emUnits(6),
+                   y: event.clientY + emUnits(0)});
+              }
             });
       }
   );

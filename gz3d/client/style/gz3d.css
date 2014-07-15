@@ -156,6 +156,11 @@ body
   margin: 0em;
   width: 100%;
 }
+.insertMenuItemLight img
+{
+  height:4em;
+  margin-top:0.6em;
+}
 /* world tree */
 .treeItem
 {
@@ -193,6 +198,13 @@ body
 {
   background-color: #aaaaaa;
 }
+/* model popup */
+#model-popup
+{
+  width: 12em;
+  height: 0em;
+  border: none;
+}
 /* smaller panel for narrow screens*/
 @media (max-width: 35em)
 {
@@ -225,6 +237,11 @@ body
   .insertMenuItem h1
   {
     font-size: 0.7em;
+  }
+  .insertMenuItemLight img
+  {
+    height:2.7em;
+    margin-top:0.4em;
   }
 }
 
