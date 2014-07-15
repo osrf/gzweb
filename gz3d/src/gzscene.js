@@ -451,7 +451,7 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
         break;
       }
 
-      if (model.name === 'grid')
+      if (model.name === 'grid' || model.name === 'boundingBox')
       {
         point = objects[i].point;
         model = null;
