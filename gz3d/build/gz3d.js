@@ -567,6 +567,11 @@ function treeControl($scope)
   {
     $scope.models = modelStats;
   };
+
+  $scope.selectEntity = function (name)
+  {
+    guiEvents.emit('selectEntity', name);
+  };
 }
 
 
@@ -782,12 +787,12 @@ GZ3D.Gui.prototype.init = function()
                 }
                 else if (type === 'transparent')
                 {
-                  that.scene.selectedEntity = entity;
+                  that.scene.selectEntity(entity);
                   guiEvents.emit('set_view_as','transparent');
                 }
                 else if (type === 'wireframe')
                 {
-                  that.scene.selectedEntity = entity;
+                  that.scene.selectEntity(entity);
                   guiEvents.emit('set_view_as','wireframe');
                 }
 
@@ -861,7 +866,7 @@ GZ3D.Gui.prototype.init = function()
       {
         that.scene.onRightClick(event, function(entity)
             {
-              that.scene.selectedEntity = entity;
+              that.scene.selectEntity(entity);
               that.scene.showBoundingBox(entity);
               $('.ui-popup').popup('close');
               if (that.scene.selectedEntity.viewAs === 'transparent')
@@ -892,7 +897,7 @@ GZ3D.Gui.prototype.init = function()
   guiEvents.on('set_view_as', function (viewAs)
       {
         that.scene.setViewAs(that.scene.selectedEntity, viewAs);
-        that.scene.selectedEntity = null;
+        that.scene.selectEntity(null);
       }
   );
 
@@ -901,7 +906,7 @@ GZ3D.Gui.prototype.init = function()
         that.emitter.emit('deleteEntity',that.scene.selectedEntity);
         guiEvents.emit('notification_popup','Model deleted');
         $('#model-popup').popup('close');
-        that.scene.selectedEntity = null;
+        that.scene.selectEntity(null);
       }
   );
 
@@ -945,6 +950,41 @@ GZ3D.Gui.prototype.init = function()
           $('.tab').css('left', '0em');
           $('.tab').css('border-left', '2em solid #2a2a2a');
         }
+      }
+  );
+
+  guiEvents.on('setTreeSelected', function (object)
+      {
+        guiEvents.emit('openTab', 'treeMenu');
+        for (var i = 0; i < modelStats.length; ++i)
+        {
+          if (modelStats[i].name === object)
+          {
+            modelStats[i].selected = 'selectedTreeItem';
+          }
+          else
+          {
+            modelStats[i].selected = 'unselectedTreeItem';
+          }
+        }
+        that.updateModelStats();
+      }
+  );
+
+  guiEvents.on('setTreeDeselected', function ()
+      {
+        for (var i = 0; i < modelStats.length; ++i)
+        {
+          modelStats[i].selected = 'unselectedTreeItem';
+        }
+        that.updateModelStats();
+      }
+  );
+
+  guiEvents.on('selectEntity', function (name)
+      {
+        that.scene.selectEntity(name);
+        that.scene.showBoundingBox(name);
       }
   );
 };
@@ -1008,9 +1048,20 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
   if (action === 'update')
   {
     var thumbnail = this.findThumbnail(name);
-    if (modelStats.indexOf(name) <= 0)
+
+    var model = $.grep(modelStats, function(e)
+        {
+          return e.name === name;
+        });
+
+    if (model.length === 0)
     {
-      modelStats.push({name: name, thumbnail: thumbnail});
+      modelStats.push(
+          {
+            name: name,
+            thumbnail: thumbnail,
+            selected: 'unselectedTreeItem'
+          });
     }
   }
   else if (action === 'delete')
@@ -1024,9 +1075,7 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
     }
   }
 
-  // Click triggers updateModelStats, there must be a better way to do it
-  $('#modelsTree').click();
-  $('#modelsTree').click();
+  this.updateModelStats();
 };
 
 /**
@@ -1059,6 +1108,15 @@ GZ3D.Gui.prototype.findThumbnail = function(instanceName)
     return 'style/images/cylinder.png';
   }
   return 'style/images/box.png';
+};
+
+/**
+ * Update model stats
+ */
+GZ3D.Gui.prototype.updateModelStats = function()
+{
+  // Click triggers updateModelStats, there must be a better way to do it
+  $('#clickToUpdate').click();
 };
 
 //var GAZEBO_MODEL_DATABASE_URI='http://gazebosim.org/models';
@@ -5274,7 +5332,7 @@ GZ3D.Scene.prototype.attachManipulator = function(model,mode)
     this.hideBoundingBox();
   }
 
-  this.selectedEntity = model;
+  this.selectEntity(model);
   this.showBoundingBox(model);
 
   if (mode !== 'view')
@@ -5325,6 +5383,11 @@ GZ3D.Scene.prototype.showRadialMenu = function(e)
  */
 GZ3D.Scene.prototype.showBoundingBox = function(model)
 {
+  if (typeof model === 'string')
+  {
+    model = this.scene.getObjectByName(model);
+  }
+
   if (this.boundingBox.visible)
   {
     if (this.boundingBox.parent === model)
@@ -5334,7 +5397,7 @@ GZ3D.Scene.prototype.showBoundingBox = function(model)
     else
     {
       this.hideBoundingBox();
-      this.selectedEntity = model;
+      this.selectEntity(model);
     }
   }
   var box = new THREE.Box3();
@@ -5413,7 +5476,7 @@ GZ3D.Scene.prototype.hideBoundingBox = function()
     this.boundingBox.parent.remove(this.boundingBox);
   }
   this.boundingBox.visible = false;
-  this.selectedEntity = null;
+  this.selectEntity(null);
 };
 
 /**
@@ -5557,6 +5620,29 @@ GZ3D.Scene.prototype.getParentByPartialName = function(object, name)
     parent = parent.parent;
   }
   return null;
+};
+
+/**
+ * Select entity
+ * @param {} object / name
+ */
+GZ3D.Scene.prototype.selectEntity = function(object)
+{
+  if (object)
+  {
+    if (typeof object === 'string')
+    {
+      object = this.scene.getObjectByName(object);
+    }
+
+    this.selectedEntity = object;
+    guiEvents.emit('setTreeSelected', object.name);
+  }
+  else
+  {
+    this.selectedEntity = null;
+    guiEvents.emit('setTreeDeselected');
+  }
 };
 
 /**

@@ -157,32 +157,41 @@ body
   width: 100%;
 }
 /* world tree */
-.treeElement
+.treeItem
 {
-  font-size: 0.8em;
-  line-height: 1em;
+  font-size: 1em;
+  line-height: 2em;
   padding: 0;
-  width: 100%;
+  width: 15em;
   clear: both;
+  margin-left: -1em;
 }
-.treeElementImg
+.treeItemImg
 {
   height: 1em;
-  width: 3em;
+  width: 3.5em;
   text-align: center;
   float: left;
 }
-.treeElementImg img
+.treeItemImg img
 {
-  height: 1em;
+  height: 1.2em;
 }
-.treeElementTitle
+.treeItemTitle
 {
-  height: 1em;
-  width: 13em;
+  height: 2em;
+  width: 10.5em;
   overflow: hidden;
   text-overflow: ellipsis;
   float: left;
+}
+.unselectedTreeItem
+{
+  background-color: #2a2a2a;
+}
+.selectedTreeItem
+{
+  background-color: #aaaaaa;
 }
 /* smaller panel for narrow screens*/
 @media (max-width: 35em)
