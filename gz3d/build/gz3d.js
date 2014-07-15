@@ -563,10 +563,10 @@ function getNameFromPath(path)
 // World tree list
 function treeControl($scope)
 {
-  $scope.updateModelStats = function()
-  {
+  //$scope.updateModelStats = function()
+  //{
     $scope.models = modelStats;
-  };
+  //};
 
   $scope.selectEntity = function (name)
   {
@@ -867,7 +867,6 @@ GZ3D.Gui.prototype.init = function()
         that.scene.onRightClick(event, function(entity)
             {
               that.scene.selectEntity(entity);
-              that.scene.showBoundingBox(entity);
               $('.ui-popup').popup('close');
               if (that.scene.selectedEntity.viewAs === 'transparent')
               {
@@ -984,7 +983,6 @@ GZ3D.Gui.prototype.init = function()
   guiEvents.on('selectEntity', function (name)
       {
         that.scene.selectEntity(name);
-        that.scene.showBoundingBox(name);
       }
   );
 };
@@ -4192,7 +4190,7 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
     {
       if (mainPointer && model.parent === this.scene)
       {
-        this.attachManipulator(model, this.manipulationMode);
+        this.selectEntity(model);
       }
     }
     // Manipulator pickers, for mouse
@@ -5265,7 +5263,7 @@ GZ3D.Scene.prototype.setManipulationMode = function(mode)
     {
       this.emitter.emit('poseChanged', this.modelManipulator.object);
     }
-    this.hideBoundingBox();
+    this.selectEntity(null);
 
     this.modelManipulator.detach();
     this.scene.remove(this.modelManipulator.gizmo);
@@ -5277,7 +5275,7 @@ GZ3D.Scene.prototype.setManipulationMode = function(mode)
     // model was selected during view mode
     if (this.selectedEntity)
     {
-      this.attachManipulator(this.selectedEntity, mode);
+      this.selectEntity(this.selectedEntity);
     }
   }
 
@@ -5327,13 +5325,6 @@ GZ3D.Scene.prototype.attachManipulator = function(model,mode)
   {
     this.emitter.emit('poseChanged', this.modelManipulator.object);
   }
-  if (this.modelManipulator.object !== model)
-  {
-    this.hideBoundingBox();
-  }
-
-  this.selectEntity(model);
-  this.showBoundingBox(model);
 
   if (mode !== 'view')
   {
@@ -5373,7 +5364,7 @@ GZ3D.Scene.prototype.showRadialMenu = function(e)
       && this.modelManipulator.pickerNames.indexOf(model.name) === -1)
   {
     this.radialMenu.show(event,model);
-    this.showBoundingBox(model);
+    this.selectEntity(model);
   }
 };
 
@@ -5397,7 +5388,6 @@ GZ3D.Scene.prototype.showBoundingBox = function(model)
     else
     {
       this.hideBoundingBox();
-      this.selectEntity(model);
     }
   }
   var box = new THREE.Box3();
@@ -5476,7 +5466,7 @@ GZ3D.Scene.prototype.hideBoundingBox = function()
     this.boundingBox.parent.remove(this.boundingBox);
   }
   this.boundingBox.visible = false;
-  this.selectEntity(null);
+  //this.selectEntity(null);
 };
 
 /**
@@ -5635,11 +5625,17 @@ GZ3D.Scene.prototype.selectEntity = function(object)
       object = this.scene.getObjectByName(object);
     }
 
-    this.selectedEntity = object;
-    guiEvents.emit('setTreeSelected', object.name);
+    if (object !== this.selectedEntity)
+    {
+      this.showBoundingBox(object);
+      this.selectedEntity = object;
+      guiEvents.emit('setTreeSelected', object.name);
+    }
+    this.attachManipulator(object, this.manipulationMode);
   }
   else
   {
+    this.hideBoundingBox();
     this.selectedEntity = null;
     guiEvents.emit('setTreeDeselected');
   }

@@ -558,10 +558,10 @@ function getNameFromPath(path)
 // World tree list
 function treeControl($scope)
 {
-  $scope.updateModelStats = function()
-  {
+  //$scope.updateModelStats = function()
+  //{
     $scope.models = modelStats;
-  };
+  //};
 
   $scope.selectEntity = function (name)
   {
@@ -862,7 +862,6 @@ GZ3D.Gui.prototype.init = function()
         that.scene.onRightClick(event, function(entity)
             {
               that.scene.selectEntity(entity);
-              that.scene.showBoundingBox(entity);
               $('.ui-popup').popup('close');
               if (that.scene.selectedEntity.viewAs === 'transparent')
               {
@@ -979,7 +978,6 @@ GZ3D.Gui.prototype.init = function()
   guiEvents.on('selectEntity', function (name)
       {
         that.scene.selectEntity(name);
-        that.scene.showBoundingBox(name);
       }
   );
 };
