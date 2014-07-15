@@ -166,13 +166,13 @@ GZ3D.Scene.prototype.init = function()
 GZ3D.Scene.prototype.initScene = function()
 {
   this.createGrid();
-  
+
   // create a sun light
   var color = new THREE.Color();
   color.r = 0.800000011920929;
   color.b = 0.800000011920929;
   color.g = 0.800000011920929;
-    
+
   var lightObj = new THREE.DirectionalLight(color.getHex());
   var dir = new THREE.Vector3(0.5, 0.1, -0.9);
   var target = dir;
@@ -195,27 +195,27 @@ GZ3D.Scene.prototype.initScene = function()
   lightObj.shadowBias = 0.0001;
 
   lightObj.position.set(negDir.x, negDir.y, negDir.z);
-  
+
   var position = [];
   position['x'] = 0;
   position['y'] = 0;
   position['z'] = 10;
-  
+
   var orientation = [];
   orientation['x'] = 0;
   orientation['y'] = 0;
   orientation['z'] = 0;
   orientation['w'] = 1;
-  
+
   this.setPose(lightObj, position, orientation);
-  
+
   lightObj.intensity = 0.8999999761581421;
   lightObj.castShadow = true;
   lightObj.shadowDarkness = 0.3;
   lightObj.name = 'sun';
 
   this.add(lightObj);
-  
+
 };
 
 /**
@@ -452,7 +452,7 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
         break;
       }
 
-      if (model.name === 'grid')
+      if (model.name === 'grid' || model.name === 'boundingBox')
       {
         point = objects[i].point;
         model = null;
