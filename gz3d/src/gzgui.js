@@ -215,15 +215,6 @@ $(function()
         .css('top', '0.15em')
         .css('z-index', '1000');
 
-    $('#box-header-fieldset')
-        .css('visibility','hidden');
-
-    $('#sphere-header-fieldset')
-        .css('visibility','hidden');
-
-    $('#cylinder-header-fieldset')
-        .css('visibility','hidden');
-
     $('#leftPanel').touchstart(function(event){
         guiEvents.emit('pointerOnMenu');
     });

@@ -161,21 +161,27 @@ GZ3D.Scene.prototype.initScene = function()
   this.createGrid();
 
   // create a sun light
+  var obj = new THREE.Object3D();
+  var helper, helperGeometry, helperMaterial;
+
   var color = new THREE.Color();
-  color.r = 0.800000011920929;
-  color.b = 0.800000011920929;
-  color.g = 0.800000011920929;
+  color.r = 0.8;
+  color.g = 0.8;
+  color.b = 0.8;
+
+  var quaternion = new THREE.Quaternion(0, 0, 0, 1);
+
+  var translation = new THREE.Vector3(0, 0, 10);
+
+  // obj matrix is not updated in time
+  var matrixWorld = new THREE.Matrix4();
+  matrixWorld.compose(translation, quaternion, new THREE.Vector3(1,1,1));
+
+  this.setPose(obj, {x: 0, y: 0, z: 10}, {x: 0, y: 0, z: 0, w: 1});
+  obj.matrixWorldNeedsUpdate = true;
 
   var lightObj = new THREE.DirectionalLight(color.getHex());
-  var dir = new THREE.Vector3(0.5, 0.1, -0.9);
-  var target = dir;
-  var negDir = dir.negate();
-  negDir.normalize();
-  var factor = 10;
-  target.x = 10 * negDir.x;
-  target.y = 10 * negDir.y;
-  target.z = 10 + 10 * negDir.z;
-  lightObj.target.position = target;
+  lightObj.intensity = 0.9;
   lightObj.shadowCameraNear = 1;
   lightObj.shadowCameraFar = 50;
   lightObj.shadowMapWidth = 4094;
@@ -186,29 +192,41 @@ GZ3D.Scene.prototype.initScene = function()
   lightObj.shadowCameraRight = 100;
   lightObj.shadowCameraTop = 100;
   lightObj.shadowBias = 0.0001;
-
-  lightObj.position.set(negDir.x, negDir.y, negDir.z);
-
-  var position = [];
-  position['x'] = 0;
-  position['y'] = 0;
-  position['z'] = 10;
-
-  var orientation = [];
-  orientation['x'] = 0;
-  orientation['y'] = 0;
-  orientation['z'] = 0;
-  orientation['w'] = 1;
-
-  this.setPose(lightObj, position, orientation);
-
-  lightObj.intensity = 0.8999999761581421;
+  lightObj.position.set(0,0,0);
   lightObj.castShadow = true;
   lightObj.shadowDarkness = 0.3;
   lightObj.name = 'sun';
 
-  this.add(lightObj);
+  helperGeometry = new THREE.Geometry();
+  helperGeometry.vertices.push(new THREE.Vector3(-0.5, -0.5, 0));
+  helperGeometry.vertices.push(new THREE.Vector3(-0.5,  0.5, 0));
+  helperGeometry.vertices.push(new THREE.Vector3(-0.5,  0.5, 0));
+  helperGeometry.vertices.push(new THREE.Vector3( 0.5,  0.5, 0));
+  helperGeometry.vertices.push(new THREE.Vector3( 0.5,  0.5, 0));
+  helperGeometry.vertices.push(new THREE.Vector3( 0.5, -0.5, 0));
+  helperGeometry.vertices.push(new THREE.Vector3( 0.5, -0.5, 0));
+  helperGeometry.vertices.push(new THREE.Vector3(-0.5, -0.5, 0));
+  helperGeometry.vertices.push(new THREE.Vector3(   0,    0, 0));
+  helperGeometry.vertices.push(new THREE.Vector3(   0,    0, -0.5));
+  helperMaterial = new THREE.LineBasicMaterial({color: 0x00ff00});
+  helper = new THREE.Line(helperGeometry, helperMaterial, THREE.LinePieces);
+  helper.name = 'sun_lightHelper';
 
+  var dir = new THREE.Vector3(0.5, 0.1, -0.9);
+
+  obj.direction = new THREE.Vector3();
+  obj.direction.copy(dir);
+
+  dir.applyMatrix4(matrixWorld); // localToWorld
+  lightObj.target.position.copy(dir);
+
+  obj.name = 'sun';
+
+  // Important: keep order
+  obj.add(lightObj);
+  obj.add(helper);
+
+  this.add(obj);
 };
 
 /**
@@ -1672,167 +1690,6 @@ GZ3D.Scene.prototype.onRightClick = function(event, callback)
       this.modelManipulator.pickerNames.indexOf(model.name) === -1)
   {
     callback(model);
-  }
-};
-
-/**
- * Toggle model transparency
- * @param {} model
- */
-GZ3D.Scene.prototype.toggleTransparency = function(model)
-{
-  var descendants = [];
-  model.getDescendants(descendants);
-  for (var i = 0; i < descendants.length; ++i)
-  {
-    if (descendants[i].material &&
-        descendants[i].name.indexOf('boundingBox') === -1 &&
-        descendants[i].name.indexOf('COLLISION') === -1 &&
-        descendants[i].parent.name.indexOf('COLLISION') === -1 &&
-        descendants[i].name.indexOf('wireframe') === -1)
-    {
-      descendants[i].material.transparent = true;
-      if (model.isTransparent)
-      {
-        descendants[i].material.opacity =
-            descendants[i].material.originalOpacity ?
-            descendants[i].material.originalOpacity : 1.0;
-      }
-      else
-      {
-        descendants[i].material.originalOpacity =
-            descendants[i].material.opacity;
-        descendants[i].material.opacity = 0.5;
-      }
-    }
-  }
-  model.isTransparent = !model.isTransparent;
-};
-
-/**
- * Set model's view mode
- * @param {} model
- * @param {} viewAs (normal/transparent/wireframe)
- */
-GZ3D.Scene.prototype.setViewAs = function(model, viewAs)
-{
-  // Toggle
-  if (model.viewAs === viewAs)
-  {
-    viewAs = 'normal';
-  }
-
-  function materialViewAs(material)
-  {
-    if (materials.indexOf(material.id) === -1)
-    {
-      materials.push(material.id);
-      material.transparent = true;
-
-      if (viewAs === 'transparent')
-      {
-        if (material.opacity)
-        {
-          material.originalOpacity = material.opacity;
-        }
-        else
-        {
-          material.originalOpacity = 1.0;
-        }
-        material.opacity = 0.25;
-      }
-      else
-      {
-        material.opacity =
-            material.originalOpacity ?
-            material.originalOpacity : 1.0;
-      }
-
-      if (viewAs === 'wireframe')
-      {
-        material.visible = false;
-      }
-      else
-      {
-        material.visible = true;
-      }
-    }
-  }
-
-  var wireframe;
-  var descendants = [];
-  var materials = [];
-  model.getDescendants(descendants);
-  for (var i = 0; i < descendants.length; ++i)
-  {
-    if (descendants[i].material &&
-        descendants[i].name.indexOf('boundingBox') === -1 &&
-        descendants[i].name.indexOf('COLLISION_VISUAL') === -1 &&
-        !this.getParentByPartialName(descendants[i], 'COLLISION_VISUAL')&&
-        descendants[i].name.indexOf('wireframe') === -1)
-    {
-      if (descendants[i].material instanceof THREE.MeshFaceMaterial)
-      {
-        for (var j = 0; j < descendants[i].material.materials.length; ++j)
-        {
-          materialViewAs(descendants[i].material.materials[j]);
-        }
-      }
-      else
-      {
-        materialViewAs(descendants[i].material);
-      }
-
-      if (viewAs === 'wireframe')
-      {
-        wireframe = descendants[i].getObjectByName('wireframe');
-        if (wireframe)
-        {
-          wireframe.visible = true;
-        }
-        else
-        {
-          var mesh = new THREE.Mesh( descendants[i].geometry,
-              new THREE.MeshBasicMaterial({color: 0xffffff}));
-          wireframe = new THREE.WireframeHelper( mesh );
-          wireframe.name = 'wireframe';
-          descendants[i].add( wireframe );
-        }
-      }
-      else
-      {
-        wireframe = descendants[i].getObjectByName('wireframe');
-        if (wireframe)
-        {
-          wireframe.visible = false;
-        }
-      }
-    }
-  }
-  model.viewAs = viewAs;
-};
-
-/**
- * Returns the closest parent whose name contains the given string
- * @param {} object
- * @param {} name
- */
-GZ3D.Scene.prototype.getParentByPartialName = function(object, name)
-{
-  var parent = object.parent;
-  while (true)
-  {
-    if (parent.name.indexOf(name) !== -1)
-    {
-      return parent;
-    }
-
-    parent = parent.parent;
-
-    if (parent === this.scene)
-    {
-      return null;
-    }
   }
 };
 
