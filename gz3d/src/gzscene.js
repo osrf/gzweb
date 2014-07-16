@@ -1461,9 +1461,6 @@ GZ3D.Scene.prototype.setManipulationMode = function(mode)
       this.emitter.emit('poseChanged', this.modelManipulator.object);
     }
     this.selectEntity(null);
-
-    this.modelManipulator.detach();
-    this.scene.remove(this.modelManipulator.gizmo);
   }
   else
   {
@@ -1663,7 +1660,6 @@ GZ3D.Scene.prototype.hideBoundingBox = function()
     this.boundingBox.parent.remove(this.boundingBox);
   }
   this.boundingBox.visible = false;
-  //this.selectEntity(null);
 };
 
 /**
@@ -1673,13 +1669,6 @@ GZ3D.Scene.prototype.hideBoundingBox = function()
  */
 GZ3D.Scene.prototype.onRightClick = function(event, callback)
 {
-  if (this.modelManipulator.object)
-  {
-    this.hideBoundingBox();
-    this.modelManipulator.detach();
-    this.scene.remove(this.modelManipulator.gizmo);
-  }
-
   var pos = new THREE.Vector2(event.clientX, event.clientY);
   var model = this.getRayCastModel(pos, new THREE.Vector3());
 
@@ -1831,6 +1820,11 @@ GZ3D.Scene.prototype.selectEntity = function(object)
   }
   else
   {
+    if (this.modelManipulator.object)
+    {
+      this.modelManipulator.detach();
+      this.scene.remove(this.modelManipulator.gizmo);
+    }
     this.hideBoundingBox();
     this.selectedEntity = null;
     guiEvents.emit('setTreeDeselected');
