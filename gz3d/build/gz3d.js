@@ -366,12 +366,6 @@ $(function()
         });
   }
 
-  $('.header-button')
-      .css('float', 'left')
-      .css('height', '1.45em')
-      .css('width', '1.45em')
-      .css('padding', '0.65em');
-
   $('.tab').click(function()
       {
         var idTab = $(this).attr('id');
