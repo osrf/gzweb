@@ -1676,22 +1676,19 @@ GZ3D.Scene.prototype.hideBoundingBox = function()
  */
 GZ3D.Scene.prototype.onRightClick = function(event, callback)
 {
-  if (this.modelManipulator.object)
+  if(this.manipulationMode === 'view')
   {
-    this.hideBoundingBox();
-    this.modelManipulator.detach();
-    this.scene.remove(this.modelManipulator.gizmo);
-  }
+    var pos = new THREE.Vector2(event.clientX, event.clientY);
+    var model = this.getRayCastModel(pos, new THREE.Vector3());
 
-  var pos = new THREE.Vector2(event.clientX, event.clientY);
-  var model = this.getRayCastModel(pos, new THREE.Vector3());
-
-  if(model && model.name !== '' && model.name !== 'plane' &&
-      this.modelManipulator.pickerNames.indexOf(model.name) === -1)
-  {
-    callback(model);
+    if(model && model.name !== '' && model.name !== 'plane' &&
+        this.modelManipulator.pickerNames.indexOf(model.name) === -1)
+    {
+      callback(model);
+    }
   }
 };
+
 
 /**
  * Set model's view mode
