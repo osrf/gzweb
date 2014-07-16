@@ -159,7 +159,7 @@ GZ3D.SdfParser.prototype.parsePose = function(poseStr)
 
   // get euler rotation and convert it to Quaternion
   var quaternion = new THREE.Quaternion();
-  var euler = new THREE.Euler(parseFloat(values[3]), parseFloat(values[4]), parseFloat(values[5]));
+  var euler = new THREE.Euler(parseFloat(values[3]), parseFloat(values[4]), parseFloat(values[5]), 'ZYX');
   quaternion.setFromEuler(euler);
 
   var pose = {
@@ -331,7 +331,6 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
         }
 
         var modelUri = this.MATERIAL_ROOT + '/' + modelName;
-
         var materialName = parent.name + '::' + modelUri;
         this.entityMaterial[materialName] = material;
 

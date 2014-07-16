@@ -514,6 +514,7 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
   var modelObj = new THREE.Object3D();
   modelObj.name = model.name;
   modelObj.userData = model.id;
+  console.log(model);
   if (model.pose)
   {
     this.scene.setPose(modelObj, model.pose.position, model.pose.orientation);
