@@ -21,8 +21,6 @@ GZ3D.Scene.prototype.init = function()
   this.heightmap = null;
 
   this.selectedEntity = null;
-  this.mouseEntity = null;
-  this.selectedModel = null;
 
   this.manipulationMode = 'view';
   this.pointerOnMenu = false;
@@ -176,35 +174,47 @@ GZ3D.Scene.prototype.setSDFParser = function(sdfParser)
 
 /**
  * Window event callback
- * @param {} event - click or tap events (select/deselect models and manipulators)
+ * @param {} event - mousedown or touchdown events
  */
 GZ3D.Scene.prototype.onPointerDown = function(event)
 {
   event.preventDefault();
 
-  var pointer, mainPointer = true;
+  if (this.spawnModel.active)
+  {
+    return;
+  }
+
+  var mainPointer = true;
+  var pos;
   if (event.touches)
   {
-    // Cancel in case of multitouch
-    if (event.touches.length !== 1)
+    if (event.touches.length === 1)
+    {
+      pos = new THREE.Vector2(
+          event.touches[0].clientX, event.touches[0].clientY);
+    }
+    else if (event.touches.length === 2)
+    {
+      pos = new THREE.Vector2(
+          (event.touches[0].clientX + event.touches[1].clientX)/2,
+          (event.touches[0].clientY + event.touches[1].clientY)/2);
+    }
+    else
     {
       return;
     }
-    pointer = event.touches[ 0 ];
   }
   else
   {
-    pointer = event;
-    if (pointer.which !== 1)
+    pos = new THREE.Vector2(
+          event.clientX, event.clientY);
+    if (event.which !== 1)
     {
       mainPointer = false;
     }
   }
 
-  // X-Y coordinates of where mouse clicked
-  var pos = new THREE.Vector2(pointer.clientX, pointer.clientY);
-
-  // See if there's a model on the direction of the click
   var intersect = new THREE.Vector3();
   var model = this.getRayCastModel(pos, intersect);
 
@@ -213,8 +223,8 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
     this.controls.target = intersect;
   }
 
-  // View mode
-  if (this.manipulationMode === 'view')
+  // Cancel in case of multitouch
+  if (event.touches && event.touches.length !== 1)
   {
     return;
   }
@@ -245,7 +255,6 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
     {
       this.modelManipulator.update();
       this.modelManipulator.object.updateMatrixWorld();
-      this.mouseEntity = this.selectedEntity;
     }
     // Sky
     else
@@ -267,9 +276,6 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
 GZ3D.Scene.prototype.onPointerUp = function(event)
 {
   event.preventDefault();
-
-  // The mouse is not holding anything
-  this.mouseEntity = null;
 
   // Clicks (<150ms) outside any models trigger view mode
   var millisecs = new Date().getTime();
@@ -555,7 +561,7 @@ GZ3D.Scene.prototype.getByName = function(name)
 GZ3D.Scene.prototype.updatePose = function(model, position, orientation)
 {
   if (this.modelManipulator && this.modelManipulator.object &&
-      this.modelManipulator.hovered && this.mouseEntity)
+      this.modelManipulator.hovered)
   {
     return;
   }
@@ -1315,13 +1321,19 @@ GZ3D.Scene.prototype.setManipulationMode = function(mode)
       this.emitter.emit('poseChanged', this.modelManipulator.object);
     }
     this.hideBoundingBox();
+
     this.modelManipulator.detach();
     this.scene.remove(this.modelManipulator.gizmo);
   }
   else
   {
     this.modelManipulator.mode = this.manipulationMode;
-    this.modelManipulator.setMode( this.modelManipulator.mode );
+    this.modelManipulator.setMode(this.modelManipulator.mode);
+    // model was selected during view mode
+    if (this.selectedEntity)
+    {
+      this.attachManipulator(this.selectedEntity, mode);
+    }
   }
 
 };
@@ -1375,14 +1387,16 @@ GZ3D.Scene.prototype.attachManipulator = function(model,mode)
     this.hideBoundingBox();
   }
 
-  this.modelManipulator.attach(model);
-  this.modelManipulator.mode = mode;
-  this.modelManipulator.setMode( this.modelManipulator.mode );
-
   this.selectedEntity = model;
-  this.mouseEntity = this.selectedEntity;
-  this.scene.add(this.modelManipulator.gizmo);
   this.showBoundingBox(model);
+
+  if (mode !== 'view')
+  {
+    this.modelManipulator.attach(model);
+    this.modelManipulator.mode = mode;
+    this.modelManipulator.setMode( this.modelManipulator.mode );
+    this.scene.add(this.modelManipulator.gizmo);
+  }
 };
 
 /**
@@ -1512,6 +1526,7 @@ GZ3D.Scene.prototype.hideBoundingBox = function()
     this.boundingBox.parent.remove(this.boundingBox);
   }
   this.boundingBox.visible = false;
+  this.selectedEntity = null;
 };
 
 /**

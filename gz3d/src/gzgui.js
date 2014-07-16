@@ -8,6 +8,14 @@ var emUnits = function(value)
     };
 
 var isTouchDevice = 'ontouchstart' in window || 'onmsgesturechange' in window;
+var isWideScreen = function()
+    {
+      return $(window).width() / emUnits(1) > 35;
+    };
+var isTallScreen = function()
+    {
+      return $(window).height() / emUnits(1) > 35;
+    };
 
 var modelList =
   [
@@ -173,10 +181,14 @@ $(function()
   $( '#clock-touch' ).popup('option', 'arrow', 't');
   $('#notification-popup-screen').remove();
 
-  // Panel starts open for wide screens
-  if ($(window).width() / emUnits(1) > 35)
+  if (isWideScreen())
   {
-    $('#leftPanel').panel('open');
+    guiEvents.emit('openTab','mainMenu');
+  }
+
+  if (isTallScreen())
+  {
+    $('.collapsible_header').click();
   }
 
   // Clicks/taps// Touch devices
@@ -184,13 +196,13 @@ $(function()
   {
     $('#play-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '15.8em')
+        .css('right', '13.6em')
         .css('top', '0em')
         .css('z-index', '1000');
 
     $('#clock-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '12.8em')
+        .css('right', '10.2em')
         .css('top', '0em')
         .css('z-index', '1000');
 
@@ -199,7 +211,7 @@ $(function()
 
     $('#mode-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '4.5em')
+        .css('right', '0.5em')
         .css('top', '0.15em')
         .css('z-index', '1000');
 
@@ -211,20 +223,6 @@ $(function()
 
     $('#cylinder-header-fieldset')
         .css('visibility','hidden');
-
-    $('#insert-header-fieldset')
-        .css('position', 'absolute')
-        .css('right', '0.5em')
-        .css('top', '0em')
-        .css('z-index', '1000');
-
-    $('#footer').touchstart(function(event){
-        guiEvents.emit('pointerOnMenu');
-    });
-
-    $('#footer').touchend(function(event){
-        guiEvents.emit('pointerOffMenu');
-    });
 
     $('#leftPanel').touchstart(function(event){
         guiEvents.emit('pointerOnMenu');
@@ -255,22 +253,22 @@ $(function()
       });
 
     // long press on insert menu item
-    var press_time_footer = 400;
+    var press_time_insert = 400;
     $('[id^="insert-entity-"]')
       .on('touchstart', function (event) {
         var path = $(this).attr('id');
         path = path.substring(14); // after 'insert-entity-'
         $(this).data('checkdown', setTimeout(function () {
-          guiEvents.emit('longpress_footer_start', event, path);
-        }, press_time_footer));
+          guiEvents.emit('longpress_insert_start', event, path);
+        }, press_time_insert));
       })
       .on('touchend', function (event) {
         clearTimeout($(this).data('checkdown'));
-        guiEvents.emit('longpress_footer_end',event,false);
+        guiEvents.emit('longpress_insert_end',event,false);
       })
       .on('touchmove', function (event) {
         clearTimeout($(this).data('checkdown'));
-        guiEvents.emit('longpress_footer_move',event);
+        guiEvents.emit('longpress_insert_move',event);
       });
   }
   // Mouse devices
@@ -291,16 +289,16 @@ $(function()
 
     $('#play-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '35.2em')
+        .css('right', '31.2em')
         .css('top', '0em')
         .css('z-index', '1000');
 
     $('#clock-mouse')
         .css('position', 'absolute')
-        .css('right', '22.4em')
+        .css('right', '19.4em')
         .css('top', '0.5em')
         .css('z-index', '100')
-        .css('width', '12em')
+        .css('width', '11em')
         .css('height', '2.5em')
         .css('background-color', '#333333')
         .css('padding', '3px')
@@ -308,51 +306,27 @@ $(function()
 
     $('#mode-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '16.4em')
+        .css('right', '12.4em')
         .css('top', '0.15em')
         .css('z-index', '1000');
 
     $('#box-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '9.5em')
+        .css('right', '6.5em')
         .css('top', '0em')
         .css('z-index', '1000');
 
     $('#sphere-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '6.5em')
+        .css('right', '3.5em')
         .css('top', '0em')
         .css('z-index', '1000');
 
     $('#cylinder-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '3.5em')
-        .css('top', '0em')
-        .css('z-index', '1000');
-
-    $('#insert-header-fieldset')
-        .css('position', 'absolute')
         .css('right', '0.5em')
         .css('top', '0em')
         .css('z-index', '1000');
-
-    $('#footer').bind('mousewheel', function(event){
-        event.originalEvent.preventDefault();
-        var id = $('.insert-menus:visible').attr('id');
-
-        var value = document.getElementById(id).scrollLeft;
-        value = value - event.originalEvent.wheelDelta/6;
-
-        $('.insert-menus:visible').scrollLeft(value);
-    });
-
-    $('#footer').mouseenter(function(event){
-        guiEvents.emit('pointerOnMenu');
-    });
-
-    $('#footer').mouseleave(function(event){
-        guiEvents.emit('pointerOffMenu');
-    });
 
     $('#leftPanel').mouseenter(function(event){
         guiEvents.emit('pointerOnMenu');
@@ -383,56 +357,32 @@ $(function()
       .css('height', '1.45em')
       .css('padding', '0.65em');
 
-  $('#insertButton').click(function()
+  $('.tab').click(function()
       {
-        $('#leftPanel').panel('close');
-        if($('#insert-menu').is(':visible'))
+        var idTab = $(this).attr('id');
+        var idMenu = idTab.substring(0,idTab.indexOf('Tab'));
+
+        if($('#'+idMenu).is(':visible')  ||
+           $('[id^="'+idMenu+'-"]').is(':visible'))
         {
-          $('#insert-menu').hide();
+          guiEvents.emit('closeTabs', true);
         }
         else
         {
-          $('#insert-menu').show();
-          $('[id^="insert-menu-"]').hide();
-          $('.insert-menu-title')
-              .css('margin-left',
-                  document.getElementById('insert-menu').scrollLeft);
+          guiEvents.emit('openTab',idMenu);
         }
       });
 
-  $('.insert-menu-back').click(function()
+  $('.panelTitle').click(function()
       {
-        $('#insert-menu').show();
-        $('[id^="insert-menu-"]').hide();
-        $('.insert-menu-title')
-            .css('margin-left',
-                document.getElementById('insert-menu').scrollLeft);
+        guiEvents.emit('closeTabs', true);
       });
 
-  $('.insert-menu-close').click(function()
+  // Only for insert for now
+  $('.panelSubTitle').click(function()
       {
-        $('.insert-menus').hide();
-      });
-
-  $('.insert-menus').on('scroll', function()
-      {
-        var id = $(this).attr('id');
-
-        $('.insert-menu-title')
-            .css('margin-left', document.getElementById(id).scrollLeft);
-      });
-
-  $('#leftPanel').on('panelopen', function()
-      {
-        if($('.insert-menus').is(':visible'))
-        {
-          $('.insert-menus').hide();
-        }
-      });
-
-  $('#leftPanel').on('panelclose', function()
-      {
-        $('#panelButton').removeClass('ui-btn-active');
+        $('.insertCategory').hide();
+        $('#insertMenu').show();
       });
 
   $('#view-mode').click(function()
@@ -449,17 +399,17 @@ $(function()
       });
   $('#box-header').click(function()
       {
-        guiEvents.emit('close_panel');
+        guiEvents.emit('closeTabs', false);
         guiEvents.emit('spawn_entity_start', 'box');
       });
   $('#sphere-header').click(function()
       {
-        guiEvents.emit('close_panel');
+        guiEvents.emit('closeTabs', false);
         guiEvents.emit('spawn_entity_start', 'sphere');
       });
   $('#cylinder-header').click(function()
       {
-        guiEvents.emit('close_panel');
+        guiEvents.emit('closeTabs', false);
         guiEvents.emit('spawn_entity_start', 'cylinder');
       });
   $('#play').click(function()
@@ -494,30 +444,30 @@ $(function()
   $('#reset-model').click(function()
       {
         guiEvents.emit('model_reset');
-        guiEvents.emit('close_panel');
+        guiEvents.emit('closeTabs', false);
       });
   $('#reset-world').click(function()
       {
         guiEvents.emit('world_reset');
-        guiEvents.emit('close_panel');
+        guiEvents.emit('closeTabs', false);
       });
   $('#reset-view').click(function()
       {
         guiEvents.emit('view_reset');
-        guiEvents.emit('close_panel');
+        guiEvents.emit('closeTabs', false);
       });
   $('#view-collisions').click(function()
       {
         guiEvents.emit('show_collision');
-        guiEvents.emit('close_panel');
+        guiEvents.emit('closeTabs', false);
       });
   $( '#snap-to-grid' ).click(function() {
     guiEvents.emit('snap_to_grid');
-    guiEvents.emit('close_panel');
+    guiEvents.emit('closeTabs', false);
   });
   $( '#toggle-notifications' ).click(function() {
     guiEvents.emit('toggle_notifications');
-    guiEvents.emit('close_panel');
+    guiEvents.emit('closeTabs', false);
   });
 
   // Disable Esc key to close panel
@@ -543,6 +493,21 @@ $(function()
   $( '#delete-entity' ).click(function() {
     guiEvents.emit('delete_entity');
   });
+
+  $(window).resize(function()
+  {
+    if ($('.leftPanels').is(':visible'))
+    {
+      if (isWideScreen())
+      {
+        $('.tab').css('left', '15em');
+      }
+      else
+      {
+        $('.tab').css('left', '10.5em');
+      }
+    }
+  });
 });
 
 // Insert menu
@@ -550,33 +515,11 @@ function insertControl($scope)
 {
   $scope.categories = modelList;
 
-  $scope.setItemWidth = function ()
-  {
-    $scope.itemWidth = 9.8;
-    if (window.innerWidth / window.innerHeight > 2 ||
-        window.innerWidth < emUnits(35))
-    {
-      $scope.itemWidth = 7.4;
-    }
-  };
-
-  $scope.setItemWidth();
-
-  $(window).resize(function()
-  {
-    $scope.$apply(function()
-    {
-       $scope.setItemWidth();
-    });
-  });
-
   $scope.openCategory = function(category)
   {
-    $('#insert-menu').hide();
-    var categoryID = 'insert-menu-'+category;
+    $('#insertMenu').hide();
+    var categoryID = 'insertMenu-'+category;
     $('#' + categoryID).show();
-    $('.insert-menu-title')
-        .css('margin-left', document.getElementById(categoryID).scrollLeft);
   };
 
   $scope.spawnEntity = function(path)
@@ -634,7 +577,6 @@ GZ3D.Gui.prototype.init = function()
 {
   this.spawnState = null;
   this.longPressContainerState = null;
-  this.longPressFooterState = null;
   this.showNotifications = false;
 
   var that = this;
@@ -768,14 +710,6 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('close_panel', function()
-      {
-        if ($(window).width() / emUnits(1)< 35)
-        {
-          $('#leftPanel').panel('close');
-        }
-      }
-  );
 
   guiEvents.on('longpress_container_start',
       function (event)
@@ -869,7 +803,7 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('longpress_footer_start', function (event, path)
+  guiEvents.on('longpress_insert_start', function (event, path)
       {
         navigator.vibrate(50);
         guiEvents.emit('spawn_entity_start', path);
@@ -877,13 +811,13 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('longpress_footer_end', function(event)
+  guiEvents.on('longpress_insert_end', function(event)
       {
         guiEvents.emit('spawn_entity_end');
       }
   );
 
-  guiEvents.on('longpress_footer_move', function(event)
+  guiEvents.on('longpress_insert_move', function(event)
       {
         guiEvents.emit('spawn_entity_move', event);
         event.stopPropagation();
@@ -906,18 +840,6 @@ GZ3D.Gui.prototype.init = function()
             $( '#notification-popup' ).popup('close');
           }, 2000);
         }
-      }
-  );
-
-  guiEvents.on('pointerOnMenu', function ()
-      {
-        that.scene.pointerOnMenu = true;
-      }
-  );
-
-  guiEvents.on('pointerOffMenu', function ()
-      {
-        that.scene.pointerOnMenu = false;
       }
   );
 
@@ -979,7 +901,38 @@ GZ3D.Gui.prototype.init = function()
       {
         that.scene.pointerOnMenu = false;
       }
-   );
+  );
+
+  guiEvents.on('openTab', function (id)
+      {
+        $('.leftPanels').hide();
+        $('#'+id).show();
+
+        if (isWideScreen())
+        {
+          $('.tab').css('left', '15em');
+        }
+        else
+        {
+          $('.tab').css('left', '10.5em');
+        }
+
+        $('.tab').css('border-left', '2em solid #2a2a2a');
+        $('#'+id+'Tab').css('border-left', '2em solid #aaaaaa');
+      }
+  );
+
+  guiEvents.on('closeTabs', function (force)
+      {
+        // Close for narrow viewports, force to always close
+        if (force || !isWideScreen())
+        {
+          $('.leftPanels').hide();
+          $('.tab').css('left', '0em');
+          $('.tab').css('border-left', '2em solid #2a2a2a');
+        }
+      }
+  );
 };
 
 /**
