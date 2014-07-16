@@ -194,6 +194,9 @@ $(function()
   // Touch devices
   if (isTouchDevice)
   {
+    $('.mouse-only')
+        .css('visibility','hidden');
+
     $('#play-header-fieldset')
         .css('position', 'absolute')
         .css('right', '13.6em')
@@ -206,32 +209,11 @@ $(function()
         .css('top', '0em')
         .css('z-index', '1000');
 
-    $('#clock-mouse')
-        .css('visibility','hidden');
-
     $('#mode-header-fieldset')
         .css('position', 'absolute')
         .css('right', '0.5em')
         .css('top', '0.15em')
         .css('z-index', '1000');
-
-    $('#box-header-fieldset')
-        .css('visibility','hidden');
-
-    $('#sphere-header-fieldset')
-        .css('visibility','hidden');
-
-    $('#cylinder-header-fieldset')
-        .css('visibility','hidden');
-
-    $('#pointlight-header-fieldset')
-        .css('visibility','hidden');
-
-    $('#spotlight-header-fieldset')
-        .css('visibility','hidden');
-
-    $('#directionallight-header-fieldset')
-        .css('visibility','hidden');
 
     $('#leftPanel').touchstart(function(event){
         guiEvents.emit('pointerOnMenu');
@@ -283,6 +265,9 @@ $(function()
   // Mouse devices
   else
   {
+    $('.touch-only')
+        .css('visibility','hidden');
+
     $('[id^="insert-entity-"]')
       .click(function(event) {
         var path = $(this).attr('id');
@@ -292,9 +277,6 @@ $(function()
       .on('mousedown', function(event) {
         event.preventDefault();
       });
-
-    $('#clock-header-fieldset')
-        .css('visibility','hidden');
 
     $('#play-header-fieldset')
         .css('position', 'absolute')
@@ -378,12 +360,6 @@ $(function()
           $('#model-popup').popup('close');
         });
   }
-
-  $('.header-button')
-      .css('float', 'left')
-      .css('height', '1.45em')
-      .css('width', '1.45em')
-      .css('padding', '0.65em');
 
   $('.tab').click(function()
       {

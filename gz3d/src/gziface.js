@@ -364,7 +364,7 @@ GZ3D.GZIface.prototype.onConnected = function()
     messageType : 'factory',
   });
 
-  // Factory messages - for spawning new models
+  // Factory messages - for spawning new lights
   this.lightFactoryTopic = new ROSLIB.Topic({
     ros : this.webSocket,
     name : '~/light',

@@ -20,6 +20,22 @@ body
 {
   z-index: 999;
 }
+/* header */
+.header-button
+{
+  float: left;
+  height: 1.45em;
+  width: 1.45em;
+  padding: 0.65em;;
+}
+.header-button img
+{
+  height: 1.45em;
+}
+#clock-touch
+{
+  z-index: 100;
+}
 /* tabs */
 .tab
 {
@@ -37,6 +53,7 @@ body
   position: relative;
   left: -1.7em;
   top: 1.2em;
+  height: 1.45em;
 }
 .tab:nth-of-type(1)
 {
