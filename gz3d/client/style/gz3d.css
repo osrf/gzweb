@@ -190,7 +190,7 @@ body
 }
 .treeItemImg
 {
-  height: 1em;
+  height: 2em;
   width: 3.5em;
   text-align: center;
   float: left;
@@ -198,6 +198,7 @@ body
 .treeItemImg img
 {
   height: 1.2em;
+  vertical-align: middle;
 }
 .treeItemTitle
 {

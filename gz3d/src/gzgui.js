@@ -1072,15 +1072,6 @@ GZ3D.Gui.prototype.setSimTime = function(simTime)
   $('.sim-time-value').text(simTime);
 };
 
-/**
- * Update scene stats on property panel
- * @param {} stats
- */
-GZ3D.Gui.prototype.setSceneStats = function(stats)
-{
-  $('#sceneName').text('Name: '+stats.name);
-};
-
 var modelStats = [];
 /**
  * Update model stats on property panel
