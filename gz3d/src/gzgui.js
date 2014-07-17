@@ -1,4 +1,5 @@
 /*global $:false */
+/*global angular*/
 
 var guiEvents = new EventEmitter2({ verbose: true });
 
@@ -508,24 +509,6 @@ $(function()
   });
 });
 
-// Insert menu
-function insertControl($scope)
-{
-  $scope.categories = modelList;
-
-  $scope.openCategory = function(category)
-  {
-    $('#insertMenu').hide();
-    var categoryID = 'insertMenu-'+category;
-    $('#' + categoryID).show();
-  };
-
-  $scope.spawnEntity = function(path)
-  {
-    guiEvents.emit('spawn_entity_start', path);
-  };
-}
-
 function getNameFromPath(path)
 {
   if(path === 'box')
@@ -565,20 +548,45 @@ function getNameFromPath(path)
   }
 }
 
-// World tree list
-function treeControl($scope)
+// World tree
+var gzangular = angular.module('gzangular',[]);
+gzangular.controller('treeControl', ['$scope', function($scope)
 {
-  //$scope.updateStats = function()
-  //{
+  $scope.models = modelStats;
+
+  $scope.updateStats = function()
+  {
     $scope.models = modelStats;
     $scope.lights = lightStats;
-  //};
+    if (!$scope.$$phase)
+    {
+      $scope.$apply();
+    }
+  };
 
   $scope.selectEntity = function (name)
   {
     guiEvents.emit('selectEntity', name);
   };
-}
+}]);
+
+// Insert menu
+gzangular.controller('insertControl', ['$scope', function($scope)
+{
+  $scope.categories = modelList;
+
+  $scope.openCategory = function(category)
+  {
+    $('#insertMenu').hide();
+    var categoryID = 'insertMenu-'+category;
+    $('#' + categoryID).show();
+  };
+
+  $scope.spawnEntity = function(path)
+  {
+    guiEvents.emit('spawn_entity_start', path);
+  };
+}]);
 
 
 /**
@@ -1209,7 +1217,6 @@ GZ3D.Gui.prototype.findModelThumbnail = function(instanceName)
  */
 GZ3D.Gui.prototype.updateStats = function()
 {
-  // Click triggers updateStats, there must be a better way to do it
-  // actually even without defining $scope.updateStats it works :O
-  $('#clickToUpdate').click();
+  var tree = angular.element($('#treeMenu')).scope();
+  tree.updateStats();
 };
