@@ -367,19 +367,27 @@ $(function()
         });
   }
 
+  var lastOpenMenu = {insertMenu: 'insertMenu', treeMenu: 'treeMenu'};
   $('.tab').click(function()
       {
         var idTab = $(this).attr('id');
         var idMenu = idTab.substring(0,idTab.indexOf('Tab'));
 
-        if($('#'+idMenu).is(':visible')  ||
-           $('[id^="'+idMenu+'-"]').is(':visible'))
+        if($('#'+idMenu).is(':visible'))
         {
+          lastOpenMenu[idMenu] = idMenu;
+          guiEvents.emit('closeTabs', true);
+        }
+        else if ($('[id^="'+idMenu+'-"]').is(':visible'))
+        {
+          var id = $('[id^="'+idMenu+'-"]:visible').attr('id');
+          lastOpenMenu[idMenu] = id;
           guiEvents.emit('closeTabs', true);
         }
         else
         {
-          guiEvents.emit('openTab',idMenu);
+          var menu = lastOpenMenu[idMenu] ? lastOpenMenu[idMenu] : idMenu;
+          guiEvents.emit('openTab', menu);
         }
       });
 
@@ -968,7 +976,7 @@ GZ3D.Gui.prototype.init = function()
         }
 
         $('.tab').css('border-left', '2em solid #2a2a2a');
-        $('#'+id+'Tab').css('border-left', '2em solid #aaaaaa');
+        $('#'+id+'Tab').css('border-left', '2em solid #22aadd');
       }
   );
 
