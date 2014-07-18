@@ -558,6 +558,23 @@ function getNameFromPath(path)
 
 // World tree
 var gzangular = angular.module('gzangular',[]);
+// add ng-right-click
+gzangular.directive('ngRightClick', function($parse)
+{
+  return function(scope, element, attrs)
+      {
+        var fn = $parse(attrs.ngRightClick);
+        element.bind('contextmenu', function(event)
+            {
+              scope.$apply(function()
+                  {
+                    event.preventDefault();
+                    fn(scope, {$event:event});
+                  });
+            });
+      };
+});
+
 gzangular.controller('treeControl', ['$scope', function($scope)
 {
   $scope.models = modelStats;
@@ -574,7 +591,14 @@ gzangular.controller('treeControl', ['$scope', function($scope)
 
   $scope.selectEntity = function (name)
   {
+    $('#model-popup').popup('close');
     guiEvents.emit('selectEntity', name);
+  };
+
+  $scope.openEntityMenu = function (event, name)
+  {
+    $('#model-popup').popup('close');
+    guiEvents.emit('openEntityPopup', event, name);
   };
 }]);
 
@@ -888,42 +912,7 @@ GZ3D.Gui.prototype.init = function()
       {
         that.scene.onRightClick(event, function(entity)
             {
-              that.scene.selectEntity(entity);
-              $('.ui-popup').popup('close');
-
-              if (entity.children[0] instanceof THREE.Light)
-              {
-                $('#view-transparent').css('visibility','collapse');
-                $('#view-wireframe').css('visibility','collapse');
-                $('#model-popup').popup('open',
-                  {x: event.clientX + emUnits(6),
-                   y: event.clientY + emUnits(-5)});
-              }
-              else
-              {
-                if (that.scene.selectedEntity.viewAs === 'transparent')
-                {
-                  $('#view-transparent').buttonMarkup({icon: 'check'});
-                }
-                else
-                {
-                  $('#view-transparent').buttonMarkup({icon: 'false'});
-                }
-
-                if (that.scene.selectedEntity.viewAs === 'wireframe')
-                {
-                  $('#view-wireframe').buttonMarkup({icon: 'check'});
-                }
-                else
-                {
-                  $('#view-wireframe').buttonMarkup({icon: 'false'});
-                }
-                $('#view-transparent').css('visibility','visible');
-                $('#view-wireframe').css('visibility','visible');
-                $('#model-popup').popup('open',
-                  {x: event.clientX + emUnits(6),
-                   y: event.clientY + emUnits(0)});
-              }
+              that.openEntityPopup(event, entity);
             });
       }
   );
@@ -1039,6 +1028,13 @@ GZ3D.Gui.prototype.init = function()
       {
         var object = that.scene.getByName(name);
         that.scene.selectEntity(object);
+      }
+  );
+
+  guiEvents.on('openEntityPopup', function (event, name)
+      {
+        var object = that.scene.getByName(name);
+        that.openEntityPopup(event, object);
       }
   );
 };
@@ -1218,4 +1214,48 @@ GZ3D.Gui.prototype.updateStats = function()
 {
   var tree = angular.element($('#treeMenu')).scope();
   tree.updateStats();
+};
+
+/**
+ * Open entity (model/light) context menu
+ * @param {THREE.Object3D} entity
+ */
+GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
+{
+  this.scene.selectEntity(entity);
+  $('.ui-popup').popup('close');
+
+  if (entity.children[0] instanceof THREE.Light)
+  {
+    $('#view-transparent').css('visibility','collapse');
+    $('#view-wireframe').css('visibility','collapse');
+    $('#model-popup').popup('open',
+      {x: event.clientX + emUnits(6),
+       y: event.clientY + emUnits(-5)});
+  }
+  else
+  {
+    if (this.scene.selectedEntity.viewAs === 'transparent')
+    {
+      $('#view-transparent').buttonMarkup({icon: 'check'});
+    }
+    else
+    {
+      $('#view-transparent').buttonMarkup({icon: 'false'});
+    }
+
+    if (this.scene.selectedEntity.viewAs === 'wireframe')
+    {
+      $('#view-wireframe').buttonMarkup({icon: 'check'});
+    }
+    else
+    {
+      $('#view-wireframe').buttonMarkup({icon: 'false'});
+    }
+    $('#view-transparent').css('visibility','visible');
+    $('#view-wireframe').css('visibility','visible');
+    $('#model-popup').popup('open',
+      {x: event.clientX + emUnits(6),
+       y: event.clientY + emUnits(0)});
+  }
 };

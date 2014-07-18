@@ -267,7 +267,7 @@
               <div id="modelsTree" data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
                 <h3><span class="collapsible_header">Models</span></h3>
                 <ul data-role="listview">
-                  <div class="treeItem {{model.selected}}" ng-repeat="model in models" ng-click="selectEntity(model.name)" title="{{model.name}}">
+                  <div class="treeItem {{model.selected}}" ng-repeat="model in models" ng-click="selectEntity(model.name)" ng-right-click="openEntityMenu($event, model.name)" title="{{model.name}}">
                     <div class="treeItemImg"><img src="{{model.thumbnail}}"></div>
                     <div class="treeItemTitle">{{model.name}}</div><br>
                   </div>
@@ -277,7 +277,7 @@
               <div id="lightsTree" data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
                 <h3><span class="collapsible_header">Lights</span></h3>
                 <ul data-role="listview">
-                  <div class="treeItem {{light.selected}}" ng-repeat="light in lights" ng-click="selectEntity(light.name)" title="{{light.name}}">
+                  <div class="treeItem {{light.selected}}" ng-repeat="light in lights" ng-click="selectEntity(light.name)" ng-right-click="openEntityMenu($event, light.name)" title="{{light.name}}">
                     <div class="treeItemImg"><img src="{{light.thumbnail}}"></div>
                     <div class="treeItemTitle">{{light.name}}</div><br>
                   </div>
