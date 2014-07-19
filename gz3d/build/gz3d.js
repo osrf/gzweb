@@ -5731,7 +5731,7 @@ GZ3D.SpawnModel.prototype.generateUniqueName = function(entity)
   var i = 0;
   while (i < 1000)
   {
-    if (this.scene.scene.getObjectByName(entity+'_'+i))
+    if (this.scene.getByName(entity+'_'+i))
     {
       ++i;
     }
