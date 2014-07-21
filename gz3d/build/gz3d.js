@@ -621,6 +621,26 @@ gzangular.controller('treeControl', ['$scope', function($scope)
     $('.leftPanels').hide();
     $('#treeMenu').show();
   };
+
+  $scope.expandProperty = function (property, model)
+  {
+    var idContent = '#expandable-' + property + '-' + model;
+    var idHeader = '#expand-' + property + '-' + model;
+    if ($(idContent).is(':visible'))
+    {
+      $(idContent).hide();
+      $(idHeader+' img').css('transform','rotate(0deg)')
+                        .css('-webkit-transform','rotate(0deg)')
+                        .css('-ms-transform','rotate(0deg)');
+    }
+    else
+    {
+      $(idContent).show();
+      $(idHeader+' img').css('transform','rotate(90deg)')
+                        .css('-webkit-transform','rotate(90deg)')
+                        .css('-ms-transform','rotate(90deg)');
+    }
+  };
 }]);
 
 // Insert menu

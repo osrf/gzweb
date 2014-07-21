@@ -289,6 +289,7 @@
               </ul>
             </div>
           </div>
+          <!-- property panels -->
           <div ng-repeat="model in models" id="propertyPanel-{{model.name}}" class="leftPanels ui-overlay-shadow">
             <div class="panelTitle" ng-click="closePanels()">
               <h3>World</h3>
@@ -299,9 +300,66 @@
               <img src="style/images/back.png">
             </div>
             <div class="panelSubContent">
-              <ul>
-                aaa
-              </ul>
+              <div class="proertyPanelImg"><img src="{{model.thumbnail}}"></div>
+              <div class="propertyHeader"><h4>Property</h4></div>
+              <div class="propertyHeader"><h4>Value</h4></div>
+              <div class="properties propertyName">name</div>
+              <div class="properties propertyValue">{{model.name}}</div>
+              <div class="properties propertyName">is_static</div>
+              <div class="properties propertyValue">False?</div>
+              <div id="expand-pose-{{model.name}}" class="expandableProperty" ng-click="expandProperty('pose', model.name)">
+                <img src="style/images/play.png">
+                pose
+              </div>
+              <div id="expandable-pose-{{model.name}}" class="expandable">
+                <div class="properties expandableItemName">x</div>
+                <div class="properties expandableItemValue">???</div>
+                <div class="properties expandableItemName">y</div>
+                <div class="properties expandableItemValue">???</div>
+                <div class="properties expandableItemName">z</div>
+                <div class="properties expandableItemValue">???</div>
+                <div class="properties expandableItemName">roll</div>
+                <div class="properties expandableItemValue">???</div>
+                <div class="properties expandableItemName">pitch</div>
+                <div class="properties expandableItemValue">???</div>
+                <div class="properties expandableItemName">yaw</div>
+                <div class="properties expandableItemValue">???</div>
+              </div>
+            </div>
+          </div>
+          <div ng-repeat="light in lights" id="propertyPanel-{{light.name}}" class="leftPanels ui-overlay-shadow">
+            <div class="panelTitle" ng-click="closePanels()">
+              <h3>World</h3>
+              <img src="style/images/close.png">
+            </div>
+            <div class="panelSubTitle" ng-click="backToTree()">
+              <h4>{{light.name}}</h4>
+              <img src="style/images/back.png">
+            </div>
+            <div class="panelSubContent">
+              <div class="proertyPanelImg"><img src="{{light.thumbnail}}"></div>
+              <div class="propertyHeader"><h4>Property</h4></div>
+              <div class="propertyHeader"><h4>Value</h4></div>
+              <div class="properties propertyName">name</div>
+              <div class="properties propertyValue">{{light.name}}</div>
+              <div id="expand-pose-{{light.name}}" class="expandableProperty" ng-click="expandProperty('pose', light.name)">
+                <img src="style/images/play.png">
+                pose
+              </div>
+              <div id="expandable-pose-{{light.name}}" class="expandable">
+                <div class="properties expandableItemName">x</div>
+                <div class="properties expandableItemValue">???</div>
+                <div class="properties expandableItemName">y</div>
+                <div class="properties expandableItemValue">???</div>
+                <div class="properties expandableItemName">z</div>
+                <div class="properties expandableItemValue">???</div>
+                <div class="properties expandableItemName">roll</div>
+                <div class="properties expandableItemValue">???</div>
+                <div class="properties expandableItemName">pitch</div>
+                <div class="properties expandableItemValue">???</div>
+                <div class="properties expandableItemName">yaw</div>
+                <div class="properties expandableItemValue">???</div>
+              </div>
             </div>
           </div>
         </div>

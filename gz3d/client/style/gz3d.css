@@ -125,6 +125,9 @@ body
 {
   margin: 0.1em;
   float: left;
+  width: 13em;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .panelSubTitle img
 {
@@ -222,6 +225,60 @@ body
 {
   background-color: #aaaaaa;
 }
+/* property panel */
+.proertyPanelImg
+{
+  text-align: center;
+  clear: both;
+}
+.proertyPanelImg img
+{
+  height: 5em;
+}
+.propertyHeader
+{
+  float: left;
+  width: 7.5em;
+  text-align: center;
+  background-color: #aaaaaa;
+}
+.propertyHeader h4
+{
+  margin: 0;
+}
+.properties
+{
+  width: 7.5em;
+  float: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.propertyName
+{
+  padding-left: 1em;
+  width: 6.5em;
+}
+.expandableProperty
+{
+  padding-left: 0.2em;
+  width: 15em;
+  float: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.expandableProperty img
+{
+  height: 0.7em;
+}
+.expandable
+{
+  display: none;
+}
+.expandableItemName
+{
+  padding-left: 1em;
+  width: 6.5em;
+}
 /* model popup */
 #model-popup
 {
@@ -238,6 +295,10 @@ body
     width: 10.5em;
   }
   .leftPanels ul
+  {
+    width: 8.5em;
+  }
+  .panelSubTitle h4
   {
     width: 8.5em;
   }
