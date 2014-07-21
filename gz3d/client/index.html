@@ -109,7 +109,7 @@
     <div data-role="page" data-theme="b" data-content-theme="c">
 
       <!-- left panel -->
-      <div id="leftPanel" ng-controller="insertControl">
+      <div id="leftPanel">
         <!-- main menu -->
         <div id="mainMenu" class="leftPanels ui-overlay-shadow">
           <div class="panelTitle">
@@ -143,147 +143,166 @@
           </div>
         </div>
         <!-- insert menu -->
-        <div id="insertMenu" class="leftPanels insertMenus ui-overlay-shadow">
-          <div class="panelTitle">
-            <h3>Insert</h3>
-            <img src="style/images/close.png">
+        <div ng-controller="insertControl" class="panelsGroup">
+          <div id="insertMenu" class="leftPanels insertMenus ui-overlay-shadow">
+            <div class="panelTitle">
+              <h3>Insert</h3>
+              <img src="style/images/close.png">
+            </div>
+            <div class="panelContent">
+              <ul>
+                <li>
+                  <a href="#" ng-click="openCategory('simple_shapes')" data-role="button" class="insertMenuItem" title="Shapes">
+                    Shapes<br>
+                    <img src="style/images/box.png">
+                  </a>
+                </li>
+                <li>
+                  <a href="#" ng-click="openCategory('lights')" data-role="button" class="insertMenuItem" title="Lights">
+                    Lights<br>
+                    <img src="style/images/light_thumb.png">
+                  </a>
+                </li>
+                <li ng-repeat="category in categories">
+                  <a href="#" ng-click="openCategory(category.path)" data-role="button" class="insertMenuItem" title="{{category.title}}">
+                    {{category.title}}<br>
+                    <img src="/assets/{{category.examplePath}}/thumbnails/0.png">
+                  </a>
+                </li>
+              </ul>
+            </div>
           </div>
-          <div class="panelContent">
-            <ul>
-              <li>
-                <a href="#" ng-click="openCategory('simple_shapes')" data-role="button" class="insertMenuItem" title="Shapes">
-                  Shapes<br>
-                  <img src="style/images/box.png">
-                </a>
-              </li>
-              <li>
-                <a href="#" ng-click="openCategory('lights')" data-role="button" class="insertMenuItem" title="Lights">
-                  Lights<br>
-                  <img src="style/images/light_thumb.png">
-                </a>
-              </li>
-              <li ng-repeat="category in categories">
-                <a href="#" ng-click="openCategory(category.path)" data-role="button" class="insertMenuItem" title="{{category.title}}">
-                  {{category.title}}<br>
-                  <img src="/assets/{{category.examplePath}}/thumbnails/0.png">
-                </a>
-              </li>
-            </ul>
+          <div id="insertMenu-simple_shapes" class="leftPanels insertMenus insertCategory ui-overlay-shadow">
+            <div class="panelTitle">
+              <h3>Insert</h3>
+              <img src="style/images/close.png">
+            </div>
+            <div class="panelSubTitle">
+              <h4>Simple Shapes</h4>
+              <img src="style/images/back.png">
+            </div>
+            <div class="panelSubContent">
+              <ul>
+                <li>
+                  <a href="#" id="insert-entity-box" ng-mousedown="spawnEntity('box')" data-role="button" class="insertMenuItem" title="Box">
+                    Box<br>
+                    <img src="style/images/box.png">
+                  </a>
+                </li>
+                <li>
+                  <a href="#" id="insert-entity-sphere" ng-mousedown="spawnEntity('sphere')" data-role="button" class="insertMenuItem" title="Sphere">
+                    Sphere<br>
+                    <img src="style/images/sphere.png">
+                  </a>
+                </li>
+                <li>
+                  <a href="#" id="insert-entity-cylinder" ng-mousedown="spawnEntity('cylinder')" data-role="button" class="insertMenuItem" title="Cylinder">
+                    Cylinder<br>
+                    <img src="style/images/cylinder.png">
+                  </a>
+                </li>
+              </ul>
+            </div>
           </div>
-        </div>
-        <div id="insertMenu-simple_shapes" class="leftPanels insertMenus insertCategory ui-overlay-shadow">
-          <div class="panelTitle">
-            <h3>Insert</h3>
-            <img src="style/images/close.png">
+          <div id="insertMenu-lights" class="leftPanels insertMenus insertCategory ui-overlay-shadow">
+            <div class="panelTitle">
+              <h3>Insert</h3>
+              <img src="style/images/close.png">
+            </div>
+            <div class="panelSubTitle">
+              <h4>Lights</h4>
+              <img src="style/images/back.png">
+            </div>
+            <div class="panelSubContent">
+              <ul>
+                <li>
+                  <a href="#" id="insert-entity-pointlight" ng-mousedown="spawnEntity('pointlight')" data-role="button" class="insertMenuItem insertMenuItemLight" title="Point Light">
+                    Point<br>
+                    <img src="style/images/pointlight.png">
+                  </a>
+                </li>
+                <li>
+                  <a href="#" id="insert-entity-spotlight" ng-mousedown="spawnEntity('spotlight')" data-role="button" class="insertMenuItem insertMenuItemLight" title="Spot Light">
+                    Spot<br>
+                    <img src="style/images/spotlight.png">
+                  </a>
+                </li>
+                <li>
+                  <a href="#" id="insert-entity-directionallight" ng-mousedown="spawnEntity('directionallight')" data-role="button" class="insertMenuItem insertMenuItemLight" title="Directional Light">
+                    Directional<br>
+                    <img src="style/images/directionallight.png">
+                  </a>
+                </li>
+              </ul>
+            </div>
           </div>
-          <div class="panelSubTitle">
-            <h4>Simple Shapes</h4>
-            <img src="style/images/back.png">
-          </div>
-          <div class="panelSubContent">
-            <ul>
-              <li>
-                <a href="#" id="insert-entity-box" ng-mousedown="spawnEntity('box')" data-role="button" class="insertMenuItem" title="Box">
-                  Box<br>
-                  <img src="style/images/box.png">
-                </a>
-              </li>
-              <li>
-                <a href="#" id="insert-entity-sphere" ng-mousedown="spawnEntity('sphere')" data-role="button" class="insertMenuItem" title="Sphere">
-                  Sphere<br>
-                  <img src="style/images/sphere.png">
-                </a>
-              </li>
-              <li>
-                <a href="#" id="insert-entity-cylinder" ng-mousedown="spawnEntity('cylinder')" data-role="button" class="insertMenuItem" title="Cylinder">
-                  Cylinder<br>
-                  <img src="style/images/cylinder.png">
-                </a>
-              </li>
-            </ul>
-          </div>
-        </div>
-        <div id="insertMenu-lights" class="leftPanels insertMenus insertCategory ui-overlay-shadow">
-          <div class="panelTitle">
-            <h3>Insert</h3>
-            <img src="style/images/close.png">
-          </div>
-          <div class="panelSubTitle">
-            <h4>Lights</h4>
-            <img src="style/images/back.png">
-          </div>
-          <div class="panelSubContent">
-            <ul>
-              <li>
-                <a href="#" id="insert-entity-pointlight" ng-mousedown="spawnEntity('pointlight')" data-role="button" class="insertMenuItem insertMenuItemLight" title="Point Light">
-                  Point<br>
-                  <img src="style/images/pointlight.png">
-                </a>
-              </li>
-              <li>
-                <a href="#" id="insert-entity-spotlight" ng-mousedown="spawnEntity('spotlight')" data-role="button" class="insertMenuItem insertMenuItemLight" title="Spot Light">
-                  Spot<br>
-                  <img src="style/images/spotlight.png">
-                </a>
-              </li>
-              <li>
-                <a href="#" id="insert-entity-directionallight" ng-mousedown="spawnEntity('directionallight')" data-role="button" class="insertMenuItem insertMenuItemLight" title="Directional Light">
-                  Directional<br>
-                  <img src="style/images/directionallight.png">
-                </a>
-              </li>
-            </ul>
-          </div>
-        </div>
-        <div ng-repeat="category in categories" id="insertMenu-{{category.path}}" class="leftPanels insertMenus insertCategory ui-overlay-shadow">
-          <div class="panelTitle">
-            <h3>Insert</h3>
-            <img src="style/images/close.png">
-          </div>
-          <div class="panelSubTitle">
-            <h4>{{category.title}}</h4>
-            <img src="style/images/back.png">
-          </div>
-          <div class="panelSubContent">
-            <ul>
-              <li ng-repeat="model in category.models">
-                <a href="#" id="insert-entity-{{model.modelPath}}" ng-mousedown="spawnEntity(model.modelPath)" data-role="button" class="insertMenuItem" title="{{model.modelTitle}}">
-                  {{model.modelTitle}}<br>
-                  <img src="/assets/{{model.modelPath}}/thumbnails/0.png">
-                </a>
-              </li>
-            </ul>
+          <div ng-repeat="category in categories" id="insertMenu-{{category.path}}" class="leftPanels insertMenus insertCategory ui-overlay-shadow">
+            <div class="panelTitle">
+              <h3>Insert</h3>
+              <img src="style/images/close.png">
+            </div>
+            <div class="panelSubTitle">
+              <h4>{{category.title}}</h4>
+              <img src="style/images/back.png">
+            </div>
+            <div class="panelSubContent">
+              <ul>
+                <li ng-repeat="model in category.models">
+                  <a href="#" id="insert-entity-{{model.modelPath}}" ng-mousedown="spawnEntity(model.modelPath)" data-role="button" class="insertMenuItem" title="{{model.modelTitle}}">
+                    {{model.modelTitle}}<br>
+                    <img src="/assets/{{model.modelPath}}/thumbnails/0.png">
+                  </a>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
         <!-- world tree -->
-        <div id="treeMenu" class="leftPanels ui-overlay-shadow" ng-controller="treeControl">
-          <div class="panelTitle">
-            <h3>World Tree</h3>
-            <img src="style/images/close.png">
+        <div ng-controller="treeControl" class="panelsGroup">
+          <div id="treeMenu" class="leftPanels ui-overlay-shadow">
+            <div class="panelTitle">
+              <h3>World</h3>
+              <img src="style/images/close.png">
+            </div>
+            <div class="panelContent">
+              <ul>
+                <!-- models -->
+                <div id="modelsTree" data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
+                  <h3><span class="collapsible_header">Models</span></h3>
+                  <ul data-role="listview">
+                    <div class="treeItem {{model.selected}}" ng-repeat="model in models" ng-click="selectEntity(model.name)" ng-right-click="openEntityMenu($event, model.name)" title="{{model.name}}">
+                      <div class="treeItemImg"><img src="{{model.thumbnail}}"></div>
+                      <div class="treeItemTitle">{{model.name}}</div><br>
+                    </div>
+                  </ul>
+                </div>
+                <!-- lights -->
+                <div id="lightsTree" data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
+                  <h3><span class="collapsible_header">Lights</span></h3>
+                  <ul data-role="listview">
+                    <div class="treeItem {{light.selected}}" ng-repeat="light in lights" ng-click="selectEntity(light.name)" ng-right-click="openEntityMenu($event, light.name)" title="{{light.name}}">
+                      <div class="treeItemImg"><img src="{{light.thumbnail}}"></div>
+                      <div class="treeItemTitle">{{light.name}}</div><br>
+                    </div>
+                  </ul>
+                </div>
+              </ul>
+            </div>
           </div>
-          <div class="panelContent">
-            <ul>
-              <!-- models -->
-              <div id="modelsTree" data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
-                <h3><span class="collapsible_header">Models</span></h3>
-                <ul data-role="listview">
-                  <div class="treeItem {{model.selected}}" ng-repeat="model in models" ng-click="selectEntity(model.name)" ng-right-click="openEntityMenu($event, model.name)" title="{{model.name}}">
-                    <div class="treeItemImg"><img src="{{model.thumbnail}}"></div>
-                    <div class="treeItemTitle">{{model.name}}</div><br>
-                  </div>
-                </ul>
-              </div>
-              <!-- lights -->
-              <div id="lightsTree" data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
-                <h3><span class="collapsible_header">Lights</span></h3>
-                <ul data-role="listview">
-                  <div class="treeItem {{light.selected}}" ng-repeat="light in lights" ng-click="selectEntity(light.name)" ng-right-click="openEntityMenu($event, light.name)" title="{{light.name}}">
-                    <div class="treeItemImg"><img src="{{light.thumbnail}}"></div>
-                    <div class="treeItemTitle">{{light.name}}</div><br>
-                  </div>
-                </ul>
-              </div>
-            </ul>
+          <div ng-repeat="model in models" id="propertyPanel-{{model.name}}" class="leftPanels ui-overlay-shadow">
+            <div class="panelTitle" ng-click="closePanels()">
+              <h3>World</h3>
+              <img src="style/images/close.png">
+            </div>
+            <div class="panelSubTitle" ng-click="backToTree()">
+              <h4>{{model.name}}</h4>
+              <img src="style/images/back.png">
+            </div>
+            <div class="panelSubContent">
+              <ul>
+                aaa
+              </ul>
+            </div>
           </div>
         </div>
       </div>

@@ -394,8 +394,10 @@ $(function()
   // Only for insert for now
   $('.panelSubTitle').click(function()
       {
-        $('.insertCategory').hide();
-        $('#insertMenu').show();
+        var id = $('.leftPanels:visible').attr('id');
+        id = id.substring(0,id.indexOf('-'));
+        $('.leftPanels').hide();
+        $('#'+id).show();
       });
 
   $('#view-mode').click(function()
@@ -593,12 +595,26 @@ gzangular.controller('treeControl', ['$scope', function($scope)
   {
     $('#model-popup').popup('close');
     guiEvents.emit('selectEntity', name);
+
+    $('#treeMenu').hide();
+    $('#propertyPanel-'+name).show();
   };
 
   $scope.openEntityMenu = function (event, name)
   {
     $('#model-popup').popup('close');
     guiEvents.emit('openEntityPopup', event, name);
+  };
+
+  $scope.closePanels = function ()
+  {
+    guiEvents.emit('closeTabs', true);
+  };
+
+  $scope.backToTree = function ()
+  {
+    $('.leftPanels').hide();
+    $('#treeMenu').show();
   };
 }]);
 
