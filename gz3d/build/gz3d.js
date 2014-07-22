@@ -4741,6 +4741,7 @@ GZ3D.Scene.prototype.createSpotLight = function(obj, color, intensity, distance,
 
   var helperGeometry = new THREE.CylinderGeometry(0, 0.3, 0.2, 4, 1, true);
   helperGeometry.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI/2));
+  helperGeometry.applyMatrix(new THREE.Matrix4().makeRotationZ(Math.PI/4));
   var helperMaterial = new THREE.MeshBasicMaterial(
         {wireframe: true, color: 0x00ff00});
   var helper = new THREE.Mesh(helperGeometry, helperMaterial);

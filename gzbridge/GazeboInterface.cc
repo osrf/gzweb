@@ -309,6 +309,8 @@ void GazeboInterface::ProcessMessages()
         {
           std::string name = get_value(msg, "msg:name");
           std::string type = get_value(msg, "msg:type");
+          // createEntity = 1: create new light
+          // createEntity = 0: modify existing light
           std::string createEntity = get_value(msg, "msg:createEntity");
 
           if (name == "")
