@@ -1366,7 +1366,7 @@ GZ3D.GZIface.prototype.onConnected = function()
     var quaternion = new THREE.Quaternion();
     var scale = new THREE.Vector3();
     matrix.decompose(translation, quaternion, scale);
-    var modelMsg =
+    var entityMsg =
     {
       name : model.name,
       type : type,
@@ -1387,11 +1387,11 @@ GZ3D.GZIface.prototype.onConnected = function()
     };
     if (model.children[0].children[0] instanceof THREE.Light)
     {
-      that.lightFactoryTopic.publish(modelMsg);
+      that.lightFactoryTopic.publish(entityMsg);
     }
     else
     {
-      that.factoryTopic.publish(modelMsg);
+      that.factoryTopic.publish(entityMsg);
     }
   };
 
