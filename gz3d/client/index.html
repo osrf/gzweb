@@ -306,24 +306,24 @@
               <div class="properties propertyName">name</div>
               <div class="properties propertyValue">{{model.name}}</div>
               <div class="properties propertyName">is_static</div>
-              <div class="properties propertyValue">False?</div>
+              <div class="properties propertyValue">{{model.is_static}}</div>
               <div id="expand-pose-{{model.name}}" class="expandableProperty" ng-click="expandProperty('pose', model.name)">
                 <img src="style/images/play.png">
                 pose
               </div>
               <div id="expandable-pose-{{model.name}}" class="expandable">
                 <div class="properties expandableItemName">x</div>
-                <div class="properties expandableItemValue">???</div>
+                <div class="properties expandableItemValue">{{model.position.x}}</div>
                 <div class="properties expandableItemName">y</div>
-                <div class="properties expandableItemValue">???</div>
+                <div class="properties expandableItemValue">{{model.position.y}}</div>
                 <div class="properties expandableItemName">z</div>
-                <div class="properties expandableItemValue">???</div>
+                <div class="properties expandableItemValue">{{model.position.z}}</div>
                 <div class="properties expandableItemName">roll</div>
-                <div class="properties expandableItemValue">???</div>
+                <div class="properties expandableItemValue">{{model.orientation.roll}}</div>
                 <div class="properties expandableItemName">pitch</div>
-                <div class="properties expandableItemValue">???</div>
+                <div class="properties expandableItemValue">{{model.orientation.pitch}}</div>
                 <div class="properties expandableItemName">yaw</div>
-                <div class="properties expandableItemValue">???</div>
+                <div class="properties expandableItemValue">{{model.orientation.yaw}}</div>
               </div>
             </div>
           </div>

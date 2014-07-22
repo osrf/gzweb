@@ -1019,16 +1019,16 @@ GZ3D.Gui.prototype.init = function()
 
   guiEvents.on('setTreeSelected', function (object)
       {
-        if (isWideScreen())
-        {
-          guiEvents.emit('openTab', 'treeMenu');
-        }
         for (var i = 0; i < modelStats.length; ++i)
         {
           if (modelStats[i].name === object)
           {
             $('#modelsTree').collapsible({collapsed: false});
             modelStats[i].selected = 'selectedTreeItem';
+            if (isWideScreen())
+            {
+              guiEvents.emit('openTab', 'propertyPanel-'+object);
+            }
           }
           else
           {
@@ -1129,21 +1129,53 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
 
   if (action === 'update')
   {
-    var thumbnail = this.findModelThumbnail(name);
-
     var model = $.grep(modelStats, function(e)
         {
           return e.name === name;
         });
 
+    var quaternions, RPY, orientation;
+
+    // New model
     if (model.length === 0)
     {
+      var thumbnail = this.findModelThumbnail(name);
+
+      quaternions = new THREE.Quaternion(stats.pose.orientation.x,
+          stats.pose.orientation.y, stats.pose.orientation.z,
+          stats.pose.orientation.w);
+
+      RPY = new THREE.Euler();
+      RPY.setFromQuaternion(quaternions);
+
+      orientation = {roll: RPY._x, pitch: RPY._y, yaw: RPY._z};
+
       modelStats.push(
           {
             name: name,
             thumbnail: thumbnail,
-            selected: 'unselectedTreeItem'
+            selected: 'unselectedTreeItem',
+            is_static: stats.is_static,
+            position: stats.pose.position,
+            orientation: orientation
           });
+    }
+    else
+    {
+      if (stats.pose)
+      {
+        quaternions = new THREE.Quaternion(stats.pose.orientation.x,
+            stats.pose.orientation.y, stats.pose.orientation.z,
+            stats.pose.orientation.w);
+
+        RPY = new THREE.Euler();
+        RPY.setFromQuaternion(quaternions);
+
+        orientation = {roll: RPY._x, pitch: RPY._y, yaw: RPY._z};
+
+        model[0].position = stats.pose.position;
+        model[0].orientation = orientation;
+      }
     }
   }
   else if (action === 'delete')

@@ -261,7 +261,7 @@ body
 .expandableProperty
 {
   padding-left: 0.2em;
-  width: 15em;
+  width: 14.5em;
   float: left;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -278,6 +278,11 @@ body
 {
   padding-left: 1em;
   width: 6.5em;
+}
+.expandableItemValue
+{
+  padding-left: 1em;
+  width: 5em;
 }
 /* model popup */
 #model-popup
