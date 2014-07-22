@@ -161,70 +161,9 @@ GZ3D.Scene.prototype.initScene = function()
   this.createGrid();
 
   // create a sun light
-  var obj = new THREE.Object3D();
-  var helper, helperGeometry, helperMaterial;
-
-  var color = new THREE.Color();
-  color.r = 0.8;
-  color.g = 0.8;
-  color.b = 0.8;
-
-  var quaternion = new THREE.Quaternion(0, 0, 0, 1);
-
-  var translation = new THREE.Vector3(0, 0, 10);
-
-  // obj matrix is not updated in time
-  var matrixWorld = new THREE.Matrix4();
-  matrixWorld.compose(translation, quaternion, new THREE.Vector3(1,1,1));
-
-  this.setPose(obj, {x: 0, y: 0, z: 10}, {x: 0, y: 0, z: 0, w: 1});
-  obj.matrixWorldNeedsUpdate = true;
-
-  var lightObj = new THREE.DirectionalLight(color.getHex());
-  lightObj.intensity = 0.9;
-  lightObj.shadowCameraNear = 1;
-  lightObj.shadowCameraFar = 50;
-  lightObj.shadowMapWidth = 4094;
-  lightObj.shadowMapHeight = 4094;
-  lightObj.shadowCameraVisible = false;
-  lightObj.shadowCameraBottom = -100;
-  lightObj.shadowCameraLeft = -100;
-  lightObj.shadowCameraRight = 100;
-  lightObj.shadowCameraTop = 100;
-  lightObj.shadowBias = 0.0001;
-  lightObj.position.set(0,0,0);
-  lightObj.castShadow = true;
-  lightObj.shadowDarkness = 0.3;
-  lightObj.name = 'sun';
-
-  helperGeometry = new THREE.Geometry();
-  helperGeometry.vertices.push(new THREE.Vector3(-0.5, -0.5, 0));
-  helperGeometry.vertices.push(new THREE.Vector3(-0.5,  0.5, 0));
-  helperGeometry.vertices.push(new THREE.Vector3(-0.5,  0.5, 0));
-  helperGeometry.vertices.push(new THREE.Vector3( 0.5,  0.5, 0));
-  helperGeometry.vertices.push(new THREE.Vector3( 0.5,  0.5, 0));
-  helperGeometry.vertices.push(new THREE.Vector3( 0.5, -0.5, 0));
-  helperGeometry.vertices.push(new THREE.Vector3( 0.5, -0.5, 0));
-  helperGeometry.vertices.push(new THREE.Vector3(-0.5, -0.5, 0));
-  helperGeometry.vertices.push(new THREE.Vector3(   0,    0, 0));
-  helperGeometry.vertices.push(new THREE.Vector3(   0,    0, -0.5));
-  helperMaterial = new THREE.LineBasicMaterial({color: 0x00ff00});
-  helper = new THREE.Line(helperGeometry, helperMaterial, THREE.LinePieces);
-  helper.name = 'sun_lightHelper';
-
-  var dir = new THREE.Vector3(0.5, 0.1, -0.9);
-
-  obj.direction = new THREE.Vector3();
-  obj.direction.copy(dir);
-
-  dir.applyMatrix4(matrixWorld); // localToWorld
-  lightObj.target.position.copy(dir);
-
-  obj.name = 'sun';
-
-  // Important: keep order
-  obj.add(lightObj);
-  obj.add(helper);
+  var obj = this.createLight(3, new THREE.Color(0.8, 0.8, 0.8), 0.9,
+       {position: {x:0, y:0, z:10}, orientation: {x:0, y:0, z:0, w:1}},
+       null, true, 'sun', {x: 0.5, y: 0.1, z: -0.9});
 
   this.add(obj);
 };
@@ -780,8 +719,8 @@ GZ3D.Scene.prototype.createBox = function(width, height, depth)
  * @param {} direction
  * @returns {THREE.Object3D}
  */
-GZ3D.Scene.prototype.createLight = function(type, color, intensity, pose, distance,
-    cast_shadows, name, direction)
+GZ3D.Scene.prototype.createLight = function(type, color, intensity, pose,
+    distance, cast_shadows, name, direction)
 {
   var obj = new THREE.Object3D();
 
@@ -873,8 +812,8 @@ GZ3D.Scene.prototype.createLight = function(type, color, intensity, pose, distan
  * @param {} cast_shadows
  * @returns {[THREE.Light, THREE.Mesh]}
  */
-GZ3D.Scene.prototype.createPointLight = function(obj, color, intensity, distance,
-    cast_shadows)
+GZ3D.Scene.prototype.createPointLight = function(obj, color, intensity,
+    distance, cast_shadows)
 {
   if (typeof(intensity) === 'undefined')
   {
@@ -911,8 +850,8 @@ GZ3D.Scene.prototype.createPointLight = function(obj, color, intensity, distance
  * @param {} cast_shadows
  * @returns {[THREE.Light, THREE.Mesh]}
  */
-GZ3D.Scene.prototype.createSpotLight = function(obj, color, intensity, distance,
-    cast_shadows)
+GZ3D.Scene.prototype.createSpotLight = function(obj, color, intensity,
+    distance, cast_shadows)
 {
   if (typeof(intensity) === 'undefined')
   {
@@ -991,7 +930,8 @@ GZ3D.Scene.prototype.createDirectionalLight = function(obj, color, intensity,
   helperGeometry.vertices.push(new THREE.Vector3(   0,    0, 0));
   helperGeometry.vertices.push(new THREE.Vector3(   0,    0, -0.5));
   var helperMaterial = new THREE.LineBasicMaterial({color: 0x00ff00});
-  var helper = new THREE.Line(helperGeometry, helperMaterial, THREE.LinePieces);
+  var helper = new THREE.Line(helperGeometry, helperMaterial,
+      THREE.LinePieces);
 
   return [lightObj, helper];
 };
