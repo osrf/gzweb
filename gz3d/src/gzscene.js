@@ -769,93 +769,22 @@ GZ3D.Scene.prototype.createBox = function(width, height, depth)
 };
 
 /**
- * Create point light
+ * Create light
+ * @param {} type - 1: point, 2: spot, 3: directional
  * @param {} color
  * @param {} intensity
- * @returns {THREE.Mesh}
+ * @param {} pose
+ * @param {} distance
+ * @param {} cast_shadows
+ * @param {} name
+ * @param {} direction
+ * @returns {THREE.Object3D}
  */
-GZ3D.Scene.prototype.createPointLight = function(color, intensity, pose, range,
-    cast_shadows, name)
-{
-  if (typeof(color) === 'undefined')
-  {
-    color = 0xffffff;
-  }
-  else if (typeof(color) !== THREE.Color)
-  {
-    var Color = new THREE.Color();
-    Color.r = color.r;
-    Color.g = color.g;
-    Color.b = color.b;
-    color = Color;
-  }
-
-  if (typeof(intensity) === 'undefined')
-  {
-    intensity = 0.5;
-  }
-
-  var obj = new THREE.Object3D();
-
-  if (pose)
-  {
-    var quaternion = new THREE.Quaternion(
-        pose.orientation.x,
-        pose.orientation.y,
-        pose.orientation.z,
-        pose.orientation.w);
-
-    var translation = new THREE.Vector3(
-        pose.position.x,
-        pose.position.y,
-        pose.position.z);
-
-    var matrixWorld = new THREE.Matrix4();
-    matrixWorld.compose(translation, quaternion, new THREE.Vector3(1,1,1));
-
-    this.setPose(obj, pose.position, pose.orientation);
-    obj.matrixWorldNeedsUpdate = true;
-  }
-
-  var lightObj = new THREE.PointLight(color, intensity);
-  lightObj.shadowDarkness = 0.3;
-
-  if (range)
-  {
-    lightObj.distance = range;
-  }
-  if (cast_shadows)
-  {
-    lightObj.castShadow = cast_shadows;
-  }
-
-  var helperGeometry = new THREE.OctahedronGeometry(0.25, 0);
-  helperGeometry.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI/2));
-  var helperMaterial = new THREE.MeshBasicMaterial(
-        {wireframe: true, color: 0x00ff00});
-  var helper = new THREE.Mesh(helperGeometry, helperMaterial);
-
-  if (name)
-  {
-    lightObj.name = name;
-    obj.name = name;
-    helper.name = name + '_lightHelper';
-  }
-
-  obj.add(lightObj);
-  obj.add(helper);
-  return obj;
-};
-
-/**
- * Create spot light
- * @param {} color
- * @param {} intensity
- * @returns {THREE.Mesh}
- */
-GZ3D.Scene.prototype.createSpotLight = function(color, intensity, pose, range,
+GZ3D.Scene.prototype.createLight = function(type, color, intensity, pose, distance,
     cast_shadows, name, direction)
 {
+  var obj = new THREE.Object3D();
+
   if (typeof(color) === 'undefined')
   {
     color = 0xffffff;
@@ -869,16 +798,6 @@ GZ3D.Scene.prototype.createSpotLight = function(color, intensity, pose, range,
     color = Color;
   }
 
-  if (typeof(intensity) === 'undefined')
-  {
-    intensity = 1;
-  }
-  if (typeof(range) === 'undefined')
-  {
-    range = 20;
-  }
-
-  var obj = new THREE.Object3D();
   var matrixWorld;
 
   if (pose)
@@ -901,21 +820,25 @@ GZ3D.Scene.prototype.createSpotLight = function(color, intensity, pose, range,
     obj.matrixWorldNeedsUpdate = true;
   }
 
-  var lightObj = new THREE.SpotLight(color, intensity);
-  lightObj.distance = range;
-  lightObj.position.set(0,0,0);
-  lightObj.shadowDarkness = 0.3;
-
-  if (cast_shadows)
+  var elements;
+  if (type === 1)
   {
-    lightObj.castShadow = cast_shadows;
+    elements = this.createPointLight(obj, color, intensity,
+        distance, cast_shadows);
+  }
+  else if (type === 2)
+  {
+    elements = this.createSpotLight(obj, color, intensity,
+        distance, cast_shadows);
+  }
+  else if (type === 3)
+  {
+    elements = this.createDirectionalLight(obj, color, intensity,
+        cast_shadows);
   }
 
-  var helperGeometry = new THREE.CylinderGeometry(0, 0.3, 0.2, 4, 1, true);
-  helperGeometry.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI/2));
-  var helperMaterial = new THREE.MeshBasicMaterial(
-        {wireframe: true, color: 0x00ff00});
-  var helper = new THREE.Mesh(helperGeometry, helperMaterial);
+  var lightObj = elements[0];
+  var helper = elements[1];
 
   if (name)
   {
@@ -942,53 +865,98 @@ GZ3D.Scene.prototype.createSpotLight = function(color, intensity, pose, range,
 };
 
 /**
- * Create directional light
+ * Create point light - called by createLight
+ * @param {} obj - light object
  * @param {} color
  * @param {} intensity
- * @returns {THREE.Mesh}
+ * @param {} distance
+ * @param {} cast_shadows
+ * @returns {[THREE.Light, THREE.Mesh]}
  */
-GZ3D.Scene.prototype.createDirectionalLight = function(color, intensity, pose,
-    cast_shadows, name, direction)
+GZ3D.Scene.prototype.createPointLight = function(obj, color, intensity, distance,
+    cast_shadows)
 {
-  if (typeof(color) === 'undefined')
+  if (typeof(intensity) === 'undefined')
   {
-    color = 0xffffff;
-  }
-  else if (typeof(color) !== THREE.Color)
-  {
-    var Color = new THREE.Color();
-    Color.r = color.r;
-    Color.g = color.g;
-    Color.b = color.b;
-    color = Color;
+    intensity = 0.5;
   }
 
+  var lightObj = new THREE.PointLight(color, intensity);
+  lightObj.shadowDarkness = 0.3;
+
+  if (distance)
+  {
+    lightObj.distance = distance;
+  }
+  if (cast_shadows)
+  {
+    lightObj.castShadow = cast_shadows;
+  }
+
+  var helperGeometry = new THREE.OctahedronGeometry(0.25, 0);
+  helperGeometry.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI/2));
+  var helperMaterial = new THREE.MeshBasicMaterial(
+        {wireframe: true, color: 0x00ff00});
+  var helper = new THREE.Mesh(helperGeometry, helperMaterial);
+
+  return [lightObj, helper];
+};
+
+/**
+ * Create spot light - called by createLight
+ * @param {} obj - light object
+ * @param {} color
+ * @param {} intensity
+ * @param {} distance
+ * @param {} cast_shadows
+ * @returns {[THREE.Light, THREE.Mesh]}
+ */
+GZ3D.Scene.prototype.createSpotLight = function(obj, color, intensity, distance,
+    cast_shadows)
+{
   if (typeof(intensity) === 'undefined')
   {
     intensity = 1;
   }
-
-  var obj = new THREE.Object3D();
-  var matrixWorld;
-
-  if (pose)
+  if (typeof(distance) === 'undefined')
   {
-    var quaternion = new THREE.Quaternion(
-        pose.orientation.x,
-        pose.orientation.y,
-        pose.orientation.z,
-        pose.orientation.w);
+    distance = 20;
+  }
 
-    var translation = new THREE.Vector3(
-        pose.position.x,
-        pose.position.y,
-        pose.position.z);
+  var lightObj = new THREE.SpotLight(color, intensity);
+  lightObj.distance = distance;
+  lightObj.position.set(0,0,0);
+  lightObj.shadowDarkness = 0.3;
 
-    matrixWorld = new THREE.Matrix4();
-    matrixWorld.compose(translation, quaternion, new THREE.Vector3(1,1,1));
+  if (cast_shadows)
+  {
+    lightObj.castShadow = cast_shadows;
+  }
 
-    this.setPose(obj, pose.position, pose.orientation);
-    obj.matrixWorldNeedsUpdate = true;
+  var helperGeometry = new THREE.CylinderGeometry(0, 0.3, 0.2, 4, 1, true);
+  helperGeometry.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI/2));
+  var helperMaterial = new THREE.MeshBasicMaterial(
+        {wireframe: true, color: 0x00ff00});
+  var helper = new THREE.Mesh(helperGeometry, helperMaterial);
+
+  return [lightObj, helper];
+
+};
+
+/**
+ * Create directional light - called by createLight
+ * @param {} obj - light object
+ * @param {} color
+ * @param {} intensity
+ * @param {} cast_shadows
+ * @returns {[THREE.Light, THREE.Mesh]}
+ */
+GZ3D.Scene.prototype.createDirectionalLight = function(obj, color, intensity,
+    cast_shadows)
+{
+  if (typeof(intensity) === 'undefined')
+  {
+    intensity = 1;
   }
 
   var lightObj = new THREE.DirectionalLight(color, intensity);
@@ -1024,28 +992,7 @@ GZ3D.Scene.prototype.createDirectionalLight = function(color, intensity, pose,
   var helperMaterial = new THREE.LineBasicMaterial({color: 0x00ff00});
   var helper = new THREE.Line(helperGeometry, helperMaterial, THREE.LinePieces);
 
-  if (name)
-  {
-    lightObj.name = name;
-    obj.name = name;
-    helper.name = name + '_lightHelper';
-  }
-
-  if (direction)
-  {
-    var dir = new THREE.Vector3(direction.x, direction.y,
-        direction.z);
-
-    obj.direction = new THREE.Vector3();
-    obj.direction.copy(dir);
-
-    dir.applyMatrix4(matrixWorld); // localToWorld
-    lightObj.target.position.copy(dir);
-  }
-
-  obj.add(lightObj);
-  obj.add(helper);
-  return obj;
+  return [lightObj, helper];
 };
 
 /**

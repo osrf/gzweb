@@ -55,15 +55,15 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
   }
   else if (entity === 'pointlight')
   {
-    mesh = this.scene.createPointLight();
+    mesh = this.scene.createLight(1);
   }
   else if (entity === 'spotlight')
   {
-    mesh = this.scene.createSpotLight();
+    mesh = this.scene.createLight(2);
   }
   else if (entity === 'directionallight')
   {
-    mesh = this.scene.createDirectionalLight();
+    mesh = this.scene.createLight(3);
   }
   else
   {

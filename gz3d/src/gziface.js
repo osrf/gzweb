@@ -611,24 +611,31 @@ GZ3D.GZIface.prototype.createVisualFromMsg = function(visual)
 
 GZ3D.GZIface.prototype.createLightFromMsg = function(light)
 {
-  var obj, factor;
+  var obj, factor, range, direction;
+
   if (light.type === 1)
   {
     factor = 1.5;
-    obj = this.scene.createPointLight(light.diffuse, light.attenuation_constant * factor,
-        light.pose, light.range, light.cast_shadows, light.name);
+    direction = null;
+    range = light.range;
   }
   else if (light.type === 2)
   {
     factor = 5;
-    obj = this.scene.createSpotLight(light.diffuse, light.attenuation_constant * factor,
-        light.pose, light.range, light.cast_shadows, light.name, light.direction);
+    direction = light.direction;
+    range = light.range;
   }
   else if (light.type === 3)
   {
-    obj = this.scene.createDirectionalLight(light.diffuse, light.attenuation_constant,
-        light.pose, light.cast_shadows, light.name, light.direction);
+    factor = 1;
+    direction = light.direction;
+    range = null;
   }
+
+  obj = this.scene.createLight(light.type, light.diffuse,
+        light.attenuation_constant * factor,
+        light.pose, range, light.cast_shadows, light.name,
+        direction);
 
   return obj;
 };
