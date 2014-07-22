@@ -44,32 +44,26 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
   if (entity === 'box')
   {
     mesh = this.scene.createBox(1, 1, 1);
-    this.obj.name = 'unit_box_' +  (new Date()).getTime();
   }
   else if (entity === 'sphere')
   {
     mesh = this.scene.createSphere(0.5);
-    this.obj.name = 'unit_sphere_' + (new Date()).getTime();
   }
   else if (entity === 'cylinder')
   {
     mesh = this.scene.createCylinder(0.5, 1.0);
-    this.obj.name = 'unit_cylinder_' + (new Date()).getTime();
   }
   else if (entity === 'pointlight')
   {
     mesh = this.scene.createPointLight(0xffffff, 0.5);
-    this.obj.name = 'pointlight_' + (new Date()).getTime();
   }
   else if (entity === 'spotlight')
   {
     mesh = this.scene.createSpotLight(0xffffff, 1);
-    this.obj.name = 'spotlight_' + (new Date()).getTime();
   }
   else if (entity === 'directionallight')
   {
     mesh = this.scene.createDirectionalLight(0xffffff, 1);
-    this.obj.name = 'directionallight_' + (new Date()).getTime();
   }
   else
   {
@@ -78,6 +72,7 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
     this.obj.name = entity + '_' + (new Date()).getTime();
   }
 
+  this.obj.name = this.generateUniqueName(entity);
   this.obj.add(mesh);
 
   // temp model appears within current view
@@ -261,5 +256,25 @@ GZ3D.SpawnModel.prototype.moveSpawnedModel = function(positionX, positionY)
     var lightObj = this.obj.children[0].children[0];
     lightObj.target.position.copy(this.obj.position);
     lightObj.target.position.add(new THREE.Vector3(0,0,-0.5));
+  }
+};
+
+/**
+ * Generate unique name for spawned entity
+ * @param {string} entity - entity type
+ */
+GZ3D.SpawnModel.prototype.generateUniqueName = function(entity)
+{
+  var i = 0;
+  while (i < 1000)
+  {
+    if (this.scene.getByName(entity+'_'+i))
+    {
+      ++i;
+    }
+    else
+    {
+      return entity+'_'+i;
+    }
   }
 };
