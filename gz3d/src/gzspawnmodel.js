@@ -55,21 +55,20 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
   }
   else if (entity === 'pointlight')
   {
-    mesh = this.scene.createPointLight(0xffffff, 0.5);
+    mesh = this.scene.createPointLight();
   }
   else if (entity === 'spotlight')
   {
-    mesh = this.scene.createSpotLight(0xffffff, 1);
+    mesh = this.scene.createSpotLight();
   }
   else if (entity === 'directionallight')
   {
-    mesh = this.scene.createDirectionalLight(0xffffff, 1);
+    mesh = this.scene.createDirectionalLight();
   }
   else
   {
     // temp box for now
     mesh = this.scene.createBox(1, 1, 1);
-    this.obj.name = entity + '_' + (new Date()).getTime();
   }
 
   this.obj.name = this.generateUniqueName(entity);
