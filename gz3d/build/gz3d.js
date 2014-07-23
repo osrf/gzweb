@@ -173,7 +173,6 @@ var modelList =
     ]}
   ];
 
-// Bind events to buttons
 $(function()
 {
   //Initialize
@@ -183,6 +182,7 @@ $(function()
   $('#view-transparent').buttonMarkup({icon: 'false'});
   $('#view-wireframe').buttonMarkup({icon: 'false'});
   guiEvents.emit('toggle_notifications');
+  guiEvents.emit('openTreeWhenSelected');
 
   $( '#clock-touch' ).popup('option', 'arrow', 't');
   $('#notification-popup-screen').remove();
@@ -201,7 +201,7 @@ $(function()
   if (isTouchDevice)
   {
     $('.mouse-only')
-        .css('visibility','hidden');
+        .css('display','none');
 
     $('#play-header-fieldset')
         .css('position', 'absolute')
@@ -272,7 +272,7 @@ $(function()
   else
   {
     $('.touch-only')
-        .css('visibility','hidden');
+        .css('display','none');
 
     $('[id^="insert-entity-"]')
       .click(function(event) {
@@ -477,6 +477,10 @@ $(function()
       });
   $( '#snap-to-grid' ).click(function() {
     guiEvents.emit('snap_to_grid');
+    guiEvents.emit('closeTabs', false);
+  });
+  $( '#open-tree-when-selected' ).click(function() {
+    guiEvents.emit('openTreeWhenSelected');
     guiEvents.emit('closeTabs', false);
   });
   $( '#toggle-notifications' ).click(function() {
@@ -684,6 +688,7 @@ GZ3D.Gui.prototype.init = function()
   this.spawnState = null;
   this.longPressContainerState = null;
   this.showNotifications = false;
+  this.openTreeWhenSelected = false;
 
   var that = this;
 
@@ -802,16 +807,30 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
+  guiEvents.on('openTreeWhenSelected', function ()
+      {
+        this.openTreeWhenSelected = !this.openTreeWhenSelected;
+        if(!this.openTreeWhenSelected)
+        {
+          $('#open-tree-when-selected').buttonMarkup({icon: 'false'});
+        }
+        else
+        {
+          $('#open-tree-when-selected').buttonMarkup({icon: 'check'});
+        }
+      }
+  );
+
   guiEvents.on('toggle_notifications', function ()
       {
         this.showNotifications = !this.showNotifications;
         if(!this.showNotifications)
         {
-            $('#toggle-notifications').buttonMarkup({ icon: 'false' });
+          $('#toggle-notifications').buttonMarkup({icon: 'false'});
         }
         else
         {
-            $('#toggle-notifications').buttonMarkup({ icon: 'check' });
+          $('#toggle-notifications').buttonMarkup({icon: 'check'});
         }
       }
   );
@@ -1025,7 +1044,7 @@ GZ3D.Gui.prototype.init = function()
           {
             $('#modelsTree').collapsible({collapsed: false});
             modelStats[i].selected = 'selectedTreeItem';
-            if (isWideScreen())
+            if (isWideScreen() && this.openTreeWhenSelected)
             {
               guiEvents.emit('openTab', 'propertyPanel-'+object);
             }
@@ -1041,6 +1060,10 @@ GZ3D.Gui.prototype.init = function()
           {
             $('#lightsTree').collapsible({collapsed: false});
             lightStats[i].selected = 'selectedTreeItem';
+            if (isWideScreen() && this.openTreeWhenSelected)
+            {
+              guiEvents.emit('openTab', 'propertyPanel-'+object);
+            }
           }
           else
           {
