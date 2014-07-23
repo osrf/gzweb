@@ -1152,21 +1152,14 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
           return e.name === name;
         });
 
-    var quaternions, RPY, orientation;
+    var orientation;
 
     // New model
     if (model.length === 0)
     {
       var thumbnail = this.findModelThumbnail(name);
 
-      quaternions = new THREE.Quaternion(stats.pose.orientation.x,
-          stats.pose.orientation.y, stats.pose.orientation.z,
-          stats.pose.orientation.w);
-
-      RPY = new THREE.Euler();
-      RPY.setFromQuaternion(quaternions);
-
-      orientation = {roll: RPY._x, pitch: RPY._y, yaw: RPY._z};
+      orientation = this.RPYFromQuaternions(stats.pose.orientation);
 
       modelStats.push(
           {
@@ -1182,14 +1175,7 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
     {
       if (stats.pose)
       {
-        quaternions = new THREE.Quaternion(stats.pose.orientation.x,
-            stats.pose.orientation.y, stats.pose.orientation.z,
-            stats.pose.orientation.w);
-
-        RPY = new THREE.Euler();
-        RPY.setFromQuaternion(quaternions);
-
-        orientation = {roll: RPY._x, pitch: RPY._y, yaw: RPY._z};
+        orientation = this.RPYFromQuaternions(stats.pose.orientation);
 
         model[0].position = stats.pose.position;
         model[0].orientation = orientation;
@@ -1349,4 +1335,24 @@ GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
       {x: event.clientX + emUnits(6),
        y: event.clientY + emUnits(0)});
   }
+};
+
+/**
+ * Get RPY formatted for property panel from quaternions message
+ * @param {} quaternions
+ * @returns {roll, pitch, yaw}
+ */
+GZ3D.Gui.prototype.RPYFromQuaternions = function(quaternions)
+{
+  var Quat = new THREE.Quaternion(quaternions.x, quaternions.y, quaternions.z,
+      quaternions.w);
+
+  var RPY = new THREE.Euler();
+  RPY.setFromQuaternion(quaternions);
+
+  RPY._x = Math.round(RPY._x * 100000) / 100000;
+  RPY._y = Math.round(RPY._y * 100000) / 100000;
+  RPY._z = Math.round(RPY._z * 100000) / 100000;
+
+  return {roll: RPY._x, pitch: RPY._y, yaw: RPY._z};
 };
