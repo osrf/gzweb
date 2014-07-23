@@ -84,9 +84,14 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
   this.obj.position.z += 0.5;
   this.scene.add(this.obj);
   // For the inserted light to have effect
-  if (this.scene.getByName('plane'))
+  var allObjects = [];
+  this.scene.scene.getDescendants(allObjects);
+  for (var l = 0; l < allObjects.length; ++l)
   {
-    this.scene.getByName('plane').material.needsUpdate = true;
+    if (allObjects[l].material)
+    {
+      allObjects[l].material.needsUpdate = true;
+    }
   }
 
   var that = this;
