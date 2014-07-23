@@ -85,12 +85,14 @@ body
 .panelContent
 {
   height: calc(100% - 1.8em);
-  overflow:auto;
+  overflow-y:auto;
+  overflow-x:hidden;
 }
 .panelSubContent
 {
   height: calc(100% - 1.8em - 1.5em);
-  overflow:auto;
+  overflow-y:auto;
+  overflow-x:hidden;
 }
 .panelTitle
 {
@@ -223,7 +225,7 @@ body
   height: 0em;
   border: none;
 }
-/* smaller panel for narrow screens*/
+/* narrow screens*/
 @media (max-width: 35em)
 {
   /* panel */
@@ -271,4 +273,30 @@ body
     width: 6.5em;
   }
 }
-
+/* short screens*/
+@media (max-height: 35em)
+{
+  /* tabs */
+  .tab
+  {
+    height: 2em;
+  }
+  .tab img
+  {
+    left: -1.6em;
+    top: 0.4em;
+    height: 1.3em;
+  }
+  .tab:nth-of-type(1)
+  {
+    top: 1.8em;
+  }
+  .tab:nth-of-type(2)
+  {
+    top: 5.8em;
+  }
+  .tab:nth-of-type(3)
+  {
+    top: 9.8em;
+  }
+}
