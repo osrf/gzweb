@@ -268,8 +268,8 @@ GZ3D.GZIface.prototype.onConnected = function()
     {
       var lightObj = this.createLightFromMsg(message);
       this.scene.add(lightObj);
-      this.gui.setLightStats(message, 'update');
     }
+    this.gui.setLightStats(message, 'update');
   };
 
   lightTopic.subscribe(lightUpdate.bind(this));

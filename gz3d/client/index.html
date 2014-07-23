@@ -267,22 +267,18 @@
               <!-- models -->
               <div id="modelsTree" data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
                 <h3><span class="collapsible_header">Models</span></h3>
-                <ul data-role="listview">
-                  <div class="treeItem {{model.selected}}" ng-repeat="model in models" ng-click="selectEntity(model.name)" ng-right-click="openEntityMenu($event, model.name)" title="{{model.name}}">
-                    <div class="treeItemImg"><img src="{{model.thumbnail}}"></div>
-                    <div class="treeItemTitle">{{model.name}}</div><br>
-                  </div>
-                </ul>
+                <div class="treeItem {{model.selected}}" ng-repeat="model in models" ng-click="selectEntity(model.name)" ng-right-click="openEntityMenu($event, model.name)" title="{{model.name}}">
+                  <div class="treeItemImg"><img src="{{model.thumbnail}}"></div>
+                  <div class="treeItemTitle">{{model.name}}</div><br>
+                </div>
               </div>
               <!-- lights -->
               <div id="lightsTree" data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
                 <h3><span class="collapsible_header">Lights</span></h3>
-                <ul data-role="listview">
-                  <div class="treeItem {{light.selected}}" ng-repeat="light in lights" ng-click="selectEntity(light.name)" ng-right-click="openEntityMenu($event, light.name)" title="{{light.name}}">
-                    <div class="treeItemImg"><img src="{{light.thumbnail}}"></div>
-                    <div class="treeItemTitle">{{light.name}}</div><br>
-                  </div>
-                </ul>
+                <div class="treeItem {{light.selected}}" ng-repeat="light in lights" ng-click="selectEntity(light.name)" ng-right-click="openEntityMenu($event, light.name)" title="{{light.name}}">
+                  <div class="treeItemImg"><img src="{{light.thumbnail}}"></div>
+                  <div class="treeItemTitle">{{light.name}}</div><br>
+                </div>
               </div>
             </ul>
           </div>
@@ -293,7 +289,7 @@
       <!-- tabs -->
       <a href="#" id="mainMenuTab" class="tab"><img src="style/images/bars.png" title="Menu"></a>
       <a href="#" id="insertMenuTab" class="tab"><img src="style/images/insert.png" title="Insert"></a>
-      <a href="#" id="treeMenuTab" class="tab"><img src="style/images/tree.png" title="World Tree"></a>
+      <a href="#" id="treeMenuTab" class="tab"><img src="style/images/tree.png" title="Scene Tree"></a>
       <!-- tabs -->
 
       <!-- header -->
@@ -305,7 +301,7 @@
         <a href="#" data-role="button" id="clock" class="header-button" data-rel="popup"><span><img src="style/images/clock.png"></span></a>
       </fieldset>
 
-      <fieldset id="clock-mouse">
+      <fieldset id="clock-mouse" class="mouse-only">
         <p style='margin:0px;margin-left:0.2em'>Real Time: <span class='real-time-value'>00 00:00:00</span></p>
         <p style='margin:0px;margin-left:0.45em'>Sim Time: <span class='sim-time-value'>00 00:00:00</span></p>
       </fieldset>

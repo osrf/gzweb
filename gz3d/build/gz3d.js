@@ -1104,7 +1104,7 @@ var modelStats = [];
 /**
  * Update model stats on property panel
  * @param {} stats
- * @param {} action: update / delete
+ * @param {} action: 'update' / 'delete'
  */
 GZ3D.Gui.prototype.setModelStats = function(stats, action)
 {
@@ -1147,7 +1147,7 @@ var lightStats = [];
 /**
  * Update light stats on property panel
  * @param {} stats
- * @param {} action: update / delete
+ * @param {} action: 'update' / 'delete'
  */
 GZ3D.Gui.prototype.setLightStats = function(stats, action)
 {
@@ -1202,6 +1202,7 @@ GZ3D.Gui.prototype.setLightStats = function(stats, action)
 /**
  * Find thumbnail
  * @param {} instanceName
+ * @returns string
  */
 GZ3D.Gui.prototype.findModelThumbnail = function(instanceName)
 {
@@ -1242,6 +1243,7 @@ GZ3D.Gui.prototype.updateStats = function()
 
 /**
  * Open entity (model/light) context menu
+ * @param {} event
  * @param {THREE.Object3D} entity
  */
 GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
@@ -1554,8 +1556,8 @@ GZ3D.GZIface.prototype.onConnected = function()
     {
       var lightObj = this.createLightFromMsg(message);
       this.scene.add(lightObj);
-      this.gui.setLightStats(message, 'update');
     }
+    this.gui.setLightStats(message, 'update');
   };
 
   lightTopic.subscribe(lightUpdate.bind(this));
@@ -5999,7 +6001,7 @@ GZ3D.Scene.prototype.getParentByPartialName = function(object, name)
 
 /**
  * Select entity
- * @param {} object / name
+ * @param {} object
  */
 GZ3D.Scene.prototype.selectEntity = function(object)
 {
