@@ -376,7 +376,7 @@ GZ3D.GZIface.prototype.onConnected = function()
     var quaternion = new THREE.Quaternion();
     var scale = new THREE.Vector3();
     matrix.decompose(translation, quaternion, scale);
-    var modelMsg =
+    var entityMsg =
     {
       name : model.name,
       type : type,
@@ -397,11 +397,11 @@ GZ3D.GZIface.prototype.onConnected = function()
     };
     if (model.children[0].children[0] instanceof THREE.Light)
     {
-      that.lightFactoryTopic.publish(modelMsg);
+      that.lightFactoryTopic.publish(entityMsg);
     }
     else
     {
-      that.factoryTopic.publish(modelMsg);
+      that.factoryTopic.publish(entityMsg);
     }
   };
 
@@ -623,114 +623,32 @@ GZ3D.GZIface.prototype.createVisualFromMsg = function(visual)
 
 GZ3D.GZIface.prototype.createLightFromMsg = function(light)
 {
-  var obj = new THREE.Object3D();
-  var lightObj;
-  var helper, helperGeometry, helperMaterial;
-  var factor;
-
-  var color = new THREE.Color();
-  color.r = light.diffuse.r;
-  color.g = light.diffuse.g;
-  color.b = light.diffuse.b;
-
-  var quaternion = new THREE.Quaternion(
-      light.pose.orientation.x,
-      light.pose.orientation.y,
-      light.pose.orientation.z,
-      light.pose.orientation.w);
-
-  var translation = new THREE.Vector3(
-      light.pose.position.x,
-      light.pose.position.y,
-      light.pose.position.z);
-
-  // obj matrix is not updated in time
-  var matrixWorld = new THREE.Matrix4();
-  matrixWorld.compose(translation, quaternion, new THREE.Vector3(1,1,1));
-
-  this.scene.setPose(obj, light.pose.position,
-        light.pose.orientation);
-  obj.matrixWorldNeedsUpdate = true;
+  var obj, factor, range, direction;
 
   if (light.type === 1)
   {
-    lightObj = new THREE.PointLight(color.getHex());
-    lightObj.distance = light.range;
-    factor = 1.5; // closer to gzclient
-    lightObj.intensity = light.attenuation_constant * factor;
-
-    helperGeometry = new THREE.OctahedronGeometry(0.25, 0);
-    helperGeometry.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI/2));
-    helperMaterial = new THREE.MeshBasicMaterial(
-        {wireframe: true, color: 0x00ff00});
-    helper = new THREE.Mesh(helperGeometry, helperMaterial);
+    factor = 1.5;
+    direction = null;
+    range = light.range;
   }
-  if (light.type === 2)
+  else if (light.type === 2)
   {
-    lightObj = new THREE.SpotLight(color.getHex());
-    lightObj.distance = light.range;
-    factor = 5; // closer to gzclient
-    lightObj.intensity = light.attenuation_constant * factor;
-    lightObj.position.set(0,0,0);
-
-    helperGeometry = new THREE.CylinderGeometry(0, 0.3, 0.2, 4, 1, true);
-    helperGeometry.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI/2));
-    helperMaterial = new THREE.MeshBasicMaterial(
-        {wireframe: true, color: 0x00ff00});
-    helper = new THREE.Mesh(helperGeometry, helperMaterial);
+    factor = 5;
+    direction = light.direction;
+    range = light.range;
   }
   else if (light.type === 3)
   {
-    lightObj = new THREE.DirectionalLight(color.getHex());
-    lightObj.intensity = light.attenuation_constant;
-    lightObj.shadowCameraNear = 1;
-    lightObj.shadowCameraFar = 50;
-    lightObj.shadowMapWidth = 4094;
-    lightObj.shadowMapHeight = 4094;
-    lightObj.shadowCameraVisible = false;
-    lightObj.shadowCameraBottom = -100;
-    lightObj.shadowCameraLeft = -100;
-    lightObj.shadowCameraRight = 100;
-    lightObj.shadowCameraTop = 100;
-    lightObj.shadowBias = 0.0001;
-    lightObj.position.set(0,0,0);
-
-    helperGeometry = new THREE.Geometry();
-    helperGeometry.vertices.push(new THREE.Vector3(-0.5, -0.5, 0));
-    helperGeometry.vertices.push(new THREE.Vector3(-0.5,  0.5, 0));
-    helperGeometry.vertices.push(new THREE.Vector3(-0.5,  0.5, 0));
-    helperGeometry.vertices.push(new THREE.Vector3( 0.5,  0.5, 0));
-    helperGeometry.vertices.push(new THREE.Vector3( 0.5,  0.5, 0));
-    helperGeometry.vertices.push(new THREE.Vector3( 0.5, -0.5, 0));
-    helperGeometry.vertices.push(new THREE.Vector3( 0.5, -0.5, 0));
-    helperGeometry.vertices.push(new THREE.Vector3(-0.5, -0.5, 0));
-    helperGeometry.vertices.push(new THREE.Vector3(   0,    0, 0));
-    helperGeometry.vertices.push(new THREE.Vector3(   0,    0, -0.5));
-    helperMaterial = new THREE.LineBasicMaterial({color: 0x00ff00});
-    helper = new THREE.Line(helperGeometry, helperMaterial, THREE.LinePieces);
+    factor = 1;
+    direction = light.direction;
+    range = null;
   }
-  lightObj.castShadow = light.cast_shadows;
-  lightObj.shadowDarkness = 0.3;
-  lightObj.name = light.name;
 
-  helper.name = light.name + '_lightHelper';
+  obj = this.scene.createLight(light.type, light.diffuse,
+        light.attenuation_constant * factor,
+        light.pose, range, light.cast_shadows, light.name,
+        direction);
 
-  if (light.type !== 1)
-  {
-    var dir = new THREE.Vector3(light.direction.x, light.direction.y,
-        light.direction.z);
-
-    obj.direction = new THREE.Vector3();
-    obj.direction.copy(dir);
-
-    dir.applyMatrix4(matrixWorld); // localToWorld
-    lightObj.target.position.copy(dir);
-  }
-  obj.name = light.name;
-
-  // Important: keep order
-  obj.add(lightObj);
-  obj.add(helper);
   return obj;
 };
 
