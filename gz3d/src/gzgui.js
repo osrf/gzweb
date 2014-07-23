@@ -196,7 +196,7 @@ $(function()
   if (isTouchDevice)
   {
     $('.mouse-only')
-        .css('visibility','hidden');
+        .css('display','none');
 
     $('#play-header-fieldset')
         .css('position', 'absolute')
@@ -267,7 +267,7 @@ $(function()
   else
   {
     $('.touch-only')
-        .css('visibility','hidden');
+        .css('display','none');
 
     $('[id^="insert-entity-"]')
       .click(function(event) {
