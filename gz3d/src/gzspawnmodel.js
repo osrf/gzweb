@@ -53,6 +53,18 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
   {
     mesh = this.scene.createCylinder(0.5, 1.0);
   }
+  else if (entity === 'pointlight')
+  {
+    mesh = this.scene.createLight(1);
+  }
+  else if (entity === 'spotlight')
+  {
+    mesh = this.scene.createLight(2);
+  }
+  else if (entity === 'directionallight')
+  {
+    mesh = this.scene.createLight(3);
+  }
   else
   {
     // temp box for now
@@ -71,6 +83,16 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
   this.obj.position.y = intersect.y;
   this.obj.position.z += 0.5;
   this.scene.add(this.obj);
+  // For the inserted light to have effect
+  var allObjects = [];
+  this.scene.scene.getDescendants(allObjects);
+  for (var l = 0; l < allObjects.length; ++l)
+  {
+    if (allObjects[l].material)
+    {
+      allObjects[l].material.needsUpdate = true;
+    }
+  }
 
   var that = this;
 
@@ -233,6 +255,15 @@ GZ3D.SpawnModel.prototype.moveSpawnedModel = function(positionX, positionY)
   }
 
   this.scene.setPose(this.obj, point, new THREE.Quaternion());
+
+  if (this.obj.children[0].children[0] &&
+     (this.obj.children[0].children[0] instanceof THREE.SpotLight ||
+      this.obj.children[0].children[0] instanceof THREE.DirectionalLight))
+  {
+    var lightObj = this.obj.children[0].children[0];
+    lightObj.target.position.copy(this.obj.position);
+    lightObj.target.position.add(new THREE.Vector3(0,0,-0.5));
+  }
 };
 
 /**

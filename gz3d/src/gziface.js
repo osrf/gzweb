@@ -296,6 +296,13 @@ GZ3D.GZIface.prototype.onConnected = function()
     messageType : 'model',
   });
 
+  // Light messages - for modifying light pose
+  this.lightModifyTopic = new ROSLIB.Topic({
+    ros : this.webSocket,
+    name : '~/light',
+    messageType : 'light',
+  });
+
   var publishModelModify = function(model)
   {
     var matrix = model.matrixWorld;
@@ -308,6 +315,7 @@ GZ3D.GZIface.prototype.onConnected = function()
     {
       name : model.name,
       id : model.userData,
+      createEntity : 0,
       position :
       {
         x : translation.x,
@@ -322,7 +330,15 @@ GZ3D.GZIface.prototype.onConnected = function()
         z: quaternion.z
       }
     };
-    that.modelModifyTopic.publish(modelMsg);
+    if (model.children[0] &&
+        model.children[0] instanceof THREE.Light)
+    {
+      that.lightModifyTopic.publish(modelMsg);
+    }
+    else
+    {
+      that.modelModifyTopic.publish(modelMsg);
+    }
   };
 
   this.scene.emitter.on('poseChanged', publishModelModify);
@@ -334,6 +350,13 @@ GZ3D.GZIface.prototype.onConnected = function()
     messageType : 'factory',
   });
 
+  // Factory messages - for spawning new lights
+  this.lightFactoryTopic = new ROSLIB.Topic({
+    ros : this.webSocket,
+    name : '~/light',
+    messageType : 'light',
+  });
+
   var publishFactory = function(model, type)
   {
     var matrix = model.matrixWorld;
@@ -341,10 +364,11 @@ GZ3D.GZIface.prototype.onConnected = function()
     var quaternion = new THREE.Quaternion();
     var scale = new THREE.Vector3();
     matrix.decompose(translation, quaternion, scale);
-    var modelMsg =
+    var entityMsg =
     {
       name : model.name,
       type : type,
+      createEntity : 1,
       position :
       {
         x : translation.x,
@@ -359,7 +383,14 @@ GZ3D.GZIface.prototype.onConnected = function()
         z: quaternion.z
       }
     };
-    that.factoryTopic.publish(modelMsg);
+    if (model.children[0].children[0] instanceof THREE.Light)
+    {
+      that.lightFactoryTopic.publish(entityMsg);
+    }
+    else
+    {
+      that.factoryTopic.publish(entityMsg);
+    }
   };
 
   // For deleting models
@@ -580,66 +611,33 @@ GZ3D.GZIface.prototype.createVisualFromMsg = function(visual)
 
 GZ3D.GZIface.prototype.createLightFromMsg = function(light)
 {
-  var lightObj;
-
-  var color = new THREE.Color();
-  color.r = light.diffuse.r;
-  color.g = light.diffuse.g;
-  color.b = light.diffuse.b;
+  var obj, factor, range, direction;
 
   if (light.type === 1)
   {
-    lightObj = new THREE.AmbientLight(color.getHex());
-    lightObj.distance = light.range;
-    this.scene.setPose(lightObj, light.pose.position,
-        light.pose.orientation);
+    factor = 1.5;
+    direction = null;
+    range = light.range;
   }
-  if (light.type === 2)
+  else if (light.type === 2)
   {
-    lightObj = new THREE.SpotLight(color.getHex());
-    lightObj.distance = light.range;
-    this.scene.setPose(lightObj, light.pose.position,
-        light.pose.orientation);
+    factor = 5;
+    direction = light.direction;
+    range = light.range;
   }
   else if (light.type === 3)
   {
-    lightObj = new THREE.DirectionalLight(color.getHex());
-    var dir = new THREE.Vector3(light.direction.x, light.direction.y,
-        light.direction.z);
-    var target = dir;
-    var negDir = dir.negate();
-    negDir.normalize();
-    var factor = 10;
-    light.pose.position.x += factor * negDir.x;
-    light.pose.position.y += factor * negDir.y;
-    light.pose.position.z += factor * negDir.z;
-
-    target.x -= light.pose.position.x;
-    target.y -= light.pose.position.y;
-    target.z -= light.pose.position.z;
-
-    lightObj.target.position = target;
-    lightObj.shadowCameraNear = 1;
-    lightObj.shadowCameraFar = 50;
-    lightObj.shadowMapWidth = 4094;
-    lightObj.shadowMapHeight = 4094;
-    lightObj.shadowCameraVisible = false;
-    lightObj.shadowCameraBottom = -100;
-    lightObj.shadowCameraLeft = -100;
-    lightObj.shadowCameraRight = 100;
-    lightObj.shadowCameraTop = 100;
-    lightObj.shadowBias = 0.0001;
-
-    lightObj.position.set(negDir.x, negDir.y, negDir.z);
-    this.scene.setPose(lightObj, light.pose.position,
-        light.pose.orientation);
+    factor = 1;
+    direction = light.direction;
+    range = null;
   }
-  lightObj.intensity = light.attenuation_constant;
-  lightObj.castShadow = light.cast_shadows;
-  lightObj.shadowDarkness = 0.3;
-  lightObj.name = light.name;
 
-  return lightObj;
+  obj = this.scene.createLight(light.type, light.diffuse,
+        light.attenuation_constant * factor,
+        light.pose, range, light.cast_shadows, light.name,
+        direction);
+
+  return obj;
 };
 
 GZ3D.GZIface.prototype.createRoadsFromMsg = function(roads)

@@ -20,6 +20,22 @@ body
 {
   z-index: 999;
 }
+/* header */
+.header-button
+{
+  float: left;
+  height: 1.45em;
+  width: 1.45em;
+  padding: 0.65em;;
+}
+.header-button img
+{
+  height: 1.45em;
+}
+#clock-touch
+{
+  z-index: 100;
+}
 /* tabs */
 .tab
 {
@@ -37,6 +53,7 @@ body
   position: relative;
   left: -1.7em;
   top: 1.2em;
+  height: 1.45em;
 }
 .tab:nth-of-type(1)
 {
@@ -152,6 +169,18 @@ body
   margin: 0em;
   width: 100%;
 }
+.insertMenuItemLight img
+{
+  height:4em;
+  margin-top:0.6em;
+}
+/* model popup */
+#model-popup
+{
+  width: 12em;
+  height: 0em;
+  border: none;
+}
 /* smaller panel for narrow screens*/
 @media (max-width: 35em)
 {
@@ -184,6 +213,11 @@ body
   .insertMenuItem h1
   {
     font-size: 0.7em;
+  }
+  .insertMenuItemLight img
+  {
+    height:2.7em;
+    margin-top:0.4em;
   }
 }
 
