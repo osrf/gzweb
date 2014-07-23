@@ -583,8 +583,6 @@ gzangular.directive('ngRightClick', function($parse)
 
 gzangular.controller('treeControl', ['$scope', function($scope)
 {
-  $scope.models = modelStats;
-
   $scope.updateStats = function()
   {
     $scope.models = modelStats;
@@ -1208,34 +1206,51 @@ GZ3D.Gui.prototype.setLightStats = function(stats, action)
 
   if (action === 'update')
   {
-    var type = stats.type;
-
-    var thumbnail;
-    switch(type)
-    {
-      case 2:
-          thumbnail = 'style/images/spotlight.png';
-          break;
-      case 3:
-          thumbnail = 'style/images/directionallight.png';
-          break;
-      default:
-          thumbnail = 'style/images/pointlight.png';
-    }
-
     var light = $.grep(lightStats, function(e)
         {
           return e.name === name;
         });
 
+    var orientation;
+
+    // New light
     if (light.length === 0)
     {
+      var type = stats.type;
+
+      var thumbnail;
+      switch(type)
+      {
+        case 2:
+            thumbnail = 'style/images/spotlight.png';
+            break;
+        case 3:
+            thumbnail = 'style/images/directionallight.png';
+            break;
+        default:
+            thumbnail = 'style/images/pointlight.png';
+      }
+
+      orientation = this.RPYFromQuaternions(stats.pose.orientation);
+
       lightStats.push(
           {
             name: name,
             thumbnail: thumbnail,
-            selected: 'unselectedTreeItem'
+            selected: 'unselectedTreeItem',
+            position: stats.pose.position,
+            orientation: orientation
           });
+    }
+    else
+    {
+      if (stats.pose)
+      {
+        orientation = this.RPYFromQuaternions(stats.pose.orientation);
+
+        light[0].position = stats.pose.position;
+        light[0].orientation = orientation;
+      }
     }
   }
   else if (action === 'delete')

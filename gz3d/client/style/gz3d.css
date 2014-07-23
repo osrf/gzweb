@@ -257,11 +257,13 @@ body
 }
 .propertyName
 {
+  font-weight:bolder;
   padding-left: 1em;
   width: 6.5em;
 }
 .expandableProperty
 {
+  font-weight:bolder;
   padding-left: 0.2em;
   width: 14.5em;
   float: left;
@@ -278,12 +280,12 @@ body
 }
 .expandableItemName
 {
+  font-weight:bolder;
   padding-left: 1em;
   width: 6.5em;
 }
 .expandableItemValue
 {
-  padding-left: 1em;
   width: 5em;
 }
 /* model popup */
