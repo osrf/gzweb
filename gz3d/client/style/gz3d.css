@@ -153,6 +153,10 @@ body
   font-size: 0.9em;
   color: #bdbdbd;
 }
+#open-tree-when-selected a
+{
+  font-size: 0.9em;
+}
 /* insert menu */
 .insertMenus li
 {
