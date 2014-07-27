@@ -1171,8 +1171,26 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
             selected: 'unselectedTreeItem',
             is_static: stats.is_static,
             position: stats.pose.position,
-            orientation: orientation
+            orientation: orientation,
+            links: []
           });
+
+      // links
+      var newModel = $.grep(modelStats, function(e)
+        {
+          return e.name === name;
+        });
+
+      for (var l = 0; l < stats.link.length; ++l)
+      {
+        var shortName = stats.link[l].name.substring(stats.link[l].name.lastIndexOf('::')+2);
+
+        newModel[0].links.push(
+            {
+              name: stats.link[l].name,
+              shortName: shortName
+            });
+      }
     }
     else
     {

@@ -326,6 +326,9 @@
                 <div class="properties expandableItemName">yaw</div>
                 <div class="properties expandableItemValue">{{model.orientation.yaw}}</div>
               </div>
+              <div ng-repeat="link in model.links" data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
+                <h3><span class="collapsible_header">{{link.shortName}}</span></h3>
+              </div>
             </div>
           </div>
           <div ng-repeat="light in lights" id="propertyPanel-{{light.name}}" class="leftPanels ui-overlay-shadow">
