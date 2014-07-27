@@ -1136,6 +1136,7 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
       if (modelStats[i].name === name)
       {
         modelStats.splice(i, 1);
+        break;
       }
     }
   }
@@ -1192,6 +1193,7 @@ GZ3D.Gui.prototype.setLightStats = function(stats, action)
       if (lightStats[i].name === name)
       {
         lightStats.splice(i, 1);
+        break;
       }
     }
   }
