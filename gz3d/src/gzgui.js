@@ -1052,8 +1052,11 @@ GZ3D.Gui.prototype.init = function()
 
   guiEvents.on('openEntityPopup', function (event, name)
       {
-        var object = that.scene.getByName(name);
-        that.openEntityPopup(event, object);
+        if (!isTouchDevice)
+        {
+          var object = that.scene.getByName(name);
+          that.openEntityPopup(event, object);
+        }
       }
   );
 };
