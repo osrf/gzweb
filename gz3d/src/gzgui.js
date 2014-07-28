@@ -1173,14 +1173,14 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
           return e.name === name;
         });
 
-    var pose;
+    var formatted;
 
     // New model
     if (model.length === 0)
     {
       var thumbnail = this.findModelThumbnail(name);
 
-      pose = this.formatPose(stats.pose);
+      formatted = this.formatStats(stats);
 
       modelStats.push(
           {
@@ -1188,8 +1188,8 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
             thumbnail: thumbnail,
             selected: 'unselectedTreeItem',
             is_static: stats.is_static,
-            position: pose.position,
-            orientation: pose.orientation,
+            position: formatted.pose.position,
+            orientation: formatted.pose.orientation,
             links: []
           });
 
@@ -1203,7 +1203,7 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
       {
         var shortName = stats.link[l].name.substring(stats.link[l].name.lastIndexOf('::')+2);
 
-        pose = this.formatPose(stats.link[l].pose);
+        formatted = this.formatStats(stats.link[l]);
 
         newModel[0].links.push(
             {
@@ -1213,8 +1213,9 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
               gravity: stats.link[l].gravity,
               kinematic: stats.link[l].kinematic,
               canonical: stats.link[l].canonical,
-              position: pose.position,
-              orientation: pose.orientation
+              position: formatted.pose.position,
+              orientation: formatted.pose.orientation,
+              inertial: formatted.inertial
             });
       }
     }
@@ -1222,10 +1223,10 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
     {
       if (stats.pose)
       {
-        pose = this.formatPose(stats.pose);
+        formatted = this.formatStats(stats);
 
-        model[0].position = pose.position;
-        model[0].orientation = pose.orientation;
+        model[0].position = formatted.pose.position;
+        model[0].orientation = formatted.pose.orientation;
       }
     }
   }
@@ -1261,7 +1262,7 @@ GZ3D.Gui.prototype.setLightStats = function(stats, action)
           return e.name === name;
         });
 
-    var pose;
+    var formatted;
 
     // New light
     if (light.length === 0)
@@ -1281,25 +1282,25 @@ GZ3D.Gui.prototype.setLightStats = function(stats, action)
             thumbnail = 'style/images/pointlight.png';
       }
 
-      pose = this.formatPose(stats.pose);
+      formatted = this.formatStats(stats);
 
       lightStats.push(
           {
             name: name,
             thumbnail: thumbnail,
             selected: 'unselectedTreeItem',
-            position: pose.position,
-            orientation: pose.orientation
+            position: formatted.pose.position,
+            orientation: formatted.pose.orientation
           });
     }
     else
     {
       if (stats.pose)
       {
-        pose = this.formatPose(stats.pose);
+        formatted = this.formatStats(stats);
 
-        light[0].position = pose.position;
-        light[0].orientation = pose.orientation;
+        light[0].position = formatted.pose.position;
+        light[0].orientation = formatted.pose.orientation;
       }
     }
   }
@@ -1410,15 +1411,16 @@ GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
  * @param {} pose
  * @returns {position, orientation}
  */
-GZ3D.Gui.prototype.formatPose = function(pose)
+GZ3D.Gui.prototype.formatStats = function(stats)
 {
-  var position = pose.position;
+  var position = stats.pose.position;
   position.x = Math.round(position.x * 10000) / 10000;
   position.y = Math.round(position.y * 10000) / 10000;
   position.z = Math.round(position.z * 10000) / 10000;
 
-  var Quat = new THREE.Quaternion(pose.orientation.x, pose.orientation.y,
-      pose.orientation.z, pose.orientation.w);
+  var Quat = new THREE.Quaternion(stats.pose.orientation.x,
+      stats.pose.orientation.y, stats.pose.orientation.z,
+      stats.pose.orientation.w);
 
   var RPY = new THREE.Euler();
   RPY.setFromQuaternion(Quat);
@@ -1429,5 +1431,17 @@ GZ3D.Gui.prototype.formatPose = function(pose)
 
   var orientation = {roll: RPY._x, pitch: RPY._y, yaw: RPY._z};
 
-  return {position: position, orientation: orientation};
+  var inertial;
+  if (stats.inertial)
+  {
+    inertial = stats.inertial;
+    inertial.ixx = Math.round(inertial.ixx * 10000) / 10000;
+    inertial.ixy = Math.round(inertial.ixy * 10000) / 10000;
+    inertial.ixz = Math.round(inertial.ixz * 10000) / 10000;
+    inertial.iyy = Math.round(inertial.iyy * 10000) / 10000;
+    inertial.iyz = Math.round(inertial.iyz * 10000) / 10000;
+    inertial.izz = Math.round(inertial.izz * 10000) / 10000;
+  }
+
+  return {pose: {position: position, orientation: orientation}, inertial: inertial};
 };

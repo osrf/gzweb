@@ -360,6 +360,24 @@
                     <div class="properties expandableItemName">yaw</div>
                     <div class="properties expandableItemValue">{{link.orientation.yaw}}</div>
                   </div>
+                  <div id="expand-inertial-{{model.name}}-{{link.shortName}}" class="expandableProperty" ng-click="expandProperty('inertial', model.name, link.shortName)">
+                    <img src="style/images/play.png">
+                    inertial
+                  </div>
+                  <div id="expandable-inertial-{{model.name}}-{{link.shortName}}" class="expandable">
+                    <div class="properties expandableItemName">ixx</div>
+                    <div class="properties expandableItemValue">{{link.inertial.ixx}}</div>
+                    <div class="properties expandableItemName">ixy</div>
+                    <div class="properties expandableItemValue">{{link.inertial.ixy}}</div>
+                    <div class="properties expandableItemName">ixz</div>
+                    <div class="properties expandableItemValue">{{link.inertial.ixz}}</div>
+                    <div class="properties expandableItemName">iyy</div>
+                    <div class="properties expandableItemValue">{{link.inertial.iyy}}</div>
+                    <div class="properties expandableItemName">iyz</div>
+                    <div class="properties expandableItemValue">{{link.inertial.iyz}}</div>
+                    <div class="properties expandableItemName">izz</div>
+                    <div class="properties expandableItemValue">{{link.inertial.izz}}</div>
+                  </div>
                 </div>
               </div>
             </div>
