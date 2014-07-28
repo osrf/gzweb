@@ -221,11 +221,11 @@ $(function()
         .css('top', '0.15em')
         .css('z-index', '1000');
 
-    $('#leftPanel').touchstart(function(event){
+    $('.gzGUI').touchstart(function(event){
         guiEvents.emit('pointerOnMenu');
     });
 
-    $('#leftPanel').touchend(function(event){
+    $('.gzGUI').touchend(function(event){
         guiEvents.emit('pointerOffMenu');
     });
 
@@ -343,11 +343,11 @@ $(function()
         .css('top', '0em')
         .css('z-index', '1000');
 
-    $('#leftPanel').mouseenter(function(event){
+    $('.gzGUI').mouseenter(function(event){
         guiEvents.emit('pointerOnMenu');
     });
 
-    $('#leftPanel').mouseleave(function(event){
+    $('.gzGUI').mouseleave(function(event){
         guiEvents.emit('pointerOffMenu');
     });
 
