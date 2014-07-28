@@ -63,6 +63,10 @@ body
 {
   top: 7.8em;
 }
+.tab:nth-of-type(3)
+{
+  top: 13.8em;
+}
 /* panel */
 #leftPanel
 {
@@ -81,12 +85,14 @@ body
 .panelContent
 {
   height: calc(100% - 1.8em);
-  overflow:auto;
+  overflow-y:auto;
+  overflow-x:hidden;
 }
 .panelSubContent
 {
   height: calc(100% - 1.8em - 1.5em);
-  overflow:auto;
+  overflow-y:auto;
+  overflow-x:hidden;
 }
 .panelTitle
 {
@@ -147,6 +153,10 @@ body
   font-size: 0.9em;
   color: #bdbdbd;
 }
+#open-tree-when-selected a
+{
+  font-size: 0.9em;
+}
 /* insert menu */
 .insertMenus li
 {
@@ -174,6 +184,44 @@ body
   height:4em;
   margin-top:0.6em;
 }
+/* world tree */
+.treeItem
+{
+  font-size: 1em;
+  line-height: 2em;
+  padding: 0;
+  width: 15em;
+  clear: both;
+  margin-left: -1em;
+}
+.treeItemImg
+{
+  height: 2em;
+  width: 3.5em;
+  text-align: center;
+  float: left;
+}
+.treeItemImg img
+{
+  height: 1.2em;
+  vertical-align: middle;
+}
+.treeItemTitle
+{
+  height: 2em;
+  width: 10.5em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  float: left;
+}
+.unselectedTreeItem
+{
+  background-color: #2a2a2a;
+}
+.selectedTreeItem
+{
+  background-color: #aaaaaa;
+}
 /* model popup */
 #model-popup
 {
@@ -181,7 +229,7 @@ body
   height: 0em;
   border: none;
 }
-/* smaller panel for narrow screens*/
+/* narrow screens*/
 @media (max-width: 35em)
 {
   /* panel */
@@ -219,5 +267,40 @@ body
     height:2.7em;
     margin-top:0.4em;
   }
+  /* world tree */
+  .treeItem
+  {
+    width: 10.5em;
+  }
+  .treeItemTitle
+  {
+    width: 6.5em;
+  }
 }
-
+/* short screens*/
+@media (max-height: 35em)
+{
+  /* tabs */
+  .tab
+  {
+    height: 2em;
+  }
+  .tab img
+  {
+    left: -1.6em;
+    top: 0.4em;
+    height: 1.3em;
+  }
+  .tab:nth-of-type(1)
+  {
+    top: 1.8em;
+  }
+  .tab:nth-of-type(2)
+  {
+    top: 5.8em;
+  }
+  .tab:nth-of-type(3)
+  {
+    top: 9.8em;
+  }
+}

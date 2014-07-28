@@ -243,7 +243,7 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
     {
       if (mainPointer && model.parent === this.scene)
       {
-        this.attachManipulator(model, this.manipulationMode);
+        this.selectEntity(model);
       }
     }
     // Manipulator pickers, for mouse
@@ -1552,10 +1552,7 @@ GZ3D.Scene.prototype.setManipulationMode = function(mode)
     {
       this.emitter.emit('poseChanged', this.modelManipulator.object);
     }
-    this.hideBoundingBox();
-
-    this.modelManipulator.detach();
-    this.scene.remove(this.modelManipulator.gizmo);
+    this.selectEntity(null);
   }
   else
   {
@@ -1564,7 +1561,7 @@ GZ3D.Scene.prototype.setManipulationMode = function(mode)
     // model was selected during view mode
     if (this.selectedEntity)
     {
-      this.attachManipulator(this.selectedEntity, mode);
+      this.selectEntity(this.selectedEntity);
     }
   }
 
@@ -1614,13 +1611,6 @@ GZ3D.Scene.prototype.attachManipulator = function(model,mode)
   {
     this.emitter.emit('poseChanged', this.modelManipulator.object);
   }
-  if (this.modelManipulator.object !== model)
-  {
-    this.hideBoundingBox();
-  }
-
-  this.selectedEntity = model;
-  this.showBoundingBox(model);
 
   if (mode !== 'view')
   {
@@ -1660,7 +1650,7 @@ GZ3D.Scene.prototype.showRadialMenu = function(e)
       && this.modelManipulator.pickerNames.indexOf(model.name) === -1)
   {
     this.radialMenu.show(event,model);
-    this.showBoundingBox(model);
+    this.selectEntity(model);
   }
 };
 
@@ -1670,6 +1660,11 @@ GZ3D.Scene.prototype.showRadialMenu = function(e)
  */
 GZ3D.Scene.prototype.showBoundingBox = function(model)
 {
+  if (typeof model === 'string')
+  {
+    model = this.scene.getObjectByName(model);
+  }
+
   if (this.boundingBox.visible)
   {
     if (this.boundingBox.parent === model)
@@ -1679,7 +1674,6 @@ GZ3D.Scene.prototype.showBoundingBox = function(model)
     else
     {
       this.hideBoundingBox();
-      this.selectedEntity = model;
     }
   }
   var box = new THREE.Box3();
@@ -1758,7 +1752,6 @@ GZ3D.Scene.prototype.hideBoundingBox = function()
     this.boundingBox.parent.remove(this.boundingBox);
   }
   this.boundingBox.visible = false;
-  this.selectedEntity = null;
 };
 
 /**
@@ -1768,16 +1761,13 @@ GZ3D.Scene.prototype.hideBoundingBox = function()
  */
 GZ3D.Scene.prototype.onRightClick = function(event, callback)
 {
-  if(this.manipulationMode === 'view')
-  {
-    var pos = new THREE.Vector2(event.clientX, event.clientY);
-    var model = this.getRayCastModel(pos, new THREE.Vector3());
+  var pos = new THREE.Vector2(event.clientX, event.clientY);
+  var model = this.getRayCastModel(pos, new THREE.Vector3());
 
-    if(model && model.name !== '' && model.name !== 'plane' &&
-        this.modelManipulator.pickerNames.indexOf(model.name) === -1)
-    {
-      callback(model);
-    }
+  if(model && model.name !== '' && model.name !== 'plane' &&
+      this.modelManipulator.pickerNames.indexOf(model.name) === -1)
+  {
+    callback(model);
   }
 };
 
@@ -1903,4 +1893,33 @@ GZ3D.Scene.prototype.getParentByPartialName = function(object, name)
     parent = parent.parent;
   }
   return null;
+};
+
+/**
+ * Select entity
+ * @param {} object
+ */
+GZ3D.Scene.prototype.selectEntity = function(object)
+{
+  if (object)
+  {
+    if (object !== this.selectedEntity)
+    {
+      this.showBoundingBox(object);
+      this.selectedEntity = object;
+      guiEvents.emit('setTreeSelected', object.name);
+    }
+    this.attachManipulator(object, this.manipulationMode);
+  }
+  else
+  {
+    if (this.modelManipulator.object)
+    {
+      this.modelManipulator.detach();
+      this.scene.remove(this.modelManipulator.gizmo);
+    }
+    this.hideBoundingBox();
+    this.selectedEntity = null;
+    guiEvents.emit('setTreeDeselected');
+  }
 };
