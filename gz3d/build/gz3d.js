@@ -179,10 +179,10 @@ $(function()
   // Toggle items
   $('#view-collisions').buttonMarkup({icon: 'false'});
   $('#snap-to-grid').buttonMarkup({icon: 'false'});
+  $('#open-tree-when-selected').buttonMarkup({icon: 'false'});
   $('#view-transparent').buttonMarkup({icon: 'false'});
   $('#view-wireframe').buttonMarkup({icon: 'false'});
   guiEvents.emit('toggle_notifications');
-  guiEvents.emit('openTreeWhenSelected');
 
   $( '#clock-touch' ).popup('option', 'arrow', 't');
   $('#notification-popup-screen').remove();
@@ -221,11 +221,11 @@ $(function()
         .css('top', '0.15em')
         .css('z-index', '1000');
 
-    $('#leftPanel').touchstart(function(event){
+    $('.gzGUI').touchstart(function(event){
         guiEvents.emit('pointerOnMenu');
     });
 
-    $('#leftPanel').touchend(function(event){
+    $('.gzGUI').touchend(function(event){
         guiEvents.emit('pointerOffMenu');
     });
 
@@ -343,11 +343,11 @@ $(function()
         .css('top', '0em')
         .css('z-index', '1000');
 
-    $('#leftPanel').mouseenter(function(event){
+    $('.gzGUI').mouseenter(function(event){
         guiEvents.emit('pointerOnMenu');
     });
 
-    $('#leftPanel').mouseleave(function(event){
+    $('.gzGUI').mouseleave(function(event){
         guiEvents.emit('pointerOffMenu');
     });
 
@@ -1095,8 +1095,11 @@ GZ3D.Gui.prototype.init = function()
 
   guiEvents.on('openEntityPopup', function (event, name)
       {
-        var object = that.scene.getByName(name);
-        that.openEntityPopup(event, object);
+        if (!isTouchDevice)
+        {
+          var object = that.scene.getByName(name);
+          that.openEntityPopup(event, object);
+        }
       }
   );
 };
@@ -1142,7 +1145,7 @@ var modelStats = [];
 /**
  * Update model stats on property panel
  * @param {} stats
- * @param {} action: update / delete
+ * @param {} action: 'update' / 'delete'
  */
 GZ3D.Gui.prototype.setModelStats = function(stats, action)
 {
@@ -1210,6 +1213,7 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
       if (modelStats[i].name === name)
       {
         modelStats.splice(i, 1);
+        break;
       }
     }
   }
@@ -1221,7 +1225,7 @@ var lightStats = [];
 /**
  * Update light stats on property panel
  * @param {} stats
- * @param {} action: update / delete
+ * @param {} action: 'update' / 'delete'
  */
 GZ3D.Gui.prototype.setLightStats = function(stats, action)
 {
@@ -1283,6 +1287,7 @@ GZ3D.Gui.prototype.setLightStats = function(stats, action)
       if (lightStats[i].name === name)
       {
         lightStats.splice(i, 1);
+        break;
       }
     }
   }
@@ -1293,6 +1298,7 @@ GZ3D.Gui.prototype.setLightStats = function(stats, action)
 /**
  * Find thumbnail
  * @param {} instanceName
+ * @returns string
  */
 GZ3D.Gui.prototype.findModelThumbnail = function(instanceName)
 {
@@ -1333,6 +1339,7 @@ GZ3D.Gui.prototype.updateStats = function()
 
 /**
  * Open entity (model/light) context menu
+ * @param {} event
  * @param {THREE.Object3D} entity
  */
 GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
@@ -6110,7 +6117,7 @@ GZ3D.Scene.prototype.getParentByPartialName = function(object, name)
 
 /**
  * Select entity
- * @param {} object / name
+ * @param {} object
  */
 GZ3D.Scene.prototype.selectEntity = function(object)
 {

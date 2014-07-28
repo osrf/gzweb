@@ -1897,7 +1897,7 @@ GZ3D.Scene.prototype.getParentByPartialName = function(object, name)
 
 /**
  * Select entity
- * @param {} object / name
+ * @param {} object
  */
 GZ3D.Scene.prototype.selectEntity = function(object)
 {

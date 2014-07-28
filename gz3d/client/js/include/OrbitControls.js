@@ -349,6 +349,11 @@ THREE.OrbitControls = function (object, domElement)
       lastPosition.copy(this.object.position);
     }
 
+    if (scope.enabled === false)
+    {
+      scope.targetIndicator.visible = false;
+    }
+
     var millisecs = new Date().getTime();
     if (scrollTime && millisecs - scrollTime > 400)
     {

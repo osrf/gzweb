@@ -109,7 +109,7 @@
     <div data-role="page" data-theme="b" data-content-theme="c">
 
       <!-- left panel -->
-      <div id="leftPanel">
+      <div id="leftPanel" class="gzGUI">
         <!-- main menu -->
         <div id="mainMenu" class="leftPanels ui-overlay-shadow">
           <div class="panelTitle">
@@ -136,7 +136,7 @@
                   <h3><span class="collapsible_header">Options</span></h3>
                   <ul data-role="listview">
                     <li id="snap-to-grid" data-icon="false" data-iconpos="right" style="border: none !important;"><a href="#"><span class="collapsible_item">Snap to Grid</span></a></li>
-                    <li id='open-tree-when-selected' data-icon="false" data-iconpos="right" style="border: none !important;"><a href="#"><span class="collapsible_item">Open when selected</span></a></li>
+                    <li id='open-tree-when-selected' data-icon="false" data-iconpos="right" style="border: none !important;"><a href="#"><span class="collapsible_item">Open tree on model selection</span></a></li>
                     <li id='toggle-notifications' data-icon="false" data-iconpos="right" style="border: none !important;"><a href="#"><span class="collapsible_item">Notifications</span></a></li>
                   </ul>
               </div>
@@ -262,7 +262,7 @@
         <div ng-controller="treeControl" class="panelsGroup">
           <div id="treeMenu" class="leftPanels ui-overlay-shadow">
             <div class="panelTitle">
-              <h3>World</h3>
+              <h3>Scene Tree</h3>
               <img src="style/images/close.png">
             </div>
             <div class="panelContent">
@@ -371,31 +371,31 @@
       <!-- left panel -->
 
       <!-- tabs -->
-      <a href="#" id="mainMenuTab" class="tab"><img src="style/images/bars.png" title="Menu"></a>
-      <a href="#" id="insertMenuTab" class="tab"><img src="style/images/insert.png" title="Insert"></a>
-      <a href="#" id="treeMenuTab" class="tab"><img src="style/images/tree.png" title="World Tree"></a>
+      <a href="#" id="mainMenuTab" class="gzGUI tab"><img src="style/images/bars.png" title="Menu"></a>
+      <a href="#" id="insertMenuTab" class="gzGUI tab"><img src="style/images/insert.png" title="Insert"></a>
+      <a href="#" id="treeMenuTab" class="gzGUI tab"><img src="style/images/tree.png" title="Scene Tree"></a>
       <!-- tabs -->
 
       <!-- header -->
-      <fieldset id="play-header-fieldset">
+      <fieldset class="gzGUI" id="play-header-fieldset">
         <a href="#" data-role="button" class="header-button" id="play"><span id="playText"><img src="style/images/play.png" title="Play"></span></a>
       </fieldset>
 
-      <fieldset id="clock-header-fieldset"  class="touch-only">
+      <fieldset id="clock-header-fieldset"  class="gzGUI touch-only">
         <a href="#" data-role="button" id="clock" class="header-button" data-rel="popup"><span><img src="style/images/clock.png"></span></a>
       </fieldset>
 
-      <fieldset id="clock-mouse">
+      <fieldset id="clock-mouse" class="gzGUI mouse-only">
         <p style='margin:0px;margin-left:0.2em'>Real Time: <span class='real-time-value'>00 00:00:00</span></p>
         <p style='margin:0px;margin-left:0.45em'>Sim Time: <span class='sim-time-value'>00 00:00:00</span></p>
       </fieldset>
 
-      <div id="clock-touch" data-role="popup" data-history="false">
+      <div class="gzGUI" id="clock-touch" data-role="popup" data-history="false">
         <p style='margin:0px;margin-left:0.2em'>Real Time: <span class='real-time-value'>00 00:00:00</span></p>
         <p style='margin:0px;margin-left:0.45em'>Sim Time: <span class='sim-time-value'>00 00:00:00</span></p>
       </div>
 
-      <fieldset data-role="controlgroup" data-mini="true" data-type="horizontal" id="mode-header-fieldset">
+      <fieldset class="gzGUI" data-role="controlgroup" data-mini="true" data-type="horizontal" id="mode-header-fieldset">
         <input type="radio" name="radio-mini" id="view-mode" value="choice-1" checked="checked" />
         <label for="view-mode"><img style="height:1.8em" src="style/images/arrow.png" title="View Mode (ESC)"></label>
 
@@ -406,23 +406,23 @@
         <label for="rotate-mode"><img style="height:1.8em" src="style/images/rotate.png" title="Rotation Mode (R)"></label>
       </fieldset>
 
-      <fieldset id="box-header-fieldset" class="mouse-only">
+      <fieldset id="box-header-fieldset" class="gzGUI mouse-only">
         <a href="#" data-role="button" id="header-insert-box" class="header-button"><span><img src="style/images/box.png" title="Insert box"></span></a>
       </fieldset>
-      <fieldset id="sphere-header-fieldset" class="mouse-only">
+      <fieldset id="sphere-header-fieldset" class="gzGUI mouse-only">
         <a href="#" data-role="button" id="header-insert-sphere" class="header-button"><span><img src="style/images/sphere.png" title="Insert sphere"></span></a>
       </fieldset>
-      <fieldset id="cylinder-header-fieldset" class="mouse-only">
+      <fieldset id="cylinder-header-fieldset" class="gzGUI mouse-only">
         <a href="#" data-role="button" id="header-insert-cylinder" class="header-button"><span><img src="style/images/cylinder.png" title="Insert cylinder"></span></a>
       </fieldset>
 
-      <fieldset id="pointlight-header-fieldset" class="mouse-only">
+      <fieldset id="pointlight-header-fieldset" class="gzGUI mouse-only">
         <a href="#" data-role="button" id="header-insert-pointlight" class="header-button"><span><img style="height:1.45em;" src="style/images/pointlight.png" title="Insert point light"></span></a>
       </fieldset>
-      <fieldset id="spotlight-header-fieldset" class="mouse-only">
+      <fieldset id="spotlight-header-fieldset" class="gzGUI mouse-only">
         <a href="#" data-role="button" id="header-insert-spotlight" class="header-button"><span><img src="style/images/spotlight.png" title="Insert spot light"></span></a>
       </fieldset>
-      <fieldset id="directionallight-header-fieldset" class="mouse-only">
+      <fieldset id="directionallight-header-fieldset" class="gzGUI mouse-only">
         <a href="#" data-role="button" id="header-insert-directionallight" class="header-button"><span><img src="style/images/directionallight.png" title="Insert directional light"></span></a>
       </fieldset>
       <!-- header -->
