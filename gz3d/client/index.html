@@ -326,8 +326,23 @@
                 <div class="properties expandableItemName">yaw</div>
                 <div class="properties expandableItemValue">{{model.orientation.yaw}}</div>
               </div>
-              <div ng-repeat="link in model.links" data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
-                <h3><span class="collapsible_header">{{link.shortName}}</span></h3>
+              <div ng-repeat="link in model.links">
+                <div id="expand-link-{{model.name}}-{{link.shortName}}" class="expandableLink" ng-click="expandProperty('link', model.name, link.shortName)">
+                  <img src="style/images/play.png">
+                  {{link.shortName}}
+                </div>
+                <div id="expandable-link-{{model.name}}-{{link.shortName}}" class="expandable">
+                  <div class="properties expandableItemName">name</div>
+                  <div class="properties expandableItemValue">{{link.name}}</div>
+                  <div class="properties expandableItemName">self_collide</div>
+                  <div class="properties expandableItemValue">{{link.self_collide}}</div>
+                  <div class="properties expandableItemName">gravity</div>
+                  <div class="properties expandableItemValue">{{link.gravity}}</div>
+                  <div class="properties expandableItemName">kinematic</div>
+                  <div class="properties expandableItemValue">{{link.kinematic}}</div>
+                  <div class="properties expandableItemName">canonical</div>
+                  <div class="properties expandableItemValue">{{link.canonical}}</div>
+                </div>
               </div>
             </div>
           </div>

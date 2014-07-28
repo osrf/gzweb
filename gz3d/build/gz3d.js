@@ -624,21 +624,41 @@ gzangular.controller('treeControl', ['$scope', function($scope)
     $('#treeMenu').show();
   };
 
-  $scope.expandProperty = function (property, model)
+  $scope.expandProperty = function (property, model, link)
   {
-    var idContent = '#expandable-' + property + '-' + model;
-    var idHeader = '#expand-' + property + '-' + model;
-    if ($(idContent).is(':visible'))
+    var idContent = 'expandable-' + property + '-' + model;
+    var idHeader = 'expand-' + property + '-' + model;
+
+    var idContentOthers, idHeaderOthers;
+
+    if (link)
     {
-      $(idContent).hide();
-      $(idHeader+' img').css('transform','rotate(0deg)')
+      idContentOthers = idContent;
+      idHeaderOthers = idHeader;
+      idContent = idContent + '-' + link;
+      idHeader = idHeader + '-' + link;
+    }
+
+    if ($('#' + idContent).is(':visible'))
+    {
+      $('#' + idContent).hide();
+      $('#' + idHeader+' img').css('transform','rotate(0deg)')
                         .css('-webkit-transform','rotate(0deg)')
                         .css('-ms-transform','rotate(0deg)');
     }
     else
     {
-      $(idContent).show();
-      $(idHeader+' img').css('transform','rotate(90deg)')
+      if (link)
+      {
+        $('[id^="' + idContentOthers + '-"]').hide();
+        $('[id^="' + idHeaderOthers + '-"] img')
+            .css('transform','rotate(0deg)')
+            .css('-webkit-transform','rotate(0deg)')
+            .css('-ms-transform','rotate(0deg)');
+      }
+
+      $('#' + idContent).show();
+      $('#' + idHeader+' img').css('transform','rotate(90deg)')
                         .css('-webkit-transform','rotate(90deg)')
                         .css('-ms-transform','rotate(90deg)');
     }
@@ -1188,10 +1208,18 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
       {
         var shortName = stats.link[l].name.substring(stats.link[l].name.lastIndexOf('::')+2);
 
+        orientation = this.RPYFromQuaternions(stats.link[l].pose.orientation);
+
         newModel[0].links.push(
             {
               name: stats.link[l].name,
-              shortName: shortName
+              shortName: shortName,
+              self_collide: stats.link[l].self_collide,
+              gravity: stats.link[l].gravity,
+              kinematic: stats.link[l].kinematic,
+              canonical: stats.link[l].canonical,
+              position: stats.link[l].pose.position,
+              orientation: orientation
             });
       }
     }
