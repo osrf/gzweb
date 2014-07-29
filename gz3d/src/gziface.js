@@ -126,7 +126,8 @@ GZ3D.GZIface.prototype.onConnected = function()
   var poseUpdate = function(message)
   {
     var entity = this.scene.getByName(message.name);
-    if (entity && entity !== this.scene.modelManipulator.object)
+    if (entity && entity !== this.scene.modelManipulator.object
+        && entity.parent !== this.scene.modelManipulator.object)
     {
       this.scene.updatePose(entity, message.position, message.orientation);
       this.gui.setModelStats(message, 'update');

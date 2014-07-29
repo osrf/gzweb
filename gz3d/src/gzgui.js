@@ -1452,6 +1452,7 @@ GZ3D.Gui.prototype.formatStats = function(stats)
   if (stats.inertial)
   {
     inertial = stats.inertial;
+    inertial.mass = Math.round(inertial.mass * 10000) / 10000;
     inertial.ixx = Math.round(inertial.ixx * 10000) / 10000;
     inertial.ixy = Math.round(inertial.ixy * 10000) / 10000;
     inertial.ixz = Math.round(inertial.ixz * 10000) / 10000;
