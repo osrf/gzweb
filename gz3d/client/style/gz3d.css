@@ -145,6 +145,10 @@ body
   padding-left: 1em;
   margin: 0em;
 }
+.clickable:hover
+{
+  cursor: pointer;
+}
 /* main menu*/
 #mainMenu li
 {

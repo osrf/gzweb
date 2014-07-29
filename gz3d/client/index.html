@@ -112,7 +112,7 @@
       <div id="leftPanel" class="gzGUI">
         <!-- main menu -->
         <div id="mainMenu" class="leftPanels ui-overlay-shadow">
-          <div class="panelTitle">
+          <div class="clickable panelTitle">
             <h3>Menu</h3>
             <img src="style/images/close.png">
           </div>
@@ -146,7 +146,7 @@
         <!-- insert menu -->
         <div ng-controller="insertControl" class="panelsGroup">
           <div id="insertMenu" class="leftPanels insertMenus ui-overlay-shadow">
-            <div class="panelTitle">
+            <div class="clickable panelTitle">
               <h3>Insert</h3>
               <img src="style/images/close.png">
             </div>
@@ -174,11 +174,11 @@
             </div>
           </div>
           <div id="insertMenu-simple_shapes" class="leftPanels insertMenus insertCategory ui-overlay-shadow">
-            <div class="panelTitle">
+            <div class="clickable panelTitle">
               <h3>Insert</h3>
               <img src="style/images/close.png">
             </div>
-            <div class="panelSubTitle">
+            <div class="clickable panelSubTitle">
               <h4>Simple Shapes</h4>
               <img src="style/images/back.png">
             </div>
@@ -206,11 +206,11 @@
             </div>
           </div>
           <div id="insertMenu-lights" class="leftPanels insertMenus insertCategory ui-overlay-shadow">
-            <div class="panelTitle">
+            <div class="clickable panelTitle">
               <h3>Insert</h3>
               <img src="style/images/close.png">
             </div>
-            <div class="panelSubTitle">
+            <div class="clickable panelSubTitle">
               <h4>Lights</h4>
               <img src="style/images/back.png">
             </div>
@@ -238,11 +238,11 @@
             </div>
           </div>
           <div ng-repeat="category in categories" id="insertMenu-{{category.path}}" class="leftPanels insertMenus insertCategory ui-overlay-shadow">
-            <div class="panelTitle">
+            <div class="clickable panelTitle">
               <h3>Insert</h3>
               <img src="style/images/close.png">
             </div>
-            <div class="panelSubTitle">
+            <div class="clickable panelSubTitle">
               <h4>{{category.title}}</h4>
               <img src="style/images/back.png">
             </div>
@@ -261,7 +261,7 @@
         <!-- world tree -->
         <div ng-controller="treeControl" class="panelsGroup">
           <div id="treeMenu" class="leftPanels ui-overlay-shadow">
-            <div class="panelTitle">
+            <div class="clickable panelTitle">
               <h3>Scene Tree</h3>
               <img src="style/images/close.png">
             </div>
@@ -271,7 +271,7 @@
                 <div id="modelsTree" data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
                   <h3><span class="collapsible_header">Models</span></h3>
                   <ul data-role="listview">
-                    <div class="treeItem {{model.selected}}" ng-repeat="model in models" ng-click="selectEntity(model.name)" ng-right-click="openEntityMenu($event, model.name)" title="{{model.name}}">
+                    <div class="clickable treeItem {{model.selected}}" ng-repeat="model in models" ng-click="selectEntity(model.name)" ng-right-click="openEntityMenu($event, model.name)" title="{{model.name}}">
                       <div class="treeItemImg"><img src="{{model.thumbnail}}"></div>
                       <div class="treeItemTitle">{{model.name}}</div><br>
                     </div>
@@ -281,7 +281,7 @@
                 <div id="lightsTree" data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
                   <h3><span class="collapsible_header">Lights</span></h3>
                   <ul data-role="listview">
-                    <div class="treeItem {{light.selected}}" ng-repeat="light in lights" ng-click="selectEntity(light.name)" ng-right-click="openEntityMenu($event, light.name)" title="{{light.name}}">
+                    <div class="clickable treeItem {{light.selected}}" ng-repeat="light in lights" ng-click="selectEntity(light.name)" ng-right-click="openEntityMenu($event, light.name)" title="{{light.name}}">
                       <div class="treeItemImg"><img src="{{light.thumbnail}}"></div>
                       <div class="treeItemTitle">{{light.name}}</div><br>
                     </div>
@@ -292,11 +292,11 @@
           </div>
           <!-- property panels -->
           <div ng-repeat="model in models" id="propertyPanel-{{model.name}}" class="leftPanels ui-overlay-shadow">
-            <div class="panelTitle" ng-click="closePanels()">
+            <div class="clickable panelTitle" ng-click="closePanels()">
               <h3>World</h3>
               <img src="style/images/close.png">
             </div>
-            <div class="panelSubTitle" ng-click="backToTree()">
+            <div class="clickable panelSubTitle" ng-click="backToTree()">
               <h4>{{model.name}}</h4>
               <img src="style/images/back.png">
             </div>
@@ -308,7 +308,7 @@
               <div class="properties propertyValue">{{model.name}}</div>
               <div class="properties propertyName">is_static</div>
               <div class="properties propertyValue">{{model.is_static}}</div>
-              <div id="expand-pose-{{model.name}}" class="expandableProperty" ng-click="expandProperty('pose', model.name)">
+              <div id="expand-pose-{{model.name}}" class="clickable expandableProperty" ng-click="expandProperty('pose', model.name)">
                 <img src="style/images/play.png">
                 pose
               </div>
@@ -327,7 +327,7 @@
                 <div class="properties expandableItemValue">{{model.orientation.yaw}}</div>
               </div>
               <div ng-repeat="link in model.links">
-                <div id="expand-link-{{model.name}}-{{link.shortName}}" class="expandableLink" ng-click="expandProperty('link', model.name, link.shortName)">
+                <div id="expand-link-{{model.name}}-{{link.shortName}}" class="clickable expandableLink" ng-click="expandProperty('link', model.name, link.shortName)">
                   <img src="style/images/play.png">
                   {{link.shortName}}
                 </div>
@@ -342,7 +342,7 @@
                   <div class="properties expandableItemValue">{{link.kinematic}}</div>
                   <div class="properties expandableItemName">canonical</div>
                   <div class="properties expandableItemValue">{{link.canonical}}</div>
-                  <div id="expand-pose-{{model.name}}-{{link.shortName}}" class="expandableProperty" ng-click="expandProperty('pose', model.name, link.shortName)">
+                  <div id="expand-pose-{{model.name}}-{{link.shortName}}" class="clickable expandableProperty" ng-click="expandProperty('pose', model.name, link.shortName)">
                     <img src="style/images/play.png">
                     pose
                   </div>
@@ -360,7 +360,7 @@
                     <div class="properties expandableItemName">yaw</div>
                     <div class="properties expandableItemValue">{{link.orientation.yaw}}</div>
                   </div>
-                  <div id="expand-inertial-{{model.name}}-{{link.shortName}}" class="expandableProperty" ng-click="expandProperty('inertial', model.name, link.shortName)">
+                  <div id="expand-inertial-{{model.name}}-{{link.shortName}}" class="clickable expandableProperty" ng-click="expandProperty('inertial', model.name, link.shortName)">
                     <img src="style/images/play.png">
                     inertial
                   </div>
@@ -383,11 +383,11 @@
             </div>
           </div>
           <div ng-repeat="light in lights" id="propertyPanel-{{light.name}}" class="leftPanels ui-overlay-shadow">
-            <div class="panelTitle" ng-click="closePanels()">
+            <div class="clickable panelTitle" ng-click="closePanels()">
               <h3>World</h3>
               <img src="style/images/close.png">
             </div>
-            <div class="panelSubTitle" ng-click="backToTree()">
+            <div class="clickable panelSubTitle" ng-click="backToTree()">
               <h4>{{light.name}}</h4>
               <img src="style/images/back.png">
             </div>
@@ -397,7 +397,7 @@
               <div class="propertyHeader"><h4>Value</h4></div>
               <div class="properties propertyName">name</div>
               <div class="properties propertyValue">{{light.name}}</div>
-              <div id="expand-pose-{{light.name}}" class="expandableProperty" ng-click="expandProperty('pose', light.name)">
+              <div id="expand-pose-{{light.name}}" class="clickable expandableProperty" ng-click="expandProperty('pose', light.name)">
                 <img src="style/images/play.png">
                 pose
               </div>
