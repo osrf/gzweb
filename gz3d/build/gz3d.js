@@ -1157,12 +1157,18 @@ var modelStats = [];
 GZ3D.Gui.prototype.setModelStats = function(stats, action)
 {
   var name = stats.name;
+  var modelName = name;
+
+  if (name.indexOf('::') >= 0)
+  {
+    modelName = name.substring(0, name.indexOf('::'));
+  }
 
   if (action === 'update')
   {
     var model = $.grep(modelStats, function(e)
         {
-          return e.name === name;
+          return e.name === modelName;
         });
 
     var formatted;
@@ -1211,14 +1217,34 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
             });
       }
     }
+    // Update existing model's pose
     else
     {
+      if (stats.position)
+      {
+        stats.pose = {};
+        stats.pose.position = stats.position;
+        stats.pose.orientation = stats.orientation;
+      }
+
       if (stats.pose)
       {
         formatted = this.formatStats(stats);
 
-        model[0].position = formatted.pose.position;
-        model[0].orientation = formatted.pose.orientation;
+        if (name === modelName)
+        {
+          model[0].position = formatted.pose.position;
+          model[0].orientation = formatted.pose.orientation;
+        }
+        else
+        {
+          var link = $.grep(model[0].links, function(e)
+            {
+              return e.name === name;
+            });
+          link[0].position = formatted.pose.position;
+          link[0].orientation = formatted.pose.orientation;
+        }
       }
     }
   }
@@ -1581,6 +1607,7 @@ GZ3D.GZIface.prototype.onConnected = function()
     if (entity && entity !== this.scene.modelManipulator.object)
     {
       this.scene.updatePose(entity, message.position, message.orientation);
+      this.gui.setModelStats(message, 'update');
     }
   };
 

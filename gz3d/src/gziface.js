@@ -129,6 +129,7 @@ GZ3D.GZIface.prototype.onConnected = function()
     if (entity && entity !== this.scene.modelManipulator.object)
     {
       this.scene.updatePose(entity, message.position, message.orientation);
+      this.gui.setModelStats(message, 'update');
     }
   };
 
