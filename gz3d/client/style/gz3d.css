@@ -130,6 +130,7 @@ body
   width: 13em;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .panelSubTitle img
 {
@@ -225,6 +226,7 @@ body
   width: 10.5em;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
   float: left;
 }
 .unselectedTreeItem
@@ -262,6 +264,7 @@ body
   float: left;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .propertyName
 {
@@ -283,6 +286,7 @@ body
   float: left;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .expandableProperty img
 {
@@ -311,6 +315,7 @@ body
   width: 10em;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
   display: inline-block;
   vertical-align: middle;
 }
