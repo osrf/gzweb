@@ -17,6 +17,8 @@ var isTallScreen = function()
     {
       return $(window).height() / emUnits(1) > 35;
     };
+var lastOpenMenu = {mainMenu: 'mainMenu', insertMenu: 'insertMenu',
+    treeMenu: 'treeMenu'};
 
 var modelList =
   [
@@ -184,7 +186,7 @@ $(function()
 
   if (isWideScreen())
   {
-    guiEvents.emit('openTab','mainMenu');
+    guiEvents.emit('openTab', 'mainMenu', 'mainMenu');
   }
 
   if (isTallScreen())
@@ -362,28 +364,12 @@ $(function()
         });
   }
 
-  var lastOpenMenu = {insertMenu: 'insertMenu', treeMenu: 'treeMenu'};
   $('.tab').click(function()
       {
         var idTab = $(this).attr('id');
         var idMenu = idTab.substring(0,idTab.indexOf('Tab'));
 
-        if($('#'+idMenu).is(':visible'))
-        {
-          lastOpenMenu[idMenu] = idMenu;
-          guiEvents.emit('closeTabs', true);
-        }
-        else if ($('[id^="'+idMenu+'-"]').is(':visible'))
-        {
-          var id = $('[id^="'+idMenu+'-"]:visible').attr('id');
-          lastOpenMenu[idMenu] = id;
-          guiEvents.emit('closeTabs', true);
-        }
-        else
-        {
-          var menu = lastOpenMenu[idMenu] ? lastOpenMenu[idMenu] : idMenu;
-          guiEvents.emit('openTab', menu);
-        }
+        guiEvents.emit('openTab', lastOpenMenu[idMenu], idMenu);
       });
 
   $('.panelTitle').click(function()
@@ -391,13 +377,11 @@ $(function()
         guiEvents.emit('closeTabs', true);
       });
 
-  // Only for insert for now
   $('.panelSubTitle').click(function()
       {
         var id = $('.leftPanels:visible').attr('id');
         id = id.substring(0,id.indexOf('-'));
-        $('.leftPanels').hide();
-        $('#'+id).show();
+        guiEvents.emit('openTab', id, id);
       });
 
   $('#view-mode').click(function()
@@ -597,9 +581,7 @@ gzangular.controller('treeControl', ['$scope', function($scope)
   {
     $('#model-popup').popup('close');
     guiEvents.emit('selectEntity', name);
-
-    $('#treeMenu').hide();
-    $('#propertyPanel-'+name).show();
+    guiEvents.emit('openTab', 'propertyPanel-'+name, 'treeMenu');
   };
 
   $scope.openEntityMenu = function (event, name)
@@ -615,8 +597,7 @@ gzangular.controller('treeControl', ['$scope', function($scope)
 
   $scope.backToTree = function ()
   {
-    $('.leftPanels').hide();
-    $('#treeMenu').show();
+    guiEvents.emit('openTab', 'treeMenu', 'treeMenu');
   };
 
   $scope.expandProperty = function (property, model, link)
@@ -667,9 +648,8 @@ gzangular.controller('insertControl', ['$scope', function($scope)
 
   $scope.openCategory = function(category)
   {
-    $('#insertMenu').hide();
     var categoryID = 'insertMenu-'+category;
-    $('#' + categoryID).show();
+    guiEvents.emit('openTab', categoryID, 'insertMenu');
   };
 
   $scope.spawnEntity = function(path)
@@ -1018,8 +998,16 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('openTab', function (id)
+  guiEvents.on('openTab', function (id, parentId)
       {
+        lastOpenMenu[parentId] = id;
+
+        if($('#'+id).is(':visible'))
+        {
+          guiEvents.emit('closeTabs', true);
+          return;
+        }
+
         $('.leftPanels').hide();
         $('#'+id).show();
 
@@ -1033,7 +1021,7 @@ GZ3D.Gui.prototype.init = function()
         }
 
         $('.tab').css('border-left', '2em solid #2a2a2a');
-        $('#'+id+'Tab').css('border-left', '2em solid #22aadd');
+        $('#'+parentId+'Tab').css('border-left', '2em solid #22aadd');
       }
   );
 
@@ -1059,7 +1047,7 @@ GZ3D.Gui.prototype.init = function()
             modelStats[i].selected = 'selectedTreeItem';
             if (isWideScreen() && this.openTreeWhenSelected)
             {
-              guiEvents.emit('openTab', 'propertyPanel-'+object);
+              guiEvents.emit('openTab', 'propertyPanel-'+object, 'treeMenu');
             }
           }
           else
@@ -1075,7 +1063,7 @@ GZ3D.Gui.prototype.init = function()
             lightStats[i].selected = 'selectedTreeItem';
             if (isWideScreen() && this.openTreeWhenSelected)
             {
-              guiEvents.emit('openTab', 'propertyPanel-'+object);
+              guiEvents.emit('openTab', 'propertyPanel-'+object, 'treeMenu');
             }
           }
           else
