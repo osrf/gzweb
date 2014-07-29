@@ -329,7 +329,7 @@
               <div ng-repeat="link in model.links">
                 <div id="expand-link-{{model.name}}-{{link.shortName}}" class="clickable expandableLink" ng-click="expandProperty('link', model.name, link.shortName)">
                   <img src="style/images/play.png">
-                  {{link.shortName}}
+                  <div>{{link.shortName}}</div>
                 </div>
                 <div id="expandable-link-{{model.name}}-{{link.shortName}}" class="expandable">
                   <div class="properties expandableItemName">name</div>

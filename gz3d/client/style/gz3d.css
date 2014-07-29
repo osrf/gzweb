@@ -294,16 +294,24 @@ body
   font-weight:bolder;
   font-size: 1.2em;
   padding-left: 0.2em;
-  width: 14.8em;
+  width: 12em;
   float: left;
-  overflow: hidden;
-  text-overflow: ellipsis;
   background-color: #333333;
   line-height: 2em;
   border: 1px solid #222222;
+  clear: both;
 }
 .expandableLink img
 {
+  display: inline-block;
+  vertical-align: middle;
+}
+.expandableLink div
+{
+  width: 10em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
   vertical-align: middle;
 }
 .expandable
