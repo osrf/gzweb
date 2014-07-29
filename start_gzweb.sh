@@ -16,5 +16,5 @@ fi
 
 http-server http/client &
 
-#cd gzbridge
-#./ws_server.js &
+cd gzbridge
+./ws_server.js &
