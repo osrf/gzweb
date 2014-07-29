@@ -243,7 +243,7 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
     {
       if (mainPointer && model.parent === this.scene)
       {
-        this.selectEntity(model);
+        this.selectEntity(model, false);
       }
     }
     // Manipulator pickers, for mouse
@@ -1561,7 +1561,7 @@ GZ3D.Scene.prototype.setManipulationMode = function(mode)
     // model was selected during view mode
     if (this.selectedEntity)
     {
-      this.selectEntity(this.selectedEntity);
+      this.selectEntity(this.selectedEntity, false);
     }
   }
 
@@ -1650,7 +1650,7 @@ GZ3D.Scene.prototype.showRadialMenu = function(e)
       && this.modelManipulator.pickerNames.indexOf(model.name) === -1)
   {
     this.radialMenu.show(event,model);
-    this.selectEntity(model);
+    this.selectEntity(model, false);
   }
 };
 
@@ -1899,7 +1899,7 @@ GZ3D.Scene.prototype.getParentByPartialName = function(object, name)
  * Select entity
  * @param {} object
  */
-GZ3D.Scene.prototype.selectEntity = function(object)
+GZ3D.Scene.prototype.selectEntity = function(object, openTab)
 {
   if (object)
   {
@@ -1907,7 +1907,7 @@ GZ3D.Scene.prototype.selectEntity = function(object)
     {
       this.showBoundingBox(object);
       this.selectedEntity = object;
-      guiEvents.emit('setTreeSelected', object.name);
+      guiEvents.emit('setTreeSelected', object.name, openTab);
     }
     this.attachManipulator(object, this.manipulationMode);
   }

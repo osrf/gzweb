@@ -586,7 +586,6 @@ gzangular.controller('treeControl', ['$scope', function($scope)
   {
     $('#model-popup').popup('close');
     guiEvents.emit('selectEntity', name);
-    guiEvents.emit('openTab', 'propertyPanel-'+name, 'treeMenu');
   };
 
   $scope.openEntityMenu = function (event, name)
@@ -1042,7 +1041,7 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('setTreeSelected', function (object)
+  guiEvents.on('setTreeSelected', function (object, openTab)
       {
         for (var i = 0; i < modelStats.length; ++i)
         {
@@ -1050,7 +1049,7 @@ GZ3D.Gui.prototype.init = function()
           {
             $('#modelsTree').collapsible({collapsed: false});
             modelStats[i].selected = 'selectedTreeItem';
-            if (isWideScreen() && this.openTreeWhenSelected)
+            if (this.openTreeWhenSelected || openTab)
             {
               guiEvents.emit('openTab', 'propertyPanel-'+object, 'treeMenu');
             }
@@ -1097,7 +1096,7 @@ GZ3D.Gui.prototype.init = function()
   guiEvents.on('selectEntity', function (name)
       {
         var object = that.scene.getByName(name);
-        that.scene.selectEntity(object);
+        that.scene.selectEntity(object, true);
       }
   );
 
@@ -4512,7 +4511,7 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
     {
       if (mainPointer && model.parent === this.scene)
       {
-        this.selectEntity(model);
+        this.selectEntity(model, false);
       }
     }
     // Manipulator pickers, for mouse
@@ -5830,7 +5829,7 @@ GZ3D.Scene.prototype.setManipulationMode = function(mode)
     // model was selected during view mode
     if (this.selectedEntity)
     {
-      this.selectEntity(this.selectedEntity);
+      this.selectEntity(this.selectedEntity, false);
     }
   }
 
@@ -5919,7 +5918,7 @@ GZ3D.Scene.prototype.showRadialMenu = function(e)
       && this.modelManipulator.pickerNames.indexOf(model.name) === -1)
   {
     this.radialMenu.show(event,model);
-    this.selectEntity(model);
+    this.selectEntity(model, false);
   }
 };
 
@@ -6168,7 +6167,7 @@ GZ3D.Scene.prototype.getParentByPartialName = function(object, name)
  * Select entity
  * @param {} object
  */
-GZ3D.Scene.prototype.selectEntity = function(object)
+GZ3D.Scene.prototype.selectEntity = function(object, openTab)
 {
   if (object)
   {
@@ -6176,7 +6175,7 @@ GZ3D.Scene.prototype.selectEntity = function(object)
     {
       this.showBoundingBox(object);
       this.selectedEntity = object;
-      guiEvents.emit('setTreeSelected', object.name);
+      guiEvents.emit('setTreeSelected', object.name, openTab);
     }
     this.attachManipulator(object, this.manipulationMode);
   }
