@@ -43,23 +43,7 @@ GZ3D.SdfParser.prototype.onConnectionError = function()
   };
   this.gui.emitter.on('entityCreated', entityCreated);
   
-  // add sun to the scene
-  var sunModel = this.loadSDF('sun');
-  this.scene.add(sunModel);
-  
 };
-
-//TODO: for now gziface inits the scene
-//GZ3D.SdfParser.prototype.initScene = function()
-//{
-//  this.scene.createGrid();
-//
-//  // add a directional light as the default gazebo server
-//  var jsonString = '{"direction":{"x":0.5,"y":0.1,"z":-0.9},"pose":{"position":{"x":0,"y":0,"z":10},"orientation":{"x":0,"y":0,"z":0,"w":1}},"specular":{"r":0.20000000298023224,"b":0.20000000298023224,"g":0.20000000298023224,"a":1},"name":"sun","diffuse":{"r":0.800000011920929,"b":0.800000011920929,"g":0.800000011920929,"a":1},"attenuation_linear":0.009999999776482582,"type":3,"attenuation_constant":0.8999999761581421,"attenuation_quadratic":0.0010000000474974513,"range":1000,"cast_shadows":true}';
-//  var lightObj = JSON.parse(jsonString);
-//  this.createLight(lightObj);
-//
-//};
 
 GZ3D.SdfParser.prototype.parseColor = function(diffuseStr)
 {
@@ -578,6 +562,7 @@ GZ3D.SdfParser.prototype.createLink = function(link)
 GZ3D.SdfParser.prototype.addModelByType = function(model, type)
 {
   var sdf, translation, euler;
+  var quaternion = new THREE.Quaternion();
   var modelObj;
   
   if (model.matrixWorld) {
@@ -586,6 +571,7 @@ GZ3D.SdfParser.prototype.addModelByType = function(model, type)
     euler = new THREE.Euler();
     var scale = new THREE.Vector3();
     matrix.decompose(translation, euler, scale);
+    quaternion.setFromEuler(euler);
   }
 
   if (type === 'box') {
@@ -597,13 +583,20 @@ GZ3D.SdfParser.prototype.addModelByType = function(model, type)
   } else if (type === 'cylinder') {
     sdf = this.createCylinderSDF(translation, euler);
     modelObj = this.spawnFromSDF(sdf);
+  } else if (type === 'spotlight') {
+    modelObj = this.scene.createLight(2);
+    this.scene.setPose(modelObj, translation, quaternion);
+  } else if (type === 'directionallight') {
+    modelObj = this.scene.createLight(3);
+    this.scene.setPose(modelObj, translation, quaternion);
+  } else if (type === 'pointlight') {
+    modelObj = this.scene.createLight(1);
+    this.scene.setPose(modelObj, translation, quaternion);
   } else {
     var sdfObj = this.loadSDF(type);
     modelObj = new THREE.Object3D();
     modelObj.add(sdfObj);
     modelObj.matrixWorld = modelObj.matrixWorld;
-    var quaternion = new THREE.Quaternion();
-    quaternion.setFromEuler(euler);
     this.scene.setPose(modelObj, translation, quaternion);
   }
   
