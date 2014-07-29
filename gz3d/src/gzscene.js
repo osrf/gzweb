@@ -168,6 +168,11 @@ GZ3D.Scene.prototype.initScene = function()
   this.add(obj);
 };
 
+GZ3D.Scene.prototype.setSDFParser = function(sdfParser)
+{
+  this.spawnModel.sdfParser = sdfParser;
+};
+
 /**
  * Window event callback
  * @param {} event - mousedown or touchdown events
