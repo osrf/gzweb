@@ -179,6 +179,7 @@ $(function()
   // Toggle items
   $('#view-collisions').buttonMarkup({icon: 'false'});
   $('#snap-to-grid').buttonMarkup({icon: 'false'});
+  $('#open-tree-when-selected').buttonMarkup({icon: 'false'});
   $('#view-transparent').buttonMarkup({icon: 'false'});
   $('#view-wireframe').buttonMarkup({icon: 'false'});
   guiEvents.emit('toggle_notifications');
@@ -196,9 +197,12 @@ $(function()
     $('.collapsible_header').click();
   }
 
-  // Clicks/taps// Touch devices
+  // Touch devices
   if (isTouchDevice)
   {
+    $('.mouse-only')
+        .css('display','none');
+
     $('#play-header-fieldset')
         .css('position', 'absolute')
         .css('right', '13.6em')
@@ -211,29 +215,17 @@ $(function()
         .css('top', '0em')
         .css('z-index', '1000');
 
-    $('#clock-mouse')
-        .css('visibility','hidden');
-
     $('#mode-header-fieldset')
         .css('position', 'absolute')
         .css('right', '0.5em')
         .css('top', '0.15em')
         .css('z-index', '1000');
 
-    $('#box-header-fieldset')
-        .css('visibility','hidden');
-
-    $('#sphere-header-fieldset')
-        .css('visibility','hidden');
-
-    $('#cylinder-header-fieldset')
-        .css('visibility','hidden');
-
-    $('#leftPanel').touchstart(function(event){
+    $('.gzGUI').touchstart(function(event){
         guiEvents.emit('pointerOnMenu');
     });
 
-    $('#leftPanel').touchend(function(event){
+    $('.gzGUI').touchend(function(event){
         guiEvents.emit('pointerOffMenu');
     });
 
@@ -279,6 +271,9 @@ $(function()
   // Mouse devices
   else
   {
+    $('.touch-only')
+        .css('display','none');
+
     $('[id^="insert-entity-"]')
       .click(function(event) {
         var path = $(this).attr('id');
@@ -289,18 +284,15 @@ $(function()
         event.preventDefault();
       });
 
-    $('#clock-header-fieldset')
-        .css('visibility','hidden');
-
     $('#play-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '31.2em')
+        .css('right', '41.2em')
         .css('top', '0em')
         .css('z-index', '1000');
 
     $('#clock-mouse')
         .css('position', 'absolute')
-        .css('right', '19.4em')
+        .css('right', '29.0em')
         .css('top', '0.5em')
         .css('z-index', '100')
         .css('width', '11em')
@@ -311,33 +303,51 @@ $(function()
 
     $('#mode-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '12.4em')
+        .css('right', '24.4em')
         .css('top', '0.15em')
         .css('z-index', '1000');
 
     $('#box-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '6.5em')
+        .css('right', '15.5em')
         .css('top', '0em')
         .css('z-index', '1000');
 
     $('#sphere-header-fieldset')
         .css('position', 'absolute')
-        .css('right', '3.5em')
+        .css('right', '12.5em')
         .css('top', '0em')
         .css('z-index', '1000');
 
     $('#cylinder-header-fieldset')
         .css('position', 'absolute')
+        .css('right', '9.5em')
+        .css('top', '0em')
+        .css('z-index', '1000');
+
+    $('#pointlight-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '6.5em')
+        .css('top', '0em')
+        .css('z-index', '1000');
+
+    $('#spotlight-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '3.5em')
+        .css('top', '0em')
+        .css('z-index', '1000');
+
+    $('#directionallight-header-fieldset')
+        .css('position', 'absolute')
         .css('right', '0.5em')
         .css('top', '0em')
         .css('z-index', '1000');
 
-    $('#leftPanel').mouseenter(function(event){
+    $('.gzGUI').mouseenter(function(event){
         guiEvents.emit('pointerOnMenu');
     });
 
-    $('#leftPanel').mouseleave(function(event){
+    $('.gzGUI').mouseleave(function(event){
         guiEvents.emit('pointerOffMenu');
     });
 
@@ -357,24 +367,27 @@ $(function()
         });
   }
 
-  $('.header-button')
-      .css('float', 'left')
-      .css('height', '1.45em')
-      .css('padding', '0.65em');
-
+  var lastOpenMenu = {insertMenu: 'insertMenu', treeMenu: 'treeMenu'};
   $('.tab').click(function()
       {
         var idTab = $(this).attr('id');
         var idMenu = idTab.substring(0,idTab.indexOf('Tab'));
 
-        if($('#'+idMenu).is(':visible')  ||
-           $('[id^="'+idMenu+'-"]').is(':visible'))
+        if($('#'+idMenu).is(':visible'))
         {
+          lastOpenMenu[idMenu] = idMenu;
+          guiEvents.emit('closeTabs', true);
+        }
+        else if ($('[id^="'+idMenu+'-"]').is(':visible'))
+        {
+          var id = $('[id^="'+idMenu+'-"]:visible').attr('id');
+          lastOpenMenu[idMenu] = id;
           guiEvents.emit('closeTabs', true);
         }
         else
         {
-          guiEvents.emit('openTab',idMenu);
+          var menu = lastOpenMenu[idMenu] ? lastOpenMenu[idMenu] : idMenu;
+          guiEvents.emit('openTab', menu);
         }
       });
 
@@ -402,21 +415,15 @@ $(function()
       {
         guiEvents.emit('manipulation_mode', 'rotate');
       });
-  $('#box-header').click(function()
+
+  $('[id^="header-insert-"]').click(function()
       {
+        var entity = $(this).attr('id');
+        entity = entity.substring(14); // after 'header-insert-'
         guiEvents.emit('closeTabs', false);
-        guiEvents.emit('spawn_entity_start', 'box');
+        guiEvents.emit('spawn_entity_start', entity);
       });
-  $('#sphere-header').click(function()
-      {
-        guiEvents.emit('closeTabs', false);
-        guiEvents.emit('spawn_entity_start', 'sphere');
-      });
-  $('#cylinder-header').click(function()
-      {
-        guiEvents.emit('closeTabs', false);
-        guiEvents.emit('spawn_entity_start', 'cylinder');
-      });
+
   $('#play').click(function()
       {
         if ( $('#playText').html().indexOf('Play') !== -1 )
@@ -470,6 +477,10 @@ $(function()
     guiEvents.emit('snap_to_grid');
     guiEvents.emit('closeTabs', false);
   });
+  $( '#open-tree-when-selected' ).click(function() {
+    guiEvents.emit('openTreeWhenSelected');
+    guiEvents.emit('closeTabs', false);
+  });
   $( '#toggle-notifications' ).click(function() {
     guiEvents.emit('toggle_notifications');
     guiEvents.emit('closeTabs', false);
@@ -515,24 +526,6 @@ $(function()
   });
 });
 
-// Insert menu
-function insertControl($scope)
-{
-  $scope.categories = modelList;
-
-  $scope.openCategory = function(category)
-  {
-    $('#insertMenu').hide();
-    var categoryID = 'insertMenu-'+category;
-    $('#' + categoryID).show();
-  };
-
-  $scope.spawnEntity = function(path)
-  {
-    guiEvents.emit('spawn_entity_start', path);
-  };
-}
-
 function getNameFromPath(path)
 {
   if(path === 'box')
@@ -547,6 +540,18 @@ function getNameFromPath(path)
   {
     return 'Cylinder';
   }
+  if(path === 'pointlight')
+  {
+    return 'Point Light';
+  }
+  if(path === 'spotlight')
+  {
+    return 'Spot Light';
+  }
+  if(path === 'directionallight')
+  {
+    return 'Directional Light';
+  }
 
   for(var i = 0; i < modelList.length; ++i)
   {
@@ -559,6 +564,70 @@ function getNameFromPath(path)
     }
   }
 }
+
+// World tree
+var gzangular = angular.module('gzangular',[]);
+// add ng-right-click
+gzangular.directive('ngRightClick', function($parse)
+{
+  return function(scope, element, attrs)
+      {
+        var fn = $parse(attrs.ngRightClick);
+        element.bind('contextmenu', function(event)
+            {
+              scope.$apply(function()
+                  {
+                    event.preventDefault();
+                    fn(scope, {$event:event});
+                  });
+            });
+      };
+});
+
+gzangular.controller('treeControl', ['$scope', function($scope)
+{
+  $scope.models = modelStats;
+
+  $scope.updateStats = function()
+  {
+    $scope.models = modelStats;
+    $scope.lights = lightStats;
+    if (!$scope.$$phase)
+    {
+      $scope.$apply();
+    }
+  };
+
+  $scope.selectEntity = function (name)
+  {
+    $('#model-popup').popup('close');
+    guiEvents.emit('selectEntity', name);
+  };
+
+  $scope.openEntityMenu = function (event, name)
+  {
+    $('#model-popup').popup('close');
+    guiEvents.emit('openEntityPopup', event, name);
+  };
+}]);
+
+// Insert menu
+gzangular.controller('insertControl', ['$scope', function($scope)
+{
+  $scope.categories = modelList;
+
+  $scope.openCategory = function(category)
+  {
+    $('#insertMenu').hide();
+    var categoryID = 'insertMenu-'+category;
+    $('#' + categoryID).show();
+  };
+
+  $scope.spawnEntity = function(path)
+  {
+    guiEvents.emit('spawn_entity_start', path);
+  };
+}]);
 
 
 /**
@@ -583,6 +652,7 @@ GZ3D.Gui.prototype.init = function()
   this.spawnState = null;
   this.longPressContainerState = null;
   this.showNotifications = false;
+  this.openTreeWhenSelected = false;
 
   var that = this;
 
@@ -701,16 +771,30 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
+  guiEvents.on('openTreeWhenSelected', function ()
+      {
+        this.openTreeWhenSelected = !this.openTreeWhenSelected;
+        if(!this.openTreeWhenSelected)
+        {
+          $('#open-tree-when-selected').buttonMarkup({icon: 'false'});
+        }
+        else
+        {
+          $('#open-tree-when-selected').buttonMarkup({icon: 'check'});
+        }
+      }
+  );
+
   guiEvents.on('toggle_notifications', function ()
       {
         this.showNotifications = !this.showNotifications;
         if(!this.showNotifications)
         {
-            $('#toggle-notifications').buttonMarkup({ icon: 'false' });
+          $('#toggle-notifications').buttonMarkup({icon: 'false'});
         }
         else
         {
-            $('#toggle-notifications').buttonMarkup({ icon: 'check' });
+          $('#toggle-notifications').buttonMarkup({icon: 'check'});
         }
       }
   );
@@ -773,12 +857,12 @@ GZ3D.Gui.prototype.init = function()
                 }
                 else if (type === 'transparent')
                 {
-                  that.scene.selectedEntity = entity;
+                  that.scene.selectEntity(entity);
                   guiEvents.emit('set_view_as','transparent');
                 }
                 else if (type === 'wireframe')
                 {
-                  that.scene.selectedEntity = entity;
+                  that.scene.selectEntity(entity);
                   guiEvents.emit('set_view_as','wireframe');
                 }
 
@@ -852,30 +936,7 @@ GZ3D.Gui.prototype.init = function()
       {
         that.scene.onRightClick(event, function(entity)
             {
-              that.scene.selectedEntity = entity;
-              that.scene.showBoundingBox(entity);
-              $('.ui-popup').popup('close');
-              if (that.scene.selectedEntity.viewAs === 'transparent')
-              {
-                $('#view-transparent').buttonMarkup({icon: 'check'});
-              }
-              else
-              {
-                $('#view-transparent').buttonMarkup({icon: 'false'});
-              }
-
-              if (that.scene.selectedEntity.viewAs === 'wireframe')
-              {
-                $('#view-wireframe').buttonMarkup({icon: 'check'});
-              }
-              else
-              {
-                $('#view-wireframe').buttonMarkup({icon: 'false'});
-              }
-
-              $('#model-popup').popup('open',
-                  {x: event.clientX + emUnits(6),
-                   y: event.clientY + emUnits(3)});
+              that.openEntityPopup(event, entity);
             });
       }
   );
@@ -883,7 +944,7 @@ GZ3D.Gui.prototype.init = function()
   guiEvents.on('set_view_as', function (viewAs)
       {
         that.scene.setViewAs(that.scene.selectedEntity, viewAs);
-        that.scene.selectedEntity = null;
+        that.scene.selectEntity(null);
       }
   );
 
@@ -892,7 +953,7 @@ GZ3D.Gui.prototype.init = function()
         that.emitter.emit('deleteEntity',that.scene.selectedEntity);
         guiEvents.emit('notification_popup','Model deleted');
         $('#model-popup').popup('close');
-        that.scene.selectedEntity = null;
+        that.scene.selectEntity(null);
       }
   );
 
@@ -923,7 +984,7 @@ GZ3D.Gui.prototype.init = function()
         }
 
         $('.tab').css('border-left', '2em solid #2a2a2a');
-        $('#'+id+'Tab').css('border-left', '2em solid #aaaaaa');
+        $('#'+id+'Tab').css('border-left', '2em solid #22aadd');
       }
   );
 
@@ -935,6 +996,71 @@ GZ3D.Gui.prototype.init = function()
           $('.leftPanels').hide();
           $('.tab').css('left', '0em');
           $('.tab').css('border-left', '2em solid #2a2a2a');
+        }
+      }
+  );
+
+  guiEvents.on('setTreeSelected', function (object)
+      {
+        if (isWideScreen() && this.openTreeWhenSelected)
+        {
+          guiEvents.emit('openTab', 'treeMenu');
+        }
+        for (var i = 0; i < modelStats.length; ++i)
+        {
+          if (modelStats[i].name === object)
+          {
+            $('#modelsTree').collapsible({collapsed: false});
+            modelStats[i].selected = 'selectedTreeItem';
+          }
+          else
+          {
+            modelStats[i].selected = 'unselectedTreeItem';
+          }
+        }
+        for (i = 0; i < lightStats.length; ++i)
+        {
+          if (lightStats[i].name === object)
+          {
+            $('#lightsTree').collapsible({collapsed: false});
+            lightStats[i].selected = 'selectedTreeItem';
+          }
+          else
+          {
+            lightStats[i].selected = 'unselectedTreeItem';
+          }
+        }
+        that.updateStats();
+      }
+  );
+
+  guiEvents.on('setTreeDeselected', function ()
+      {
+        for (var i = 0; i < modelStats.length; ++i)
+        {
+          modelStats[i].selected = 'unselectedTreeItem';
+        }
+        for (i = 0; i < lightStats.length; ++i)
+        {
+          lightStats[i].selected = 'unselectedTreeItem';
+        }
+        that.updateStats();
+      }
+  );
+
+  guiEvents.on('selectEntity', function (name)
+      {
+        var object = that.scene.getByName(name);
+        that.scene.selectEntity(object);
+      }
+  );
+
+  guiEvents.on('openEntityPopup', function (event, name)
+      {
+        if (!isTouchDevice)
+        {
+          var object = that.scene.getByName(name);
+          that.openEntityPopup(event, object);
         }
       }
   );
@@ -1477,6 +1603,13 @@ GZ3D.GZIface.prototype.onConnected = function()
     messageType : 'model',
   });
 
+  // Light messages - for modifying light pose
+  this.lightModifyTopic = new ROSLIB.Topic({
+    ros : this.webSocket,
+    name : '~/light',
+    messageType : 'light',
+  });
+
   var publishModelModify = function(model)
   {
     var matrix = model.matrixWorld;
@@ -1489,6 +1622,7 @@ GZ3D.GZIface.prototype.onConnected = function()
     {
       name : model.name,
       id : model.userData,
+      createEntity : 0,
       position :
       {
         x : translation.x,
@@ -1503,7 +1637,15 @@ GZ3D.GZIface.prototype.onConnected = function()
         z: quaternion.z
       }
     };
-    that.modelModifyTopic.publish(modelMsg);
+    if (model.children[0] &&
+        model.children[0] instanceof THREE.Light)
+    {
+      that.lightModifyTopic.publish(modelMsg);
+    }
+    else
+    {
+      that.modelModifyTopic.publish(modelMsg);
+    }
   };
 
   this.scene.emitter.on('poseChanged', publishModelModify);
@@ -1515,6 +1657,13 @@ GZ3D.GZIface.prototype.onConnected = function()
     messageType : 'factory',
   });
 
+  // Factory messages - for spawning new lights
+  this.lightFactoryTopic = new ROSLIB.Topic({
+    ros : this.webSocket,
+    name : '~/light',
+    messageType : 'light',
+  });
+
   var publishFactory = function(model, type)
   {
     var matrix = model.matrixWorld;
@@ -1522,10 +1671,11 @@ GZ3D.GZIface.prototype.onConnected = function()
     var quaternion = new THREE.Quaternion();
     var scale = new THREE.Vector3();
     matrix.decompose(translation, quaternion, scale);
-    var modelMsg =
+    var entityMsg =
     {
       name : model.name,
       type : type,
+      createEntity : 1,
       position :
       {
         x : translation.x,
@@ -1540,7 +1690,14 @@ GZ3D.GZIface.prototype.onConnected = function()
         z: quaternion.z
       }
     };
-    that.factoryTopic.publish(modelMsg);
+    if (model.children[0].children[0] instanceof THREE.Light)
+    {
+      that.lightFactoryTopic.publish(entityMsg);
+    }
+    else
+    {
+      that.factoryTopic.publish(entityMsg);
+    }
   };
 
   // For deleting models
@@ -1693,6 +1850,7 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
   var modelObj = new THREE.Object3D();
   modelObj.name = model.name;
   modelObj.userData = model.id;
+  console.log(model);
   if (model.pose)
   {
     this.scene.setPose(modelObj, model.pose.position, model.pose.orientation);
@@ -1761,66 +1919,33 @@ GZ3D.GZIface.prototype.createVisualFromMsg = function(visual)
 
 GZ3D.GZIface.prototype.createLightFromMsg = function(light)
 {
-  var lightObj;
-
-  var color = new THREE.Color();
-  color.r = light.diffuse.r;
-  color.g = light.diffuse.g;
-  color.b = light.diffuse.b;
+  var obj, factor, range, direction;
 
   if (light.type === 1)
   {
-    lightObj = new THREE.AmbientLight(color.getHex());
-    lightObj.distance = light.range;
-    this.scene.setPose(lightObj, light.pose.position,
-        light.pose.orientation);
+    factor = 1.5;
+    direction = null;
+    range = light.range;
   }
-  if (light.type === 2)
+  else if (light.type === 2)
   {
-    lightObj = new THREE.SpotLight(color.getHex());
-    lightObj.distance = light.range;
-    this.scene.setPose(lightObj, light.pose.position,
-        light.pose.orientation);
+    factor = 5;
+    direction = light.direction;
+    range = light.range;
   }
   else if (light.type === 3)
   {
-    lightObj = new THREE.DirectionalLight(color.getHex());
-    var dir = new THREE.Vector3(light.direction.x, light.direction.y,
-        light.direction.z);
-    var target = dir;
-    var negDir = dir.negate();
-    negDir.normalize();
-    var factor = 10;
-    light.pose.position.x += factor * negDir.x;
-    light.pose.position.y += factor * negDir.y;
-    light.pose.position.z += factor * negDir.z;
-
-    target.x -= light.pose.position.x;
-    target.y -= light.pose.position.y;
-    target.z -= light.pose.position.z;
-
-    lightObj.target.position = target;
-    lightObj.shadowCameraNear = 1;
-    lightObj.shadowCameraFar = 50;
-    lightObj.shadowMapWidth = 4094;
-    lightObj.shadowMapHeight = 4094;
-    lightObj.shadowCameraVisible = false;
-    lightObj.shadowCameraBottom = -100;
-    lightObj.shadowCameraLeft = -100;
-    lightObj.shadowCameraRight = 100;
-    lightObj.shadowCameraTop = 100;
-    lightObj.shadowBias = 0.0001;
-
-    lightObj.position.set(negDir.x, negDir.y, negDir.z);
-    this.scene.setPose(lightObj, light.pose.position,
-        light.pose.orientation);
+    factor = 1;
+    direction = light.direction;
+    range = null;
   }
-  lightObj.intensity = light.attenuation_constant;
-  lightObj.castShadow = light.cast_shadows;
-  lightObj.shadowDarkness = 0.3;
-  lightObj.name = light.name;
 
-  return lightObj;
+  obj = this.scene.createLight(light.type, light.diffuse,
+        light.attenuation_constant * factor,
+        light.pose, range, light.cast_shadows, light.name,
+        direction);
+
+  return obj;
 };
 
 GZ3D.GZIface.prototype.createRoadsFromMsg = function(roads)
@@ -3243,27 +3368,7 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
 
       point.applyMatrix4(tempMatrix.getInverse(parentRotationMatrix));
 
-      scope.object.position.copy(oldPosition);
-      scope.object.position.add(point);
-
-      if(scope.snapDist)
-      {
-        if(isSelected('X'))
-        {
-          scope.object.position.x = Math.round(scope.object.position.x /
-              scope.snapDist) * scope.snapDist;
-        }
-        if(isSelected('Y'))
-        {
-          scope.object.position.y = Math.round(scope.object.position.y /
-              scope.snapDist) * scope.snapDist;
-        }
-        if(isSelected('Z'))
-        {
-          scope.object.position.z = Math.round(scope.object.position.z /
-              scope.snapDist) * scope.snapDist;
-        }
-      }
+      translateObject(oldPosition, point);
     }
 
     // rotate depends on a tap (= mouse click) to select the axis of rotation
@@ -3276,35 +3381,7 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
       tempVector.copy(offset).sub(worldPosition);
       tempVector.multiply(parentScale);
 
-      rotation.set(Math.atan2(point.z, point.y), Math.atan2(point.x, point.z),
-          Math.atan2(point.y, point.x));
-      offsetRotation.set(Math.atan2(tempVector.z, tempVector.y), Math.atan2(
-          tempVector.x, tempVector.z), Math.atan2(tempVector.y, tempVector.x));
-
-      tempQuaternion.setFromRotationMatrix(tempMatrix.getInverse(
-          parentRotationMatrix));
-
-      quaternionX.setFromAxisAngle(unitX, rotation.x - offsetRotation.x);
-      quaternionY.setFromAxisAngle(unitY, rotation.y - offsetRotation.y);
-      quaternionZ.setFromAxisAngle(unitZ, rotation.z - offsetRotation.z);
-      quaternionXYZ.setFromRotationMatrix(worldRotationMatrix);
-
-      if(scope.selected === 'RX')
-      {
-        tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionX);
-      }
-      if(scope.selected === 'RY')
-      {
-        tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionY);
-      }
-      if(scope.selected === 'RZ')
-      {
-        tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionZ);
-      }
-
-      tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionXYZ);
-
-      scope.object.quaternion.copy(tempQuaternion);
+      rotateObjectXYZ(point, tempVector);
     }
 
     scope.update();
@@ -3441,24 +3518,7 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
 
         point.applyMatrix4(tempMatrix.getInverse(parentRotationMatrix));
 
-        scope.object.position.copy(oldPosition);
-        scope.object.position.add(point);
-
-        if(scope.snapDist)
-        {
-            if(isSelected('X'))
-            {
-              scope.object.position.x = Math.round(scope.object.position.x / scope.snapDist) * scope.snapDist;
-            }
-            if(isSelected('Y'))
-            {
-              scope.object.position.y = Math.round(scope.object.position.y / scope.snapDist) * scope.snapDist;
-            }
-            if(isSelected('Z'))
-            {
-              scope.object.position.z = Math.round(scope.object.position.z / scope.snapDist) * scope.snapDist;
-            }
-        }
+        translateObject(oldPosition, point);
       }
       else if((scope.mode === 'rotate') && isSelected('R'))
       {
@@ -3484,6 +3544,7 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
           tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionXYZ);
 
           scope.object.quaternion.copy(tempQuaternion);
+          moveLightTarget();
         }
         else if(scope.selected === 'RXYZE')
         {
@@ -3497,35 +3558,11 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
           tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionXYZ);
 
           scope.object.quaternion.copy(tempQuaternion);
+          moveLightTarget();
         }
         else
         {
-          rotation.set(Math.atan2(point.z, point.y), Math.atan2(point.x, point.z), Math.atan2(point.y, point.x));
-          offsetRotation.set(Math.atan2(tempVector.z, tempVector.y), Math.atan2(tempVector.x, tempVector.z), Math.atan2(tempVector.y, tempVector.x));
-
-          tempQuaternion.setFromRotationMatrix(tempMatrix.getInverse(parentRotationMatrix));
-
-          quaternionX.setFromAxisAngle(unitX, rotation.x - offsetRotation.x);
-          quaternionY.setFromAxisAngle(unitY, rotation.y - offsetRotation.y);
-          quaternionZ.setFromAxisAngle(unitZ, rotation.z - offsetRotation.z);
-          quaternionXYZ.setFromRotationMatrix(worldRotationMatrix);
-
-          if(scope.selected === 'RX')
-          {
-            tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionX);
-          }
-          if(scope.selected === 'RY')
-          {
-            tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionY);
-          }
-          if(scope.selected === 'RZ')
-          {
-            tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionZ);
-          }
-
-          tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionXYZ);
-
-          scope.object.quaternion.copy(tempQuaternion);
+          rotateObjectXYZ(point, tempVector);
         }
       }
     }
@@ -3596,6 +3633,94 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
     object.rotation.set(0, 0, 0);
     object.scale.set(1, 1, 1);
   }
+
+  /*
+   * Translate object
+   * @param {} oldPosition
+   * @param {} point
+   */
+  function translateObject(oldPosition, point)
+  {
+    scope.object.position.copy(oldPosition);
+    scope.object.position.add(point);
+
+    if(scope.snapDist)
+    {
+      if(isSelected('X'))
+      {
+        scope.object.position.x = Math.round(scope.object.position.x /
+            scope.snapDist) * scope.snapDist;
+      }
+      if(isSelected('Y'))
+      {
+        scope.object.position.y = Math.round(scope.object.position.y /
+            scope.snapDist) * scope.snapDist;
+      }
+      if(isSelected('Z'))
+      {
+        scope.object.position.z = Math.round(scope.object.position.z /
+            scope.snapDist) * scope.snapDist;
+      }
+    }
+    moveLightTarget();
+  }
+
+  /*
+   * Rotate object
+   * @param {} point
+   * @param {} tempVector
+   */
+  function rotateObjectXYZ(point, tempVector)
+  {
+    rotation.set(Math.atan2(point.z, point.y), Math.atan2(point.x, point.z),
+        Math.atan2(point.y, point.x));
+    offsetRotation.set(Math.atan2(tempVector.z, tempVector.y), Math.atan2(
+      tempVector.x, tempVector.z), Math.atan2(tempVector.y, tempVector.x));
+
+    tempQuaternion.setFromRotationMatrix(tempMatrix.getInverse(
+      parentRotationMatrix));
+
+    quaternionX.setFromAxisAngle(unitX, rotation.x - offsetRotation.x);
+    quaternionY.setFromAxisAngle(unitY, rotation.y - offsetRotation.y);
+    quaternionZ.setFromAxisAngle(unitZ, rotation.z - offsetRotation.z);
+    quaternionXYZ.setFromRotationMatrix(worldRotationMatrix);
+
+    if(scope.selected === 'RX')
+    {
+      tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionX);
+    }
+    if(scope.selected === 'RY')
+    {
+      tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionY);
+    }
+    if(scope.selected === 'RZ')
+    {
+      tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionZ);
+    }
+
+    tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionXYZ);
+
+    scope.object.quaternion.copy(tempQuaternion);
+
+    moveLightTarget();
+  }
+
+  /*
+   * Move light target
+   */
+  function moveLightTarget()
+  {
+    if (scope.object.children[0] &&
+       (scope.object.children[0] instanceof THREE.SpotLight ||
+        scope.object.children[0] instanceof THREE.DirectionalLight))
+    {
+      var lightObj = scope.object.children[0];
+      var dir = new THREE.Vector3(0,0,0);
+      dir.copy(scope.object.direction);
+      scope.object.localToWorld(dir);
+      lightObj.target.position.copy(dir);
+    }
+  }
 };
 
 GZ3D.Manipulator.prototype = Object.create(THREE.EventDispatcher.prototype);
@@ -3663,8 +3788,7 @@ GZ3D.RadialMenu.prototype.init = function()
   this.addItem('transparent','style/images/transparent.png');
   this.addItem('wireframe','style/images/wireframe.png');
 
-  this.numberOfItems = this.menu.children.length;
-  this.offset = this.numberOfItems - 1 - Math.floor(this.numberOfItems/2);
+  this.setNumberOfItems(this.menu.children.length);
 
   // Start hidden
   this.hide();
@@ -3677,7 +3801,7 @@ GZ3D.RadialMenu.prototype.init = function()
  */
 GZ3D.RadialMenu.prototype.hide = function(event,callback)
 {
-  for ( var i in this.menu.children )
+  for (var i = 0; i < this.numberOfItems; i++)
   {
     var item = this.menu.children[i];
 
@@ -3723,6 +3847,16 @@ GZ3D.RadialMenu.prototype.show = function(event,model)
   }
 
   this.model = model;
+
+  if (model.children[0] instanceof THREE.Light)
+  {
+    this.setNumberOfItems(3);
+  }
+  else
+  {
+    this.setNumberOfItems(5);
+  }
+
   var pointer = this.getPointer(event);
   this.startPosition = pointer;
 
@@ -3737,7 +3871,7 @@ GZ3D.RadialMenu.prototype.show = function(event,model)
     this.menu.getObjectByName('wireframe').isHighlighted = true;
   }
 
-  for ( var i in this.menu.children )
+  for (var i = 0; i < this.numberOfItems; i++)
   {
     var item = this.menu.children[i];
 
@@ -3766,7 +3900,7 @@ GZ3D.RadialMenu.prototype.update = function()
   }
 
   // Move outwards
-  for ( var i in this.menu.children )
+  for (var i = 0; i < this.numberOfItems; i++)
   {
     var item = this.menu.children[i];
 
@@ -3883,7 +4017,7 @@ GZ3D.RadialMenu.prototype.onLongPressMove = function(event)
   }
 
   var counter = 0;
-  for ( var i in this.menu.children )
+  for (var i = 0; i < this.numberOfItems; i++)
   {
     var item = this.menu.children[i];
 
@@ -3967,6 +4101,16 @@ GZ3D.RadialMenu.prototype.addItem = function(type, iconTexture)
 };
 
 /**
+ * Set number of items (different for models and lights)
+ * @param {int} number
+ */
+GZ3D.RadialMenu.prototype.setNumberOfItems = function(number)
+{
+  this.numberOfItems = number;
+  this.offset = this.numberOfItems - 1 - Math.floor(this.numberOfItems/2);
+};
+
+/**
  * The scene is where everything is placed, from objects, to lights and cameras.
  * @constructor
  */
@@ -4047,16 +4191,9 @@ GZ3D.Scene.prototype.init = function()
       function(event) {that.onPointerUp(event);}, false );
 
   // Handles for translating and rotating objects
-  if (isTouchDevice)
-  {
-    this.modelManipulator = new GZ3D.Manipulator(this.camera, true,
+  this.modelManipulator = new GZ3D.Manipulator(this.camera, isTouchDevice,
       this.getDomElement());
-  }
-  else
-  {
-    this.modelManipulator = new GZ3D.Manipulator(this.camera, false,
-      this.getDomElement());
-  }
+
   this.timeDown = null;
 
   this.controls = new THREE.OrbitControls(this.camera);
@@ -4683,6 +4820,235 @@ GZ3D.Scene.prototype.createBox = function(width, height, depth)
 };
 
 /**
+ * Create light
+ * @param {} type - 1: point, 2: spot, 3: directional
+ * @param {} color
+ * @param {} intensity
+ * @param {} pose
+ * @param {} distance
+ * @param {} cast_shadows
+ * @param {} name
+ * @param {} direction
+ * @returns {THREE.Object3D}
+ */
+GZ3D.Scene.prototype.createLight = function(type, color, intensity, pose,
+    distance, cast_shadows, name, direction)
+{
+  var obj = new THREE.Object3D();
+
+  if (typeof(color) === 'undefined')
+  {
+    color = 0xffffff;
+  }
+  else if (typeof(color) !== THREE.Color)
+  {
+    var Color = new THREE.Color();
+    Color.r = color.r;
+    Color.g = color.g;
+    Color.b = color.b;
+    color = Color;
+  }
+
+  var matrixWorld;
+
+  if (pose)
+  {
+    var quaternion = new THREE.Quaternion(
+        pose.orientation.x,
+        pose.orientation.y,
+        pose.orientation.z,
+        pose.orientation.w);
+
+    var translation = new THREE.Vector3(
+        pose.position.x,
+        pose.position.y,
+        pose.position.z);
+
+    matrixWorld = new THREE.Matrix4();
+    matrixWorld.compose(translation, quaternion, new THREE.Vector3(1,1,1));
+
+    this.setPose(obj, pose.position, pose.orientation);
+    obj.matrixWorldNeedsUpdate = true;
+  }
+
+  var elements;
+  if (type === 1)
+  {
+    elements = this.createPointLight(obj, color, intensity,
+        distance, cast_shadows);
+  }
+  else if (type === 2)
+  {
+    elements = this.createSpotLight(obj, color, intensity,
+        distance, cast_shadows);
+  }
+  else if (type === 3)
+  {
+    elements = this.createDirectionalLight(obj, color, intensity,
+        cast_shadows);
+  }
+
+  var lightObj = elements[0];
+  var helper = elements[1];
+
+  if (name)
+  {
+    lightObj.name = name;
+    obj.name = name;
+    helper.name = name + '_lightHelper';
+  }
+
+  if (direction)
+  {
+    var dir = new THREE.Vector3(direction.x, direction.y,
+        direction.z);
+
+    obj.direction = new THREE.Vector3();
+    obj.direction.copy(dir);
+
+    dir.applyMatrix4(matrixWorld); // localToWorld
+    lightObj.target.position.copy(dir);
+  }
+
+  obj.add(lightObj);
+  obj.add(helper);
+  return obj;
+};
+
+/**
+ * Create point light - called by createLight
+ * @param {} obj - light object
+ * @param {} color
+ * @param {} intensity
+ * @param {} distance
+ * @param {} cast_shadows
+ * @returns {[THREE.Light, THREE.Mesh]}
+ */
+GZ3D.Scene.prototype.createPointLight = function(obj, color, intensity,
+    distance, cast_shadows)
+{
+  if (typeof(intensity) === 'undefined')
+  {
+    intensity = 0.5;
+  }
+
+  var lightObj = new THREE.PointLight(color, intensity);
+  lightObj.shadowDarkness = 0.3;
+
+  if (distance)
+  {
+    lightObj.distance = distance;
+  }
+  if (cast_shadows)
+  {
+    lightObj.castShadow = cast_shadows;
+  }
+
+  var helperGeometry = new THREE.OctahedronGeometry(0.25, 0);
+  helperGeometry.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI/2));
+  var helperMaterial = new THREE.MeshBasicMaterial(
+        {wireframe: true, color: 0x00ff00});
+  var helper = new THREE.Mesh(helperGeometry, helperMaterial);
+
+  return [lightObj, helper];
+};
+
+/**
+ * Create spot light - called by createLight
+ * @param {} obj - light object
+ * @param {} color
+ * @param {} intensity
+ * @param {} distance
+ * @param {} cast_shadows
+ * @returns {[THREE.Light, THREE.Mesh]}
+ */
+GZ3D.Scene.prototype.createSpotLight = function(obj, color, intensity,
+    distance, cast_shadows)
+{
+  if (typeof(intensity) === 'undefined')
+  {
+    intensity = 1;
+  }
+  if (typeof(distance) === 'undefined')
+  {
+    distance = 20;
+  }
+
+  var lightObj = new THREE.SpotLight(color, intensity);
+  lightObj.distance = distance;
+  lightObj.position.set(0,0,0);
+  lightObj.shadowDarkness = 0.3;
+
+  if (cast_shadows)
+  {
+    lightObj.castShadow = cast_shadows;
+  }
+
+  var helperGeometry = new THREE.CylinderGeometry(0, 0.3, 0.2, 4, 1, true);
+  helperGeometry.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI/2));
+  helperGeometry.applyMatrix(new THREE.Matrix4().makeRotationZ(Math.PI/4));
+  var helperMaterial = new THREE.MeshBasicMaterial(
+        {wireframe: true, color: 0x00ff00});
+  var helper = new THREE.Mesh(helperGeometry, helperMaterial);
+
+  return [lightObj, helper];
+
+};
+
+/**
+ * Create directional light - called by createLight
+ * @param {} obj - light object
+ * @param {} color
+ * @param {} intensity
+ * @param {} cast_shadows
+ * @returns {[THREE.Light, THREE.Mesh]}
+ */
+GZ3D.Scene.prototype.createDirectionalLight = function(obj, color, intensity,
+    cast_shadows)
+{
+  if (typeof(intensity) === 'undefined')
+  {
+    intensity = 1;
+  }
+
+  var lightObj = new THREE.DirectionalLight(color, intensity);
+  lightObj.shadowCameraNear = 1;
+  lightObj.shadowCameraFar = 50;
+  lightObj.shadowMapWidth = 4094;
+  lightObj.shadowMapHeight = 4094;
+  lightObj.shadowCameraVisible = false;
+  lightObj.shadowCameraBottom = -100;
+  lightObj.shadowCameraLeft = -100;
+  lightObj.shadowCameraRight = 100;
+  lightObj.shadowCameraTop = 100;
+  lightObj.shadowBias = 0.0001;
+  lightObj.position.set(0,0,0);
+  lightObj.shadowDarkness = 0.3;
+
+  if (cast_shadows)
+  {
+    lightObj.castShadow = cast_shadows;
+  }
+
+  var helperGeometry = new THREE.Geometry();
+  helperGeometry.vertices.push(new THREE.Vector3(-0.5, -0.5, 0));
+  helperGeometry.vertices.push(new THREE.Vector3(-0.5,  0.5, 0));
+  helperGeometry.vertices.push(new THREE.Vector3(-0.5,  0.5, 0));
+  helperGeometry.vertices.push(new THREE.Vector3( 0.5,  0.5, 0));
+  helperGeometry.vertices.push(new THREE.Vector3( 0.5,  0.5, 0));
+  helperGeometry.vertices.push(new THREE.Vector3( 0.5, -0.5, 0));
+  helperGeometry.vertices.push(new THREE.Vector3( 0.5, -0.5, 0));
+  helperGeometry.vertices.push(new THREE.Vector3(-0.5, -0.5, 0));
+  helperGeometry.vertices.push(new THREE.Vector3(   0,    0, 0));
+  helperGeometry.vertices.push(new THREE.Vector3(   0,    0, -0.5));
+  var helperMaterial = new THREE.LineBasicMaterial({color: 0x00ff00});
+  var helper = new THREE.Line(helperGeometry, helperMaterial,
+      THREE.LinePieces);
+
+  return [lightObj, helper];
+};
+
+/**
  * Create roads
  * @param {} points
  * @param {} width
@@ -5298,10 +5664,7 @@ GZ3D.Scene.prototype.setManipulationMode = function(mode)
     {
       this.emitter.emit('poseChanged', this.modelManipulator.object);
     }
-    this.hideBoundingBox();
-
-    this.modelManipulator.detach();
-    this.scene.remove(this.modelManipulator.gizmo);
+    this.selectEntity(null);
   }
   else
   {
@@ -5310,7 +5673,7 @@ GZ3D.Scene.prototype.setManipulationMode = function(mode)
     // model was selected during view mode
     if (this.selectedEntity)
     {
-      this.attachManipulator(this.selectedEntity, mode);
+      this.selectEntity(this.selectedEntity);
     }
   }
 
@@ -5360,13 +5723,6 @@ GZ3D.Scene.prototype.attachManipulator = function(model,mode)
   {
     this.emitter.emit('poseChanged', this.modelManipulator.object);
   }
-  if (this.modelManipulator.object !== model)
-  {
-    this.hideBoundingBox();
-  }
-
-  this.selectedEntity = model;
-  this.showBoundingBox(model);
 
   if (mode !== 'view')
   {
@@ -5406,7 +5762,7 @@ GZ3D.Scene.prototype.showRadialMenu = function(e)
       && this.modelManipulator.pickerNames.indexOf(model.name) === -1)
   {
     this.radialMenu.show(event,model);
-    this.showBoundingBox(model);
+    this.selectEntity(model);
   }
 };
 
@@ -5416,6 +5772,11 @@ GZ3D.Scene.prototype.showRadialMenu = function(e)
  */
 GZ3D.Scene.prototype.showBoundingBox = function(model)
 {
+  if (typeof model === 'string')
+  {
+    model = this.scene.getObjectByName(model);
+  }
+
   if (this.boundingBox.visible)
   {
     if (this.boundingBox.parent === model)
@@ -5425,7 +5786,6 @@ GZ3D.Scene.prototype.showBoundingBox = function(model)
     else
     {
       this.hideBoundingBox();
-      this.selectedEntity = model;
     }
   }
   var box = new THREE.Box3();
@@ -5504,7 +5864,6 @@ GZ3D.Scene.prototype.hideBoundingBox = function()
     this.boundingBox.parent.remove(this.boundingBox);
   }
   this.boundingBox.visible = false;
-  this.selectedEntity = null;
 };
 
 /**
@@ -5514,18 +5873,16 @@ GZ3D.Scene.prototype.hideBoundingBox = function()
  */
 GZ3D.Scene.prototype.onRightClick = function(event, callback)
 {
-  if(this.manipulationMode === 'view')
-  {
-    var pos = new THREE.Vector2(event.clientX, event.clientY);
-    var model = this.getRayCastModel(pos, new THREE.Vector3());
+  var pos = new THREE.Vector2(event.clientX, event.clientY);
+  var model = this.getRayCastModel(pos, new THREE.Vector3());
 
-    if(model && model.name !== '' && model.name !== 'plane' &&
-        this.modelManipulator.pickerNames.indexOf(model.name) === -1)
-    {
-      callback(model);
-    }
+  if(model && model.name !== '' && model.name !== 'plane' &&
+      this.modelManipulator.pickerNames.indexOf(model.name) === -1)
+  {
+    callback(model);
   }
 };
+
 
 /**
  * Set model's view mode
@@ -6012,10 +6369,7 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
         }
 
         var modelUri = this.MATERIAL_ROOT + '/' + modelName;
-        
-        console.log(modelUri);
         var materialName = parent.name + '::' + modelUri;
-        console.log(materialName);
         this.entityMaterial[materialName] = material;
 
         this.scene.loadMesh(modelUri, submesh,
