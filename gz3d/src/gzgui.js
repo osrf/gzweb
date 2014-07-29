@@ -20,6 +20,8 @@ var isTallScreen = function()
 var lastOpenMenu = {mainMenu: 'mainMenu', insertMenu: 'insertMenu',
     treeMenu: 'treeMenu'};
 
+var tabColors = {selected: 'rgb(34, 170, 221)', unselected: 'rgb(42, 42, 42)'};
+
 var modelList =
   [
     {path:'buildings', title:'Buildings', examplePath:'house_1', models:
@@ -183,6 +185,7 @@ $(function()
 
   $( '#clock-touch' ).popup('option', 'arrow', 't');
   $('#notification-popup-screen').remove();
+  $('.tab').css('border-left-color', tabColors.unselected);
 
   if (isWideScreen())
   {
@@ -369,7 +372,14 @@ $(function()
         var idTab = $(this).attr('id');
         var idMenu = idTab.substring(0,idTab.indexOf('Tab'));
 
-        guiEvents.emit('openTab', lastOpenMenu[idMenu], idMenu);
+        if($('#'+idTab).css('border-left-color') === tabColors.unselected)
+        {
+          guiEvents.emit('openTab', lastOpenMenu[idMenu], idMenu);
+        }
+        else
+        {
+          guiEvents.emit('closeTabs', true);
+        }
       });
 
   $('.panelTitle').click(function()
@@ -1001,12 +1011,6 @@ GZ3D.Gui.prototype.init = function()
       {
         lastOpenMenu[parentId] = id;
 
-        if($('#'+id).is(':visible'))
-        {
-          guiEvents.emit('closeTabs', true);
-          return;
-        }
-
         $('.leftPanels').hide();
         $('#'+id).show();
 
@@ -1019,8 +1023,8 @@ GZ3D.Gui.prototype.init = function()
           $('.tab').css('left', '10.5em');
         }
 
-        $('.tab').css('border-left', '2em solid #2a2a2a');
-        $('#'+parentId+'Tab').css('border-left', '2em solid #22aadd');
+        $('.tab').css('border-left-color', tabColors.unselected);
+        $('#'+parentId+'Tab').css('border-left-color', tabColors.selected);
       }
   );
 
@@ -1031,7 +1035,7 @@ GZ3D.Gui.prototype.init = function()
         {
           $('.leftPanels').hide();
           $('.tab').css('left', '0em');
-          $('.tab').css('border-left', '2em solid #2a2a2a');
+          $('.tab').css('border-left-color', tabColors.unselected);
         }
       }
   );
@@ -1060,7 +1064,7 @@ GZ3D.Gui.prototype.init = function()
           {
             $('#lightsTree').collapsible({collapsed: false});
             lightStats[i].selected = 'selectedTreeItem';
-            if (isWideScreen() && this.openTreeWhenSelected)
+            if (this.openTreeWhenSelected || openTab)
             {
               guiEvents.emit('openTab', 'propertyPanel-'+object, 'treeMenu');
             }

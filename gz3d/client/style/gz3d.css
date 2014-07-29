@@ -41,7 +41,7 @@ body
 {
   width: 0;
   height: 4em;
-  border-left: 2em solid #2a2a2a;
+  border-left: 2em solid;
   border-top: 1em solid transparent;
   border-bottom: 1em solid transparent;
   z-index: 1001;

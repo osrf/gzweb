@@ -1907,9 +1907,9 @@ GZ3D.Scene.prototype.selectEntity = function(object, openTab)
     {
       this.showBoundingBox(object);
       this.selectedEntity = object;
-      guiEvents.emit('setTreeSelected', object.name, openTab);
     }
     this.attachManipulator(object, this.manipulationMode);
+    guiEvents.emit('setTreeSelected', object.name, openTab);
   }
   else
   {
