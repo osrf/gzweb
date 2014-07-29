@@ -70,7 +70,7 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
   {
     // temp box for now
     mesh = this.sdfParser.loadSDF(entity);
-//    mesh = this.scene.createBox(1, 1, 1);
+    //TODO: add transparency to the object
   }
 
   this.obj.name = this.generateUniqueName(entity);

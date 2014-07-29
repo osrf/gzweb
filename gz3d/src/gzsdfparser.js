@@ -155,6 +155,14 @@ GZ3D.SdfParser.prototype.parsePose = function(poseStr)
 
 };
 
+GZ3D.SdfParser.prototype.parseScale = function(scaleStr)
+{
+  var values = scaleStr.split(' ');
+  var scale = new THREE.Vector3(parseFloat(values[0]), parseFloat(values[1]), parseFloat(values[2]));
+  return scale;
+};
+
+
 GZ3D.SdfParser.prototype.createMaterial = function(material)
 {
   var textureUri, texture, mat;
@@ -309,9 +317,10 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
         var modelName = meshUri.substring(meshUri.indexOf('://') + 3);
         if (geom.mesh.scale)
         {
-          parent.scale.x = geom.mesh.scale.x;
-          parent.scale.y = geom.mesh.scale.y;
-          parent.scale.z = geom.mesh.scale.z;
+          var scale = this.parseScale(geom.mesh.scale);
+          parent.scale.x = scale.x;
+          parent.scale.y = scale.y;
+          parent.scale.z = scale.z;
         }
 
         var modelUri = this.MATERIAL_ROOT + '/' + modelName;
