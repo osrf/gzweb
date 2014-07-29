@@ -4,6 +4,7 @@ var GZ3D = GZ3D || {
 
 
 /*global $:false */
+/*global angular*/
 
 var guiEvents = new EventEmitter2({ verbose: true });
 
@@ -172,7 +173,6 @@ var modelList =
     ]}
   ];
 
-// Bind events to buttons
 $(function()
 {
   //Initialize
@@ -977,6 +977,194 @@ GZ3D.Gui.prototype.setSimTime = function(simTime)
   $('.sim-time-value').text(simTime);
 };
 
+var modelStats = [];
+/**
+ * Update model stats on property panel
+ * @param {} stats
+ * @param {} action: 'update' / 'delete'
+ */
+GZ3D.Gui.prototype.setModelStats = function(stats, action)
+{
+  var name = stats.name;
+
+  if (action === 'update')
+  {
+    var thumbnail = this.findModelThumbnail(name);
+
+    var model = $.grep(modelStats, function(e)
+        {
+          return e.name === name;
+        });
+
+    if (model.length === 0)
+    {
+      modelStats.push(
+          {
+            name: name,
+            thumbnail: thumbnail,
+            selected: 'unselectedTreeItem'
+          });
+    }
+  }
+  else if (action === 'delete')
+  {
+    for (var i = 0; i < modelStats.length; ++i)
+    {
+      if (modelStats[i].name === name)
+      {
+        modelStats.splice(i, 1);
+        break;
+      }
+    }
+  }
+
+  this.updateStats();
+};
+
+var lightStats = [];
+/**
+ * Update light stats on property panel
+ * @param {} stats
+ * @param {} action: 'update' / 'delete'
+ */
+GZ3D.Gui.prototype.setLightStats = function(stats, action)
+{
+  var name = stats.name;
+
+  if (action === 'update')
+  {
+    var type = stats.type;
+
+    var thumbnail;
+    switch(type)
+    {
+      case 2:
+          thumbnail = 'style/images/spotlight.png';
+          break;
+      case 3:
+          thumbnail = 'style/images/directionallight.png';
+          break;
+      default:
+          thumbnail = 'style/images/pointlight.png';
+    }
+
+    var light = $.grep(lightStats, function(e)
+        {
+          return e.name === name;
+        });
+
+    if (light.length === 0)
+    {
+      lightStats.push(
+          {
+            name: name,
+            thumbnail: thumbnail,
+            selected: 'unselectedTreeItem'
+          });
+    }
+  }
+  else if (action === 'delete')
+  {
+    for (var i = 0; i < lightStats.length; ++i)
+    {
+      if (lightStats[i].name === name)
+      {
+        lightStats.splice(i, 1);
+        break;
+      }
+    }
+  }
+
+  this.updateStats();
+};
+
+/**
+ * Find thumbnail
+ * @param {} instanceName
+ * @returns string
+ */
+GZ3D.Gui.prototype.findModelThumbnail = function(instanceName)
+{
+  for(var i = 0; i < modelList.length; ++i)
+  {
+    for(var j = 0; j < modelList[i].models.length; ++j)
+    {
+      var path = modelList[i].models[j].modelPath;
+      if(instanceName.indexOf(path) >= 0)
+      {
+        return '/assets/'+path+'/thumbnails/0.png';
+      }
+    }
+  }
+  if(instanceName.indexOf('box') >= 0)
+  {
+    return 'style/images/box.png';
+  }
+  if(instanceName.indexOf('sphere') >= 0)
+  {
+    return 'style/images/sphere.png';
+  }
+  if(instanceName.indexOf('cylinder') >= 0)
+  {
+    return 'style/images/cylinder.png';
+  }
+  return 'style/images/box.png';
+};
+
+/**
+ * Update model stats
+ */
+GZ3D.Gui.prototype.updateStats = function()
+{
+  var tree = angular.element($('#treeMenu')).scope();
+  tree.updateStats();
+};
+
+/**
+ * Open entity (model/light) context menu
+ * @param {} event
+ * @param {THREE.Object3D} entity
+ */
+GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
+{
+  this.scene.selectEntity(entity);
+  $('.ui-popup').popup('close');
+
+  if (entity.children[0] instanceof THREE.Light)
+  {
+    $('#view-transparent').css('visibility','collapse');
+    $('#view-wireframe').css('visibility','collapse');
+    $('#model-popup').popup('open',
+      {x: event.clientX + emUnits(6),
+       y: event.clientY + emUnits(-5)});
+  }
+  else
+  {
+    if (this.scene.selectedEntity.viewAs === 'transparent')
+    {
+      $('#view-transparent').buttonMarkup({icon: 'check'});
+    }
+    else
+    {
+      $('#view-transparent').buttonMarkup({icon: 'false'});
+    }
+
+    if (this.scene.selectedEntity.viewAs === 'wireframe')
+    {
+      $('#view-wireframe').buttonMarkup({icon: 'check'});
+    }
+    else
+    {
+      $('#view-wireframe').buttonMarkup({icon: 'false'});
+    }
+    $('#view-transparent').css('visibility','visible');
+    $('#view-wireframe').css('visibility','visible');
+    $('#model-popup').popup('open',
+      {x: event.clientX + emUnits(6),
+       y: event.clientY + emUnits(0)});
+  }
+};
+
 //var GAZEBO_MODEL_DATABASE_URI='http://gazebosim.org/models';
 
 GZ3D.GZIface = function(scene, gui)
@@ -1081,6 +1269,7 @@ GZ3D.GZIface.prototype.onConnected = function()
       var light = message.light[i];
       var lightObj = this.createLightFromMsg(light);
       this.scene.add(lightObj);
+      this.gui.setLightStats(light, 'update');
     }
 
     for (var j = 0; j < message.model.length; ++j)
@@ -1088,6 +1277,7 @@ GZ3D.GZIface.prototype.onConnected = function()
       var model = message.model[j];
       var modelObj = this.createModelFromMsg(model);
       this.scene.add(modelObj);
+      this.gui.setModelStats(model, 'update');
     }
 
     this.sceneTopic.unsubscribe();
@@ -1127,6 +1317,14 @@ GZ3D.GZIface.prototype.onConnected = function()
       var entity = this.scene.getByName(message.data);
       if (entity)
       {
+        if (entity.children[0] instanceof THREE.Light)
+        {
+          this.gui.setLightStats({name: message.data}, 'delete');
+        }
+        else
+        {
+          this.gui.setModelStats({name: message.data}, 'delete');
+        }
         this.scene.remove(entity);
       }
     }
@@ -1173,6 +1371,7 @@ GZ3D.GZIface.prototype.onConnected = function()
         i++;
       }
     }
+    this.gui.setModelStats(message, 'update');
   };
 
   modelInfoTopic.subscribe(modelUpdate.bind(this));
@@ -1232,16 +1431,17 @@ GZ3D.GZIface.prototype.onConnected = function()
     messageType : 'light',
   });
 
-  var ligthtUpdate = function(message)
+  var lightUpdate = function(message)
   {
     if (!this.scene.getByName(message.name))
     {
       var lightObj = this.createLightFromMsg(message);
       this.scene.add(lightObj);
     }
+    this.gui.setLightStats(message, 'update');
   };
 
-  lightTopic.subscribe(ligthtUpdate.bind(this));
+  lightTopic.subscribe(lightUpdate.bind(this));
 
 
   // heightmap
@@ -3934,11 +4134,13 @@ GZ3D.Scene.prototype.init = function()
 GZ3D.Scene.prototype.initScene = function()
 {
   this.createGrid();
-};
 
-GZ3D.Scene.prototype.setSDFParser = function(sdfParser)
-{
-  this.spawnModel.sdfParser = sdfParser;
+  // create a sun light
+  var obj = this.createLight(3, new THREE.Color(0.8, 0.8, 0.8), 0.9,
+       {position: {x:0, y:0, z:10}, orientation: {x:0, y:0, z:0, w:1}},
+       null, true, 'sun', {x: 0.5, y: 0.1, z: -0.9});
+
+  this.add(obj);
 };
 
 /**
@@ -4016,7 +4218,7 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
     {
       if (mainPointer && model.parent === this.scene)
       {
-        this.attachManipulator(model, this.manipulationMode);
+        this.selectEntity(model);
       }
     }
     // Manipulator pickers, for mouse
@@ -4167,8 +4369,14 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
     for (var i = 0; i < objects.length; ++i)
     {
       model = objects[i].object;
+      if (model.name.indexOf('_lightHelper') >= 0)
+      {
+        model = model.parent;
+        break;
+      }
+
       if (!this.modelManipulator.hovered &&
-          (objects[i].object.name === 'plane'))
+          (model.name === 'plane'))
       {
         // model = null;
         point = objects[i].point;
@@ -5442,6 +5650,35 @@ GZ3D.Scene.prototype.getParentByPartialName = function(object, name)
   return null;
 };
 
+/**
+ * Select entity
+ * @param {} object
+ */
+GZ3D.Scene.prototype.selectEntity = function(object)
+{
+  if (object)
+  {
+    if (object !== this.selectedEntity)
+    {
+      this.showBoundingBox(object);
+      this.selectedEntity = object;
+      guiEvents.emit('setTreeSelected', object.name);
+    }
+    this.attachManipulator(object, this.manipulationMode);
+  }
+  else
+  {
+    if (this.modelManipulator.object)
+    {
+      this.modelManipulator.detach();
+      this.scene.remove(this.modelManipulator.gizmo);
+    }
+    this.hideBoundingBox();
+    this.selectedEntity = null;
+    guiEvents.emit('setTreeDeselected');
+  }
+};
+
 GZ3D.SdfParser = function(scene, gui, gziface)
 {
   // set the sdf version
@@ -6184,26 +6421,35 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
   if (entity === 'box')
   {
     mesh = this.scene.createBox(1, 1, 1);
-    this.obj.name = 'unit_box_' +  (new Date()).getTime();
   }
   else if (entity === 'sphere')
   {
     mesh = this.scene.createSphere(0.5);
-    this.obj.name = 'unit_sphere_' + (new Date()).getTime();
   }
   else if (entity === 'cylinder')
   {
     mesh = this.scene.createCylinder(0.5, 1.0);
-    this.obj.name = 'unit_cylinder_' + (new Date()).getTime();
+  }
+  else if (entity === 'pointlight')
+  {
+    mesh = this.scene.createLight(1);
+  }
+  else if (entity === 'spotlight')
+  {
+    mesh = this.scene.createLight(2);
+  }
+  else if (entity === 'directionallight')
+  {
+    mesh = this.scene.createLight(3);
   }
   else
   {
     // temp box for now
     mesh = this.sdfParser.loadSDF(entity);
 //    mesh = this.scene.createBox(1, 1, 1);
-    this.obj.name = entity + '_' + (new Date()).getTime();
   }
 
+  this.obj.name = this.generateUniqueName(entity);
   this.obj.add(mesh);
 
   // temp model appears within current view
@@ -6215,6 +6461,16 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
   this.obj.position.y = intersect.y;
   this.obj.position.z += 0.5;
   this.scene.add(this.obj);
+  // For the inserted light to have effect
+  var allObjects = [];
+  this.scene.scene.getDescendants(allObjects);
+  for (var l = 0; l < allObjects.length; ++l)
+  {
+    if (allObjects[l].material)
+    {
+      allObjects[l].material.needsUpdate = true;
+    }
+  }
 
   var that = this;
 
@@ -6377,4 +6633,33 @@ GZ3D.SpawnModel.prototype.moveSpawnedModel = function(positionX, positionY)
   }
 
   this.scene.setPose(this.obj, point, new THREE.Quaternion());
+
+  if (this.obj.children[0].children[0] &&
+     (this.obj.children[0].children[0] instanceof THREE.SpotLight ||
+      this.obj.children[0].children[0] instanceof THREE.DirectionalLight))
+  {
+    var lightObj = this.obj.children[0].children[0];
+    lightObj.target.position.copy(this.obj.position);
+    lightObj.target.position.add(new THREE.Vector3(0,0,-0.5));
+  }
+};
+
+/**
+ * Generate unique name for spawned entity
+ * @param {string} entity - entity type
+ */
+GZ3D.SpawnModel.prototype.generateUniqueName = function(entity)
+{
+  var i = 0;
+  while (i < 1000)
+  {
+    if (this.scene.getByName(entity+'_'+i))
+    {
+      ++i;
+    }
+    else
+    {
+      return entity+'_'+i;
+    }
+  }
 };

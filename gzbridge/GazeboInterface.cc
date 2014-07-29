@@ -69,8 +69,6 @@ GazeboInterface::GazeboInterface()
   this->visSub = this->node->Subscribe(this->visualTopic,
       &GazeboInterface::OnVisualMsg, this);
 
-  // this->lightPub = this->node->Advertise<gazebo::msgs::Light>("~/light");
-
   this->jointSub = this->node->Subscribe(this->jointTopic,
       &GazeboInterface::OnJointMsg, this);
 
@@ -108,7 +106,8 @@ GazeboInterface::GazeboInterface()
       this->node->Advertise<gazebo::msgs::Model>(this->modelModifyTopic);
 
   // For modifying lights
-  this->lightPub = this->node->Advertise<gazebo::msgs::Light>(this->lightTopic);
+  this->lightPub =
+      this->node->Advertise<gazebo::msgs::Light>(this->lightTopic);
 
   // For spawning models
   this->factoryPub =
@@ -305,14 +304,63 @@ void GazeboInterface::ProcessMessages()
           gazebo::msgs::Set(modelMsg.mutable_pose(), pose);
 
           this->modelPub->Publish(modelMsg);
+        }
+        else if (topic == this->lightTopic)
+        {
+          std::string name = get_value(msg, "msg:name");
+          std::string type = get_value(msg, "msg:type");
+          // createEntity = 1: create new light
+          // createEntity = 0: modify existing light
+          std::string createEntity = get_value(msg, "msg:createEntity");
 
-          /* else if (type == "light")
+          if (name == "")
+            continue;
+
+          gazebo::math::Vector3 pos(
+            atof(get_value(msg, "msg:position:x").c_str()),
+            atof(get_value(msg, "msg:position:y").c_str()),
+            atof(get_value(msg, "msg:position:z").c_str()));
+          gazebo::math::Quaternion quat(
+            atof(get_value(msg, "msg:orientation:w").c_str()),
+            atof(get_value(msg, "msg:orientation:x").c_str()),
+            atof(get_value(msg, "msg:orientation:y").c_str()),
+            atof(get_value(msg, "msg:orientation:z").c_str()));
+          gazebo::math::Pose pose(pos, quat);
+
+          gazebo::msgs::Light lightMsg;
+          lightMsg.set_name(name);
+          gazebo::msgs::Set(lightMsg.mutable_pose(), pose);
+
+          if (createEntity.compare("1") == 0)
           {
-            gazebo::msgs::Light msg;
-            msg.set_name(name);
-            gazebo::msgs::Set(msg.mutable_pose(), pose);
-            this->lightPub->Publish(msg);
-          }*/
+            if (type.compare("pointlight") == 0)
+            {
+              lightMsg.set_type(gazebo::msgs::Light::POINT);
+            }
+            else if (type.compare("spotlight") == 0)
+            {
+              lightMsg.set_type(gazebo::msgs::Light::SPOT);
+              gazebo::msgs::Set(lightMsg.mutable_direction(),
+                  gazebo::math::Vector3(0,0,-1));
+            }
+            else if (type.compare("directionallight") == 0)
+            {
+              lightMsg.set_type(gazebo::msgs::Light::DIRECTIONAL);
+              gazebo::msgs::Set(lightMsg.mutable_direction(),
+                  gazebo::math::Vector3(0,0,-1));
+            }
+
+            gazebo::msgs::Set(lightMsg.mutable_diffuse(),
+                gazebo::common::Color(0.5, 0.5, 0.5, 1));
+            gazebo::msgs::Set(lightMsg.mutable_specular(),
+                gazebo::common::Color(0.1, 0.1, 0.1, 1));
+            lightMsg.set_attenuation_constant(0.5);
+            lightMsg.set_attenuation_linear(0.01);
+            lightMsg.set_attenuation_quadratic(0.001);
+            lightMsg.set_range(20);
+          }
+
+          this->lightPub->Publish(lightMsg);
         }
         else if (topic == this->factoryTopic)
         {
