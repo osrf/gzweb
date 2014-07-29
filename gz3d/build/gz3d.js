@@ -1180,7 +1180,7 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
             name: name,
             thumbnail: thumbnail,
             selected: 'unselectedTreeItem',
-            is_static: stats.is_static,
+            is_static: this.trueOrFalse(stats.is_static),
             position: formatted.pose.position,
             orientation: formatted.pose.orientation,
             links: []
@@ -1202,10 +1202,10 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
             {
               name: stats.link[l].name,
               shortName: shortName,
-              self_collide: stats.link[l].self_collide,
-              gravity: stats.link[l].gravity,
-              kinematic: stats.link[l].kinematic,
-              canonical: stats.link[l].canonical,
+              self_collide: this.trueOrFalse(stats.link[l].self_collide),
+              gravity: this.trueOrFalse(stats.link[l].gravity),
+              kinematic: this.trueOrFalse(stats.link[l].kinematic),
+              canonical: this.trueOrFalse(stats.link[l].canonical),
               position: formatted.pose.position,
               orientation: formatted.pose.orientation,
               inertial: formatted.inertial
@@ -1437,6 +1437,18 @@ GZ3D.Gui.prototype.formatStats = function(stats)
   }
 
   return {pose: {position: position, orientation: orientation}, inertial: inertial};
+};
+
+/**
+ * Format togglable items
+ * @param {} stats: true / false
+ * @returns {icon, title}
+ */
+GZ3D.Gui.prototype.trueOrFalse = function(stats)
+{
+  return stats ?
+      {icon: 'check', title: 'True'} :
+      {icon: 'false', title: 'False'};
 };
 
 //var GAZEBO_MODEL_DATABASE_URI='http://gazebosim.org/models';

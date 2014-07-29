@@ -269,6 +269,12 @@ body
   padding-left: 1em;
   width: calc( 6.5em - 7.5px);
 }
+.propertyToggle
+{
+  position: relative;
+  padding-left: 2.1em;
+  width: calc( 5em - 7.5px);
+}
 .expandableProperty
 {
   font-weight:bolder;

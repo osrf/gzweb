@@ -307,7 +307,7 @@
               <div class="properties propertyName">name</div>
               <div class="properties propertyValue">{{model.name}}</div>
               <div class="properties propertyName">is_static</div>
-              <div class="properties propertyValue">{{model.is_static}}</div>
+              <div class="properties propertyToggle ui-icon-{{model.is_static.icon}} ui-btn-icon-left">{{model.is_static.title}}</div>
               <div id="expand-pose-{{model.name}}" class="clickable expandableProperty" ng-click="expandProperty('pose', model.name)">
                 <img src="style/images/play.png">
                 pose
@@ -335,13 +335,13 @@
                   <div class="properties expandableItemName">name</div>
                   <div class="properties expandableItemValue">{{link.name}}</div>
                   <div class="properties expandableItemName">self_collide</div>
-                  <div class="properties expandableItemValue">{{link.self_collide}}</div>
+                  <div class="properties propertyToggle ui-icon-{{link.self_collide.icon}} ui-btn-icon-left">{{link.self_collide.title}}</div>
                   <div class="properties expandableItemName">gravity</div>
-                  <div class="properties expandableItemValue">{{link.gravity}}</div>
+                  <div class="properties propertyToggle ui-icon-{{link.gravity.icon}} ui-btn-icon-left">{{link.gravity.title}}</div>
                   <div class="properties expandableItemName">kinematic</div>
-                  <div class="properties expandableItemValue">{{link.kinematic}}</div>
+                  <div class="properties propertyToggle ui-icon-{{link.kinematic.icon}} ui-btn-icon-left">{{link.kinematic.title}}</div>
                   <div class="properties expandableItemName">canonical</div>
-                  <div class="properties expandableItemValue">{{link.canonical}}</div>
+                  <div class="properties propertyToggle ui-icon-{{link.canonical.icon}} ui-btn-icon-left">{{link.canonical.title}}</div>
                   <div id="expand-pose-{{model.name}}-{{link.shortName}}" class="clickable expandableProperty" ng-click="expandProperty('pose', model.name, link.shortName)">
                     <img src="style/images/play.png">
                     pose
