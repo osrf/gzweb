@@ -417,6 +417,54 @@
                 <div class="properties expandableItemName">yaw</div>
                 <div class="properties expandableItemValue">{{light.orientation.yaw}}</div>
               </div>
+              <div id="expand-diffuse-{{light.name}}" class="clickable expandableProperty expandableColor" ng-click="expandProperty('diffuse', light.name)">
+                <img src="style/images/play.png">
+                diffuse
+              </div>
+              <div class="properties propertyValue">
+                <div class="colorDisplay" style="background-color: rgb({{light.diffuse.r}},{{light.diffuse.g}},{{light.diffuse.b}})"></div>
+              </div>
+              <div id="expandable-diffuse-{{light.name}}" class="expandable">
+                <div class="properties expandableItemName red">red</div>
+                <div class="properties expandableItemValue">{{light.diffuse.r}}</div>
+                <div class="properties expandableItemName green">green</div>
+                <div class="properties expandableItemValue">{{light.diffuse.g}}</div>
+                <div class="properties expandableItemName blue">blue</div>
+                <div class="properties expandableItemValue">{{light.diffuse.b}}</div>
+                <div class="properties expandableItemName">alpha</div>
+                <div class="properties expandableItemValue">{{light.diffuse.a}}</div>
+              </div>
+              <div id="expand-specular-{{light.name}}" class="clickable expandableProperty expandableColor" ng-click="expandProperty('specular', light.name)">
+                <img src="style/images/play.png">
+                specular
+              </div>
+              <div class="properties propertyValue">
+                <div class="colorDisplay" style="background-color: rgb({{light.specular.r}}, {{light.specular.g}}, {{light.specular.b}})"></div>
+              </div>
+              <div id="expandable-specular-{{light.name}}" class="expandable">
+                <div class="properties expandableItemName red">red</div>
+                <div class="properties expandableItemValue">{{light.specular.r}}</div>
+                <div class="properties expandableItemName green">green</div>
+                <div class="properties expandableItemValue">{{light.specular.g}}</div>
+                <div class="properties expandableItemName blue">blue</div>
+                <div class="properties expandableItemValue">{{light.specular.b}}</div>
+                <div class="properties expandableItemName">alpha</div>
+                <div class="properties expandableItemValue">{{light.specular.a}}</div>
+              </div>
+              <div class="properties propertyName">range</div>
+              <div class="properties propertyValue">{{light.range}}</div>
+              <div id="expand-attenuation-{{light.name}}" class="clickable expandableProperty" ng-click="expandProperty('attenuation', light.name)">
+                <img src="style/images/play.png">
+                attenuation
+              </div>
+              <div id="expandable-attenuation-{{light.name}}" class="expandable">
+                <div class="properties expandableItemName">constant</div>
+                <div class="properties expandableItemValue">{{light.attenuation.constant}}</div>
+                <div class="properties expandableItemName">linear</div>
+                <div class="properties expandableItemValue">{{light.attenuation.linear}}</div>
+                <div class="properties expandableItemName">quadratic</div>
+                <div class="properties expandableItemValue">{{light.attenuation.quadratic}}</div>
+              </div>
             </div>
           </div>
         </div>

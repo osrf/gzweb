@@ -327,11 +327,34 @@ body
 {
   font-weight:bolder;
   padding-left: 1em;
-  width: calc( 6.5em - 7.5px);
+  width: calc(6.5em - 7.5px);
 }
 .expandableItemValue
 {
-  width: calc( 7.5em - 7.5px);
+  width: calc(7.5em - 7.5px);
+}
+.expandableColor
+{
+  width: calc(7.5em - 0.2em - 7.5px);
+}
+.colorDisplay
+{
+  display: inline-block;
+  height: 0.5em;
+  width: 0.5em;
+  border: 1px solid white;
+}
+.red
+{
+  color: rgb(255, 50, 50);
+}
+.green
+{
+  color: rgb(50, 255, 50);
+}
+.blue
+{
+  color: rgb(50, 50, 255);
 }
 /* model popup */
 #model-popup

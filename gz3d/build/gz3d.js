@@ -1304,6 +1304,10 @@ GZ3D.Gui.prototype.setLightStats = function(stats, action)
             thumbnail = 'style/images/pointlight.png';
       }
 
+      stats.attenuation = {constant: stats.attenuation_constant,
+                           linear: stats.attenuation_linear,
+                           quadratic: stats.attenuation_quadratic};
+
       formatted = this.formatStats(stats);
 
       lightStats.push(
@@ -1312,7 +1316,11 @@ GZ3D.Gui.prototype.setLightStats = function(stats, action)
             thumbnail: thumbnail,
             selected: 'unselectedTreeItem',
             position: formatted.pose.position,
-            orientation: formatted.pose.orientation
+            orientation: formatted.pose.orientation,
+            diffuse: formatted.diffuse,
+            specular: formatted.specular,
+            range: stats.range,
+            attenuation: formatted.attenuation
           });
     }
     else
@@ -1435,10 +1443,7 @@ GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
  */
 GZ3D.Gui.prototype.formatStats = function(stats)
 {
-  var position = stats.pose.position;
-  position.x = Math.round(position.x * 10000) / 10000;
-  position.y = Math.round(position.y * 10000) / 10000;
-  position.z = Math.round(position.z * 10000) / 10000;
+  var position = this.round(stats.pose.position);
 
   var Quat = new THREE.Quaternion(stats.pose.orientation.x,
       stats.pose.orientation.y, stats.pose.orientation.z,
@@ -1447,26 +1452,56 @@ GZ3D.Gui.prototype.formatStats = function(stats)
   var RPY = new THREE.Euler();
   RPY.setFromQuaternion(Quat);
 
-  RPY._x = Math.round(RPY._x * 10000) / 10000;
-  RPY._y = Math.round(RPY._y * 10000) / 10000;
-  RPY._z = Math.round(RPY._z * 10000) / 10000;
-
   var orientation = {roll: RPY._x, pitch: RPY._y, yaw: RPY._z};
+  orientation = this.round(orientation);
 
   var inertial;
   if (stats.inertial)
   {
-    inertial = stats.inertial;
-    inertial.mass = Math.round(inertial.mass * 10000) / 10000;
-    inertial.ixx = Math.round(inertial.ixx * 10000) / 10000;
-    inertial.ixy = Math.round(inertial.ixy * 10000) / 10000;
-    inertial.ixz = Math.round(inertial.ixz * 10000) / 10000;
-    inertial.iyy = Math.round(inertial.iyy * 10000) / 10000;
-    inertial.iyz = Math.round(inertial.iyz * 10000) / 10000;
-    inertial.izz = Math.round(inertial.izz * 10000) / 10000;
+    inertial = this.round(stats.inertial);
+  }
+  var diffuse;
+  if (stats.diffuse)
+  {
+    diffuse = this.round(stats.diffuse);
+  }
+  var specular;
+  if (stats.specular)
+  {
+    specular = this.round(stats.specular);
+  }
+  var attenuation;
+  if (stats.attenuation)
+  {
+    attenuation = this.round(stats.attenuation);
   }
 
-  return {pose: {position: position, orientation: orientation}, inertial: inertial};
+  return {pose: {position: position, orientation: orientation},
+          inertial: inertial,
+          diffuse: diffuse,
+          specular: specular,
+          attenuation: attenuation};
+};
+
+/**
+ * Round all child numbers
+ * @param {} stats
+ * @returns stats
+ */
+GZ3D.Gui.prototype.round = function(stats)
+{
+  for (var key in stats)
+  {
+    if (key === 'r' || key === 'g' || key === 'b' || key === 'a')
+    {
+      stats[key] = Math.round(stats[key] * 255);
+    }
+    else
+    {
+      stats[key] = Math.round(stats[key] * 10000) / 10000;
+    }
+  }
+  return stats;
 };
 
 /**
