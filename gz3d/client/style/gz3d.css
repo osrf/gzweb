@@ -91,14 +91,14 @@ body
 .panelContent
 {
   height: calc(100% - 1.8em);
-  overflow-y:auto;
-  overflow-x:hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 .panelSubContent
 {
   height: calc(100% - 1.8em - 1.5em);
-  overflow-y:scroll;
-  overflow-x:hidden;
+  overflow-y: scroll;
+  overflow-x: hidden;
 }
 .panelTitle
 {
@@ -195,8 +195,8 @@ body
 }
 .insertMenuItemLight img
 {
-  height:4em;
-  margin-top:0.6em;
+  height: 4em;
+  margin-top: 0.6em;
 }
 /* world tree */
 .treeItem
@@ -250,7 +250,7 @@ body
 .propertyHeader
 {
   float: left;
-  width: calc( 7.5em - 7.5px);
+  width: calc(7.5em - 7.5px);
   text-align: center;
   background-color: #aaaaaa;
 }
@@ -260,7 +260,7 @@ body
 }
 .properties
 {
-  width: calc( 7.5em - 7.5px);
+  width: calc(7.5em - 7.5px);
   float: left;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -270,17 +270,17 @@ body
 {
   font-weight:bolder;
   padding-left: 1em;
-  width: calc( 6.5em - 7.5px);
+  width: calc(6.5em - 7.5px);
 }
 .propertyToggle
 {
   position: relative;
   padding-left: 2.1em;
-  width: calc( 5em - 7.5px);
+  width: calc(5em - 7.5px);
 }
 .expandableProperty
 {
-  font-weight:bolder;
+  font-weight: bolder;
   padding-left: 0.2em;
   width: 14.5em;
   float: left;
@@ -295,7 +295,7 @@ body
 }
 .expandableLink
 {
-  font-weight:bolder;
+  font-weight: bolder;
   font-size: 1.2em;
   padding-left: 0.2em;
   width: 12em;
@@ -325,7 +325,7 @@ body
 }
 .expandableItemName
 {
-  font-weight:bolder;
+  font-weight: bolder;
   padding-left: 1em;
   width: calc(6.5em - 7.5px);
 }
@@ -402,8 +402,8 @@ body
   }
   .insertMenuItemLight img
   {
-    height:2.7em;
-    margin-top:0.4em;
+    height: 2.7em;
+    margin-top: 0.4em;
   }
   /* world tree */
   .treeItem

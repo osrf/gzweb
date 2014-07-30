@@ -633,8 +633,8 @@ gzangular.controller('treeControl', ['$scope', function($scope)
     {
       $('#' + idContent).hide();
       $('#' + idHeader+' img').css('transform','rotate(0deg)')
-                        .css('-webkit-transform','rotate(0deg)')
-                        .css('-ms-transform','rotate(0deg)');
+                              .css('-webkit-transform','rotate(0deg)')
+                              .css('-ms-transform','rotate(0deg)');
     }
     else
     {
@@ -649,8 +649,8 @@ gzangular.controller('treeControl', ['$scope', function($scope)
 
       $('#' + idContent).show();
       $('#' + idHeader+' img').css('transform','rotate(90deg)')
-                        .css('-webkit-transform','rotate(90deg)')
-                        .css('-ms-transform','rotate(90deg)');
+                              .css('-webkit-transform','rotate(90deg)')
+                              .css('-ms-transform','rotate(90deg)');
     }
   };
 }]);
@@ -1014,6 +1014,12 @@ GZ3D.Gui.prototype.init = function()
 
   guiEvents.on('openTab', function (id, parentId)
       {
+        // not supporting mobile property panel for now
+        if (id.indexOf('propertyPanel-') >= 0 && isTouchDevice)
+        {
+          return;
+        }
+
         lastOpenMenu[parentId] = id;
 
         $('.leftPanels').hide();
@@ -1249,9 +1255,9 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
 
       // links
       var newModel = $.grep(modelStats, function(e)
-        {
-          return e.name === name;
-        });
+          {
+            return e.name === name;
+          });
 
       for (var l = 0; l < stats.link.length; ++l)
       {
@@ -1494,9 +1500,9 @@ GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
 };
 
 /**
- * Format pose message for proper display
- * @param {} pose
- * @returns {position, orientation}
+ * Format stats message for proper display
+ * @param {} stats
+ * @returns {position, orientation, inertial, diffuse, specular, attenuation}
  */
 GZ3D.Gui.prototype.formatStats = function(stats)
 {
@@ -1541,7 +1547,7 @@ GZ3D.Gui.prototype.formatStats = function(stats)
 };
 
 /**
- * Round all child numbers
+ * Round all number children and format color
  * @param {} stats
  * @returns stats
  */
@@ -1562,7 +1568,7 @@ GZ3D.Gui.prototype.round = function(stats)
 };
 
 /**
- * Format togglable items
+ * Format toggle items
  * @param {} stats: true / false
  * @returns {icon, title}
  */
