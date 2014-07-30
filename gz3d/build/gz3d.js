@@ -1030,6 +1030,58 @@ GZ3D.Gui.prototype.init = function()
 
         $('.tab').css('border-left-color', tabColors.unselected);
         $('#'+parentId+'Tab').css('border-left-color', tabColors.selected);
+
+        if (id.indexOf('propertyPanel-') >= 0)
+        {
+          var entityName = id.substring(id.indexOf('-')+1);
+          var object = that.scene.getByName(entityName);
+
+          var stats = {};
+          stats.name = entityName;
+
+          stats.pose = {};
+          stats.pose.position = {x: object.position.x,
+                                 y: object.position.y,
+                                 z: object.position.z};
+
+          stats.pose.orientation = {x: object.quaternion._x,
+                                    y: object.quaternion._y,
+                                    z: object.quaternion._z,
+                                    w: object.quaternion._w};
+
+          if (object.children[0] instanceof THREE.Light)
+          {
+            that.setLightStats(stats, 'update');
+          }
+          else
+          {
+            that.setModelStats(stats, 'update');
+
+            for (var i = 0; i < object.children.length; ++i)
+            {
+              var link = object.children[i];
+
+              if (link.name === 'boundingBox')
+              {
+                continue;
+              }
+
+              stats.name = link.name;
+
+              stats.pose = {};
+              stats.pose.position = {x: link.position.x,
+                                     y: link.position.y,
+                                     z: link.position.z};
+
+              stats.pose.orientation = {x: link.quaternion._x,
+                                        y: link.quaternion._y,
+                                        z: link.quaternion._z,
+                                        w: link.quaternion._w};
+
+              that.setModelStats(stats, 'update');
+            }
+          }
+        }
       }
   );
 
@@ -1224,6 +1276,11 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
     // Update existing model's pose
     else
     {
+      if (!$('#propertyPanel-'+modelName).is(':visible'))
+      {
+        return;
+      }
+
       if (stats.position)
       {
         stats.pose = {};
