@@ -614,19 +614,19 @@ gzangular.controller('treeControl', ['$scope', function($scope)
     guiEvents.emit('openTab', 'treeMenu', 'treeMenu');
   };
 
-  $scope.expandProperty = function (property, model, link)
+  $scope.expandProperty = function (prop, modelName, linkShortName, linkName)
   {
-    var idContent = 'expandable-' + property + '-' + model;
-    var idHeader = 'expand-' + property + '-' + model;
+    var idContent = 'expandable-' + prop + '-' + modelName;
+    var idHeader = 'expand-' + prop + '-' + modelName;
 
     var idContentOthers, idHeaderOthers;
 
-    if (link)
+    if (linkShortName)
     {
       idContentOthers = idContent;
       idHeaderOthers = idHeader;
-      idContent = idContent + '-' + link;
-      idHeader = idHeader + '-' + link;
+      idContent = idContent + '-' + linkShortName;
+      idHeader = idHeader + '-' + linkShortName;
     }
 
     if ($('#' + idContent).is(':visible'))
@@ -638,7 +638,7 @@ gzangular.controller('treeControl', ['$scope', function($scope)
     }
     else
     {
-      if (link && property === 'link')
+      if (linkShortName && prop === 'link')
       {
         $('[id^="' + idContentOthers + '-"]').hide();
         $('[id^="' + idHeaderOthers + '-"] img')
@@ -651,6 +651,11 @@ gzangular.controller('treeControl', ['$scope', function($scope)
       $('#' + idHeader+' img').css('transform','rotate(90deg)')
                               .css('-webkit-transform','rotate(90deg)')
                               .css('-ms-transform','rotate(90deg)');
+
+      if (prop === 'pose')
+      {
+        guiEvents.emit('setPoseStats', modelName, linkName);
+      }
     }
   };
 }]);
@@ -1054,39 +1059,6 @@ GZ3D.Gui.prototype.init = function()
                                     y: object.quaternion._y,
                                     z: object.quaternion._z,
                                     w: object.quaternion._w};
-
-          if (object.children[0] instanceof THREE.Light)
-          {
-            that.setLightStats(stats, 'update');
-          }
-          else
-          {
-            that.setModelStats(stats, 'update');
-
-            for (var i = 0; i < object.children.length; ++i)
-            {
-              var link = object.children[i];
-
-              if (link.name === 'boundingBox')
-              {
-                continue;
-              }
-
-              stats.name = link.name;
-
-              stats.pose = {};
-              stats.pose.position = {x: link.position.x,
-                                     y: link.position.y,
-                                     z: link.position.z};
-
-              stats.pose.orientation = {x: link.quaternion._x,
-                                        y: link.quaternion._y,
-                                        z: link.quaternion._z,
-                                        w: link.quaternion._w};
-
-              that.setModelStats(stats, 'update');
-            }
-          }
         }
       }
   );
@@ -1171,6 +1143,40 @@ GZ3D.Gui.prototype.init = function()
         }
       }
   );
+
+  guiEvents.on('setPoseStats', function (modelName, linkName)
+      {
+        var object;
+        if (linkName === undefined)
+        {
+          object = that.scene.getByName(modelName);
+        }
+        else
+        {
+          object = that.scene.getByName(linkName);
+        }
+
+        var stats = {};
+        stats.name = object.name;
+        stats.pose = {};
+        stats.pose.position = {x: object.position.x,
+                               y: object.position.y,
+                               z: object.position.z};
+        stats.pose.orientation = {x: object.quaternion._x,
+                                  y: object.quaternion._y,
+                                  z: object.quaternion._z,
+                                  w: object.quaternion._w};
+
+        if (object.children[0] instanceof THREE.Light)
+        {
+          that.setLightStats(stats, 'update');
+        }
+        else
+        {
+          that.setModelStats(stats, 'update');
+        }
+      }
+  );
 };
 
 /**
@@ -1218,12 +1224,13 @@ var modelStats = [];
  */
 GZ3D.Gui.prototype.setModelStats = function(stats, action)
 {
-  var name = stats.name;
-  var modelName = name;
+  var modelName = stats.name;
+  var linkShortName;
 
-  if (name.indexOf('::') >= 0)
+  if (stats.name.indexOf('::') >= 0)
   {
-    modelName = name.substring(0, name.indexOf('::'));
+    modelName = stats.name.substring(0, stats.name.indexOf('::'));
+    linkShortName = stats.name.substring(stats.name.lastIndexOf('::')+2);
   }
 
   if (action === 'update')
@@ -1238,13 +1245,13 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
     // New model
     if (model.length === 0)
     {
-      var thumbnail = this.findModelThumbnail(name);
+      var thumbnail = this.findModelThumbnail(modelName);
 
       formatted = this.formatStats(stats);
 
       modelStats.push(
           {
-            name: name,
+            name: modelName,
             thumbnail: thumbnail,
             selected: 'unselectedTreeItem',
             is_static: this.trueOrFalse(stats.is_static),
@@ -1254,18 +1261,16 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
           });
 
       // links
-      var newModel = $.grep(modelStats, function(e)
-          {
-            return e.name === name;
-          });
+      var newModel = modelStats[modelStats.length-1];
 
       for (var l = 0; l < stats.link.length; ++l)
       {
-        var shortName = stats.link[l].name.substring(stats.link[l].name.lastIndexOf('::')+2);
+        var shortName = stats.link[l].name.substring(
+            stats.link[l].name.lastIndexOf('::')+2);
 
         formatted = this.formatStats(stats.link[l]);
 
-        newModel[0].links.push(
+        newModel.links.push(
             {
               name: stats.link[l].name,
               shortName: shortName,
@@ -1282,7 +1287,10 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
     // Update existing model's pose
     else
     {
-      if (!$('#propertyPanel-'+modelName).is(':visible'))
+      if ((linkShortName &&
+          !$('#expandable-pose-'+modelName+'-'+linkShortName).is(':visible'))||
+          (!linkShortName &&
+          !$('#expandable-pose-'+modelName).is(':visible')))
       {
         return;
       }
@@ -1298,7 +1306,7 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
       {
         formatted = this.formatStats(stats);
 
-        if (name === modelName)
+        if (linkShortName === undefined)
         {
           model[0].position = formatted.pose.position;
           model[0].orientation = formatted.pose.orientation;
@@ -1306,9 +1314,9 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
         else
         {
           var link = $.grep(model[0].links, function(e)
-            {
-              return e.name === name;
-            });
+              {
+                return e.shortName === linkShortName;
+              });
           link[0].position = formatted.pose.position;
           link[0].orientation = formatted.pose.orientation;
         }
@@ -1317,14 +1325,7 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
   }
   else if (action === 'delete')
   {
-    for (var i = 0; i < modelStats.length; ++i)
-    {
-      if (modelStats[i].name === name)
-      {
-        modelStats.splice(i, 1);
-        break;
-      }
-    }
+    this.deleteFromStats('model', modelName);
   }
 
   this.updateStats();
@@ -1399,14 +1400,7 @@ GZ3D.Gui.prototype.setLightStats = function(stats, action)
   }
   else if (action === 'delete')
   {
-    for (var i = 0; i < lightStats.length; ++i)
-    {
-      if (lightStats[i].name === name)
-      {
-        lightStats.splice(i, 1);
-        break;
-      }
-    }
+    this.deleteFromStats('light', name);
   }
 
   this.updateStats();
@@ -1577,6 +1571,30 @@ GZ3D.Gui.prototype.trueOrFalse = function(stats)
   return stats ?
       {icon: 'check', title: 'True'} :
       {icon: 'false', title: 'False'};
+};
+
+/**
+ * Delete an entity from stats list
+ * @param {} type: 'model' / 'light'
+ * @param {} name
+ */
+GZ3D.Gui.prototype.deleteFromStats = function(type, name)
+{
+  var list = (type === 'model') ? modelStats : lightStats;
+
+  for (var i = 0; i < list.length; ++i)
+  {
+    if (list[i].name === name)
+    {
+      if ($('#propertyPanel-'+name).is(':visible'))
+      {
+        guiEvents.emit('openTab', 'treeMenu', 'treeMenu');
+      }
+
+      list.splice(i, 1);
+      break;
+    }
+  }
 };
 
 //var GAZEBO_MODEL_DATABASE_URI='http://gazebosim.org/models';
