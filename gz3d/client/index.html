@@ -304,13 +304,13 @@
               <div class="proertyPanelImg"><img src="{{model.thumbnail}}"></div>
               <div class="propertyHeader"><h4>Property</h4></div>
               <div class="propertyHeader"><h4>Value</h4></div>
-              <div class="properties propertyName">name</div>
+              <div class="properties propertyName">Name</div>
               <div class="properties propertyValue">{{model.name}}</div>
-              <div class="properties propertyName">is_static</div>
+              <div class="properties propertyName">Static</div>
               <div class="properties propertyToggle ui-icon-{{model.is_static.icon}} ui-btn-icon-left">{{model.is_static.title}}</div>
               <div id="expand-pose-{{model.name}}" class="clickable expandableProperty" ng-click="expandProperty('pose', model.name)">
                 <img src="style/images/play.png">
-                pose
+                Pose
               </div>
               <div id="expandable-pose-{{model.name}}" class="expandable">
                 <div class="properties expandableItemName">x</div>
@@ -319,11 +319,11 @@
                 <div class="properties expandableItemValue">{{model.position.y}}</div>
                 <div class="properties expandableItemName">z</div>
                 <div class="properties expandableItemValue">{{model.position.z}}</div>
-                <div class="properties expandableItemName">roll</div>
+                <div class="properties expandableItemName">Roll</div>
                 <div class="properties expandableItemValue">{{model.orientation.roll}}</div>
-                <div class="properties expandableItemName">pitch</div>
+                <div class="properties expandableItemName">Pitch</div>
                 <div class="properties expandableItemValue">{{model.orientation.pitch}}</div>
-                <div class="properties expandableItemName">yaw</div>
+                <div class="properties expandableItemName">Yaw</div>
                 <div class="properties expandableItemValue">{{model.orientation.yaw}}</div>
               </div>
               <div ng-repeat="link in model.links">
@@ -332,19 +332,19 @@
                   <div>{{link.shortName}}</div>
                 </div>
                 <div id="expandable-link-{{model.name}}-{{link.shortName}}" class="expandable">
-                  <div class="properties expandableItemName">name</div>
+                  <div class="properties expandableItemName">Name</div>
                   <div class="properties expandableItemValue" title="{{link.name}}">{{link.name}}</div>
-                  <div class="properties expandableItemName">self_collide</div>
+                  <div class="properties expandableItemName">Self Collide</div>
                   <div class="properties propertyToggle ui-icon-{{link.self_collide.icon}} ui-btn-icon-left">{{link.self_collide.title}}</div>
-                  <div class="properties expandableItemName">gravity</div>
+                  <div class="properties expandableItemName">Gravity</div>
                   <div class="properties propertyToggle ui-icon-{{link.gravity.icon}} ui-btn-icon-left">{{link.gravity.title}}</div>
-                  <div class="properties expandableItemName">kinematic</div>
+                  <div class="properties expandableItemName">Kinematic</div>
                   <div class="properties propertyToggle ui-icon-{{link.kinematic.icon}} ui-btn-icon-left">{{link.kinematic.title}}</div>
-                  <div class="properties expandableItemName">canonical</div>
+                  <div class="properties expandableItemName">Canonical</div>
                   <div class="properties propertyToggle ui-icon-{{link.canonical.icon}} ui-btn-icon-left">{{link.canonical.title}}</div>
                   <div id="expand-pose-{{model.name}}-{{link.shortName}}" class="clickable expandableProperty" ng-click="expandProperty('pose', model.name, link.shortName, link.name)">
                     <img src="style/images/play.png">
-                    pose
+                    Pose
                   </div>
                   <div id="expandable-pose-{{model.name}}-{{link.shortName}}" class="expandable">
                     <div class="properties expandableItemName">x</div>
@@ -353,19 +353,19 @@
                     <div class="properties expandableItemValue">{{link.position.y}}</div>
                     <div class="properties expandableItemName">z</div>
                     <div class="properties expandableItemValue">{{link.position.z}}</div>
-                    <div class="properties expandableItemName">roll</div>
+                    <div class="properties expandableItemName">Roll</div>
                     <div class="properties expandableItemValue">{{link.orientation.roll}}</div>
-                    <div class="properties expandableItemName">pitch</div>
+                    <div class="properties expandableItemName">Pitch</div>
                     <div class="properties expandableItemValue">{{link.orientation.pitch}}</div>
-                    <div class="properties expandableItemName">yaw</div>
+                    <div class="properties expandableItemName">Yaw</div>
                     <div class="properties expandableItemValue">{{link.orientation.yaw}}</div>
                   </div>
                   <div id="expand-inertial-{{model.name}}-{{link.shortName}}" class="clickable expandableProperty" ng-click="expandProperty('inertial', model.name, link.shortName)">
                     <img src="style/images/play.png">
-                    inertial
+                    Inertial
                   </div>
                   <div id="expandable-inertial-{{model.name}}-{{link.shortName}}" class="expandable">
-                    <div class="properties expandableItemName">mass</div>
+                    <div class="properties expandableItemName">Mass</div>
                     <div class="properties expandableItemValue">{{link.inertial.mass}}</div>
                     <div class="properties expandableItemName">ixx</div>
                     <div class="properties expandableItemValue">{{link.inertial.ixx}}</div>
@@ -397,11 +397,11 @@
               <div class="proertyPanelImg"><img src="{{light.thumbnail}}"></div>
               <div class="propertyHeader"><h4>Property</h4></div>
               <div class="propertyHeader"><h4>Value</h4></div>
-              <div class="properties propertyName">name</div>
+              <div class="properties propertyName">Name</div>
               <div class="properties propertyValue">{{light.name}}</div>
               <div id="expand-pose-{{light.name}}" class="clickable expandableProperty" ng-click="expandProperty('pose', light.name)">
                 <img src="style/images/play.png">
-                pose
+                Pose
               </div>
               <div id="expandable-pose-{{light.name}}" class="expandable">
                 <div class="properties expandableItemName">x</div>
@@ -410,59 +410,59 @@
                 <div class="properties expandableItemValue">{{light.position.y}}</div>
                 <div class="properties expandableItemName">z</div>
                 <div class="properties expandableItemValue">{{light.position.z}}</div>
-                <div class="properties expandableItemName">roll</div>
+                <div class="properties expandableItemName">Roll</div>
                 <div class="properties expandableItemValue">{{light.orientation.roll}}</div>
-                <div class="properties expandableItemName">pitch</div>
+                <div class="properties expandableItemName">Pitch</div>
                 <div class="properties expandableItemValue">{{light.orientation.pitch}}</div>
-                <div class="properties expandableItemName">yaw</div>
+                <div class="properties expandableItemName">Yaw</div>
                 <div class="properties expandableItemValue">{{light.orientation.yaw}}</div>
               </div>
               <div id="expand-diffuse-{{light.name}}" class="clickable expandableProperty expandableColor" ng-click="expandProperty('diffuse', light.name)">
                 <img src="style/images/play.png">
-                diffuse
+                Diffuse
               </div>
               <div class="properties propertyValue">
                 <div class="colorDisplay" style="background-color: rgb({{light.diffuse.r}},{{light.diffuse.g}},{{light.diffuse.b}})"></div>
               </div>
               <div id="expandable-diffuse-{{light.name}}" class="expandable">
-                <div class="properties expandableItemName red">red</div>
+                <div class="properties expandableItemName red">Red</div>
                 <div class="properties expandableItemValue">{{light.diffuse.r}}</div>
-                <div class="properties expandableItemName green">green</div>
+                <div class="properties expandableItemName green">Green</div>
                 <div class="properties expandableItemValue">{{light.diffuse.g}}</div>
-                <div class="properties expandableItemName blue">blue</div>
+                <div class="properties expandableItemName blue">Blue</div>
                 <div class="properties expandableItemValue">{{light.diffuse.b}}</div>
-                <div class="properties expandableItemName">alpha</div>
+                <div class="properties expandableItemName">Alpha</div>
                 <div class="properties expandableItemValue">{{light.diffuse.a}}</div>
               </div>
               <div id="expand-specular-{{light.name}}" class="clickable expandableProperty expandableColor" ng-click="expandProperty('specular', light.name)">
                 <img src="style/images/play.png">
-                specular
+                Specular
               </div>
               <div class="properties propertyValue">
                 <div class="colorDisplay" style="background-color: rgb({{light.specular.r}}, {{light.specular.g}}, {{light.specular.b}})"></div>
               </div>
               <div id="expandable-specular-{{light.name}}" class="expandable">
-                <div class="properties expandableItemName red">red</div>
+                <div class="properties expandableItemName red">Red</div>
                 <div class="properties expandableItemValue">{{light.specular.r}}</div>
-                <div class="properties expandableItemName green">green</div>
+                <div class="properties expandableItemName green">Green</div>
                 <div class="properties expandableItemValue">{{light.specular.g}}</div>
-                <div class="properties expandableItemName blue">blue</div>
+                <div class="properties expandableItemName blue">Blue</div>
                 <div class="properties expandableItemValue">{{light.specular.b}}</div>
-                <div class="properties expandableItemName">alpha</div>
+                <div class="properties expandableItemName">Alpha</div>
                 <div class="properties expandableItemValue">{{light.specular.a}}</div>
               </div>
-              <div class="properties propertyName">range</div>
+              <div class="properties propertyName">Range</div>
               <div class="properties propertyValue">{{light.range}}</div>
               <div id="expand-attenuation-{{light.name}}" class="clickable expandableProperty" ng-click="expandProperty('attenuation', light.name)">
                 <img src="style/images/play.png">
-                attenuation
+                Attenuation
               </div>
               <div id="expandable-attenuation-{{light.name}}" class="expandable">
-                <div class="properties expandableItemName">constant</div>
+                <div class="properties expandableItemName">Constant</div>
                 <div class="properties expandableItemValue">{{light.attenuation.constant}}</div>
-                <div class="properties expandableItemName">linear</div>
+                <div class="properties expandableItemName">Linear</div>
                 <div class="properties expandableItemValue">{{light.attenuation.linear}}</div>
-                <div class="properties expandableItemName">quadratic</div>
+                <div class="properties expandableItemName">Quadratic</div>
                 <div class="properties expandableItemValue">{{light.attenuation.quadratic}}</div>
               </div>
             </div>
