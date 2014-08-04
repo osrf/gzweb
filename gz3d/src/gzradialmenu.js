@@ -59,6 +59,7 @@ GZ3D.RadialMenu.prototype.init = function()
   this.addItem('rotate','style/images/rotate.png');
   this.addItem('transparent','style/images/transparent.png');
   this.addItem('wireframe','style/images/wireframe.png');
+  this.addItem('joints','style/images/joints.png');
 
   this.setNumberOfItems(this.menu.children.length);
 
@@ -126,7 +127,7 @@ GZ3D.RadialMenu.prototype.show = function(event,model)
   }
   else
   {
-    this.setNumberOfItems(5);
+    this.setNumberOfItems(6);
   }
 
   var pointer = this.getPointer(event);
@@ -134,6 +135,7 @@ GZ3D.RadialMenu.prototype.show = function(event,model)
 
   this.menu.getObjectByName('transparent').isHighlighted = false;
   this.menu.getObjectByName('wireframe').isHighlighted = false;
+  this.menu.getObjectByName('joints').isHighlighted = false;
   if (this.model.viewAs === 'transparent')
   {
     this.menu.getObjectByName('transparent').isHighlighted = true;
@@ -141,6 +143,10 @@ GZ3D.RadialMenu.prototype.show = function(event,model)
   if (this.model.viewAs === 'wireframe')
   {
     this.menu.getObjectByName('wireframe').isHighlighted = true;
+  }
+  if (this.model.getObjectByName('jointAxis', true))
+  {
+    this.menu.getObjectByName('joints').isHighlighted = true;
   }
 
   for (var i = 0; i < this.numberOfItems; i++)
@@ -323,7 +329,7 @@ GZ3D.RadialMenu.prototype.onLongPressMove = function(event)
 /**
  * Create an item and add it to the menu.
  * Create them in order
- * @param {string} type - delete/translate/rotate/transparent/wireframe
+ * @param {string} type - delete/translate/rotate/transparent/wireframe/joints
  * @param {string} iconTexture - icon's uri
  */
 GZ3D.RadialMenu.prototype.addItem = function(type, iconTexture)

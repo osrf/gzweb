@@ -182,6 +182,7 @@ $(function()
   $('#open-tree-when-selected').buttonMarkup({icon: 'false'});
   $('#view-transparent').buttonMarkup({icon: 'false'});
   $('#view-wireframe').buttonMarkup({icon: 'false'});
+  $('#view-joints').buttonMarkup({icon: 'false'});
   guiEvents.emit('toggle_notifications');
 
   $( '#clock-touch' ).popup('option', 'arrow', 't');
@@ -504,6 +505,11 @@ $(function()
   $( '#view-wireframe' ).click(function() {
     $('#model-popup').popup('close');
     guiEvents.emit('set_view_as','wireframe');
+  });
+
+  $( '#view-joints' ).click(function() {
+    $('#model-popup').popup('close');
+    guiEvents.emit('view_joints');
   });
 
   $( '#delete-entity' ).click(function() {
@@ -865,6 +871,11 @@ GZ3D.Gui.prototype.init = function()
                   that.scene.selectEntity(entity);
                   guiEvents.emit('set_view_as','wireframe');
                 }
+                else if (type === 'joints')
+                {
+                  that.scene.selectEntity(entity);
+                  guiEvents.emit('view_joints');
+                }
 
               });
           }
@@ -945,6 +956,12 @@ GZ3D.Gui.prototype.init = function()
       {
         that.scene.setViewAs(that.scene.selectedEntity, viewAs);
         that.scene.selectEntity(null);
+      }
+  );
+
+  guiEvents.on('view_joints', function ()
+      {
+        that.scene.viewJoints(that.scene.selectedEntity);
       }
   );
 
@@ -1260,9 +1277,10 @@ GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
   {
     $('#view-transparent').css('visibility','collapse');
     $('#view-wireframe').css('visibility','collapse');
+    $('#view-joints').css('visibility','collapse');
     $('#model-popup').popup('open',
       {x: event.clientX + emUnits(6),
-       y: event.clientY + emUnits(-5)});
+       y: event.clientY + emUnits(-8)});
   }
   else
   {
@@ -1283,8 +1301,19 @@ GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
     {
       $('#view-wireframe').buttonMarkup({icon: 'false'});
     }
+
+    if (entity.getObjectByName('jointAxis', true))
+    {
+      $('#view-joints').buttonMarkup({icon: 'check'});
+    }
+    else
+    {
+      $('#view-joints').buttonMarkup({icon: 'false'});
+    }
+
     $('#view-transparent').css('visibility','visible');
     $('#view-wireframe').css('visibility','visible');
+    $('#view-joints').css('visibility','visible');
     $('#model-popup').popup('open',
       {x: event.clientX + emUnits(6),
        y: event.clientY + emUnits(0)});
@@ -1889,6 +1918,11 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
       }
     }
   }
+  if (model.joint)
+  {
+    modelObj.joint = model.joint;
+  }
+
   return modelObj;
 };
 
@@ -3784,6 +3818,7 @@ GZ3D.RadialMenu.prototype.init = function()
   this.addItem('rotate','style/images/rotate.png');
   this.addItem('transparent','style/images/transparent.png');
   this.addItem('wireframe','style/images/wireframe.png');
+  this.addItem('joints','style/images/joints.png');
 
   this.setNumberOfItems(this.menu.children.length);
 
@@ -3851,7 +3886,7 @@ GZ3D.RadialMenu.prototype.show = function(event,model)
   }
   else
   {
-    this.setNumberOfItems(5);
+    this.setNumberOfItems(6);
   }
 
   var pointer = this.getPointer(event);
@@ -3859,6 +3894,7 @@ GZ3D.RadialMenu.prototype.show = function(event,model)
 
   this.menu.getObjectByName('transparent').isHighlighted = false;
   this.menu.getObjectByName('wireframe').isHighlighted = false;
+  this.menu.getObjectByName('joints').isHighlighted = false;
   if (this.model.viewAs === 'transparent')
   {
     this.menu.getObjectByName('transparent').isHighlighted = true;
@@ -3866,6 +3902,10 @@ GZ3D.RadialMenu.prototype.show = function(event,model)
   if (this.model.viewAs === 'wireframe')
   {
     this.menu.getObjectByName('wireframe').isHighlighted = true;
+  }
+  if (this.model.getObjectByName('jointAxis', true))
+  {
+    this.menu.getObjectByName('joints').isHighlighted = true;
   }
 
   for (var i = 0; i < this.numberOfItems; i++)
@@ -4048,7 +4088,7 @@ GZ3D.RadialMenu.prototype.onLongPressMove = function(event)
 /**
  * Create an item and add it to the menu.
  * Create them in order
- * @param {string} type - delete/translate/rotate/transparent/wireframe
+ * @param {string} type - delete/translate/rotate/transparent/wireframe/joints
  * @param {string} iconTexture - icon's uri
  */
 GZ3D.RadialMenu.prototype.addItem = function(type, iconTexture)
@@ -4263,6 +4303,69 @@ GZ3D.Scene.prototype.init = function()
       new THREE.LineBasicMaterial({color: 0xffffff}),
       THREE.LinePieces);
   this.boundingBox.visible = false;
+
+  // Joint axis
+  this.jointAxis = new THREE.Object3D();
+  this.jointAxis.name = 'jointAxis';
+  var geometry, material, mesh;
+
+  var AxisMaterial = function(color)
+  {
+    var material = new THREE.MeshBasicMaterial();
+    material.color = color;
+    return material;
+  };
+
+  geometry = new THREE.CylinderGeometry(0.01, 0.01, 0.3, 10, 1, false);
+
+  material = new AxisMaterial(new THREE.Color(0xff0000));
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.position.x = 0.15;
+  mesh.rotation.z = -Math.PI/2;
+  mesh.name = 'jointAxis';
+  this.jointAxis.add(mesh);
+
+  material = new AxisMaterial(new THREE.Color(0x00ff00));
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.position.y = 0.15;
+  mesh.name = 'jointAxis';
+  this.jointAxis.add(mesh);
+
+  material = new AxisMaterial(new THREE.Color(0x0000ff));
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.position.z = 0.15;
+  mesh.rotation.x = Math.PI/2;
+  mesh.name = 'jointAxis';
+  this.jointAxis.add(mesh);
+
+  geometry = new THREE.CylinderGeometry(0, 0.03, 0.1, 10, 1, true);
+
+  material = new AxisMaterial(new THREE.Color(0xff0000));
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.position.x = 0.3;
+  mesh.rotation.z = -Math.PI/2;
+  mesh.name = 'jointAxis';
+  this.jointAxis.add(mesh);
+
+  material = new AxisMaterial(new THREE.Color(0x00ff00));
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.position.y = 0.3;
+  mesh.name = 'jointAxis';
+  this.jointAxis.add(mesh);
+
+  material = new AxisMaterial(new THREE.Color(0x0000ff));
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.position.z = 0.3;
+  mesh.rotation.x = Math.PI/2;
+  mesh.name = 'jointAxis';
+  this.jointAxis.add(mesh);
+
+  geometry = new THREE.TorusGeometry(0.05, 0.005, 10, 10);
+
+  material = new AxisMaterial(new THREE.Color(0xff0000));
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.name = 'jointAxis_circle';
+  this.jointAxis.add(mesh);
 };
 
 GZ3D.Scene.prototype.initScene = function()
@@ -5941,7 +6044,8 @@ GZ3D.Scene.prototype.setViewAs = function(model, viewAs)
         descendants[i].name.indexOf('boundingBox') === -1 &&
         descendants[i].name.indexOf('COLLISION_VISUAL') === -1 &&
         !this.getParentByPartialName(descendants[i], 'COLLISION_VISUAL')&&
-        descendants[i].name.indexOf('wireframe') === -1)
+        descendants[i].name.indexOf('wireframe') === -1 &&
+        descendants[i].name.indexOf('jointAxis') === -1)
     {
       if (descendants[i].material instanceof THREE.MeshFaceMaterial)
       {
@@ -6030,6 +6134,61 @@ GZ3D.Scene.prototype.selectEntity = function(object)
     this.hideBoundingBox();
     this.selectedEntity = null;
     guiEvents.emit('setTreeDeselected');
+  }
+};
+
+/**
+ * View joints
+ * @param {} model
+ */
+GZ3D.Scene.prototype.viewJoints = function(model)
+{
+  if (model.joint === undefined || model.joint.length === 0)
+  {
+    return;
+  }
+
+  var joint = model.getObjectByName('jointAxis', true);
+  if (joint)
+  {
+    do
+    {
+      joint.parent.remove(joint);
+      joint = model.getObjectByName('jointAxis', true);
+    }
+    while (joint);
+  }
+  else
+  {
+    for (var j = 0; j < model.joint.length; ++j)
+    {
+      var child = this.getByName(model.joint[j].child);
+      joint = this.jointAxis.clone();
+      child.add(joint);
+      this.setPose(joint, model.joint[j].pose.position,
+          model.joint[j].pose.orientation);
+
+      var circle = joint.getObjectByName('jointAxis_circle');
+      circle.material = circle.material.clone();
+
+      if (model.joint[j].axis1.xyz.x === 1)
+      {
+        circle.material.color = new THREE.Color(0xff0000);
+        circle.position.x = 0.3;
+        circle.rotation.y = Math.PI/2;
+      }
+      else if (model.joint[j].axis1.xyz.y === 1)
+      {
+        circle.material.color = new THREE.Color(0x00ff00);
+        circle.position.y = 0.3;
+        circle.rotation.x = Math.PI/2;
+      }
+      else if (model.joint[j].axis1.xyz.z === 1)
+      {
+        circle.material.color = new THREE.Color(0x0000ff);
+        circle.position.z = 0.3;
+      }
+    }
   }
 };
 

@@ -154,6 +154,69 @@ GZ3D.Scene.prototype.init = function()
       new THREE.LineBasicMaterial({color: 0xffffff}),
       THREE.LinePieces);
   this.boundingBox.visible = false;
+
+  // Joint axis
+  this.jointAxis = new THREE.Object3D();
+  this.jointAxis.name = 'jointAxis';
+  var geometry, material, mesh;
+
+  var AxisMaterial = function(color)
+  {
+    var material = new THREE.MeshBasicMaterial();
+    material.color = color;
+    return material;
+  };
+
+  geometry = new THREE.CylinderGeometry(0.01, 0.01, 0.3, 10, 1, false);
+
+  material = new AxisMaterial(new THREE.Color(0xff0000));
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.position.x = 0.15;
+  mesh.rotation.z = -Math.PI/2;
+  mesh.name = 'jointAxis';
+  this.jointAxis.add(mesh);
+
+  material = new AxisMaterial(new THREE.Color(0x00ff00));
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.position.y = 0.15;
+  mesh.name = 'jointAxis';
+  this.jointAxis.add(mesh);
+
+  material = new AxisMaterial(new THREE.Color(0x0000ff));
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.position.z = 0.15;
+  mesh.rotation.x = Math.PI/2;
+  mesh.name = 'jointAxis';
+  this.jointAxis.add(mesh);
+
+  geometry = new THREE.CylinderGeometry(0, 0.03, 0.1, 10, 1, true);
+
+  material = new AxisMaterial(new THREE.Color(0xff0000));
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.position.x = 0.3;
+  mesh.rotation.z = -Math.PI/2;
+  mesh.name = 'jointAxis';
+  this.jointAxis.add(mesh);
+
+  material = new AxisMaterial(new THREE.Color(0x00ff00));
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.position.y = 0.3;
+  mesh.name = 'jointAxis';
+  this.jointAxis.add(mesh);
+
+  material = new AxisMaterial(new THREE.Color(0x0000ff));
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.position.z = 0.3;
+  mesh.rotation.x = Math.PI/2;
+  mesh.name = 'jointAxis';
+  this.jointAxis.add(mesh);
+
+  geometry = new THREE.TorusGeometry(0.05, 0.005, 10, 10);
+
+  material = new AxisMaterial(new THREE.Color(0xff0000));
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.name = 'jointAxis_circle';
+  this.jointAxis.add(mesh);
 };
 
 GZ3D.Scene.prototype.initScene = function()
@@ -1832,7 +1895,8 @@ GZ3D.Scene.prototype.setViewAs = function(model, viewAs)
         descendants[i].name.indexOf('boundingBox') === -1 &&
         descendants[i].name.indexOf('COLLISION_VISUAL') === -1 &&
         !this.getParentByPartialName(descendants[i], 'COLLISION_VISUAL')&&
-        descendants[i].name.indexOf('wireframe') === -1)
+        descendants[i].name.indexOf('wireframe') === -1 &&
+        descendants[i].name.indexOf('jointAxis') === -1)
     {
       if (descendants[i].material instanceof THREE.MeshFaceMaterial)
       {
@@ -1921,5 +1985,60 @@ GZ3D.Scene.prototype.selectEntity = function(object)
     this.hideBoundingBox();
     this.selectedEntity = null;
     guiEvents.emit('setTreeDeselected');
+  }
+};
+
+/**
+ * View joints
+ * @param {} model
+ */
+GZ3D.Scene.prototype.viewJoints = function(model)
+{
+  if (model.joint === undefined || model.joint.length === 0)
+  {
+    return;
+  }
+
+  var joint = model.getObjectByName('jointAxis', true);
+  if (joint)
+  {
+    do
+    {
+      joint.parent.remove(joint);
+      joint = model.getObjectByName('jointAxis', true);
+    }
+    while (joint);
+  }
+  else
+  {
+    for (var j = 0; j < model.joint.length; ++j)
+    {
+      var child = this.getByName(model.joint[j].child);
+      joint = this.jointAxis.clone();
+      child.add(joint);
+      this.setPose(joint, model.joint[j].pose.position,
+          model.joint[j].pose.orientation);
+
+      var circle = joint.getObjectByName('jointAxis_circle');
+      circle.material = circle.material.clone();
+
+      if (model.joint[j].axis1.xyz.x === 1)
+      {
+        circle.material.color = new THREE.Color(0xff0000);
+        circle.position.x = 0.3;
+        circle.rotation.y = Math.PI/2;
+      }
+      else if (model.joint[j].axis1.xyz.y === 1)
+      {
+        circle.material.color = new THREE.Color(0x00ff00);
+        circle.position.y = 0.3;
+        circle.rotation.x = Math.PI/2;
+      }
+      else if (model.joint[j].axis1.xyz.z === 1)
+      {
+        circle.material.color = new THREE.Color(0x0000ff);
+        circle.position.z = 0.3;
+      }
+    }
   }
 };
