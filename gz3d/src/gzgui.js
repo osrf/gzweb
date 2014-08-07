@@ -1166,30 +1166,15 @@ GZ3D.Gui.prototype.init = function()
 
         if ($('.propertyPanels').is(':visible'))
         {
-          var scrollBar = 15;
-          if (isTouchDevice)
-          {
-            scrollBar = 0;
-          }
-
-          var maxWidth = $(window).width() - scrollBar;
+          var maxWidth = $(window).width();
           if (isWideScreen())
           {
-            maxWidth = emUnits(15) - scrollBar;
+            maxWidth = emUnits(15);
           }
 
-          $('.propertyPanels').css('width', maxWidth + scrollBar);
-          $('.propertyHeader').css('width', maxWidth/2);
-          $('.properties').css('width', maxWidth/2);
-          $('.propertyName').css('width', maxWidth/2 - emUnits(1));
-          $('.propertyToggle').css('width', maxWidth/2 - emUnits(2.5));
-          $('.expandableProperty').css('width', maxWidth - emUnits(0.7));
-          $('.expandableLink').css('width', maxWidth - emUnits(0.2));
-          $('.expandableLink div').css('width', maxWidth - emUnits(3.2));
-          $('.expandableItemName').css('width', maxWidth/2 - emUnits(1));
-          $('.expandableItemValue').css('width', maxWidth/2);
-          $('.expandableColor').css('width', maxWidth/2 - emUnits(0.2));
+          $('.propertyPanels').css('width', maxWidth);
         }
+
       }
   );
 

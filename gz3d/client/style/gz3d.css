@@ -97,7 +97,7 @@ body
 .panelSubContent
 {
   height: calc(100% - 1.8em - 1.5em);
-  overflow-y: scroll;
+  overflow-y: auto;
   overflow-x: hidden;
 }
 .panelTitle
@@ -238,41 +238,48 @@ body
   background-color: #aaaaaa;
 }
 /* property panel */
-.proertyPanelImg
+.propertyPanelImg
 {
   text-align: center;
   clear: both;
 }
-.proertyPanelImg img
+.propertyPanelImg img
 {
   height: 5em;
 }
-.propertyHeader
+.propertyPanelHeader
 {
-  float: left;
   text-align: center;
-  background-color: #aaaaaa;
+  clear: both;
 }
-.propertyHeader h4
+.propertyPanelHeader h4
 {
+  background-color: #aaaaaa;
+  float: left;
+  width: 50%;
   margin: 0;
 }
-.properties
+.property div
 {
   float: left;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  position: relative;
 }
-.propertyName
+.property div:first-child
 {
   font-weight:bolder;
-  padding-left: 1em;
+  padding-left: 1.1em;
+  width: calc(50% - 1.1em);
+}
+.property div:nth-child(2)
+{
+  width: 50%;
 }
 .propertyToggle
 {
-  position: relative;
-  padding-left: 2.1em;
+  width: calc(50% - 2.5em) !important;
 }
 .expandableProperty
 {
@@ -282,11 +289,27 @@ body
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  width: 100%;
 }
 .expandableProperty img
 {
   height: 0.7em;
   vertical-align: middle;
+}
+.expandableProperty div
+{
+  position: relative;
+  float: left;
+  width: calc(50% - 0.2em);
+}
+.expandedContent
+{
+  display: none;
+}
+.expandedSubContent div:first-child
+{
+  padding-left: 2em;
+  width: calc(50% - 2em);
 }
 .expandableLink
 {
@@ -298,6 +321,7 @@ body
   line-height: 2em;
   border: 1px solid #222222;
   clear: both;
+  width: 100%;
 }
 .expandableLink img
 {
@@ -312,20 +336,11 @@ body
   display: inline-block;
   vertical-align: middle;
 }
-.expandable
-{
-  display: none;
-}
-.expandableItemName
-{
-  font-weight: bolder;
-  padding-left: 1em;
-}
 .colorDisplay
 {
   display: inline-block;
-  height: 0.5em;
-  width: 0.5em;
+  height: 1em;
+  width: calc(50% - 2em);
   border: 1px solid white;
 }
 .red
