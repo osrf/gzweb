@@ -585,6 +585,7 @@ gzangular.controller('treeControl', ['$scope', function($scope)
   $scope.selectEntity = function (name)
   {
     $('#model-popup').popup('close');
+    guiEvents.emit('openTab', 'propertyPanel-'+name, 'treeMenu');
     guiEvents.emit('selectEntity', name);
   };
 
@@ -895,12 +896,10 @@ GZ3D.Gui.prototype.init = function()
                 }
                 else if (type === 'transparent')
                 {
-                  that.scene.selectEntity(entity);
                   guiEvents.emit('set_view_as','transparent');
                 }
                 else if (type === 'wireframe')
                 {
-                  that.scene.selectEntity(entity);
                   guiEvents.emit('set_view_as','wireframe');
                 }
 
@@ -982,7 +981,6 @@ GZ3D.Gui.prototype.init = function()
   guiEvents.on('set_view_as', function (viewAs)
       {
         that.scene.setViewAs(that.scene.selectedEntity, viewAs);
-        that.scene.selectEntity(null);
       }
   );
 
@@ -1052,7 +1050,7 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('setTreeSelected', function (object, openTab)
+  guiEvents.on('setTreeSelected', function (object)
       {
         for (var i = 0; i < modelStats.length; ++i)
         {
@@ -1060,7 +1058,7 @@ GZ3D.Gui.prototype.init = function()
           {
             $('#modelsTree').collapsible({collapsed: false});
             modelStats[i].selected = 'selectedTreeItem';
-            if (this.openTreeWhenSelected || openTab)
+            if (this.openTreeWhenSelected)
             {
               guiEvents.emit('openTab', 'propertyPanel-'+object, 'treeMenu');
             }
@@ -1076,7 +1074,7 @@ GZ3D.Gui.prototype.init = function()
           {
             $('#lightsTree').collapsible({collapsed: false});
             lightStats[i].selected = 'selectedTreeItem';
-            if (this.openTreeWhenSelected || openTab)
+            if (this.openTreeWhenSelected)
             {
               guiEvents.emit('openTab', 'propertyPanel-'+object, 'treeMenu');
             }
@@ -1107,7 +1105,7 @@ GZ3D.Gui.prototype.init = function()
   guiEvents.on('selectEntity', function (name)
       {
         var object = that.scene.getByName(name);
-        that.scene.selectEntity(object, true);
+        that.scene.selectEntity(object);
       }
   );
 
@@ -1179,7 +1177,6 @@ GZ3D.Gui.prototype.init = function()
 
           $('.propertyPanels').css('width', maxWidth);
         }
-
       }
   );
 
@@ -4667,7 +4664,7 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
     {
       if (mainPointer && model.parent === this.scene)
       {
-        this.selectEntity(model, false);
+        this.selectEntity(model);
       }
     }
     // Manipulator pickers, for mouse
@@ -5985,7 +5982,7 @@ GZ3D.Scene.prototype.setManipulationMode = function(mode)
     // model was selected during view mode
     if (this.selectedEntity)
     {
-      this.selectEntity(this.selectedEntity, false);
+      this.selectEntity(this.selectedEntity);
     }
   }
 
@@ -6074,7 +6071,7 @@ GZ3D.Scene.prototype.showRadialMenu = function(e)
       && this.modelManipulator.pickerNames.indexOf(model.name) === -1)
   {
     this.radialMenu.show(event,model);
-    this.selectEntity(model, false);
+    this.selectEntity(model);
   }
 };
 
@@ -6323,7 +6320,7 @@ GZ3D.Scene.prototype.getParentByPartialName = function(object, name)
  * Select entity
  * @param {} object
  */
-GZ3D.Scene.prototype.selectEntity = function(object, openTab)
+GZ3D.Scene.prototype.selectEntity = function(object)
 {
   if (object)
   {
@@ -6333,7 +6330,7 @@ GZ3D.Scene.prototype.selectEntity = function(object, openTab)
       this.selectedEntity = object;
     }
     this.attachManipulator(object, this.manipulationMode);
-    guiEvents.emit('setTreeSelected', object.name, openTab);
+    guiEvents.emit('setTreeSelected', object.name);
   }
   else
   {
