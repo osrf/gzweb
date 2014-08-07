@@ -508,17 +508,7 @@ $(function()
 
   $(window).resize(function()
   {
-    if ($('.leftPanels').is(':visible'))
-    {
-      if (isWideScreen())
-      {
-        $('.tab').css('left', '15em');
-      }
-      else
-      {
-        $('.tab').css('left', '10.5em');
-      }
-    }
+    guiEvents.emit('resizePanel');
   });
 });
 
@@ -1019,25 +1009,10 @@ GZ3D.Gui.prototype.init = function()
 
   guiEvents.on('openTab', function (id, parentId)
       {
-        // not supporting mobile property panel for now
-        if (id.indexOf('propertyPanel-') >= 0 && isTouchDevice)
-        {
-          return;
-        }
-
         lastOpenMenu[parentId] = id;
 
         $('.leftPanels').hide();
         $('#'+id).show();
-
-        if (isWideScreen())
-        {
-          $('.tab').css('left', '15em');
-        }
-        else
-        {
-          $('.tab').css('left', '10.5em');
-        }
 
         $('.tab').css('border-left-color', tabColors.unselected);
         $('#'+parentId+'Tab').css('border-left-color', tabColors.selected);
@@ -1060,6 +1035,8 @@ GZ3D.Gui.prototype.init = function()
                                     z: object.quaternion._z,
                                     w: object.quaternion._w};
         }
+
+        guiEvents.emit('resizePanel');
       }
   );
 
@@ -1177,6 +1154,50 @@ GZ3D.Gui.prototype.init = function()
         }
       }
   );
+
+  guiEvents.on('resizePanel', function ()
+      {
+        if ($('.leftPanels').is(':visible'))
+        {
+          if (isWideScreen())
+          {
+            $('.tab').css('left', '15em');
+          }
+          else
+          {
+            $('.tab').css('left', '10.5em');
+          }
+        }
+
+        if ($('.propertyPanels').is(':visible'))
+        {
+          var scrollBar = 15;
+          if (isTouchDevice)
+          {
+            scrollBar = 0;
+          }
+
+          var maxWidth = $(window).width() - scrollBar;
+          if (isWideScreen())
+          {
+            maxWidth = emUnits(15) - scrollBar;
+          }
+
+          $('.propertyPanels').css('width', maxWidth + scrollBar);
+          $('.propertyHeader').css('width', maxWidth/2);
+          $('.properties').css('width', maxWidth/2);
+          $('.propertyName').css('width', maxWidth/2 - emUnits(1));
+          $('.propertyToggle').css('width', maxWidth/2 - emUnits(2.5));
+          $('.expandableProperty').css('width', maxWidth - emUnits(0.7));
+          $('.expandableLink').css('width', maxWidth - emUnits(0.2));
+          $('.expandableLink div').css('width', maxWidth - emUnits(3.2));
+          $('.expandableItemName').css('width', maxWidth/2 - emUnits(1));
+          $('.expandableItemValue').css('width', maxWidth/2);
+          $('.expandableColor').css('width', maxWidth/2 - emUnits(0.2));
+        }
+      }
+  );
+
 };
 
 /**
@@ -1596,6 +1617,7 @@ GZ3D.Gui.prototype.deleteFromStats = function(type, name)
     }
   }
 };
+
 
 //var GAZEBO_MODEL_DATABASE_URI='http://gazebosim.org/models';
 
