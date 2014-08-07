@@ -291,6 +291,11 @@ body
   white-space: nowrap;
   width: 100%;
 }
+.expandableProperty:hover,
+.expandableProperty:active
+{
+  background-color: #2e2e2e;
+}
 .expandableProperty img
 {
   height: 0.7em;
@@ -322,6 +327,11 @@ body
   border: 1px solid #222222;
   clear: both;
   width: 100%;
+}
+.expandableLink:hover,
+.expandableLink:active
+{
+  background-color: #373737;
 }
 .expandableLink img
 {
