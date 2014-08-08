@@ -238,10 +238,15 @@ body
   background-color: #aaaaaa;
 }
 /* property panel */
+.propertyPanels
+{
+  background-color: #eeeeee;
+}
 .propertyPanelImg
 {
   text-align: center;
   clear: both;
+  background-color: #2a2a2a;
 }
 .propertyPanelImg img
 {
@@ -256,8 +261,15 @@ body
 {
   background-color: #aaaaaa;
   float: left;
-  width: 50%;
   margin: 0;
+}
+.propertyPanelHeader h4:first-child
+{
+  width: 60%;
+}
+.propertyPanelHeader h4:nth-child(2)
+{
+  width: 40%;
 }
 .property div
 {
@@ -266,20 +278,60 @@ body
   text-overflow: ellipsis;
   white-space: nowrap;
   position: relative;
+  color: #000000;
+  text-shadow: none;
+  font-size: 0.9em;
 }
 .property div:first-child
 {
   font-weight:bolder;
-  padding-left: 1.1em;
-  width: calc(50% - 1.1em);
 }
 .property div:nth-child(2)
 {
-  width: 50%;
+  width: 40%;
 }
-.propertyToggle
+.propertyLevel2 div
 {
-  width: calc(50% - 2.5em) !important;
+  font-size: 0.8em;
+}
+.propertyLevel3 div
+{
+  font-size: 0.7em;
+}
+.propertyLevel4 div
+{
+  font-size: 0.65em;
+}
+.propertyLevel1 div:first-child
+{
+  padding-left: 1.7em;
+  width: calc(60% - 1.7em);
+}
+.propertyLevel2 div:first-child
+{
+  padding-left: 2.8em;
+  width: calc(60% - 2.8em);
+}
+.propertyLevel3 div:first-child
+{
+  padding-left: calc(2.8em + 1.7em);
+  width: calc(60% - 2.8em - 1.7em);
+}
+.propertyLevel4 div:first-child
+{
+  padding-left: calc(2.8em + 3.4em);
+  width: calc(60% - 2.8em - 3.4em);
+}
+.propertyToggle img
+{
+  vertical-align: middle;
+  height: 0.8em;
+}
+.propertyNumber
+{
+  text-align: right;
+  padding-right: 3em;
+  width: calc(40% - 3em) !important;
 }
 .expandableProperty
 {
@@ -290,80 +342,75 @@ body
   text-overflow: ellipsis;
   white-space: nowrap;
   width: 100%;
+  color: #000000;
+  text-shadow: none;
+  font-size: 0.9em;
 }
 .expandableProperty:hover,
 .expandableProperty:active
 {
-  background-color: #2e2e2e;
+  background-color: #e8e8e8;
+}
+.expandableLevel2
+{
+  padding-left: 1.7em;
+  width: calc(100% - 1.7em);
+  font-size: 0.8em;
+}
+.expandableLevel3
+{
+  padding-left: 3.5em;
+  width: calc(100% - 3.5em);
+  font-size: 0.7em;
 }
 .expandableProperty img
 {
-  height: 0.7em;
   vertical-align: middle;
+}
+.expandableLevel1 img
+{
+  height: 1em;
+}
+.expandableLevel2 img
+{
+  height: 0.8em;
+}
+.expandableLevel3 img
+{
+  height: 0.7em;
 }
 .expandableProperty div
 {
   position: relative;
   float: left;
-  width: calc(50% - 0.2em);
+  width: calc(60% - 0.2em);
 }
 .expandedContent
 {
   display: none;
 }
-.expandedSubContent div:first-child
-{
-  padding-left: 2em;
-  width: calc(50% - 2em);
-}
-.expandableLink
-{
-  font-weight: bolder;
-  font-size: 1.2em;
-  padding-left: 0.2em;
-  float: left;
-  background-color: #333333;
-  line-height: 2em;
-  border: 1px solid #222222;
-  clear: both;
-  width: 100%;
-}
-.expandableLink:hover,
-.expandableLink:active
-{
-  background-color: #373737;
-}
-.expandableLink img
-{
-  display: inline-block;
-  vertical-align: middle;
-}
-.expandableLink div
-{
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  display: inline-block;
-  vertical-align: middle;
-}
 .colorDisplay
 {
   display: inline-block;
   height: 1em;
-  width: calc(50% - 2em);
+  width: calc(40% - 2em) !important;
   border: 1px solid white;
 }
-.red
+.redBg div
 {
-  color: rgb(255, 50, 50);
+  background-color: #ffdddd !important;
 }
-.green
+.greenBg div
 {
-  color: rgb(50, 255, 50);
+  background-color: #ddffdd !important;
 }
-.blue
+.blueBg div
 {
-  color: rgb(50, 50, 255);
+  background-color: #ddddff !important;
+}
+.darkBg div
+{
+  background-color: #dddddd;
 }
 /* model popup */
 #model-popup
