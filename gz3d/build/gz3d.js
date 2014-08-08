@@ -4360,9 +4360,9 @@ GZ3D.Scene.prototype.init = function()
   mesh.name = 'jointAxis';
   this.jointAxis.add(mesh);
 
-  geometry = new THREE.TorusGeometry(0.05, 0.005, 10, 10);
+  geometry = new THREE.TorusGeometry(0.05, 0.005, 10, 36);
 
-  material = new AxisMaterial(new THREE.Color(0xff0000));
+  material = new AxisMaterial(new THREE.Color(0xffff00));
   mesh = new THREE.Mesh(geometry, material);
   mesh.name = 'jointAxis_circle';
   this.jointAxis.add(mesh);
@@ -6169,25 +6169,17 @@ GZ3D.Scene.prototype.viewJoints = function(model)
           model.joint[j].pose.orientation);
 
       var circle = joint.getObjectByName('jointAxis_circle');
-      circle.material = circle.material.clone();
 
-      if (model.joint[j].axis1.xyz.x === 1)
-      {
-        circle.material.color = new THREE.Color(0xff0000);
-        circle.position.x = 0.3;
-        circle.rotation.y = Math.PI/2;
-      }
-      else if (model.joint[j].axis1.xyz.y === 1)
-      {
-        circle.material.color = new THREE.Color(0x00ff00);
-        circle.position.y = 0.3;
-        circle.rotation.x = Math.PI/2;
-      }
-      else if (model.joint[j].axis1.xyz.z === 1)
-      {
-        circle.material.color = new THREE.Color(0x0000ff);
-        circle.position.z = 0.3;
-      }
+      var rotAxis = new THREE.Vector3(
+          model.joint[j].axis1.xyz.x,
+          model.joint[j].axis1.xyz.y,
+          model.joint[j].axis1.xyz.z);
+      rotAxis.normalize();
+
+      circle.position =  rotAxis.multiplyScalar(0.3);
+      var rotMatrix = new THREE.Matrix4();
+      rotMatrix.lookAt(new THREE.Vector3(0, 0, 0), rotAxis, circle.up);
+      circle.quaternion.setFromRotationMatrix(rotMatrix);
     }
   }
 };
