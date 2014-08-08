@@ -4360,12 +4360,31 @@ GZ3D.Scene.prototype.init = function()
   mesh.name = 'jointAxis';
   this.jointAxis.add(mesh);
 
-  geometry = new THREE.TorusGeometry(0.05, 0.005, 10, 36);
+  var rotAxis = new THREE.Object3D();
+  rotAxis.name = 'jointAxis_rotAxis';
+
+  geometry = new THREE.CylinderGeometry(0.009, 0.009, 0.3, 10, 1, false);
 
   material = new AxisMaterial(new THREE.Color(0xffff00));
   mesh = new THREE.Mesh(geometry, material);
-  mesh.name = 'jointAxis_circle';
-  this.jointAxis.add(mesh);
+  mesh.position.z = -0.15;
+  mesh.rotation.x = Math.PI/2;
+  mesh.name = 'jointAxis_rotAxis';
+  rotAxis.add(mesh);
+
+  geometry = new THREE.CylinderGeometry(0, 0.025, 0.1, 10, 1, true);
+
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.rotation.x = Math.PI/2;
+  mesh.name = 'jointAxis_rotAxis';
+  rotAxis.add(mesh);
+
+  geometry = new THREE.TorusGeometry(0.05, 0.005, 10, 36);
+
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.name = 'jointAxis_rotAxis';
+  rotAxis.add(mesh);
+  this.jointAxis.add(rotAxis);
 };
 
 GZ3D.Scene.prototype.initScene = function()
@@ -6168,7 +6187,7 @@ GZ3D.Scene.prototype.viewJoints = function(model)
       this.setPose(joint, model.joint[j].pose.position,
           model.joint[j].pose.orientation);
 
-      var circle = joint.getObjectByName('jointAxis_circle');
+      var circle = joint.getObjectByName('jointAxis_rotAxis');
 
       var rotAxis = new THREE.Vector3(
           model.joint[j].axis1.xyz.x,
@@ -6178,7 +6197,7 @@ GZ3D.Scene.prototype.viewJoints = function(model)
 
       circle.position =  rotAxis.multiplyScalar(0.3);
       var rotMatrix = new THREE.Matrix4();
-      rotMatrix.lookAt(new THREE.Vector3(0, 0, 0), rotAxis, circle.up);
+      rotMatrix.lookAt(rotAxis, new THREE.Vector3(0, 0, 0), circle.up);
       circle.quaternion.setFromRotationMatrix(rotMatrix);
     }
   }
