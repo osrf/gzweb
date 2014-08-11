@@ -317,18 +317,18 @@ GZ3D.GZIface.prototype.onConnected = function()
     messageType : 'light',
   });
 
-  var publishModelModify = function(model)
+  var publishEntityModify = function(entity)
   {
-    var matrix = model.matrixWorld;
+    var matrix = entity.matrixWorld;
     var translation = new THREE.Vector3();
     var quaternion = new THREE.Quaternion();
     var scale = new THREE.Vector3();
     matrix.decompose(translation, quaternion, scale);
 
-    var modelMsg =
+    var entityMsg =
     {
-      name : model.name,
-      id : model.userData,
+      name : entity.name,
+      id : entity.userData,
       createEntity : 0,
       position :
       {
@@ -344,18 +344,24 @@ GZ3D.GZIface.prototype.onConnected = function()
         z: quaternion.z
       }
     };
-    if (model.children[0] &&
-        model.children[0] instanceof THREE.Light)
+    if (entity.children[0] &&
+        entity.children[0] instanceof THREE.Light)
     {
-      that.lightModifyTopic.publish(modelMsg);
+      entityMsg.diffuse =
+      {
+        r: entity.children[0].color.r,
+        g: entity.children[0].color.g,
+        b: entity.children[0].color.b
+      };
+      that.lightModifyTopic.publish(entityMsg);
     }
     else
     {
-      that.modelModifyTopic.publish(modelMsg);
+      that.modelModifyTopic.publish(entityMsg);
     }
   };
 
-  this.scene.emitter.on('poseChanged', publishModelModify);
+  this.scene.emitter.on('entityChanged', publishEntityModify);
 
   // Factory messages - for spawning new models
   this.factoryTopic = new ROSLIB.Topic({
@@ -451,8 +457,6 @@ GZ3D.GZIface.prototype.onConnected = function()
     }
     that.worldControlTopic.publish(worldControlMsg);
   };
-
-  this.scene.emitter.on('poseChanged', publishModelModify);
 
   this.gui.emitter.on('entityCreated', publishFactory);
 

@@ -649,6 +649,11 @@ gzangular.controller('treeControl', ['$scope', function($scope)
   {
     guiEvents.emit('setPose', prop1, prop2, name, value);
   };
+
+  $scope.changeColor = function(prop, name, value)
+  {
+    guiEvents.emit('setColor', prop, name, value);
+  };
 }]);
 
 // Insert menu
@@ -1182,6 +1187,11 @@ GZ3D.Gui.prototype.init = function()
 
   guiEvents.on('setPose', function (prop1, prop2, name, value)
       {
+        if (value === undefined)
+        {
+          return;
+        }
+
         var entity = that.scene.getByName(name);
         if (prop1 === 'orientation')
         {
@@ -1205,7 +1215,24 @@ GZ3D.Gui.prototype.init = function()
           lightObj.target.position.copy(dir);
         }
 
-        that.scene.emitter.emit('poseChanged', entity);
+        that.scene.emitter.emit('entityChanged', entity);
+      }
+  );
+
+  guiEvents.on('setColor', function (prop, name, value)
+      {
+        if (value === undefined)
+        {
+          return;
+        }
+
+        var color = new THREE.Color(value);
+
+        var entity = that.scene.getByName(name);
+        entity.children[0].color = color;
+
+        // updating too often, maybe only update when popup is closed
+        that.scene.emitter.emit('entityChanged', entity);
       }
   );
 };
@@ -1413,6 +1440,7 @@ GZ3D.Gui.prototype.setLightStats = function(stats, action)
             position: formatted.pose.position,
             orientation: formatted.pose.orientation,
             diffuse: formatted.diffuse,
+            color: formatted.color,
             specular: formatted.specular,
             range: stats.range,
             attenuation: formatted.attenuation
@@ -1420,12 +1448,17 @@ GZ3D.Gui.prototype.setLightStats = function(stats, action)
     }
     else
     {
+      formatted = this.formatStats(stats);
+
       if (stats.pose)
       {
-        formatted = this.formatStats(stats);
-
         light[0].position = formatted.pose.position;
         light[0].orientation = formatted.pose.orientation;
+      }
+
+      if (stats.diffuse)
+      {
+        light[0].diffuse = formatted.diffuse;
       }
     }
   }
@@ -1548,10 +1581,21 @@ GZ3D.Gui.prototype.formatStats = function(stats)
   {
     inertial = this.round(stats.inertial);
   }
-  var diffuse;
+  var diffuse, color;
   if (stats.diffuse)
   {
     diffuse = this.round(stats.diffuse);
+
+    var colorHex = {};
+    for (var comp in diffuse)
+    {
+      colorHex[comp] = diffuse[comp].toString(16);
+      if (colorHex[comp].length === 1)
+      {
+        colorHex[comp] = '0' + colorHex[comp];
+      }
+    }
+    color = '#' + colorHex['r'] + colorHex['g'] + colorHex['b'];
   }
   var specular;
   if (stats.specular)
@@ -1567,6 +1611,7 @@ GZ3D.Gui.prototype.formatStats = function(stats)
   return {pose: {position: position, orientation: orientation},
           inertial: inertial,
           diffuse: diffuse,
+          color: color,
           specular: specular,
           attenuation: attenuation};
 };

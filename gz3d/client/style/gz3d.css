@@ -346,6 +346,25 @@ body
   background-color: #eeeeee;
   text-align: right;
 }
+.propertyColorEdit
+{
+  height: 100%;
+}
+.propertyColorEdit div
+{
+  background-color: #aaaaaa !important;
+  padding: 0;
+  margin: 0;
+  height: 100%;
+  border: none;
+}
+.propertyColorEdit input
+{
+  padding: 0;
+  margin: 0;
+  min-height: 1em;
+  height: 1.2em;
+}
 .expandableProperty
 {
   font-weight: bolder;
@@ -392,11 +411,17 @@ body
 {
   height: 0.7em;
 }
-.expandableProperty > div
+.expandableProperty > div:first-child
 {
   position: relative;
   float: left;
   width: calc(60% - 0.2em);
+}
+.expandableProperty > div:nth-child(2)
+{
+  position: relative;
+  float: left;
+  width: 40%;
 }
 .expandedContent
 {

@@ -654,6 +654,11 @@ gzangular.controller('treeControl', ['$scope', function($scope)
   {
     guiEvents.emit('setPose', prop1, prop2, name, value);
   };
+
+  $scope.changeColor = function(prop, name, value)
+  {
+    guiEvents.emit('setColor', prop, name, value);
+  };
 }]);
 
 // Insert menu
@@ -1187,6 +1192,11 @@ GZ3D.Gui.prototype.init = function()
 
   guiEvents.on('setPose', function (prop1, prop2, name, value)
       {
+        if (value === undefined)
+        {
+          return;
+        }
+
         var entity = that.scene.getByName(name);
         if (prop1 === 'orientation')
         {
@@ -1210,7 +1220,24 @@ GZ3D.Gui.prototype.init = function()
           lightObj.target.position.copy(dir);
         }
 
-        that.scene.emitter.emit('poseChanged', entity);
+        that.scene.emitter.emit('entityChanged', entity);
+      }
+  );
+
+  guiEvents.on('setColor', function (prop, name, value)
+      {
+        if (value === undefined)
+        {
+          return;
+        }
+
+        var color = new THREE.Color(value);
+
+        var entity = that.scene.getByName(name);
+        entity.children[0].color = color;
+
+        // updating too often, maybe only update when popup is closed
+        that.scene.emitter.emit('entityChanged', entity);
       }
   );
 };
@@ -1418,6 +1445,7 @@ GZ3D.Gui.prototype.setLightStats = function(stats, action)
             position: formatted.pose.position,
             orientation: formatted.pose.orientation,
             diffuse: formatted.diffuse,
+            color: formatted.color,
             specular: formatted.specular,
             range: stats.range,
             attenuation: formatted.attenuation
@@ -1425,12 +1453,17 @@ GZ3D.Gui.prototype.setLightStats = function(stats, action)
     }
     else
     {
+      formatted = this.formatStats(stats);
+
       if (stats.pose)
       {
-        formatted = this.formatStats(stats);
-
         light[0].position = formatted.pose.position;
         light[0].orientation = formatted.pose.orientation;
+      }
+
+      if (stats.diffuse)
+      {
+        light[0].diffuse = formatted.diffuse;
       }
     }
   }
@@ -1553,10 +1586,21 @@ GZ3D.Gui.prototype.formatStats = function(stats)
   {
     inertial = this.round(stats.inertial);
   }
-  var diffuse;
+  var diffuse, color;
   if (stats.diffuse)
   {
     diffuse = this.round(stats.diffuse);
+
+    var colorHex = {};
+    for (var comp in diffuse)
+    {
+      colorHex[comp] = diffuse[comp].toString(16);
+      if (colorHex[comp].length === 1)
+      {
+        colorHex[comp] = '0' + colorHex[comp];
+      }
+    }
+    color = '#' + colorHex['r'] + colorHex['g'] + colorHex['b'];
   }
   var specular;
   if (stats.specular)
@@ -1572,6 +1616,7 @@ GZ3D.Gui.prototype.formatStats = function(stats)
   return {pose: {position: position, orientation: orientation},
           inertial: inertial,
           diffuse: diffuse,
+          color: color,
           specular: specular,
           attenuation: attenuation};
 };
@@ -1954,18 +1999,18 @@ GZ3D.GZIface.prototype.onConnected = function()
     messageType : 'light',
   });
 
-  var publishModelModify = function(model)
+  var publishEntityModify = function(entity)
   {
-    var matrix = model.matrixWorld;
+    var matrix = entity.matrixWorld;
     var translation = new THREE.Vector3();
     var quaternion = new THREE.Quaternion();
     var scale = new THREE.Vector3();
     matrix.decompose(translation, quaternion, scale);
 
-    var modelMsg =
+    var entityMsg =
     {
-      name : model.name,
-      id : model.userData,
+      name : entity.name,
+      id : entity.userData,
       createEntity : 0,
       position :
       {
@@ -1981,18 +2026,24 @@ GZ3D.GZIface.prototype.onConnected = function()
         z: quaternion.z
       }
     };
-    if (model.children[0] &&
-        model.children[0] instanceof THREE.Light)
+    if (entity.children[0] &&
+        entity.children[0] instanceof THREE.Light)
     {
-      that.lightModifyTopic.publish(modelMsg);
+      entityMsg.diffuse =
+      {
+        r: entity.children[0].color.r,
+        g: entity.children[0].color.g,
+        b: entity.children[0].color.b
+      };
+      that.lightModifyTopic.publish(entityMsg);
     }
     else
     {
-      that.modelModifyTopic.publish(modelMsg);
+      that.modelModifyTopic.publish(entityMsg);
     }
   };
 
-  this.scene.emitter.on('poseChanged', publishModelModify);
+  this.scene.emitter.on('entityChanged', publishEntityModify);
 
   // Factory messages - for spawning new models
   this.factoryTopic = new ROSLIB.Topic({
@@ -2088,8 +2139,6 @@ GZ3D.GZIface.prototype.onConnected = function()
     }
     that.worldControlTopic.publish(worldControlMsg);
   };
-
-  this.scene.emitter.on('poseChanged', publishModelModify);
 
   this.gui.emitter.on('entityCreated', publishFactory);
 
@@ -6005,7 +6054,7 @@ GZ3D.Scene.prototype.setManipulationMode = function(mode)
   {
     if (this.modelManipulator.object)
     {
-      this.emitter.emit('poseChanged', this.modelManipulator.object);
+      this.emitter.emit('entityChanged', this.modelManipulator.object);
     }
     this.selectEntity(null);
   }
@@ -6064,7 +6113,7 @@ GZ3D.Scene.prototype.attachManipulator = function(model,mode)
 {
   if (this.modelManipulator.object)
   {
-    this.emitter.emit('poseChanged', this.modelManipulator.object);
+    this.emitter.emit('entityChanged', this.modelManipulator.object);
   }
 
   if (mode !== 'view')

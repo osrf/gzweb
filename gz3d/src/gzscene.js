@@ -1550,7 +1550,7 @@ GZ3D.Scene.prototype.setManipulationMode = function(mode)
   {
     if (this.modelManipulator.object)
     {
-      this.emitter.emit('poseChanged', this.modelManipulator.object);
+      this.emitter.emit('entityChanged', this.modelManipulator.object);
     }
     this.selectEntity(null);
   }
@@ -1609,7 +1609,7 @@ GZ3D.Scene.prototype.attachManipulator = function(model,mode)
 {
   if (this.modelManipulator.object)
   {
-    this.emitter.emit('poseChanged', this.modelManipulator.object);
+    this.emitter.emit('entityChanged', this.modelManipulator.object);
   }
 
   if (mode !== 'view')

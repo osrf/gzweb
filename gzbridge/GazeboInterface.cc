@@ -316,6 +316,9 @@ void GazeboInterface::ProcessMessages()
           if (name == "")
             continue;
 
+          gazebo::msgs::Light lightMsg;
+          lightMsg.set_name(name);
+
           gazebo::math::Vector3 pos(
             atof(get_value(msg, "msg:position:x").c_str()),
             atof(get_value(msg, "msg:position:y").c_str()),
@@ -326,10 +329,14 @@ void GazeboInterface::ProcessMessages()
             atof(get_value(msg, "msg:orientation:y").c_str()),
             atof(get_value(msg, "msg:orientation:z").c_str()));
           gazebo::math::Pose pose(pos, quat);
-
-          gazebo::msgs::Light lightMsg;
-          lightMsg.set_name(name);
           gazebo::msgs::Set(lightMsg.mutable_pose(), pose);
+
+          gazebo::common::Color diffuse(
+            atof(get_value(msg, "msg:diffuse:r").c_str()),
+            atof(get_value(msg, "msg:diffuse:g").c_str()),
+            atof(get_value(msg, "msg:diffuse:b").c_str()), 1);
+
+          gazebo::msgs::Set(lightMsg.mutable_diffuse(), diffuse);
 
           if (createEntity.compare("1") == 0)
           {

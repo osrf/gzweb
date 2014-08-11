@@ -554,7 +554,9 @@
                   <img src="style/images/play.png">
                   Diffuse
                 </div>
-                <div class="colorDisplay" style="background-color: rgb({{light.diffuse.r}},{{light.diffuse.g}},{{light.diffuse.b}})"></div>
+                <div class="propertyColorEdit">
+                  <input class="clickable" type="color" ng-model="light.color" ng-change="changeColor('diffuse', light.name, light.color)"/>
+                </div>
               </div>
               <div id="expandable-diffuse-{{light.name}}" class="expandedContent">
                 <div class="property propertyLevel2 redBg">
