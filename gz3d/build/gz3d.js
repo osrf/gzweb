@@ -1558,7 +1558,7 @@ GZ3D.Gui.prototype.round = function(stats)
     }
     else
     {
-      stats[key] = Math.round(stats[key] * 10000) / 10000;
+      stats[key] = parseFloat(Math.round(stats[key] * 1000) / 1000).toFixed(3);
     }
   }
   return stats;
@@ -1572,7 +1572,7 @@ GZ3D.Gui.prototype.round = function(stats)
 GZ3D.Gui.prototype.trueOrFalse = function(stats)
 {
   return stats ?
-      {icon: 'check', title: 'True'} :
+      {icon: 'true', title: 'True'} :
       {icon: 'false', title: 'False'};
 };
 

@@ -296,7 +296,7 @@
               <h3>Scene Tree</h3>
               <img src="style/images/close.png">
             </div>
-            <div class="clickable panelSubTitle" ng-click="backToTree()">
+            <div class="clickable panelSubTitle" ng-click="backToTree()" title="{{model.name}}">
               <h4>{{model.name}}</h4>
               <img src="style/images/back.png">
             </div>
@@ -308,144 +308,177 @@
                 <h4>Property</h4>
                 <h4>Value</h4>
               </div>
-              <div class="property">
-                <div>Name</div>
-                <div>{{model.name}}</div>
-              </div>
-              <div class="property">
-                <div>Static</div>
-                <div class="propertyToggle ui-icon-{{model.is_static.icon}} ui-btn-icon-left">{{model.is_static.title}}</div>
-              </div>
-              <div id="expand-pose-{{model.name}}" class="clickable expandableProperty" ng-click="expandProperty('pose', model.name)">
+              <!-- general -->
+              <div id="expand-general-{{model.name}}" class="clickable expandableProperty expandableLevel1" ng-click="expandProperty('general', model.name)">
                 <img src="style/images/play.png">
-                Pose
+                General
               </div>
-              <div id="expandable-pose-{{model.name}}" class="expandedContent">
-                <div class="property expandedSubContent">
-                  <div>x</div>
-                  <div>{{model.position.x}}</div>
+              <div id="expandable-general-{{model.name}}" class="expandedContent">
+                <div class="property propertyLevel2" title="{{model.name}}">
+                  <div>Name</div>
+                  <div>{{model.name}}</div>
                 </div>
-                <div class="property expandedSubContent">
-                  <div>y</div>
-                  <div>{{model.position.y}}</div>
+                <div class="property propertyLevel2">
+                  <div>Static</div>
+                  <div class="propertyToggle">
+                    <img src="style/images/{{model.is_static.icon}}.png">
+                    {{model.is_static.title}}
+                  </div>
                 </div>
-                <div class="property expandedSubContent">
-                  <div>z</div>
-                  <div>{{model.position.z}}</div>
-                </div>
-                <div class="property expandedSubContent">
-                  <div>Roll</div>
-                  <div>{{model.orientation.roll}}</div>
-                </div>
-                <div class="property expandedSubContent">
-                  <div>Pitch</div>
-                  <div>{{model.orientation.pitch}}</div>
-                </div>
-                <div class="property expandedSubContent">
-                  <div>Yaw</div>
-                  <div>{{model.orientation.yaw}}</div>
-                </div>
-              </div>
-              <div ng-repeat="link in model.links">
-                <div id="expand-link-{{model.name}}-{{link.shortName}}" class="clickable expandableLink" ng-click="expandProperty('link', model.name, link.shortName)">
+                <!-- model pose -->
+                <div id="expand-pose-{{model.name}}" class="clickable expandableProperty expandableLevel2" ng-click="expandProperty('pose', model.name)">
                   <img src="style/images/play.png">
-                  <div>{{link.shortName}}</div>
+                  Pose
                 </div>
-                <div id="expandable-link-{{model.name}}-{{link.shortName}}" class="expandedContent">
-                  <div class="property">
-                    <div>Name</div>
-                    <div>{{link.name}}</div>
+                <div id="expandable-pose-{{model.name}}" class="expandedContent">
+                  <div class="property propertyLevel3 darkBg">
+                    <div>x</div>
+                    <div class="propertyNumber">{{model.position.x}}</div>
                   </div>
-                  <div class="property">
-                    <div>Self Collide</div>
-                    <div class="propertyToggle ui-icon-{{link.self_collide.icon}} ui-btn-icon-left">{{link.self_collide.title}}</div>
+                  <div class="property propertyLevel3">
+                    <div>y</div>
+                    <div class="propertyNumber">{{model.position.y}}</div>
                   </div>
-                  <div class="property">
-                    <div>Gravity</div>
-                    <div class="propertyToggle ui-icon-{{link.gravity.icon}} ui-btn-icon-left">{{link.gravity.title}}</div>
+                  <div class="property propertyLevel3 darkBg">
+                    <div>z</div>
+                    <div class="propertyNumber">{{model.position.z}}</div>
                   </div>
-                  <div class="property">
-                    <div>Kinematic</div>
-                    <div class="propertyToggle ui-icon-{{link.kinematic.icon}} ui-btn-icon-left">{{link.kinematic.title}}</div>
+                  <div class="property propertyLevel3">
+                    <div>Roll</div>
+                    <div class="propertyNumber">{{model.orientation.roll}}</div>
                   </div>
-                  <div class="property">
-                    <div>Canonical</div>
-                    <div class="propertyToggle ui-icon-{{link.canonical.icon}} ui-btn-icon-left">{{link.canonical.title}}</div>
+                  <div class="property propertyLevel3 darkBg">
+                    <div>Pitch</div>
+                    <div class="propertyNumber">{{model.orientation.pitch}}</div>
                   </div>
-                  <div id="expand-pose-{{model.name}}-{{link.shortName}}" class="clickable expandableProperty" ng-click="expandProperty('pose', model.name, link.shortName, link.name)">
+                  <div class="property propertyLevel3">
+                    <div>Yaw</div>
+                    <div class="propertyNumber">{{model.orientation.yaw}}</div>
+                  </div>
+                </div>
+              </div>
+              <!-- links -->
+              <div id="expand-links-{{model.name}}" class="clickable expandableProperty expandableLevel1" ng-click="expandProperty('links', model.name)">
+                <img src="style/images/play.png">
+                Links
+              </div>
+              <div id="expandable-links-{{model.name}}" class="expandedContent">
+                <div ng-repeat="link in model.links">
+                  <div id="expand-link-{{model.name}}-{{link.shortName}}" class="clickable expandableProperty expandableLevel2" ng-click="expandProperty('link', model.name, link.shortName)" title="{{link.name}}">
                     <img src="style/images/play.png">
-                    Pose
+                    {{link.shortName}}
                   </div>
-                  <div id="expandable-pose-{{model.name}}-{{link.shortName}}" class="expandedContent">
-                    <div class="property expandedSubContent">
-                      <div>x</div>
-                      <div>{{link.position.x}}</div>
+                  <div id="expandable-link-{{model.name}}-{{link.shortName}}" class="expandedContent">
+                    <div class="property propertyLevel3" title="{{link.name}}">
+                      <div>Name</div>
+                      <div>{{link.name}}</div>
                     </div>
-                    <div class="property expandedSubContent">
-                      <div>y</div>
-                      <div>{{link.position.y}}</div>
+                    <div class="property propertyLevel3">
+                      <div>Self Collide</div>
+                      <div class="propertyToggle">
+                        <img src="style/images/{{link.self_collide.icon}}.png">
+                        {{link.self_collide.title}}
+                      </div>
                     </div>
-                    <div class="property expandedSubContent">
-                      <div>z</div>
-                      <div>{{link.position.z}}</div>
+                    <div class="property propertyLevel3">
+                      <div>Gravity</div>
+                      <div class="propertyToggle">
+                        <img src="style/images/{{link.gravity.icon}}.png">
+                        {{link.gravity.title}}
+                      </div>
                     </div>
-                    <div class="property expandedSubContent">
-                      <div>Roll</div>
-                      <div>{{link.orientation.roll}}</div>
+                    <div class="property propertyLevel3">
+                      <div>Kinematic</div>
+                      <div class="propertyToggle">
+                        <img src="style/images/{{link.kinematic.icon}}.png">
+                        {{link.kinematic.title}}
+                      </div>
                     </div>
-                    <div class="property expandedSubContent">
-                      <div>Pitch</div>
-                      <div>{{link.orientation.pitch}}</div>
+                    <div class="property propertyLevel3">
+                      <div>Canonical</div>
+                      <div class="propertyToggle">
+                        <img src="style/images/{{link.canonical.icon}}.png">
+                        {{link.canonical.title}}
+                      </div>
                     </div>
-                    <div class="property expandedSubContent">
-                      <div>Yaw</div>
-                      <div>{{link.orientation.yaw}}</div>
+                    <!-- link pose -->
+                    <div id="expand-pose-{{model.name}}-{{link.shortName}}" class="clickable expandableProperty expandableLevel3" ng-click="expandProperty('pose', model.name, link.shortName, link.name)">
+                      <img src="style/images/play.png">
+                      Pose
                     </div>
-                  </div>
-                  <div id="expand-inertial-{{model.name}}-{{link.shortName}}" class="clickable expandableProperty" ng-click="expandProperty('inertial', model.name, link.shortName)">
-                    <img src="style/images/play.png">
-                    Inertial
-                  </div>
-                  <div id="expandable-inertial-{{model.name}}-{{link.shortName}}" class="expandedContent">
-                    <div class="property expandedSubContent">
-                      <div>Mass</div>
-                      <div>{{link.inertial.mass}}</div>
+                    <div id="expandable-pose-{{model.name}}-{{link.shortName}}" class="expandedContent">
+                      <div class="property propertyLevel4 darkBg">
+                        <div>x</div>
+                        <div class="propertyNumber">{{link.position.x}}</div>
+                      </div>
+                      <div class="property propertyLevel4">
+                        <div>y</div>
+                        <div class="propertyNumber">{{link.position.y}}</div>
+                      </div>
+                      <div class="property propertyLevel4 darkBg">
+                        <div>z</div>
+                        <div class="propertyNumber">{{link.position.z}}</div>
+                      </div>
+                      <div class="property propertyLevel4">
+                        <div>Roll</div>
+                        <div class="propertyNumber">{{link.orientation.roll}}</div>
+                      </div>
+                      <div class="property propertyLevel4 darkBg">
+                        <div>Pitch</div>
+                        <div class="propertyNumber">{{link.orientation.pitch}}</div>
+                      </div>
+                      <div class="property propertyLevel4">
+                        <div>Yaw</div>
+                        <div class="propertyNumber">{{link.orientation.yaw}}</div>
+                      </div>
                     </div>
-                    <div class="property expandedSubContent">
-                      <div>ixx</div>
-                      <div>{{link.inertial.ixx}}</div>
+                    <!-- link inertial -->
+                    <div id="expand-inertial-{{model.name}}-{{link.shortName}}" class="clickable expandableProperty expandableLevel3" ng-click="expandProperty('inertial', model.name, link.shortName)">
+                      <img src="style/images/play.png">
+                      Inertial
                     </div>
-                    <div class="property expandedSubContent">
-                      <div>ixy</div>
-                      <div>{{link.inertial.ixy}}</div>
-                    </div>
-                    <div class="property expandedSubContent">
-                      <div>ixz</div>
-                      <div>{{link.inertial.ixz}}</div>
-                    </div>
-                    <div class="property expandedSubContent">
-                      <div>iyy</div>
-                      <div>{{link.inertial.iyy}}</div>
-                    </div>
-                    <div class="property expandedSubContent">
-                      <div>iyz</div>
-                      <div>{{link.inertial.iyz}}</div>
-                    </div>
-                    <div class="property expandedSubContent">
-                      <div>izz</div>
-                      <div>{{link.inertial.izz}}</div>
+                    <div id="expandable-inertial-{{model.name}}-{{link.shortName}}" class="expandedContent">
+                      <div class="property propertyLevel4 darkBg">
+                        <div>Mass</div>
+                        <div class="propertyNumber">{{link.inertial.mass}}</div>
+                      </div>
+                      <div class="property propertyLevel4">
+                        <div>ixx</div>
+                        <div class="propertyNumber">{{link.inertial.ixx}}</div>
+                      </div>
+                      <div class="property propertyLevel4 darkBg">
+                        <div>ixy</div>
+                        <div class="propertyNumber">{{link.inertial.ixy}}</div>
+                      </div>
+                      <div class="property propertyLevel4">
+                        <div>ixz</div>
+                        <div class="propertyNumber">{{link.inertial.ixz}}</div>
+                      </div>
+                      <div class="property propertyLevel4 darkBg">
+                        <div>iyy</div>
+                        <div class="propertyNumber">{{link.inertial.iyy}}</div>
+                      </div>
+                      <div class="property propertyLevel4">
+                        <div>iyz</div>
+                        <div class="propertyNumber">{{link.inertial.iyz}}</div>
+                      </div>
+                      <div class="property propertyLevel4 darkBg">
+                        <div>izz</div>
+                        <div class="propertyNumber">{{link.inertial.izz}}</div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+          <!-- lights -->
           <div ng-repeat="light in lights" id="propertyPanel-{{light.name}}" class="leftPanels propertyPanels ui-overlay-shadow">
             <div class="clickable panelTitle" ng-click="closePanels()">
               <h3>Scene Tree</h3>
               <img src="style/images/close.png">
             </div>
-            <div class="clickable panelSubTitle" ng-click="backToTree()">
+            <div class="clickable panelSubTitle" ng-click="backToTree()" title="{{light.name}}">
               <h4>{{light.name}}</h4>
               <img src="style/images/back.png">
             </div>
@@ -457,7 +490,7 @@
                 <h4>Property</h4>
                 <h4>Value</h4>
               </div>
-              <div class="property">
+              <div class="property propertyLevel1" title="{{light.name}}">
                 <div>Name</div>
                 <div>{{light.name}}</div>
               </div>
@@ -466,29 +499,29 @@
                 Pose
               </div>
               <div id="expandable-pose-{{light.name}}" class="expandedContent">
-                <div class="property expandedSubContent">
+                <div class="property propertyLevel2 darkBg">
                   <div>x</div>
-                  <div>{{light.position.x}}</div>
+                  <div class="propertyNumber">{{light.position.x}}</div>
                 </div>
-                <div class="property expandedSubContent">
+                <div class="property propertyLevel2">
                   <div>y</div>
-                  <div>{{light.position.y}}</div>
+                  <div class="propertyNumber">{{light.position.y}}</div>
                 </div>
-                <div class="property expandedSubContent">
+                <div class="property propertyLevel2 darkBg">
                   <div>z</div>
-                  <div>{{light.position.z}}</div>
+                  <div class="propertyNumber">{{light.position.z}}</div>
                 </div>
-                <div class="property expandedSubContent">
+                <div class="property propertyLevel2">
                   <div>Roll</div>
-                  <div>{{light.orientation.roll}}</div>
+                  <div class="propertyNumber">{{light.orientation.roll}}</div>
                 </div>
-                <div class="property expandedSubContent">
+                <div class="property propertyLevel2 darkBg">
                   <div>Pitch</div>
-                  <div>{{light.orientation.pitch}}</div>
+                  <div class="propertyNumber">{{light.orientation.pitch}}</div>
                 </div>
-                <div class="property expandedSubContent">
+                <div class="property propertyLevel2">
                   <div>Yaw</div>
-                  <div>{{light.orientation.yaw}}</div>
+                  <div class="propertyNumber">{{light.orientation.yaw}}</div>
                 </div>
               </div>
               <div id="expand-diffuse-{{light.name}}" class="clickable expandableProperty" ng-click="expandProperty('diffuse', light.name)">
@@ -499,21 +532,21 @@
                 <div class="colorDisplay" style="background-color: rgb({{light.diffuse.r}},{{light.diffuse.g}},{{light.diffuse.b}})"></div>
               </div>
               <div id="expandable-diffuse-{{light.name}}" class="expandedContent">
-                <div class="property expandedSubContent">
-                  <div class="red">Red</div>
-                  <div>{{light.diffuse.r}}</div>
+                <div class="property propertyLevel2 redBg">
+                  <div>Red</div>
+                  <div class="propertyNumber">{{light.diffuse.r}}</div>
                 </div>
-                <div class="property expandedSubContent">
-                  <div class="green">Green</div>
-                  <div>{{light.diffuse.g}}</div>
+                <div class="property propertyLevel2 greenBg">
+                  <div>Green</div>
+                  <div class="propertyNumber">{{light.diffuse.g}}</div>
                 </div>
-                <div class="property expandedSubContent">
-                  <div class="blue">Blue</div>
-                  <div>{{light.diffuse.b}}</div>
+                <div class="property propertyLevel2 blueBg">
+                  <div>Blue</div>
+                  <div class="propertyNumber">{{light.diffuse.b}}</div>
                 </div>
-                <div class="property expandedSubContent">
+                <div class="property propertyLevel2">
                   <div>Alpha</div>
-                  <div>{{light.diffuse.a}}</div>
+                  <div class="propertyNumber">{{light.diffuse.a}}</div>
                 </div>
               </div>
               <div id="expand-specular-{{light.name}}" class="clickable expandableProperty" ng-click="expandProperty('specular', light.name)">
@@ -524,43 +557,43 @@
                 <div class="colorDisplay" style="background-color: rgb({{light.specular.r}},{{light.specular.g}},{{light.specular.b}})"></div>
               </div>
               <div id="expandable-specular-{{light.name}}" class="expandedContent">
-                <div class="property expandedSubContent">
-                  <div class="red">Red</div>
-                  <div>{{light.specular.r}}</div>
+                <div class="property propertyLevel2 redBg">
+                  <div>Red</div>
+                  <div class="propertyNumber">{{light.specular.r}}</div>
                 </div>
-                <div class="property expandedSubContent">
-                  <div class="green">Green</div>
-                  <div>{{light.specular.g}}</div>
+                <div class="property propertyLevel2 greenBg">
+                  <div>Green</div>
+                  <div class="propertyNumber">{{light.specular.g}}</div>
                 </div>
-                <div class="property expandedSubContent">
-                  <div class="blue">Blue</div>
-                  <div>{{light.specular.b}}</div>
+                <div class="property propertyLevel2 blueBg">
+                  <div>Blue</div>
+                  <div class="propertyNumber">{{light.specular.b}}</div>
                 </div>
-                <div class="property expandedSubContent">
+                <div class="property propertyLevel2">
                   <div>Alpha</div>
-                  <div>{{light.specular.a}}</div>
+                  <div class="propertyNumber">{{light.specular.a}}</div>
                 </div>
               </div>
-              <div class="property">
+              <div class="property propertyLevel1">
                 <div>Range</div>
-                <div>{{light.range}}</div>
+                <div class="propertyNumber">{{light.range}}</div>
               </div>
               <div id="expand-attenuation-{{light.name}}" class="clickable expandableProperty" ng-click="expandProperty('attenuation', light.name)">
                 <img src="style/images/play.png">
                 Attenuation
               </div>
               <div id="expandable-attenuation-{{light.name}}" class="expandedContent">
-                <div class="property expandedSubContent">
+                <div class="property propertyLevel2">
                   <div>Constant</div>
-                  <div>{{light.attenuation.constant}}</div>
+                  <div class="propertyNumber">{{light.attenuation.constant}}</div>
                 </div>
-                <div class="property expandedSubContent">
+                <div class="property propertyLevel2">
                   <div>Linear</div>
-                  <div>{{light.attenuation.linear}}</div>
+                  <div class="propertyNumber">{{light.attenuation.linear}}</div>
                 </div>
-                <div class="property expandedSubContent">
+                <div class="property propertyLevel2">
                   <div>Quadratic</div>
-                  <div>{{light.attenuation.quadratic}}</div>
+                  <div class="propertyNumber">{{light.attenuation.quadratic}}</div>
                 </div>
               </div>
             </div>
