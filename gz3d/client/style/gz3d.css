@@ -248,7 +248,7 @@ body
   clear: both;
   background-color: #2a2a2a;
 }
-.propertyPanelImg img
+.propertyPanelImg > img
 {
   height: 5em;
 }
@@ -257,21 +257,21 @@ body
   text-align: center;
   clear: both;
 }
-.propertyPanelHeader h4
+.propertyPanelHeader > h4
 {
   background-color: #aaaaaa;
   float: left;
   margin: 0;
 }
-.propertyPanelHeader h4:first-child
+.propertyPanelHeader > h4:first-child
 {
   width: 60%;
 }
-.propertyPanelHeader h4:nth-child(2)
+.propertyPanelHeader > h4:nth-child(2)
 {
   width: 40%;
 }
-.property div
+.property > div
 {
   float: left;
   overflow: hidden;
@@ -282,47 +282,47 @@ body
   text-shadow: none;
   font-size: 0.9em;
 }
-.property div:first-child
+.property > div:first-child
 {
   font-weight:bolder;
 }
-.property div:nth-child(2)
+.property > div:nth-child(2)
 {
   width: 40%;
 }
-.propertyLevel2 div
+.propertyLevel2 > div
 {
   font-size: 0.8em;
 }
-.propertyLevel3 div
+.propertyLevel3 > div
 {
   font-size: 0.7em;
 }
-.propertyLevel4 div
+.propertyLevel4 > div
 {
   font-size: 0.65em;
 }
-.propertyLevel1 div:first-child
+.propertyLevel1 > div:first-child
 {
   padding-left: 1.7em;
   width: calc(60% - 1.7em);
 }
-.propertyLevel2 div:first-child
+.propertyLevel2 > div:first-child
 {
   padding-left: 2.8em;
   width: calc(60% - 2.8em);
 }
-.propertyLevel3 div:first-child
+.propertyLevel3 > div:first-child
 {
   padding-left: calc(2.8em + 1.7em);
   width: calc(60% - 2.8em - 1.7em);
 }
-.propertyLevel4 div:first-child
+.propertyLevel4 > div:first-child
 {
   padding-left: calc(2.8em + 3.4em);
   width: calc(60% - 2.8em - 3.4em);
 }
-.propertyToggle img
+.propertyToggle > img
 {
   vertical-align: middle;
   height: 0.8em;
@@ -332,6 +332,19 @@ body
   text-align: right;
   padding-right: 3em;
   width: calc(40% - 3em) !important;
+}
+.propertyNumberEdit > div
+{
+  margin: 0;
+}
+.propertyNumberEdit input
+{
+  margin: 0;
+  padding: 0;
+  border: 0;
+  width: 80%;
+  background-color: #eeeeee;
+  text-align: right;
 }
 .expandableProperty
 {
@@ -363,23 +376,23 @@ body
   width: calc(100% - 3.5em);
   font-size: 0.7em;
 }
-.expandableProperty img
+.expandableProperty > img
 {
   vertical-align: middle;
 }
-.expandableLevel1 img
+.expandableLevel1 > img
 {
   height: 1em;
 }
-.expandableLevel2 img
+.expandableLevel2 > img
 {
   height: 0.8em;
 }
-.expandableLevel3 img
+.expandableLevel3 > img
 {
   height: 0.7em;
 }
-.expandableProperty div
+.expandableProperty > div
 {
   position: relative;
   float: left;
@@ -396,19 +409,19 @@ body
   width: calc(40% - 2em) !important;
   border: 1px solid white;
 }
-.redBg div
+.redBg > div
 {
   background-color: #ffdddd !important;
 }
-.greenBg div
+.greenBg > div
 {
   background-color: #ddffdd !important;
 }
-.blueBg div
+.blueBg > div
 {
   background-color: #ddddff !important;
 }
-.darkBg div
+.darkBg div, .darkBg input
 {
   background-color: #dddddd;
 }

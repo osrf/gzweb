@@ -333,27 +333,39 @@
                 <div id="expandable-pose-{{model.name}}" class="expandedContent">
                   <div class="property propertyLevel3 darkBg">
                     <div>x</div>
-                    <div class="propertyNumber">{{model.position.x}}</div>
+                    <div class="propertyNumberEdit">
+                      <input type="number" ng-model="model.position.x" ng-change="changePose('position', 'x', model.name, model.position.x)" data-role="none"/>
+                    </div>
                   </div>
                   <div class="property propertyLevel3">
                     <div>y</div>
-                    <div class="propertyNumber">{{model.position.y}}</div>
+                    <div class="propertyNumberEdit">
+                      <input type="number" ng-model="model.position.y" ng-change="changePose('position', 'y', model.name, model.position.y)" data-role="none"/>
+                    </div>
                   </div>
                   <div class="property propertyLevel3 darkBg">
                     <div>z</div>
-                    <div class="propertyNumber">{{model.position.z}}</div>
+                    <div class="propertyNumberEdit">
+                      <input type="number" ng-model="model.position.z" ng-change="changePose('position', 'z', model.name, model.position.z)" data-role="none"/>
+                    </div>
                   </div>
                   <div class="property propertyLevel3">
                     <div>Roll</div>
-                    <div class="propertyNumber">{{model.orientation.roll}}</div>
+                    <div class="propertyNumberEdit">
+                      <input type="number" ng-model="model.orientation.roll" ng-change="changePose('orientation', 'x', model.name, model.orientation.roll)" data-role="none"/>
+                    </div>
                   </div>
                   <div class="property propertyLevel3 darkBg">
                     <div>Pitch</div>
-                    <div class="propertyNumber">{{model.orientation.pitch}}</div>
+                    <div class="propertyNumberEdit">
+                      <input type="number" ng-model="model.orientation.pitch" ng-change="changePose('orientation', 'y', model.name, model.orientation.pitch)" data-role="none"/>
+                    </div>
                   </div>
                   <div class="property propertyLevel3">
                     <div>Yaw</div>
-                    <div class="propertyNumber">{{model.orientation.yaw}}</div>
+                    <div class="propertyNumberEdit">
+                      <input type="number" ng-model="model.orientation.yaw" ng-change="changePose('orientation', 'z', model.name, model.orientation.yaw)" data-role="none"/>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -494,6 +506,7 @@
                 <div>Name</div>
                 <div>{{light.name}}</div>
               </div>
+              <!-- light pose -->
               <div id="expand-pose-{{light.name}}" class="clickable expandableProperty" ng-click="expandProperty('pose', light.name)">
                 <img src="style/images/play.png">
                 Pose
@@ -501,27 +514,39 @@
               <div id="expandable-pose-{{light.name}}" class="expandedContent">
                 <div class="property propertyLevel2 darkBg">
                   <div>x</div>
-                  <div class="propertyNumber">{{light.position.x}}</div>
+                  <div class="propertyNumberEdit">
+                    <input type="number" ng-model="light.position.x" ng-change="changePose('position', 'x', light.name, light.position.x)" data-role="none"/>
+                  </div>
                 </div>
                 <div class="property propertyLevel2">
                   <div>y</div>
-                  <div class="propertyNumber">{{light.position.y}}</div>
+                  <div class="propertyNumberEdit">
+                    <input type="number" ng-model="light.position.y" ng-change="changePose('position', 'y', light.name, light.position.y)" data-role="none"/>
+                  </div>
                 </div>
                 <div class="property propertyLevel2 darkBg">
                   <div>z</div>
-                  <div class="propertyNumber">{{light.position.z}}</div>
+                  <div class="propertyNumberEdit">
+                    <input type="number" ng-model="light.position.z" ng-change="changePose('position', 'z', light.name, light.position.z)" data-role="none"/>
+                  </div>
                 </div>
                 <div class="property propertyLevel2">
                   <div>Roll</div>
-                  <div class="propertyNumber">{{light.orientation.roll}}</div>
+                  <div class="propertyNumberEdit">
+                    <input type="number" ng-model="light.orientation.roll" ng-change="changePose('orientation', 'x', light.name, light.orientation.roll)" data-role="none"/>
+                  </div>
                 </div>
                 <div class="property propertyLevel2 darkBg">
                   <div>Pitch</div>
-                  <div class="propertyNumber">{{light.orientation.pitch}}</div>
+                  <div class="propertyNumberEdit">
+                    <input type="number" ng-model="light.orientation.pitch" ng-change="changePose('orientation', 'y', light.name, light.orientation.pitch)" data-role="none"/>
+                  </div>
                 </div>
                 <div class="property propertyLevel2">
                   <div>Yaw</div>
-                  <div class="propertyNumber">{{light.orientation.yaw}}</div>
+                  <div class="propertyNumberEdit">
+                    <input type="number" ng-model="light.orientation.yaw" ng-change="changePose('orientation', 'z', light.name, light.orientation.yaw)" data-role="none"/>
+                  </div>
                 </div>
               </div>
               <div id="expand-diffuse-{{light.name}}" class="clickable expandableProperty" ng-click="expandProperty('diffuse', light.name)">

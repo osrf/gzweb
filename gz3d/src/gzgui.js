@@ -644,6 +644,11 @@ gzangular.controller('treeControl', ['$scope', function($scope)
       }
     }
   };
+
+  $scope.changePose = function(prop1, prop2, name, value)
+  {
+    guiEvents.emit('setPose', prop1, prop2, name, value);
+  };
 }]);
 
 // Insert menu
@@ -1175,6 +1180,34 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
+  guiEvents.on('setPose', function (prop1, prop2, name, value)
+      {
+        var entity = that.scene.getByName(name);
+        if (prop1 === 'orientation')
+        {
+          entity['rotation']['_'+prop2] = value;
+          entity['quaternion'].setFromEuler(entity['rotation']);
+        }
+        else
+        {
+          entity[prop1][prop2] = value;
+        }
+        entity.updateMatrixWorld();
+
+        if (entity.children[0] &&
+           (entity.children[0] instanceof THREE.SpotLight ||
+            entity.children[0] instanceof THREE.DirectionalLight))
+        {
+          var lightObj = entity.children[0];
+          var dir = new THREE.Vector3(0,0,0);
+          dir.copy(entity.direction);
+          entity.localToWorld(dir);
+          lightObj.target.position.copy(dir);
+        }
+
+        that.scene.emitter.emit('poseChanged', entity);
+      }
+  );
 };
 
 /**
@@ -1553,7 +1586,8 @@ GZ3D.Gui.prototype.round = function(stats)
     }
     else
     {
-      stats[key] = parseFloat(Math.round(stats[key] * 1000) / 1000).toFixed(3);
+      stats[key] = Math.round(stats[key] * 1000) / 1000;
+      //stats[key] = parseFloat(Math.round(stats[key] * 1000) / 1000).toFixed(3);
     }
   }
   return stats;
