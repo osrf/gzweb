@@ -41,7 +41,7 @@ body
 {
   width: 0;
   height: 4em;
-  border-left: 2em solid #2a2a2a;
+  border-left: 2em solid;
   border-top: 1em solid transparent;
   border-bottom: 1em solid transparent;
   z-index: 1001;
@@ -75,6 +75,12 @@ body
   left: 0;
   z-index: 1002;
 }
+.panelsGroup
+{
+  height: 100%;
+  position: absolute;
+  top: 0;
+}
 .leftPanels
 {
   display: none;
@@ -85,14 +91,14 @@ body
 .panelContent
 {
   height: calc(100% - 1.8em);
-  overflow-y:auto;
-  overflow-x:hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 .panelSubContent
 {
   height: calc(100% - 1.8em - 1.5em);
-  overflow-y:auto;
-  overflow-x:hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 .panelTitle
 {
@@ -121,6 +127,10 @@ body
 {
   margin: 0.1em;
   float: left;
+  width: 13em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .panelSubTitle img
 {
@@ -135,6 +145,10 @@ body
   padding: 0em;
   padding-left: 1em;
   margin: 0em;
+}
+.clickable:hover
+{
+  cursor: pointer;
 }
 /* main menu*/
 #mainMenu li
@@ -181,8 +195,8 @@ body
 }
 .insertMenuItemLight img
 {
-  height:4em;
-  margin-top:0.6em;
+  height: 4em;
+  margin-top: 0.6em;
 }
 /* world tree */
 .treeItem
@@ -212,6 +226,7 @@ body
   width: 10.5em;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
   float: left;
 }
 .unselectedTreeItem
@@ -221,6 +236,181 @@ body
 .selectedTreeItem
 {
   background-color: #aaaaaa;
+}
+/* property panel */
+.propertyPanels
+{
+  background-color: #eeeeee;
+}
+.propertyPanelImg
+{
+  text-align: center;
+  clear: both;
+  background-color: #2a2a2a;
+}
+.propertyPanelImg img
+{
+  height: 5em;
+}
+.propertyPanelHeader
+{
+  text-align: center;
+  clear: both;
+}
+.propertyPanelHeader h4
+{
+  background-color: #aaaaaa;
+  float: left;
+  margin: 0;
+}
+.propertyPanelHeader h4:first-child
+{
+  width: 60%;
+}
+.propertyPanelHeader h4:nth-child(2)
+{
+  width: 40%;
+}
+.property div
+{
+  float: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  position: relative;
+  color: #000000;
+  text-shadow: none;
+  font-size: 0.9em;
+}
+.property div:first-child
+{
+  font-weight:bolder;
+}
+.property div:nth-child(2)
+{
+  width: 40%;
+}
+.propertyLevel2 div
+{
+  font-size: 0.8em;
+}
+.propertyLevel3 div
+{
+  font-size: 0.7em;
+}
+.propertyLevel4 div
+{
+  font-size: 0.65em;
+}
+.propertyLevel1 div:first-child
+{
+  padding-left: 1.7em;
+  width: calc(60% - 1.7em);
+}
+.propertyLevel2 div:first-child
+{
+  padding-left: 2.8em;
+  width: calc(60% - 2.8em);
+}
+.propertyLevel3 div:first-child
+{
+  padding-left: calc(2.8em + 1.7em);
+  width: calc(60% - 2.8em - 1.7em);
+}
+.propertyLevel4 div:first-child
+{
+  padding-left: calc(2.8em + 3.4em);
+  width: calc(60% - 2.8em - 3.4em);
+}
+.propertyToggle img
+{
+  vertical-align: middle;
+  height: 0.8em;
+}
+.propertyNumber
+{
+  text-align: right;
+  padding-right: 3em;
+  width: calc(40% - 3em) !important;
+}
+.expandableProperty
+{
+  font-weight: bolder;
+  padding-left: 0.2em;
+  float: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+  color: #000000;
+  text-shadow: none;
+  font-size: 0.9em;
+}
+.expandableProperty:hover,
+.expandableProperty:active
+{
+  background-color: #e8e8e8;
+}
+.expandableLevel2
+{
+  padding-left: 1.7em;
+  width: calc(100% - 1.7em);
+  font-size: 0.8em;
+}
+.expandableLevel3
+{
+  padding-left: 3.5em;
+  width: calc(100% - 3.5em);
+  font-size: 0.7em;
+}
+.expandableProperty img
+{
+  vertical-align: middle;
+}
+.expandableLevel1 img
+{
+  height: 1em;
+}
+.expandableLevel2 img
+{
+  height: 0.8em;
+}
+.expandableLevel3 img
+{
+  height: 0.7em;
+}
+.expandableProperty div
+{
+  position: relative;
+  float: left;
+  width: calc(60% - 0.2em);
+}
+.expandedContent
+{
+  display: none;
+}
+.colorDisplay
+{
+  display: inline-block;
+  height: 1em;
+  width: calc(40% - 2em) !important;
+  border: 1px solid white;
+}
+.redBg div
+{
+  background-color: #ffdddd !important;
+}
+.greenBg div
+{
+  background-color: #ddffdd !important;
+}
+.blueBg div
+{
+  background-color: #ddddff !important;
+}
+.darkBg div
+{
+  background-color: #dddddd;
 }
 /* model popup */
 #model-popup
@@ -238,6 +428,10 @@ body
     width: 10.5em;
   }
   .leftPanels ul
+  {
+    width: 8.5em;
+  }
+  .panelSubTitle h4
   {
     width: 8.5em;
   }
@@ -264,8 +458,8 @@ body
   }
   .insertMenuItemLight img
   {
-    height:2.7em;
-    margin-top:0.4em;
+    height: 2.7em;
+    margin-top: 0.4em;
   }
   /* world tree */
   .treeItem
