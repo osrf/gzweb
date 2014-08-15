@@ -110,6 +110,9 @@ then
   ./get_local_models.py $DIR/http/client/assets
   ./webify_models_v2.py $DIR/http/client/assets
 
+  echo "Generating a thumbnail for each model"
+  ./tools/gzthumbnails.sh
+
 else
   echo "Not cloning the model repo"
 fi

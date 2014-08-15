@@ -12,10 +12,6 @@ Dependencies: sudo apt-get install the following:
 
     sudo apt-get install libjansson-dev nodejs npm libboost-dev
 
-Install nodejs modules. From the gzweb root directory:
-
-    npm install
-
 # Build
 
 The first time you build, you'll need to gather all the gazebo models and
@@ -34,6 +30,16 @@ database and any other models in your gazebo paths. For all subsequent builds,
 the `-m` flag will not be needed, i.e.:
 
     ./deploy.sh
+
+Mobile devices: 
+
+If you'll use gzweb on mobile devices, you can create coarse versions of all models, which are lighter to load (50% of original quality). If you've already ran `./deploy.sh -m`, run just:
+
+    ./deploy.sh -c
+
+Or you can run both flags at the same time to create the model database and also generate coarse versions:
+
+    ./deploy.sh -m -c
 
 # Running gzserver, gzweb, and webgl
 
