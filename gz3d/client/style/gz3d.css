@@ -238,15 +238,10 @@ body
   background-color: #aaaaaa;
 }
 /* property panel */
-.propertyPanels
-{
-  background-color: #eeeeee;
-}
 .propertyPanelImg
 {
   text-align: center;
   clear: both;
-  background-color: #2a2a2a;
 }
 .propertyPanelImg img
 {
@@ -278,7 +273,6 @@ body
   text-overflow: ellipsis;
   white-space: nowrap;
   position: relative;
-  color: #000000;
   text-shadow: none;
   font-size: 0.9em;
 }
@@ -342,14 +336,13 @@ body
   text-overflow: ellipsis;
   white-space: nowrap;
   width: 100%;
-  color: #000000;
   text-shadow: none;
   font-size: 0.9em;
 }
 .expandableProperty:hover,
 .expandableProperty:active
 {
-  background-color: #e8e8e8;
+  background-color: #2e2e2e;
 }
 .expandableLevel2
 {
@@ -398,19 +391,19 @@ body
 }
 .redBg div
 {
-  background-color: #ffdddd !important;
+  background-color: #772a2a !important;
 }
 .greenBg div
 {
-  background-color: #ddffdd !important;
+  background-color: #2a772a !important;
 }
 .blueBg div
 {
-  background-color: #ddddff !important;
+  background-color: #2a2a77 !important;
 }
-.darkBg div
+.lightBg div
 {
-  background-color: #dddddd;
+  background-color: #414141;
 }
 /* model popup */
 #model-popup
