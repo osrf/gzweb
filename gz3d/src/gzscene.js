@@ -158,6 +158,7 @@ GZ3D.Scene.prototype.init = function()
 
 GZ3D.Scene.prototype.initScene = function()
 {
+  this.removeAll();
   this.createGrid();
 
   // create a sun light
@@ -592,6 +593,14 @@ GZ3D.Scene.prototype.setPose = function(model, position, orientation)
   model.quaternion.x = orientation.x;
   model.quaternion.y = orientation.y;
   model.quaternion.z = orientation.z;
+};
+
+GZ3D.Scene.prototype.removeAll = function()
+{
+  while(this.scene.children.length > 0)
+  {
+    this.scene.remove(this.scene.children[0]);
+  }
 };
 
 /**

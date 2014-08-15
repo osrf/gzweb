@@ -11,6 +11,10 @@ GZ3D.GZIface = function(scene, gui)
 
   this.init();
   this.visualsToAdd = [];
+  
+  this.numConnectionTrials = 0;
+  this.maxConnectionTrials = 30; // try to connect 30 times
+  this.timeToSleepBtwTrials = 1000; // wait 1 second between connection trials
 };
 
 GZ3D.GZIface.prototype.init = function()
@@ -25,7 +29,7 @@ GZ3D.GZIface.prototype.connect = function()
 {
   // connect to websocket
   this.webSocket = new ROSLIB.Ros({
-    url : 'ws://' + location.hostname + ':7681'
+    url : 'ws://' + location.hostname + ':9876'
   });
 
   var that = this;
@@ -35,13 +39,26 @@ GZ3D.GZIface.prototype.connect = function()
   this.webSocket.on('error', function() {
     that.onError();
   });
+  
+  this.numConnectionTrials++;
 };
 
 GZ3D.GZIface.prototype.onError = function()
 {
-  this.scene.initScene();
-  this.emitter.emit('error');
-  this.gui.guiEvents.emit('notification_popup', 'GzWeb is currently running without a server');
+  // init scene and show popup only for the first connection error
+  if (this.numConnectionTrials === 1)
+  {
+    this.emitter.emit('error');
+  }
+  
+  var that = this;
+  // retry to connect after certain time
+  if (this.numConnectionTrials < this.maxConnectionTrials)
+  {
+    setTimeout(function() {
+      that.connect();
+    }, this.timeToSleepBtwTrials);
+  }
 };
 
 GZ3D.GZIface.prototype.onConnected = function()
@@ -66,6 +83,22 @@ GZ3D.GZIface.prototype.onConnected = function()
   };
 
   setInterval(publishHeartbeat, 5000);
+  
+  var statusTopic = new ROSLIB.Topic({
+    ros: this.webSocket,
+    name: '~/status',
+    messageType : 'status',
+  });
+  
+  var statusUpdate = function(message)
+  {
+    if (message.status === 'error')
+    {
+      that.isConnected = false;
+      this.emitter.emit('gzstatus', 'error');
+    }
+  };
+  statusTopic.subscribe(statusUpdate.bind(this));
 
   var materialTopic = new ROSLIB.Topic({
     ros : this.webSocket,
@@ -76,6 +109,8 @@ GZ3D.GZIface.prototype.onConnected = function()
   var materialUpdate = function(message)
   {
     this.material = message;
+    this.emitter.emit('material', this.material);
+    
   };
   materialTopic.subscribe(materialUpdate.bind(this));
 
