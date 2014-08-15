@@ -132,6 +132,7 @@ GZ3D.GZIface.prototype.onConnected = function()
       this.gui.setModelStats(model, 'update');
     }
 
+    this.gui.setSceneStats(message);
     this.sceneTopic.unsubscribe();
   };
   this.sceneTopic.subscribe(sceneUpdate.bind(this));

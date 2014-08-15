@@ -199,6 +199,26 @@ body
   margin-top: 0.6em;
 }
 /* world tree */
+.expandableTree
+{
+  font-weight: bolder;
+  padding-left: 0.5em;
+  width: calc( 100% - 0.5em);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: none;
+  font-size: 1.2em;
+  background-color: #333333;
+  border-top: 1px solid #222222;
+  border-bottom: 1px solid #222222;
+  line-height: 2em;
+}
+.expandableTree:hover,
+.expandableTree:active
+{
+  background-color: #373737;
+}
 .treeItem
 {
   font-size: 1em;
