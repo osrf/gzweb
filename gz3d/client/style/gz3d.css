@@ -369,11 +369,11 @@ body
 {
   font-weight: bolder;
   padding-left: 0.2em;
+  width: calc(100% - 0.2em);
   float: left;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  width: 100%;
   color: #000000;
   text-shadow: none;
   font-size: 0.9em;
