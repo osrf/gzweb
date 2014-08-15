@@ -8,7 +8,7 @@ OPTIONS:
    -m      Build a local model database. 
            Option "local" to use only local models.
    -c      Create coarse versions of all models in the local database 
-   -t      Generate thumbnails for each model
+   -t      Generate a thumbnail for each model
 EOF
 exit
 }
@@ -139,10 +139,8 @@ fi
 
 if [[ $MODELS ]] || [[ $THUMBNAIL ]]
 then
-
-  echo "Generating a thumbnail for each model"
+  echo "Generating a thumbnail for each model. Make sure gazebo is not running"
   ./tools/gzthumbnails.sh
-
 fi
 
 # build a local model database
