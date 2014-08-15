@@ -6298,7 +6298,7 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
 
           if (mat.texture)
           {
-            for (var i = 0; i < script.uri.length; i++)
+            for (var i = 0; i < script.uri.length; ++i)
             {
               var uriType = script.uri[i].substring(0, script.uri[i]
                       .indexOf('://'));
@@ -6626,7 +6626,7 @@ GZ3D.SdfParser.prototype.spawnModelFromSDF = function(sdfObj)
     sdfObj.model.link = [sdfObj.model.link];
   }
 
-  for (i = 0; i < sdfObj.model.link.length; i++)
+  for (i = 0; i < sdfObj.model.link.length; ++i)
   {
     linkObj = this.createLink(sdfObj.model.link[i]);
     modelObj.add(linkObj);
@@ -6656,7 +6656,7 @@ GZ3D.SdfParser.prototype.createLink = function(link)
       link.visual = [link.visual];
     }
 
-    for (var i = 0; i < link.visual.length; i++)
+    for (var i = 0; i < link.visual.length; ++i)
     {
       visualObj = this.createVisual(link.visual[i]);
       if (visualObj && !visualObj.parent)
@@ -6675,7 +6675,7 @@ GZ3D.SdfParser.prototype.createLink = function(link)
         link.collision.visual = [link.collision.visual];
       }
 
-      for (var j = 0; j < link.collision.visual.length; j++)
+      for (var j = 0; j < link.collision.visual.length; ++j)
       {
         visualObj = this.createVisual(link.collision.visual[j]);
         if (visualObj && !visualObj.parent)
