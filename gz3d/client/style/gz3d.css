@@ -351,11 +351,11 @@ body
 {
   font-weight: bolder;
   padding-left: 0.2em;
+  width: calc(100% - 0.2em);
   float: left;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  width: 100%;
   text-shadow: none;
   font-size: 0.9em;
 }
@@ -509,5 +509,59 @@ body
   .tab:nth-of-type(3)
   {
     top: 9.8em;
+  }
+}
+/* touch devices */
+@media (pointer:coarse)
+{
+  .propertyLevel1 div, .expandableProperty
+  {
+    font-size: 1.2em;
+    line-height: 1.9em;
+  }
+  .propertyLevel2 div, .expandableLevel2
+  {
+    font-size: 1.1em;
+    line-height: 1.8em;
+  }
+  .propertyLevel3 div, .expandableLevel3
+  {
+    font-size: 1.0em;
+    line-height: 1.7em;
+  }
+  .propertyLevel4 div, .expandableLevel4
+  {
+    font-size: 0.9em;
+    line-height: 1.6em;
+  }
+  .propertyLevel1 div:first-child
+  {
+    padding-left: 1.3em;
+    width: calc(60% - 1.3em);
+  }
+  .propertyLevel2 div:first-child
+  {
+    padding-left: 2.4em;
+    width: calc(60% - 2.4em);
+  }
+  .propertyLevel3 div:first-child
+  {
+    padding-left: calc(2.4em + 1.5em);
+    width: calc(60% - 2.4em - 1.5em);
+  }
+  .propertyLevel4 div:first-child
+  {
+    padding-left: calc(2.4em + 3.0em);
+    width: calc(60% - 2.4em - 3.0em);
+  }
+  .expandableLevel2
+  {
+    padding-left: 1.3em;
+    width: calc(100% - 1.3em);
+  }
+  .expandableLevel3
+  {
+    padding-left: 3.0em;
+    width: calc(100% - 3.0em);
   }
 }
