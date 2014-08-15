@@ -555,7 +555,7 @@
                   Diffuse
                 </div>
                 <div class="propertyColorEdit">
-                  <input class="clickable" type="color" ng-model="light.color" ng-change="changeColor('diffuse', light.name, light.color)"/>
+                  <input class="clickable" type="color" ng-model="light.color" ng-change="changeLight('diffuse', light.name, light.color)"/>
                 </div>
               </div>
               <div id="expandable-diffuse-{{light.name}}" class="expandedContent">
@@ -603,7 +603,9 @@
               </div>
               <div class="property propertyLevel1">
                 <div>Range</div>
-                <div class="propertyNumber">{{light.range}}</div>
+                <div class="propertyNumberEdit">
+                  <input type="number" onClick="this.select();" ng-model="light.range" ng-change="changeLight('range', light.name, light.range)" data-role="none"/>
+                </div>
               </div>
               <div id="expand-attenuation-{{light.name}}" class="clickable expandableProperty" ng-click="expandProperty('attenuation', light.name)">
                 <img src="style/images/play.png">

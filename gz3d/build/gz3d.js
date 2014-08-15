@@ -655,9 +655,9 @@ gzangular.controller('treeControl', ['$scope', function($scope)
     guiEvents.emit('setPose', prop1, prop2, name, value);
   };
 
-  $scope.changeColor = function(prop, name, value)
+  $scope.changeLight = function(prop, name, value)
   {
-    guiEvents.emit('setColor', prop, name, value);
+    guiEvents.emit('setLight', prop, name, value);
   };
 }]);
 
@@ -1224,19 +1224,24 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('setColor', function (prop, name, value)
+  guiEvents.on('setLight', function (prop, name, value)
       {
         if (value === undefined)
         {
           return;
         }
 
-        var color = new THREE.Color(value);
-
         var entity = that.scene.getByName(name);
-        entity.children[0].color = color;
+        if (prop === 'diffuse')
+        {
+          entity.children[0].color = new THREE.Color(value);
+        }
+        else if (prop === 'range')
+        {
+          entity.children[0].distance = value;
+        }
 
-        // updating too often, maybe only update when popup is closed
+        // updating color too often, maybe only update when popup is closed
         that.scene.emitter.emit('entityChanged', entity);
       }
   );
@@ -2035,6 +2040,8 @@ GZ3D.GZIface.prototype.onConnected = function()
         g: entity.children[0].color.g,
         b: entity.children[0].color.b
       };
+      entityMsg.range = entity.children[0].distance;
+
       that.lightModifyTopic.publish(entityMsg);
     }
     else

@@ -320,25 +320,28 @@ void GazeboInterface::ProcessMessages()
           lightMsg.set_name(name);
 
           gazebo::math::Vector3 pos(
-            atof(get_value(msg, "msg:position:x").c_str()),
-            atof(get_value(msg, "msg:position:y").c_str()),
-            atof(get_value(msg, "msg:position:z").c_str()));
+              atof(get_value(msg, "msg:position:x").c_str()),
+              atof(get_value(msg, "msg:position:y").c_str()),
+              atof(get_value(msg, "msg:position:z").c_str()));
           gazebo::math::Quaternion quat(
-            atof(get_value(msg, "msg:orientation:w").c_str()),
-            atof(get_value(msg, "msg:orientation:x").c_str()),
-            atof(get_value(msg, "msg:orientation:y").c_str()),
-            atof(get_value(msg, "msg:orientation:z").c_str()));
+              atof(get_value(msg, "msg:orientation:w").c_str()),
+              atof(get_value(msg, "msg:orientation:x").c_str()),
+              atof(get_value(msg, "msg:orientation:y").c_str()),
+              atof(get_value(msg, "msg:orientation:z").c_str()));
           gazebo::math::Pose pose(pos, quat);
           gazebo::msgs::Set(lightMsg.mutable_pose(), pose);
 
-          gazebo::common::Color diffuse(
-            atof(get_value(msg, "msg:diffuse:r").c_str()),
-            atof(get_value(msg, "msg:diffuse:g").c_str()),
-            atof(get_value(msg, "msg:diffuse:b").c_str()), 1);
+          if (createEntity.compare("0") == 0)
+          {
+            gazebo::common::Color diffuse(
+                atof(get_value(msg, "msg:diffuse:r").c_str()),
+                atof(get_value(msg, "msg:diffuse:g").c_str()),
+                atof(get_value(msg, "msg:diffuse:b").c_str()), 1);
+            gazebo::msgs::Set(lightMsg.mutable_diffuse(), diffuse);
 
-          gazebo::msgs::Set(lightMsg.mutable_diffuse(), diffuse);
-
-          if (createEntity.compare("1") == 0)
+            lightMsg.set_range(atof(get_value(msg, "msg:range").c_str()));
+          }
+          else
           {
             if (type.compare("pointlight") == 0)
             {
