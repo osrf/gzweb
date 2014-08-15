@@ -1248,11 +1248,9 @@ var sceneStats = {};
  */
 GZ3D.Gui.prototype.setSceneStats = function(stats)
 {
-  var formatted = {};
-  formatted['ambient'] = stats.ambient;
-  formatted['background'] = stats.background;
-
-  formatted = this.formatStats(formatted);
+  var formatted = this.formatStats({
+      ambient: stats.ambient,
+      background: stats.background});
 
   sceneStats['ambient'] = formatted.ambient;
   sceneStats['background'] = formatted.background;
