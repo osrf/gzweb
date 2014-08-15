@@ -42,15 +42,15 @@ struct PointCloud
   std::vector<Point>  pts;
 
   // Must return the number of data points
-  inline long unsigned int kdtree_get_point_count() const
+  inline size_t kdtree_get_point_count() const
   {
     return pts.size();
   }
 
   // Returns the distance between the vector "p1[0:size-1]" and the data point
   // with index "idx_p2" stored in the class:
-  inline T kdtree_distance(const T *p1, const long unsigned int idx_p2,
-      long unsigned int size) const
+  inline T kdtree_distance(const T *p1, const size_t idx_p2,
+      size_t size) const
   {
     const T d0=p1[0]-pts[idx_p2].x;
     const T d1=p1[1]-pts[idx_p2].y;
@@ -61,7 +61,7 @@ struct PointCloud
   // Returns the dim'th component of the idx'th point in the class:
   // Since this is inlined and the "dim" argument is typically an immediate
   // value, the "if/else's" are actually solved at compile time.
-  inline T kdtree_get_pt(const long unsigned int idx, int dim) const
+  inline T kdtree_get_pt(const size_t idx, int dim) const
   {
     if (dim==0) return pts[idx].x;
     else if (dim==1) return pts[idx].y;
@@ -108,7 +108,7 @@ void ExportTextureSource(const gazebo::common::SubMesh *_outSubMesh,
   PointCloud<double> cloud;
   cloud.pts.resize(inCount);
   gazebo::math::Vector3 inVertex;
-  for (long unsigned int i = 0; i < inCount; ++i)
+  for (size_t i = 0; i < inCount; ++i)
   {
     inVertex = _inSubMesh->GetVertex(i);
     cloud.pts[i].x = inVertex.x;
@@ -129,8 +129,8 @@ void ExportTextureSource(const gazebo::common::SubMesh *_outSubMesh,
 
   // For each vertex of each triangle
   unsigned int outTriIndexCount = _outSubMesh->GetIndexCount();
-  const long unsigned int num_results = 30;
-  std::vector<long unsigned int> result_index(num_results);
+  const size_t num_results = 30;
+  std::vector<size_t> result_index(num_results);
   std::vector<double> out_dist_sqr(num_results);
   static const int offset[] = {1,2,-1,1,-2,-1};
   for (int i = 0; i < outTriIndexCount; ++i)
@@ -143,7 +143,7 @@ void ExportTextureSource(const gazebo::common::SubMesh *_outSubMesh,
     cloudIndex.knnSearch(&query_pt[0], num_results, &result_index[0],
         &out_dist_sqr[0]);
 
-    std::vector<long unsigned int> closestIndices;
+    std::vector<size_t> closestIndices;
     double closestDistance = 1000;
     for (int j = 0; j < num_results; ++j)
     {
@@ -181,7 +181,7 @@ void ExportTextureSource(const gazebo::common::SubMesh *_outSubMesh,
     gazebo::math::Vector3 outDir_2 = (outVertex_2-outVertex).Normalize();
 
     // Initialize closestVertex
-    long unsigned int closestIndex = closestIndices[0];
+    size_t closestIndex = closestIndices[0];
     gazebo::math::Vector2d
         closestOffset(closestIndex+offset[(closestIndex % 3)*2],
                       closestIndex+offset[(closestIndex % 3)*2+1]);
@@ -216,7 +216,7 @@ void ExportTextureSource(const gazebo::common::SubMesh *_outSubMesh,
     for (int k = 1; k < closestIndices.size(); ++k)
     {
       // Current vertex
-      long unsigned int currentIndex = closestIndices[k];
+      size_t currentIndex = closestIndices[k];
       gazebo::math::Vector2d
           currentOffset(currentIndex+offset[(currentIndex % 3)*2],
                         currentIndex+offset[(currentIndex % 3)*2+1]);
