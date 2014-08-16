@@ -2,7 +2,7 @@
 
 Install gazebo or drcsim if you haven't done so already.
 
-http://gazebosim.org/wiki/Install
+http://gazebosim.org/tutorials?tut=install&cat=get_started
 
 Dependencies: sudo apt-get install the following:
 
