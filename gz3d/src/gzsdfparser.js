@@ -1,7 +1,14 @@
+/**
+ * SDF parser constructor initializes SDF parser with the given parameters 
+ * and defines a DOM parser function to parse SDF XML files
+ * @param {object} scene - the gz3d scene object
+ * @param {object} gui - the gz3d gui object
+ * @param {object} gziface - the gz3d gziface object
+ */
 GZ3D.SdfParser = function(scene, gui, gziface)
 {
   // set the sdf version
-  this.SDF_VERSION = 1.40;
+  this.SDF_VERSION = 1.5;
   this.MATERIAL_ROOT = 'assets/';
 
   // set the xml parser function
@@ -21,6 +28,9 @@ GZ3D.SdfParser = function(scene, gui, gziface)
 
 };
 
+/**
+ * Initializes SDF parser by connecting relevant events from gziface
+ */
 GZ3D.SdfParser.prototype.init = function()
 {
   var that = this;
@@ -45,6 +55,13 @@ GZ3D.SdfParser.prototype.init = function()
   });
 };
 
+/**
+ * Event callback function for gziface connection error which occurs
+ * when gziface cannot connect to gzbridge websocket
+ * this is due to 2 reasons:
+ * 1 - gzbridge websocket might not be run yet
+ * 2 - gzbridge websocket is trying to connect to gzserver which is not running currenly
+ */
 GZ3D.SdfParser.prototype.onConnectionError = function()
 {
   this.scene.initScene();
@@ -58,6 +75,12 @@ GZ3D.SdfParser.prototype.onConnectionError = function()
   this.gui.emitter.on('entityCreated', entityCreated);
 };
 
+/**
+ * Parses string which denotes the color
+ * @param {string} colorStr - string which denotes the color where every value
+ * should be separated with single white space
+ * @returns {object} color - color object having r,g,b and alpha values
+ */
 GZ3D.SdfParser.prototype.parseColor = function(colorStr)
 {
   var color = {};
@@ -71,6 +94,12 @@ GZ3D.SdfParser.prototype.parseColor = function(colorStr)
   return color;
 };
 
+/**
+ * Parses string which is a 3D vector
+ * @param {string} vectorStr - string which denotes the vector where every value
+ * should be separated with single white space
+ * @returns {object} vector3D - vector having x, y, z values
+ */
 GZ3D.SdfParser.prototype.parse3DVector = function(vectorStr)
 {
   var vector3D = {};
@@ -81,6 +110,14 @@ GZ3D.SdfParser.prototype.parse3DVector = function(vectorStr)
   return vector3D;
 };
 
+/**
+ * Creates THREE light object according to properties of sdf object 
+ * which is parsed from sdf model of the light
+ * @param {object} sdfObj - object which is parsed from the sdf string
+ * @returns {THREE.Light} lightObj - THREE light object created
+ * according to given properties. The type of light object is determined
+ * according to light type
+ */
 GZ3D.SdfParser.prototype.spawnLightFromSDF = function(sdfObj)
 {
   var light = sdfObj.light;
@@ -142,10 +179,17 @@ GZ3D.SdfParser.prototype.spawnLightFromSDF = function(sdfObj)
   lightObj.shadowDarkness = 0.3;
   lightObj.name = light['@name'];
 
-  //  this.scene.add(lightObj);
   return lightObj;
 };
 
+/**
+ * Parses a string which is a 3D vector
+ * @param {string} poseStr - string which denotes the pose of the object
+ * where every value should be separated with single white space and first three denotes
+ * x,y,z and values of the pose, and following three denotes euler rotation around x,y,z
+ * @returns {object} pose - pose object having position (x,y,z)(THREE.Vector3)
+ * and orientation (THREE.Quaternion) properties
+ */
 GZ3D.SdfParser.prototype.parsePose = function(poseStr)
 {
   var values = poseStr.split(' ');
@@ -168,6 +212,13 @@ GZ3D.SdfParser.prototype.parsePose = function(poseStr)
 
 };
 
+/**
+ * Parses a string which is a 3D vector
+ * @param {string} scaleStr - string which denotes scaling in x,y,z
+ * where every value should be separated with single white space
+ * @returns {THREE.Vector3} scale - THREE Vector3 object 
+ * which denotes scaling of an object in x,y,z
+ */
 GZ3D.SdfParser.prototype.parseScale = function(scaleStr)
 {
   var values = scaleStr.split(' ');
@@ -176,6 +227,14 @@ GZ3D.SdfParser.prototype.parseScale = function(scaleStr)
   return scale;
 };
 
+/**
+ * Parses SDF material element which is going to be used by THREE library
+ * It matches material scripts with the material objects which are
+ * already parsed by gzbridge and saved by SDFParser
+ * @param {object} material - SDF material object
+ * @returns {object} material - material object which has the followings:
+ * texture, normalMap, ambient, diffuse, specular, opacity
+ */
 GZ3D.SdfParser.prototype.createMaterial = function(material)
 {
   var textureUri, texture, mat;
@@ -283,10 +342,17 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
 
 };
 
-GZ3D.SdfParser.prototype.parseSize = function(size)
+/**
+ * Parses a string which is a size of an object
+ * @param {string} sizeStr - string which denotes size in x,y,z
+ * where every value should be separated with single white space
+ * @returns {object} size - size object which denotes 
+ * size of an object in x,y,z
+ */
+GZ3D.SdfParser.prototype.parseSize = function(sizeStr)
 {
   var sizeObj;
-  var values = size.split(' ');
+  var values = sizeStr.split(' ');
   var x = parseFloat(values[0]);
   var y = parseFloat(values[1]);
   var z = parseFloat(values[2]);
@@ -299,6 +365,17 @@ GZ3D.SdfParser.prototype.parseSize = function(size)
   return sizeObj;
 };
 
+/**
+ * Parses SDF geometry element and creates corresponding mesh,
+ * when it creates the THREE.Mesh object it directly add it to the parent
+ * object.
+ * @param {object} geom - SDF geometry object which determines the geometry
+ *  of the object and can have following properties: box, cylinder, sphere,
+ *   plane, mesh
+ * @param {object} mat - SDF material object which is going to be parsed 
+ * by createMaterial function
+ * @param {object} parent - parent 3D object
+ */
 GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
 {
   var that = this;
@@ -447,9 +524,15 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
       }
     }
   }
-
 };
 
+/**
+ * Parses SDF visual element and creates THREE 3D object by parsing 
+ * geometry element using createGeom function
+ * @param {object} visual - SDF visual element
+ * @returns {THREE.Object3D} visualObj - 3D object which is created
+ * according to SDF visual element. 
+ */
 GZ3D.SdfParser.prototype.createVisual = function(visual)
 {
   //TODO: handle these node values
@@ -475,6 +558,12 @@ GZ3D.SdfParser.prototype.createVisual = function(visual)
 
 };
 
+/**
+ * Parses SDF XML string or SDF XML DOM object
+ * @param {object} sdf - It is either SDF XML string or SDF XML DOM object
+ * @returns {THREE.Object3D} object - 3D object which is created from the
+ * given SDF.
+ */
 GZ3D.SdfParser.prototype.spawnFromSDF = function(sdf)
 {
   //parse sdfXML
@@ -504,12 +593,24 @@ GZ3D.SdfParser.prototype.spawnFromSDF = function(sdf)
   }
 };
 
+/**
+ * Loads SDF file according to given model name
+ * @param {string} modelName - name of the model
+ * @returns {THREE.Object3D} modelObject - 3D object which is created
+ * according to SDF model. 
+ */
 GZ3D.SdfParser.prototype.loadSDF = function(modelName)
 {
   var sdf = this.loadModel(modelName);
   return this.spawnFromSDF(sdf);
 };
 
+/**
+ * Creates 3D object from parsed model SDF
+ * @param {object} sdfObj - parsed SDF object
+ * @returns {THREE.Object3D} modelObject - 3D object which is created
+ * according to SDF model object. 
+ */
 GZ3D.SdfParser.prototype.spawnModelFromSDF = function(sdfObj)
 {
   // create the model
@@ -546,6 +647,13 @@ GZ3D.SdfParser.prototype.spawnModelFromSDF = function(sdfObj)
 
 };
 
+/**
+ * Creates a link 3D object of the model. A model consists of links
+ * these links are 3D objects. The function creates only visual elements
+ * of the link by createLink function
+ * @param {object} link - parsed SDF link object
+ * @returns {THREE.Object3D} linkObject - 3D link object
+ */
 GZ3D.SdfParser.prototype.createLink = function(link)
 {
   var linkPose, visualObj;
@@ -599,6 +707,13 @@ GZ3D.SdfParser.prototype.createLink = function(link)
   return linkObj;
 };
 
+/**
+ * Creates 3D object according to model name and type of the model and add
+ * the created object to the scene.
+ * @param {THREE.Object3D} model - model object which will be added to scene
+ * @param {string} type - type of the model which can be followings: box,
+ * sphere, cylinder, spotlight, directionallight, pointlight
+ */
 GZ3D.SdfParser.prototype.addModelByType = function(model, type)
 {
   var sdf, translation, euler;
@@ -657,6 +772,17 @@ GZ3D.SdfParser.prototype.addModelByType = function(model, type)
   this.scene.add(modelObj);
 };
 
+/**
+ * Creates SDF string for simple shapes: box, cylinder, sphere.
+ * @param {string} type - type of the model which can be followings: box,
+ * sphere, cylinder
+ * @param {THREE.Vector3} translation - denotes the x,y,z position
+ * of the object
+ * @param {THREE.Euler} euler - denotes the euler rotation of the object
+ * @param {string} geomSDF - geometry element string of 3D object which is
+ * already created according to type of the object
+ * @returns {string} sdf - SDF string of the simple shape
+ */
 GZ3D.SdfParser.prototype.createSimpleShapeSDF = function(type, translation,
         euler, geomSDF)
   {
@@ -677,6 +803,13 @@ GZ3D.SdfParser.prototype.createSimpleShapeSDF = function(type, translation,
   return sdf;
 };
 
+/**
+ * Creates SDF string of box geometry element
+ * @param {THREE.Vector3} translation - the x,y,z position of
+ * the box object
+ * @param {THREE.Euler} euler - the euler rotation of the box object
+ * @returns {string} geomSDF - geometry SDF string of the box
+ */
 GZ3D.SdfParser.prototype.createBoxSDF = function(translation, euler)
 {
   var geomSDF = '<box>' + '<size>1.0 1.0 1.0</size>' + '</box>';
@@ -684,6 +817,13 @@ GZ3D.SdfParser.prototype.createBoxSDF = function(translation, euler)
   return this.createSimpleShapeSDF('box', translation, euler, geomSDF);
 };
 
+/**
+ * Creates SDF string of sphere geometry element
+ * @param {THREE.Vector3} translation - the x,y,z position of
+ * the box object
+ * @param {THREE.Euler} euler - the euler rotation of the box object
+ * @returns {string} geomSDF - geometry SDF string of the sphere
+ */
 GZ3D.SdfParser.prototype.createSphereSDF = function(translation, euler)
 {
   var geomSDF = '<sphere>' + '<radius>0.5</radius>' + '</sphere>';
@@ -691,6 +831,13 @@ GZ3D.SdfParser.prototype.createSphereSDF = function(translation, euler)
   return this.createSimpleShapeSDF('sphere', translation, euler, geomSDF);
 };
 
+/**
+ * Creates SDF string of cylinder geometry element
+ * @param {THREE.Vector3} translation - the x,y,z position of
+ * the box object
+ * @param {THREE.Euler} euler - the euler rotation of the cylinder object
+ * @returns {string} geomSDF - geometry SDF string of the cylinder
+ */
 GZ3D.SdfParser.prototype.createCylinderSDF = function(translation, euler)
 {
   var geomSDF = '<cylinder>' + '<radius>0.5</radius>' + '<length>1.0</length>'
@@ -699,6 +846,12 @@ GZ3D.SdfParser.prototype.createCylinderSDF = function(translation, euler)
   return this.createSimpleShapeSDF('cylinder', translation, euler, geomSDF);
 };
 
+/**
+ * Loads SDF of the model. It first constructs the url of the model
+ * according to modelname
+ * @param {string} modelName - name of the model
+ * @returns {XMLDocument} modelDOM - SDF DOM object of the loaded model
+ */
 GZ3D.SdfParser.prototype.loadModel = function(modelName)
 {
   var modelFile = this.MATERIAL_ROOT + modelName + '/model.sdf';
