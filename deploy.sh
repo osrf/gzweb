@@ -66,12 +66,28 @@ rm -rf build
 mkdir build
 cd build
 
+
+# Run cmake and check for the exit code
 cmake ..
+
+RETVAL=$?
+if [ $RETVAL -ne 0 ]; then
+  echo There are cmake errors, exiting.
+  exit 1
+fi
+
+# continue building if cmake is happy
 make -j 8
 
 cd ../gzbridge
 $DIR/node_modules/.bin/node-gyp configure
 $DIR/node_modules/.bin/node-gyp build -d
+
+RETVAL=$?
+if [ $RETVAL -ne 0 ]; then
+  echo There are node-gyp build errors, exiting.
+  exit 1
+fi
 
 cd $DIR
 
@@ -81,7 +97,7 @@ then
   # Temporal directory for the repository
     TMP_DIR=`mktemp -d`
     cd $TMP_DIR
-  
+
   # If no arg given then download from gazebo_models repo
   if [[ -z $LOCAL ]]
   then
@@ -109,6 +125,9 @@ then
 
   ./get_local_models.py $DIR/http/client/assets
   ./webify_models_v2.py $DIR/http/client/assets
+
+  echo "Generating a thumbnail for each model"
+  ./tools/gzthumbnails.sh
 
 else
   echo "Not cloning the model repo"

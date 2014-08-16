@@ -22,6 +22,10 @@ var isTallScreen = function()
     {
       return $(window).height() / emUnits(1) > 35;
     };
+var lastOpenMenu = {mainMenu: 'mainMenu', insertMenu: 'insertMenu',
+    treeMenu: 'treeMenu'};
+
+var tabColors = {selected: 'rgb(34, 170, 221)', unselected: 'rgb(42, 42, 42)'};
 
 var modelList =
   [
@@ -187,10 +191,11 @@ $(function()
 
   $( '#clock-touch' ).popup('option', 'arrow', 't');
   $('#notification-popup-screen').remove();
+  $('.tab').css('border-left-color', tabColors.unselected);
 
   if (isWideScreen())
   {
-    guiEvents.emit('openTab','mainMenu');
+    guiEvents.emit('openTab', 'mainMenu', 'mainMenu');
   }
 
   if (isTallScreen())
@@ -368,27 +373,18 @@ $(function()
         });
   }
 
-  var lastOpenMenu = {insertMenu: 'insertMenu', treeMenu: 'treeMenu'};
   $('.tab').click(function()
       {
         var idTab = $(this).attr('id');
         var idMenu = idTab.substring(0,idTab.indexOf('Tab'));
 
-        if($('#'+idMenu).is(':visible'))
+        if($('#'+idTab).css('border-left-color') === tabColors.unselected)
         {
-          lastOpenMenu[idMenu] = idMenu;
-          guiEvents.emit('closeTabs', true);
-        }
-        else if ($('[id^="'+idMenu+'-"]').is(':visible'))
-        {
-          var id = $('[id^="'+idMenu+'-"]:visible').attr('id');
-          lastOpenMenu[idMenu] = id;
-          guiEvents.emit('closeTabs', true);
+          guiEvents.emit('openTab', lastOpenMenu[idMenu], idMenu);
         }
         else
         {
-          var menu = lastOpenMenu[idMenu] ? lastOpenMenu[idMenu] : idMenu;
-          guiEvents.emit('openTab', menu);
+          guiEvents.emit('closeTabs', true);
         }
       });
 
@@ -397,11 +393,11 @@ $(function()
         guiEvents.emit('closeTabs', true);
       });
 
-  // Only for insert for now
   $('.panelSubTitle').click(function()
       {
-        $('.insertCategory').hide();
-        $('#insertMenu').show();
+        var id = $('.leftPanels:visible').attr('id');
+        id = id.substring(0,id.indexOf('-'));
+        guiEvents.emit('openTab', id, id);
       });
 
   $('#view-mode').click(function()
@@ -518,17 +514,7 @@ $(function()
 
   $(window).resize(function()
   {
-    if ($('.leftPanels').is(':visible'))
-    {
-      if (isWideScreen())
-      {
-        $('.tab').css('left', '15em');
-      }
-      else
-      {
-        $('.tab').css('left', '10.5em');
-      }
-    }
+    guiEvents.emit('resizePanel');
   });
 });
 
@@ -592,8 +578,6 @@ gzangular.directive('ngRightClick', function($parse)
 
 gzangular.controller('treeControl', ['$scope', function($scope)
 {
-  $scope.models = modelStats;
-
   $scope.updateStats = function()
   {
     $scope.models = modelStats;
@@ -607,6 +591,7 @@ gzangular.controller('treeControl', ['$scope', function($scope)
   $scope.selectEntity = function (name)
   {
     $('#model-popup').popup('close');
+    guiEvents.emit('openTab', 'propertyPanel-'+name, 'treeMenu');
     guiEvents.emit('selectEntity', name);
   };
 
@@ -614,6 +599,61 @@ gzangular.controller('treeControl', ['$scope', function($scope)
   {
     $('#model-popup').popup('close');
     guiEvents.emit('openEntityPopup', event, name);
+  };
+
+  $scope.closePanels = function ()
+  {
+    guiEvents.emit('closeTabs', true);
+  };
+
+  $scope.backToTree = function ()
+  {
+    guiEvents.emit('openTab', 'treeMenu', 'treeMenu');
+  };
+
+  $scope.expandProperty = function (prop, modelName, linkShortName, linkName)
+  {
+    var idContent = 'expandable-' + prop + '-' + modelName;
+    var idHeader = 'expand-' + prop + '-' + modelName;
+
+    var idContentOthers, idHeaderOthers;
+
+    if (linkShortName)
+    {
+      idContentOthers = idContent;
+      idHeaderOthers = idHeader;
+      idContent = idContent + '-' + linkShortName;
+      idHeader = idHeader + '-' + linkShortName;
+    }
+
+    if ($('#' + idContent).is(':visible'))
+    {
+      $('#' + idContent).hide();
+      $('#' + idHeader+' img').css('transform','rotate(0deg)')
+                              .css('-webkit-transform','rotate(0deg)')
+                              .css('-ms-transform','rotate(0deg)');
+    }
+    else
+    {
+      if (linkShortName && prop === 'link')
+      {
+        $('[id^="' + idContentOthers + '-"]').hide();
+        $('[id^="' + idHeaderOthers + '-"] img')
+            .css('transform','rotate(0deg)')
+            .css('-webkit-transform','rotate(0deg)')
+            .css('-ms-transform','rotate(0deg)');
+      }
+
+      $('#' + idContent).show();
+      $('#' + idHeader+' img').css('transform','rotate(90deg)')
+                              .css('-webkit-transform','rotate(90deg)')
+                              .css('-ms-transform','rotate(90deg)');
+
+      if (prop === 'pose')
+      {
+        guiEvents.emit('setPoseStats', modelName, linkName);
+      }
+    }
   };
 }]);
 
@@ -624,9 +664,8 @@ gzangular.controller('insertControl', ['$scope', function($scope)
 
   $scope.openCategory = function(category)
   {
-    $('#insertMenu').hide();
     var categoryID = 'insertMenu-'+category;
-    $('#' + categoryID).show();
+    guiEvents.emit('openTab', categoryID, 'insertMenu');
   };
 
   $scope.spawnEntity = function(path)
@@ -863,12 +902,10 @@ GZ3D.Gui.prototype.init = function()
                 }
                 else if (type === 'transparent')
                 {
-                  that.scene.selectEntity(entity);
                   guiEvents.emit('set_view_as','transparent');
                 }
                 else if (type === 'wireframe')
                 {
-                  that.scene.selectEntity(entity);
                   guiEvents.emit('set_view_as','wireframe');
                 }
                 else if (type === 'joints')
@@ -955,7 +992,6 @@ GZ3D.Gui.prototype.init = function()
   guiEvents.on('set_view_as', function (viewAs)
       {
         that.scene.setViewAs(that.scene.selectedEntity, viewAs);
-        that.scene.selectEntity(null);
       }
   );
 
@@ -986,22 +1022,36 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('openTab', function (id)
+  guiEvents.on('openTab', function (id, parentId)
       {
+        lastOpenMenu[parentId] = id;
+
         $('.leftPanels').hide();
         $('#'+id).show();
 
-        if (isWideScreen())
+        $('.tab').css('border-left-color', tabColors.unselected);
+        $('#'+parentId+'Tab').css('border-left-color', tabColors.selected);
+
+        if (id.indexOf('propertyPanel-') >= 0)
         {
-          $('.tab').css('left', '15em');
-        }
-        else
-        {
-          $('.tab').css('left', '10.5em');
+          var entityName = id.substring(id.indexOf('-')+1);
+          var object = that.scene.getByName(entityName);
+
+          var stats = {};
+          stats.name = entityName;
+
+          stats.pose = {};
+          stats.pose.position = {x: object.position.x,
+                                 y: object.position.y,
+                                 z: object.position.z};
+
+          stats.pose.orientation = {x: object.quaternion._x,
+                                    y: object.quaternion._y,
+                                    z: object.quaternion._z,
+                                    w: object.quaternion._w};
         }
 
-        $('.tab').css('border-left', '2em solid #2a2a2a');
-        $('#'+id+'Tab').css('border-left', '2em solid #22aadd');
+        guiEvents.emit('resizePanel');
       }
   );
 
@@ -1012,23 +1062,23 @@ GZ3D.Gui.prototype.init = function()
         {
           $('.leftPanels').hide();
           $('.tab').css('left', '0em');
-          $('.tab').css('border-left', '2em solid #2a2a2a');
+          $('.tab').css('border-left-color', tabColors.unselected);
         }
       }
   );
 
   guiEvents.on('setTreeSelected', function (object)
       {
-        if (isWideScreen() && this.openTreeWhenSelected)
-        {
-          guiEvents.emit('openTab', 'treeMenu');
-        }
         for (var i = 0; i < modelStats.length; ++i)
         {
           if (modelStats[i].name === object)
           {
             $('#modelsTree').collapsible({collapsed: false});
             modelStats[i].selected = 'selectedTreeItem';
+            if (this.openTreeWhenSelected)
+            {
+              guiEvents.emit('openTab', 'propertyPanel-'+object, 'treeMenu');
+            }
           }
           else
           {
@@ -1041,6 +1091,10 @@ GZ3D.Gui.prototype.init = function()
           {
             $('#lightsTree').collapsible({collapsed: false});
             lightStats[i].selected = 'selectedTreeItem';
+            if (this.openTreeWhenSelected)
+            {
+              guiEvents.emit('openTab', 'propertyPanel-'+object, 'treeMenu');
+            }
           }
           else
           {
@@ -1081,6 +1135,68 @@ GZ3D.Gui.prototype.init = function()
         }
       }
   );
+
+  guiEvents.on('setPoseStats', function (modelName, linkName)
+      {
+        var object;
+        if (linkName === undefined)
+        {
+          object = that.scene.getByName(modelName);
+        }
+        else
+        {
+          object = that.scene.getByName(linkName);
+        }
+
+        var stats = {};
+        stats.name = object.name;
+        stats.pose = {};
+        stats.pose.position = {x: object.position.x,
+                               y: object.position.y,
+                               z: object.position.z};
+        stats.pose.orientation = {x: object.quaternion._x,
+                                  y: object.quaternion._y,
+                                  z: object.quaternion._z,
+                                  w: object.quaternion._w};
+
+        if (object.children[0] instanceof THREE.Light)
+        {
+          that.setLightStats(stats, 'update');
+        }
+        else
+        {
+          that.setModelStats(stats, 'update');
+        }
+      }
+  );
+
+  guiEvents.on('resizePanel', function ()
+      {
+        if ($('.leftPanels').is(':visible'))
+        {
+          if (isWideScreen())
+          {
+            $('.tab').css('left', '15em');
+          }
+          else
+          {
+            $('.tab').css('left', '10.5em');
+          }
+        }
+
+        if ($('.propertyPanels').is(':visible'))
+        {
+          var maxWidth = $(window).width();
+          if (isWideScreen())
+          {
+            maxWidth = emUnits(15);
+          }
+
+          $('.propertyPanels').css('width', maxWidth);
+        }
+      }
+  );
+
 };
 
 /**
@@ -1128,37 +1244,108 @@ var modelStats = [];
  */
 GZ3D.Gui.prototype.setModelStats = function(stats, action)
 {
-  var name = stats.name;
+  var modelName = stats.name;
+  var linkShortName;
+
+  if (stats.name.indexOf('::') >= 0)
+  {
+    modelName = stats.name.substring(0, stats.name.indexOf('::'));
+    linkShortName = stats.name.substring(stats.name.lastIndexOf('::')+2);
+  }
 
   if (action === 'update')
   {
-    var thumbnail = this.findModelThumbnail(name);
-
     var model = $.grep(modelStats, function(e)
         {
-          return e.name === name;
+          return e.name === modelName;
         });
 
+    var formatted;
+
+    // New model
     if (model.length === 0)
     {
+      var thumbnail = this.findModelThumbnail(modelName);
+
+      formatted = this.formatStats(stats);
+
       modelStats.push(
           {
-            name: name,
+            name: modelName,
             thumbnail: thumbnail,
-            selected: 'unselectedTreeItem'
+            selected: 'unselectedTreeItem',
+            is_static: this.trueOrFalse(stats.is_static),
+            position: formatted.pose.position,
+            orientation: formatted.pose.orientation,
+            links: []
           });
+
+      // links
+      var newModel = modelStats[modelStats.length-1];
+
+      for (var l = 0; l < stats.link.length; ++l)
+      {
+        var shortName = stats.link[l].name.substring(
+            stats.link[l].name.lastIndexOf('::')+2);
+
+        formatted = this.formatStats(stats.link[l]);
+
+        newModel.links.push(
+            {
+              name: stats.link[l].name,
+              shortName: shortName,
+              self_collide: this.trueOrFalse(stats.link[l].self_collide),
+              gravity: this.trueOrFalse(stats.link[l].gravity),
+              kinematic: this.trueOrFalse(stats.link[l].kinematic),
+              canonical: this.trueOrFalse(stats.link[l].canonical),
+              position: formatted.pose.position,
+              orientation: formatted.pose.orientation,
+              inertial: formatted.inertial
+            });
+      }
+    }
+    // Update existing model's pose
+    else
+    {
+      if ((linkShortName &&
+          !$('#expandable-pose-'+modelName+'-'+linkShortName).is(':visible'))||
+          (!linkShortName &&
+          !$('#expandable-pose-'+modelName).is(':visible')))
+      {
+        return;
+      }
+
+      if (stats.position)
+      {
+        stats.pose = {};
+        stats.pose.position = stats.position;
+        stats.pose.orientation = stats.orientation;
+      }
+
+      if (stats.pose)
+      {
+        formatted = this.formatStats(stats);
+
+        if (linkShortName === undefined)
+        {
+          model[0].position = formatted.pose.position;
+          model[0].orientation = formatted.pose.orientation;
+        }
+        else
+        {
+          var link = $.grep(model[0].links, function(e)
+              {
+                return e.shortName === linkShortName;
+              });
+          link[0].position = formatted.pose.position;
+          link[0].orientation = formatted.pose.orientation;
+        }
+      }
     }
   }
   else if (action === 'delete')
   {
-    for (var i = 0; i < modelStats.length; ++i)
-    {
-      if (modelStats[i].name === name)
-      {
-        modelStats.splice(i, 1);
-        break;
-      }
-    }
+    this.deleteFromStats('model', modelName);
   }
 
   this.updateStats();
@@ -1176,46 +1363,64 @@ GZ3D.Gui.prototype.setLightStats = function(stats, action)
 
   if (action === 'update')
   {
-    var type = stats.type;
-
-    var thumbnail;
-    switch(type)
-    {
-      case 2:
-          thumbnail = 'style/images/spotlight.png';
-          break;
-      case 3:
-          thumbnail = 'style/images/directionallight.png';
-          break;
-      default:
-          thumbnail = 'style/images/pointlight.png';
-    }
-
     var light = $.grep(lightStats, function(e)
         {
           return e.name === name;
         });
 
+    var formatted;
+
+    // New light
     if (light.length === 0)
     {
+      var type = stats.type;
+
+      var thumbnail;
+      switch(type)
+      {
+        case 2:
+            thumbnail = 'style/images/spotlight.png';
+            break;
+        case 3:
+            thumbnail = 'style/images/directionallight.png';
+            break;
+        default:
+            thumbnail = 'style/images/pointlight.png';
+      }
+
+      stats.attenuation = {constant: stats.attenuation_constant,
+                           linear: stats.attenuation_linear,
+                           quadratic: stats.attenuation_quadratic};
+
+      formatted = this.formatStats(stats);
+
       lightStats.push(
           {
             name: name,
             thumbnail: thumbnail,
-            selected: 'unselectedTreeItem'
+            selected: 'unselectedTreeItem',
+            position: formatted.pose.position,
+            orientation: formatted.pose.orientation,
+            diffuse: formatted.diffuse,
+            specular: formatted.specular,
+            range: stats.range,
+            attenuation: formatted.attenuation
           });
+    }
+    else
+    {
+      if (stats.pose)
+      {
+        formatted = this.formatStats(stats);
+
+        light[0].position = formatted.pose.position;
+        light[0].orientation = formatted.pose.orientation;
+      }
     }
   }
   else if (action === 'delete')
   {
-    for (var i = 0; i < lightStats.length; ++i)
-    {
-      if (lightStats[i].name === name)
-      {
-        lightStats.splice(i, 1);
-        break;
-      }
-    }
+    this.deleteFromStats('light', name);
   }
 
   this.updateStats();
@@ -1319,6 +1524,111 @@ GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
        y: event.clientY + emUnits(0)});
   }
 };
+
+/**
+ * Format stats message for proper display
+ * @param {} stats
+ * @returns {position, orientation, inertial, diffuse, specular, attenuation}
+ */
+GZ3D.Gui.prototype.formatStats = function(stats)
+{
+  var position = this.round(stats.pose.position);
+
+  var Quat = new THREE.Quaternion(stats.pose.orientation.x,
+      stats.pose.orientation.y, stats.pose.orientation.z,
+      stats.pose.orientation.w);
+
+  var RPY = new THREE.Euler();
+  RPY.setFromQuaternion(Quat);
+
+  var orientation = {roll: RPY._x, pitch: RPY._y, yaw: RPY._z};
+  orientation = this.round(orientation);
+
+  var inertial;
+  if (stats.inertial)
+  {
+    inertial = this.round(stats.inertial);
+  }
+  var diffuse;
+  if (stats.diffuse)
+  {
+    diffuse = this.round(stats.diffuse);
+  }
+  var specular;
+  if (stats.specular)
+  {
+    specular = this.round(stats.specular);
+  }
+  var attenuation;
+  if (stats.attenuation)
+  {
+    attenuation = this.round(stats.attenuation);
+  }
+
+  return {pose: {position: position, orientation: orientation},
+          inertial: inertial,
+          diffuse: diffuse,
+          specular: specular,
+          attenuation: attenuation};
+};
+
+/**
+ * Round all number children and format color
+ * @param {} stats
+ * @returns stats
+ */
+GZ3D.Gui.prototype.round = function(stats)
+{
+  for (var key in stats)
+  {
+    if (key === 'r' || key === 'g' || key === 'b' || key === 'a')
+    {
+      stats[key] = Math.round(stats[key] * 255);
+    }
+    else
+    {
+      stats[key] = parseFloat(Math.round(stats[key] * 1000) / 1000).toFixed(3);
+    }
+  }
+  return stats;
+};
+
+/**
+ * Format toggle items
+ * @param {} stats: true / false
+ * @returns {icon, title}
+ */
+GZ3D.Gui.prototype.trueOrFalse = function(stats)
+{
+  return stats ?
+      {icon: 'true', title: 'True'} :
+      {icon: 'false', title: 'False'};
+};
+
+/**
+ * Delete an entity from stats list
+ * @param {} type: 'model' / 'light'
+ * @param {} name
+ */
+GZ3D.Gui.prototype.deleteFromStats = function(type, name)
+{
+  var list = (type === 'model') ? modelStats : lightStats;
+
+  for (var i = 0; i < list.length; ++i)
+  {
+    if (list[i].name === name)
+    {
+      if ($('#propertyPanel-'+name).is(':visible'))
+      {
+        guiEvents.emit('openTab', 'treeMenu', 'treeMenu');
+      }
+
+      list.splice(i, 1);
+      break;
+    }
+  }
+};
+
 
 //var GAZEBO_MODEL_DATABASE_URI='http://gazebosim.org/models';
 
@@ -1448,9 +1758,11 @@ GZ3D.GZIface.prototype.onConnected = function()
   var poseUpdate = function(message)
   {
     var entity = this.scene.getByName(message.name);
-    if (entity && entity !== this.scene.modelManipulator.object)
+    if (entity && entity !== this.scene.modelManipulator.object
+        && entity.parent !== this.scene.modelManipulator.object)
     {
       this.scene.updatePose(entity, message.position, message.orientation);
+      this.gui.setModelStats(message, 'update');
     }
   };
 
@@ -6190,9 +6502,9 @@ GZ3D.Scene.prototype.selectEntity = function(object)
     {
       this.showBoundingBox(object);
       this.selectedEntity = object;
-      guiEvents.emit('setTreeSelected', object.name);
     }
     this.attachManipulator(object, this.manipulationMode);
+    guiEvents.emit('setTreeSelected', object.name);
   }
   else
   {
