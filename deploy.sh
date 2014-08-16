@@ -132,6 +132,7 @@ then
   ./get_local_models.py $DIR/http/client/assets
   ./webify_models_v2.py $DIR/http/client/assets
 
+  ./tools/gzthumbnails.sh
 
 else
   echo "Not cloning the model repo"
