@@ -8,6 +8,7 @@ OPTIONS:
    -m      Build a local model database. 
            Option "local" to use only local models.
    -c      Create coarse versions of all models in the local database 
+   -t      Generate a thumbnail for each model
 EOF
 exit
 }
@@ -16,6 +17,7 @@ exit
 MODELS=
 LOCAL=
 COARSE=
+THUMBNAIL=
 GetOpts() 
 {
   branch=""
@@ -42,6 +44,10 @@ GetOpts()
         -c)
           COARSE=true
           echo "Simplify models on local database."
+          ;;
+        -t)
+          THUMBNAIL=true
+          echo "Thumbnails will be generated"
           ;;
         *)
           usage
@@ -126,11 +132,14 @@ then
   ./get_local_models.py $DIR/http/client/assets
   ./webify_models_v2.py $DIR/http/client/assets
 
-  echo "Generating a thumbnail for each model"
-  ./tools/gzthumbnails.sh
-
 else
   echo "Not cloning the model repo"
+fi
+
+if [[ $MODELS ]] || [[ $THUMBNAIL ]]
+then
+  echo "Generating a thumbnail for each model. Make sure gazebo is not running"
+  ./tools/gzthumbnails.sh
 fi
 
 # build a local model database
