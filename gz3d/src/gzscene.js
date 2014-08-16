@@ -167,6 +167,9 @@ GZ3D.Scene.prototype.init = function()
     return material;
   };
 
+  // XYZ
+  var XYZaxes = new THREE.Object3D();
+
   geometry = new THREE.CylinderGeometry(0.01, 0.01, 0.3, 10, 1, false);
 
   material = new AxisMaterial(new THREE.Color(0xff0000));
@@ -174,20 +177,20 @@ GZ3D.Scene.prototype.init = function()
   mesh.position.x = 0.15;
   mesh.rotation.z = -Math.PI/2;
   mesh.name = 'jointAxis';
-  this.jointAxis.add(mesh);
+  XYZaxes.add(mesh);
 
   material = new AxisMaterial(new THREE.Color(0x00ff00));
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.y = 0.15;
   mesh.name = 'jointAxis';
-  this.jointAxis.add(mesh);
+  XYZaxes.add(mesh);
 
   material = new AxisMaterial(new THREE.Color(0x0000ff));
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.z = 0.15;
   mesh.rotation.x = Math.PI/2;
   mesh.name = 'jointAxis';
-  this.jointAxis.add(mesh);
+  XYZaxes.add(mesh);
 
   geometry = new THREE.CylinderGeometry(0, 0.03, 0.1, 10, 1, true);
 
@@ -196,46 +199,94 @@ GZ3D.Scene.prototype.init = function()
   mesh.position.x = 0.3;
   mesh.rotation.z = -Math.PI/2;
   mesh.name = 'jointAxis';
-  this.jointAxis.add(mesh);
+  XYZaxes.add(mesh);
 
   material = new AxisMaterial(new THREE.Color(0x00ff00));
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.y = 0.3;
   mesh.name = 'jointAxis';
-  this.jointAxis.add(mesh);
+  XYZaxes.add(mesh);
 
   material = new AxisMaterial(new THREE.Color(0x0000ff));
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.z = 0.3;
   mesh.rotation.x = Math.PI/2;
   mesh.name = 'jointAxis';
-  this.jointAxis.add(mesh);
+  XYZaxes.add(mesh);
+
+  this.jointAxis['XYZaxes'] = XYZaxes;
+
+  var mainAxis = new THREE.Object3D();
+
+  material = new THREE.MeshLambertMaterial();
+  material.color = new THREE.Color(0xffff00);
+  material.ambient = material.color;
+
+  geometry = new THREE.CylinderGeometry(0.03, 0.03, 0.25, 36, 1, false);
+
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.position.z = -0.175;
+  mesh.rotation.x = Math.PI/2;
+  mesh.name = 'jointAxis';
+  mainAxis.add(mesh);
+
+  geometry = new THREE.CylinderGeometry(0, 0.05, 0.15, 36, 1, false);
+
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.rotation.x = Math.PI/2;
+  mesh.name = 'jointAxis';
+  mainAxis.add(mesh);
+
+  this.jointAxis['mainAxis'] = mainAxis;
 
   var rotAxis = new THREE.Object3D();
-  rotAxis.name = 'jointAxis_rotAxis';
 
-  geometry = new THREE.CylinderGeometry(0.009, 0.009, 0.3, 10, 1, false);
+  geometry = new THREE.TorusGeometry(0.06, 0.007, 10, 36, Math.PI * 3/2);
 
-  material = new AxisMaterial(new THREE.Color(0xffff00));
   mesh = new THREE.Mesh(geometry, material);
-  mesh.position.z = -0.15;
+  mesh.name = 'jointAxis';
+  rotAxis.add(mesh);
+
+  geometry = new THREE.CylinderGeometry(0.02, 0, 0.0375, 10, 1, false);
+
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.position.x = 0.06;
+  mesh.name = 'jointAxis';
+  rotAxis.add(mesh);
+
+  this.jointAxis['rotAxis'] = rotAxis;
+
+  var transAxis = new THREE.Object3D();
+
+  geometry = new THREE.CylinderGeometry(0.01, 0.01, 0.1, 10, 1, true);
+
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.position.x = 0.06;
+  mesh.position.y = 0.06;
+  mesh.position.z = -0.175;
   mesh.rotation.x = Math.PI/2;
-  mesh.name = 'jointAxis_rotAxis';
-  rotAxis.add(mesh);
+  mesh.name = 'jointAxis';
+  transAxis.add(mesh);
 
-  geometry = new THREE.CylinderGeometry(0, 0.025, 0.1, 10, 1, true);
+  geometry = new THREE.CylinderGeometry(0.02, 0, 0.0375, 10, 1, false);
 
   mesh = new THREE.Mesh(geometry, material);
+  mesh.position.x = 0.06;
+  mesh.position.y = 0.06;
+  mesh.position.z = -0.175 + 0.05;
+  mesh.rotation.x = -Math.PI/2;
+  mesh.name = 'jointAxis';
+  transAxis.add(mesh);
+
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.position.x = 0.06;
+  mesh.position.y = 0.06;
+  mesh.position.z = -0.175 - 0.05;
   mesh.rotation.x = Math.PI/2;
-  mesh.name = 'jointAxis_rotAxis';
-  rotAxis.add(mesh);
+  mesh.name = 'jointAxis';
+  transAxis.add(mesh);
 
-  geometry = new THREE.TorusGeometry(0.05, 0.005, 10, 36);
-
-  mesh = new THREE.Mesh(geometry, material);
-  mesh.name = 'jointAxis_rotAxis';
-  rotAxis.add(mesh);
-  this.jointAxis.add(rotAxis);
+  this.jointAxis['transAxis'] = transAxis;
 };
 
 GZ3D.Scene.prototype.initScene = function()
@@ -2033,23 +2084,38 @@ GZ3D.Scene.prototype.viewJoints = function(model)
     for (var j = 0; j < model.joint.length; ++j)
     {
       var child = this.getByName(model.joint[j].child);
-      joint = this.jointAxis.clone();
-      child.add(joint);
-      this.setPose(joint, model.joint[j].pose.position,
+
+      var jointVisual = this.jointAxis['XYZaxes'].clone();
+      child.add(jointVisual);
+      this.setPose(jointVisual, model.joint[j].pose.position,
           model.joint[j].pose.orientation);
 
-      var circle = joint.getObjectByName('jointAxis_rotAxis');
+      var mainAxis = this.jointAxis['mainAxis'].clone();
+      jointVisual.add(mainAxis);
 
-      var rotAxis = new THREE.Vector3(
+      if (model.joint[j].type === 1)
+      {
+        mainAxis.add(this.jointAxis['rotAxis'].clone());
+      }
+      else if (model.joint[j].type === 3)
+      {
+        mainAxis.add(this.jointAxis['transAxis'].clone());
+      }
+      else
+      {
+        console.log(model.joint[j].type);
+      }
+
+      var direction = new THREE.Vector3(
           model.joint[j].axis1.xyz.x,
           model.joint[j].axis1.xyz.y,
           model.joint[j].axis1.xyz.z);
-      rotAxis.normalize();
+      direction.normalize();
 
-      circle.position =  rotAxis.multiplyScalar(0.3);
+      mainAxis.position =  direction.multiplyScalar(0.3);
       var rotMatrix = new THREE.Matrix4();
-      rotMatrix.lookAt(rotAxis, new THREE.Vector3(0, 0, 0), circle.up);
-      circle.quaternion.setFromRotationMatrix(rotMatrix);
+      rotMatrix.lookAt(direction, new THREE.Vector3(0, 0, 0), mainAxis.up);
+      mainAxis.quaternion.setFromRotationMatrix(rotMatrix);
     }
   }
 };
