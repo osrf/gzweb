@@ -541,27 +541,27 @@ body
   }
   .propertyLevel2 div:first-child
   {
-    padding-left: 2.4em;
-    width: calc(60% - 2.4em);
+    padding-left: 2.3em;
+    width: calc(60% - 2.3em);
   }
   .propertyLevel3 div:first-child
   {
-    padding-left: calc(2.4em + 1.5em);
-    width: calc(60% - 2.4em - 1.5em);
+    padding-left: 3.3em;
+    width: calc(60% - 3.3em);
   }
   .propertyLevel4 div:first-child
   {
-    padding-left: calc(2.4em + 3.0em);
-    width: calc(60% - 2.4em - 3.0em);
+    padding-left: 4.6em;
+    width: calc(60% - 4.6em);
   }
   .expandableLevel2
   {
-    padding-left: 1.3em;
-    width: calc(100% - 1.3em);
+    padding-left: 1.2em;
+    width: calc(100% - 1.2em);
   }
   .expandableLevel3
   {
-    padding-left: 3.0em;
-    width: calc(100% - 3.0em);
+    padding-left: 2.4em;
+    width: calc(100% - 2.4em);
   }
 }
