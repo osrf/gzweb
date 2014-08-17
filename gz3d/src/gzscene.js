@@ -287,6 +287,16 @@ GZ3D.Scene.prototype.init = function()
   transAxis.add(mesh);
 
   this.jointAxis['transAxis'] = transAxis;
+
+  var ballVisual = new THREE.Object3D();
+
+  geometry = new THREE.SphereGeometry(0.06);
+
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.name = 'jointAxis';
+  ballVisual.add(mesh);
+
+  this.jointAxis['ballVisual'] = ballVisual;
 };
 
 GZ3D.Scene.prototype.initScene = function()
@@ -2090,13 +2100,39 @@ GZ3D.Scene.prototype.viewJoints = function(model)
       this.setPose(jointVisual, model.joint[j].pose.position,
           model.joint[j].pose.orientation);
 
-      var mainAxis = this.jointAxis['mainAxis'].clone();
-      jointVisual.add(mainAxis);
+      var mainAxis;
+      // except for ball joint
+      if (model.joint[j].type !== 5)
+      {
+        mainAxis = this.jointAxis['mainAxis'].clone();
+        jointVisual.add(mainAxis);
+      }
 
-      if (model.joint[j].type === 1)
+      var secondAxis;
+      // revolute2 or universal
+      if (model.joint[j].type === 2 || model.joint[j].type === 4)
+      {
+        secondAxis = this.jointAxis['mainAxis'].clone();
+        jointVisual.add(secondAxis);
+      }
+
+      // revolute or gearbox
+      if (model.joint[j].type === 1 || model.joint[j].type === 7)
       {
         mainAxis.add(this.jointAxis['rotAxis'].clone());
       }
+      // revolute2 or universal
+      if (model.joint[j].type === 2 || model.joint[j].type === 4)
+      {
+        mainAxis.add(this.jointAxis['rotAxis'].clone());
+        secondAxis.add(this.jointAxis['rotAxis'].clone());
+      }
+      // ball
+      if (model.joint[j].type === 5)
+      {
+        jointVisual.add(this.jointAxis['ballVisual'].clone());
+      }
+      // prismatic
       else if (model.joint[j].type === 3)
       {
         mainAxis.add(this.jointAxis['transAxis'].clone());
@@ -2106,16 +2142,34 @@ GZ3D.Scene.prototype.viewJoints = function(model)
         console.log(model.joint[j].type);
       }
 
-      var direction = new THREE.Vector3(
-          model.joint[j].axis1.xyz.x,
-          model.joint[j].axis1.xyz.y,
-          model.joint[j].axis1.xyz.z);
-      direction.normalize();
+      var direction, rotMatrix;
+      if (mainAxis)
+      {
+        direction = new THREE.Vector3(
+            model.joint[j].axis1.xyz.x,
+            model.joint[j].axis1.xyz.y,
+            model.joint[j].axis1.xyz.z);
+        direction.normalize();
 
-      mainAxis.position =  direction.multiplyScalar(0.3);
-      var rotMatrix = new THREE.Matrix4();
-      rotMatrix.lookAt(direction, new THREE.Vector3(0, 0, 0), mainAxis.up);
-      mainAxis.quaternion.setFromRotationMatrix(rotMatrix);
+        mainAxis.position =  direction.multiplyScalar(0.3);
+        rotMatrix = new THREE.Matrix4();
+        rotMatrix.lookAt(direction, new THREE.Vector3(0, 0, 0), mainAxis.up);
+        mainAxis.quaternion.setFromRotationMatrix(rotMatrix);
+      }
+
+      if (secondAxis)
+      {
+        direction = new THREE.Vector3(
+            model.joint[j].axis2.xyz.x,
+            model.joint[j].axis2.xyz.y,
+            model.joint[j].axis2.xyz.z);
+        direction.normalize();
+
+        secondAxis.position =  direction.multiplyScalar(0.3);
+        rotMatrix = new THREE.Matrix4();
+        rotMatrix.lookAt(direction, new THREE.Vector3(0, 0, 0), secondAxis.up);
+        secondAxis.quaternion.setFromRotationMatrix(rotMatrix);
+      }
     }
   }
 };
