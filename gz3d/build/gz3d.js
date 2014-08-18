@@ -181,7 +181,6 @@ $(function()
 {
   //Initialize
   // Toggle items
-  $('#view-grid').buttonMarkup({icon: 'check'});
   $('#view-collisions').buttonMarkup({icon: 'false'});
   $('#snap-to-grid').buttonMarkup({icon: 'false'});
   $('#open-tree-when-selected').buttonMarkup({icon: 'false'});
@@ -467,7 +466,7 @@ $(function()
       });
   $('#view-grid').click(function()
       {
-        guiEvents.emit('show_grid');
+        guiEvents.emit('show_grid', 'toggle');
         guiEvents.emit('closeTabs', false);
       });
   $('#view-collisions').click(function()
@@ -796,9 +795,21 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('show_grid', function()
+  guiEvents.on('show_grid', function(option)
       {
-        that.scene.grid.visible = !that.scene.grid.visible;
+        if (option === 'show')
+        {
+          that.scene.grid.visible = true;
+        }
+        else if (option === 'hide')
+        {
+          that.scene.grid.visible = false;
+        }
+        else if (option === 'toggle')
+        {
+          that.scene.grid.visible = !that.scene.grid.visible;
+        }
+
         if(!that.scene.grid.visible)
         {
           $('#view-grid').buttonMarkup({icon: 'false'});
@@ -1717,7 +1728,7 @@ GZ3D.GZIface.prototype.onConnected = function()
 
     if (message.grid === true)
     {
-      this.scene.grid.visible = true;
+      this.gui.guiEvents.emit('show_grid', 'show');
     }
 
     for (var i = 0; i < message.light.length; ++i)
@@ -4613,7 +4624,7 @@ GZ3D.Scene.prototype.init = function()
 
 GZ3D.Scene.prototype.initScene = function()
 {
-  this.grid.visible = true;
+  guiEvents.emit('show_grid', 'show');
 
   // create a sun light
   var obj = this.createLight(3, new THREE.Color(0.8, 0.8, 0.8), 0.9,
