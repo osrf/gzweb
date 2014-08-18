@@ -266,89 +266,89 @@
               <img src="style/images/close.png">
             </div>
             <div class="panelContent">
-                <!-- scene -->
-                <div id="expand-SCENE" class="clickable expandableTree" ng-click="expandTree('SCENE')">
-                  <img src="style/images/play.png">
-                  Scene
+              <!-- scene -->
+              <div id="expand-SCENE" class="clickable expandableTree" ng-click="expandTree('SCENE')">
+                <img src="style/images/play.png">
+                Scene
+              </div>
+              <div id="expandable-SCENE" class="expandedContent">
+                <div id="expand-ambient-SCENE" class="clickable expandableProperty expandableLevel01" ng-click="expandProperty('ambient', 'SCENE')">
+                  <div>
+                    <img src="style/images/play.png">
+                    Ambient
+                  </div>
+                  <div class="colorDisplay" style="background-color: rgb({{scene.ambient.r}},{{scene.ambient.g}},{{scene.ambient.b}})"></div>
                 </div>
-                <div id="expandable-SCENE" class="expandedContent">
-                  <div id="expand-ambient-SCENE" class="clickable expandableProperty" ng-click="expandProperty('ambient', 'SCENE')">
-                    <div>
-                      <img src="style/images/play.png">
-                      Ambient
-                    </div>
-                    <div class="colorDisplay" style="background-color: rgb({{scene.ambient.r}},{{scene.ambient.g}},{{scene.ambient.b}})"></div>
+                <div id="expandable-ambient-SCENE" class="expandedContent">
+                  <div class="property propertyLevel02 redBg">
+                    <div>Red</div>
+                    <div class="propertyNumber">{{scene.ambient.r}}</div>
                   </div>
-                  <div id="expandable-ambient-SCENE" class="expandedContent">
-                    <div class="property propertyLevel2 redBg">
-                      <div>Red</div>
-                      <div class="propertyNumber">{{scene.ambient.r}}</div>
-                    </div>
-                    <div class="property propertyLevel2 greenBg">
-                      <div>Green</div>
-                      <div class="propertyNumber">{{scene.ambient.g}}</div>
-                    </div>
-                    <div class="property propertyLevel2 blueBg">
-                      <div>Blue</div>
-                      <div class="propertyNumber">{{scene.ambient.b}}</div>
-                    </div>
-                    <div class="property propertyLevel2">
-                      <div>Alpha</div>
-                      <div class="propertyNumber">{{scene.ambient.a}}</div>
-                    </div>
+                  <div class="property propertyLevel02 greenBg">
+                    <div>Green</div>
+                    <div class="propertyNumber">{{scene.ambient.g}}</div>
                   </div>
-                  <div id="expand-background-SCENE" class="clickable expandableProperty" ng-click="expandProperty('background', 'SCENE')">
-                    <div>
-                      <img src="style/images/play.png">
-                      Background
-                    </div>
-                    <div class="colorDisplay" style="background-color: rgb({{scene.background.r}},{{scene.background.g}},{{scene.background.b}})"></div>
+                  <div class="property propertyLevel02 blueBg">
+                    <div>Blue</div>
+                    <div class="propertyNumber">{{scene.ambient.b}}</div>
                   </div>
-                  <div id="expandable-background-SCENE" class="expandedContent">
-                    <div class="property propertyLevel2 redBg">
-                      <div>Red</div>
-                      <div class="propertyNumber">{{scene.background.r}}</div>
-                    </div>
-                    <div class="property propertyLevel2 greenBg">
-                      <div>Green</div>
-                      <div class="propertyNumber">{{scene.background.g}}</div>
-                    </div>
-                    <div class="property propertyLevel2 blueBg">
-                      <div>Blue</div>
-                      <div class="propertyNumber">{{scene.background.b}}</div>
-                    </div>
-                    <div class="property propertyLevel2">
-                      <div>Alpha</div>
-                      <div class="propertyNumber">{{scene.background.a}}</div>
-                    </div>
+                  <div class="property propertyLevel02">
+                    <div>Alpha</div>
+                    <div class="propertyNumber">{{scene.ambient.a}}</div>
                   </div>
                 </div>
-                <!-- models -->
-                <div id="expand-MODELS" class="clickable expandableTree" ng-click="expandTree('MODELS')">
-                  <img src="style/images/play.png">
-                  Models
+                <div id="expand-background-SCENE" class="clickable expandableProperty expandableLevel01" ng-click="expandProperty('background', 'SCENE')">
+                  <div>
+                    <img src="style/images/play.png">
+                    Background
+                  </div>
+                  <div class="colorDisplay" style="background-color: rgb({{scene.background.r}},{{scene.background.g}},{{scene.background.b}})"></div>
                 </div>
-                <div id="expandable-MODELS" class="expandedContent">
-                  <ul data-role="listview">
-                    <div class="clickable treeItem {{model.selected}}" ng-repeat="model in models" ng-click="selectEntity(model.name)" ng-right-click="openEntityMenu($event, model.name)" title="{{model.name}}">
-                      <div class="treeItemImg"><img src="{{model.thumbnail}}"></div>
-                      <div class="treeItemTitle">{{model.name}}</div><br>
-                    </div>
-                  </ul>
+                <div id="expandable-background-SCENE" class="expandedContent">
+                  <div class="property propertyLevel02 redBg">
+                    <div>Red</div>
+                    <div class="propertyNumber">{{scene.background.r}}</div>
+                  </div>
+                  <div class="property propertyLevel02 greenBg">
+                    <div>Green</div>
+                    <div class="propertyNumber">{{scene.background.g}}</div>
+                  </div>
+                  <div class="property propertyLevel02 blueBg">
+                    <div>Blue</div>
+                    <div class="propertyNumber">{{scene.background.b}}</div>
+                  </div>
+                  <div class="property propertyLevel02">
+                    <div>Alpha</div>
+                    <div class="propertyNumber">{{scene.background.a}}</div>
+                  </div>
                 </div>
-                <!-- lights -->
-                <div id="expand-LIGHTS" class="clickable expandableTree" ng-click="expandTree('LIGHTS')">
-                  <img src="style/images/play.png">
-                  Lights
-                </div>
-                <div id="expandable-LIGHTS" class="expandedContent">
-                  <ul data-role="listview">
-                    <div class="clickable treeItem {{light.selected}}" ng-repeat="light in lights" ng-click="selectEntity(light.name)" ng-right-click="openEntityMenu($event, light.name)" title="{{light.name}}">
-                      <div class="treeItemImg"><img src="{{light.thumbnail}}"></div>
-                      <div class="treeItemTitle">{{light.name}}</div><br>
-                    </div>
-                  </ul>
-                </div>
+              </div>
+              <!-- models -->
+              <div id="expand-MODELS" class="clickable expandableTree" ng-click="expandTree('MODELS')">
+                <img src="style/images/play.png">
+                Models
+              </div>
+              <div id="expandable-MODELS" class="expandedContent">
+                <ul data-role="listview">
+                  <div class="clickable treeItem {{model.selected}}" ng-repeat="model in models" ng-click="selectEntity(model.name)" ng-right-click="openEntityMenu($event, model.name)" title="{{model.name}}">
+                    <div class="treeItemImg"><img src="{{model.thumbnail}}"></div>
+                    <div class="treeItemTitle">{{model.name}}</div><br>
+                  </div>
+                </ul>
+              </div>
+              <!-- lights -->
+              <div id="expand-LIGHTS" class="clickable expandableTree" ng-click="expandTree('LIGHTS')">
+                <img src="style/images/play.png">
+                Lights
+              </div>
+              <div id="expandable-LIGHTS" class="expandedContent">
+                <ul data-role="listview">
+                  <div class="clickable treeItem {{light.selected}}" ng-repeat="light in lights" ng-click="selectEntity(light.name)" ng-right-click="openEntityMenu($event, light.name)" title="{{light.name}}">
+                    <div class="treeItemImg"><img src="{{light.thumbnail}}"></div>
+                    <div class="treeItemTitle">{{light.name}}</div><br>
+                  </div>
+                </ul>
+              </div>
             </div>
           </div>
           <!-- property panels -->

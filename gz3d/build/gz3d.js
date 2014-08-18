@@ -14,6 +14,7 @@ var emUnits = function(value)
     };
 
 var isTouchDevice = 'ontouchstart' in window || 'onmsgesturechange' in window;
+
 var isWideScreen = function()
     {
       return $(window).width() / emUnits(1) > 35;
@@ -180,6 +181,11 @@ var modelList =
 $(function()
 {
   //Initialize
+  if ('ontouchstart' in window || 'onmsgesturechange' in window)
+  {
+    $('body').addClass('isTouchDevice');
+  }
+
   // Toggle items
   $('#view-collisions').buttonMarkup({icon: 'false'});
   $('#snap-to-grid').buttonMarkup({icon: 'false'});
