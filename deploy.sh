@@ -8,6 +8,7 @@ OPTIONS:
    -m      Build a local model database. 
            Option "local" to use only local models.
    -c      Create coarse versions of all models in the local database 
+   -t      Generate a thumbnail for each model
 EOF
 exit
 }
@@ -16,6 +17,7 @@ exit
 MODELS=
 LOCAL=
 COARSE=
+THUMBNAIL=
 GetOpts() 
 {
   branch=""
@@ -43,6 +45,10 @@ GetOpts()
           COARSE=true
           echo "Simplify models on local database."
           ;;
+        -t)
+          THUMBNAIL=true
+          echo "Thumbnails will be generated"
+          ;;
         *)
           usage
           argv+=(${opt})
@@ -66,12 +72,28 @@ rm -rf build
 mkdir build
 cd build
 
+
+# Run cmake and check for the exit code
 cmake ..
+
+RETVAL=$?
+if [ $RETVAL -ne 0 ]; then
+  echo There are cmake errors, exiting.
+  exit 1
+fi
+
+# continue building if cmake is happy
 make -j 8
 
 cd ../gzbridge
 $DIR/node_modules/.bin/node-gyp configure
 $DIR/node_modules/.bin/node-gyp build -d
+
+RETVAL=$?
+if [ $RETVAL -ne 0 ]; then
+  echo There are node-gyp build errors, exiting.
+  exit 1
+fi
 
 cd $DIR
 
@@ -81,7 +103,7 @@ then
   # Temporal directory for the repository
     TMP_DIR=`mktemp -d`
     cd $TMP_DIR
-  
+
   # If no arg given then download from gazebo_models repo
   if [[ -z $LOCAL ]]
   then
@@ -112,6 +134,12 @@ then
 
 else
   echo "Not cloning the model repo"
+fi
+
+if [[ $MODELS ]] || [[ $THUMBNAIL ]]
+then
+  echo "Generating a thumbnail for each model. Make sure gazebo is not running"
+  ./tools/gzthumbnails.sh
 fi
 
 # build a local model database
