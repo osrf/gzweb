@@ -375,6 +375,7 @@ GZ3D.GZIface.prototype.onConnected = function()
         g: entity.children[0].color.g,
         b: entity.children[0].color.b
       };
+      entityMsg.direction = entity.direction;
       entityMsg.range = entity.children[0].distance;
 
       that.lightModifyTopic.publish(entityMsg);

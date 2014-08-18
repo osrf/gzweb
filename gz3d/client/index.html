@@ -610,6 +610,30 @@
                   </div>
                 </div>
               </div>
+              <div ng-if="light.direction" id="expand-direction-{{light.name}}" class="clickable expandableProperty" ng-click="expandProperty('direction', light.name)">
+                <img src="style/images/play.png">
+                Direction
+              </div>
+              <div id="expandable-direction-{{light.name}}" class="expandedContent">
+                <div class="property propertyLevel2 lightBg">
+                  <div>x</div>
+                  <div class="propertyNumberEdit">
+                    <input type="number" onClick="this.select();" ng-model="light.direction.x" ng-change="changePose('direction', 'x', light.name, light.direction.x)" data-role="none"/>
+                  </div>
+                </div>
+                <div class="property propertyLevel2">
+                  <div>y</div>
+                  <div class="propertyNumberEdit">
+                    <input type="number" onClick="this.select();" ng-model="light.direction.y" ng-change="changePose('direction', 'y', light.name, light.direction.y)" data-role="none"/>
+                  </div>
+                </div>
+                <div class="property propertyLevel2 lightBg">
+                  <div>z</div>
+                  <div class="propertyNumberEdit">
+                    <input type="number" onClick="this.select();" ng-model="light.direction.z" ng-change="changePose('direction', 'z', light.name, light.direction.z)" data-role="none"/>
+                  </div>
+                </div>
+              </div>
               <div id="expand-diffuse-{{light.name}}" class="clickable expandableProperty" ng-click="expandProperty('diffuse', light.name)">
                 <div>
                   <img src="style/images/play.png">

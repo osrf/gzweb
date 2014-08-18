@@ -333,6 +333,12 @@ void GazeboInterface::ProcessMessages()
 
           if (createEntity.compare("0") == 0)
           {
+            gazebo::math::Vector3 direction(
+              atof(get_value(msg, "msg:direction:x").c_str()),
+              atof(get_value(msg, "msg:direction:y").c_str()),
+              atof(get_value(msg, "msg:direction:z").c_str()));
+            gazebo::msgs::Set(lightMsg.mutable_direction(), direction);
+
             gazebo::common::Color diffuse(
                 atof(get_value(msg, "msg:diffuse:r").c_str()),
                 atof(get_value(msg, "msg:diffuse:g").c_str()),

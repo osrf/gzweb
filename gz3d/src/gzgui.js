@@ -1480,6 +1480,12 @@ GZ3D.Gui.prototype.setLightStats = function(stats, action)
 
       formatted = this.formatStats(stats);
 
+      var direction;
+      if (stats.direction)
+      {
+        direction = stats.direction;
+      }
+
       lightStats.push(
           {
             name: name,
@@ -1491,7 +1497,8 @@ GZ3D.Gui.prototype.setLightStats = function(stats, action)
             color: formatted.color,
             specular: formatted.specular,
             range: stats.range,
-            attenuation: formatted.attenuation
+            attenuation: formatted.attenuation,
+            direction: direction
           });
     }
     else

@@ -1485,6 +1485,12 @@ GZ3D.Gui.prototype.setLightStats = function(stats, action)
 
       formatted = this.formatStats(stats);
 
+      var direction;
+      if (stats.direction)
+      {
+        direction = stats.direction;
+      }
+
       lightStats.push(
           {
             name: name,
@@ -1496,7 +1502,8 @@ GZ3D.Gui.prototype.setLightStats = function(stats, action)
             color: formatted.color,
             specular: formatted.specular,
             range: stats.range,
-            attenuation: formatted.attenuation
+            attenuation: formatted.attenuation,
+            direction: direction
           });
     }
     else
@@ -2120,6 +2127,7 @@ GZ3D.GZIface.prototype.onConnected = function()
         g: entity.children[0].color.g,
         b: entity.children[0].color.b
       };
+      entityMsg.direction = entity.direction;
       entityMsg.range = entity.children[0].distance;
 
       that.lightModifyTopic.publish(entityMsg);
