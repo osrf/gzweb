@@ -176,6 +176,7 @@ $(function()
 {
   //Initialize
   // Toggle items
+  $('#view-grid').buttonMarkup({icon: 'check'});
   $('#view-collisions').buttonMarkup({icon: 'false'});
   $('#snap-to-grid').buttonMarkup({icon: 'false'});
   $('#open-tree-when-selected').buttonMarkup({icon: 'false'});
@@ -457,6 +458,11 @@ $(function()
   $('#reset-view').click(function()
       {
         guiEvents.emit('view_reset');
+        guiEvents.emit('closeTabs', false);
+      });
+  $('#view-grid').click(function()
+      {
+        guiEvents.emit('show_grid');
         guiEvents.emit('closeTabs', false);
       });
   $('#view-collisions').click(function()
@@ -781,6 +787,22 @@ GZ3D.Gui.prototype.init = function()
         {
           $('#view-collisions').buttonMarkup({icon: 'check'});
           guiEvents.emit('notification_popup','Viewing collisions');
+        }
+      }
+  );
+
+  guiEvents.on('show_grid', function()
+      {
+        that.scene.grid.visible = !that.scene.grid.visible;
+        if(!that.scene.grid.visible)
+        {
+          $('#view-grid').buttonMarkup({icon: 'false'});
+          guiEvents.emit('notification_popup','Hiding grid');
+        }
+        else
+        {
+          $('#view-grid').buttonMarkup({icon: 'check'});
+          guiEvents.emit('notification_popup','Viewing grid');
         }
       }
   );

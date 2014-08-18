@@ -92,7 +92,7 @@ GZ3D.GZIface.prototype.onConnected = function()
 
     if (message.grid === true)
     {
-      this.scene.createGrid();
+      this.scene.grid.visible = true;
     }
 
     for (var i = 0; i < message.light.length; ++i)

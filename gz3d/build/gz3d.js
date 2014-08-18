@@ -181,6 +181,7 @@ $(function()
 {
   //Initialize
   // Toggle items
+  $('#view-grid').buttonMarkup({icon: 'check'});
   $('#view-collisions').buttonMarkup({icon: 'false'});
   $('#snap-to-grid').buttonMarkup({icon: 'false'});
   $('#open-tree-when-selected').buttonMarkup({icon: 'false'});
@@ -462,6 +463,11 @@ $(function()
   $('#reset-view').click(function()
       {
         guiEvents.emit('view_reset');
+        guiEvents.emit('closeTabs', false);
+      });
+  $('#view-grid').click(function()
+      {
+        guiEvents.emit('show_grid');
         guiEvents.emit('closeTabs', false);
       });
   $('#view-collisions').click(function()
@@ -786,6 +792,22 @@ GZ3D.Gui.prototype.init = function()
         {
           $('#view-collisions').buttonMarkup({icon: 'check'});
           guiEvents.emit('notification_popup','Viewing collisions');
+        }
+      }
+  );
+
+  guiEvents.on('show_grid', function()
+      {
+        that.scene.grid.visible = !that.scene.grid.visible;
+        if(!that.scene.grid.visible)
+        {
+          $('#view-grid').buttonMarkup({icon: 'false'});
+          guiEvents.emit('notification_popup','Hiding grid');
+        }
+        else
+        {
+          $('#view-grid').buttonMarkup({icon: 'check'});
+          guiEvents.emit('notification_popup','Viewing grid');
         }
       }
   );
@@ -1695,7 +1717,7 @@ GZ3D.GZIface.prototype.onConnected = function()
 
     if (message.grid === true)
     {
-      this.scene.createGrid();
+      this.scene.grid.visible = true;
     }
 
     for (var i = 0; i < message.light.length; ++i)
@@ -4462,6 +4484,18 @@ GZ3D.Scene.prototype.init = function()
   this.defaultCameraPosition = new THREE.Vector3(0, -5, 5);
   this.resetView();
 
+  // Grid
+  this.grid = new THREE.GridHelper(10, 1);
+  this.grid.name = 'grid';
+  this.grid.position.z = 0.05;
+  this.grid.rotation.x = Math.PI * 0.5;
+  this.grid.castShadow = false;
+  this.grid.setColors(new THREE.Color( 0xCCCCCC ),new THREE.Color( 0x4D4D4D ));
+  this.grid.material.transparent = true;
+  this.grid.material.opacity = 0.5;
+  this.grid.visible = false;
+  this.scene.add(this.grid);
+
   this.showCollisions = false;
 
   this.spawnModel = new GZ3D.SpawnModel(
@@ -4579,7 +4613,7 @@ GZ3D.Scene.prototype.init = function()
 
 GZ3D.Scene.prototype.initScene = function()
 {
-  this.createGrid();
+  this.grid.visible = true;
 
   // create a sun light
   var obj = this.createLight(3, new THREE.Color(0.8, 0.8, 0.8), 0.9,
@@ -5008,24 +5042,6 @@ GZ3D.Scene.prototype.setPose = function(model, position, orientation)
   model.quaternion.x = orientation.x;
   model.quaternion.y = orientation.y;
   model.quaternion.z = orientation.z;
-};
-
-/**
- * Create grid and add it to the scene
- */
-GZ3D.Scene.prototype.createGrid = function()
-{
-  var grid = new THREE.GridHelper(10, 1);
-  grid.name = 'grid';
-  grid.position.z = 0.05;
-  grid.rotation.x = Math.PI * 0.5;
-  grid.castShadow = false;
-  // Color1: Central cross, Color2: grid
-  // 0xCCCCCC = 80%,80%,80% / 0x4D4D4D = 30%,30%,30%
-  grid.setColors(new THREE.Color( 0xCCCCCC ),new THREE.Color( 0x4D4D4D ));
-  grid.material.transparent = true;
-  grid.material.opacity = 0.5;
-  this.scene.add(grid);
 };
 
 /**
