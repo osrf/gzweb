@@ -200,6 +200,8 @@ $(function()
   if (isTallScreen())
   {
     $('.collapsible_header').click();
+    $('#expand-MODELS').click();
+    $('#expand-LIGHTS').click();
   }
 
   // Touch devices
@@ -576,6 +578,7 @@ gzangular.controller('treeControl', ['$scope', function($scope)
   {
     $scope.models = modelStats;
     $scope.lights = lightStats;
+    $scope.scene = sceneStats;
     if (!$scope.$$phase)
     {
       $scope.$apply();
@@ -603,6 +606,27 @@ gzangular.controller('treeControl', ['$scope', function($scope)
   $scope.backToTree = function ()
   {
     guiEvents.emit('openTab', 'treeMenu', 'treeMenu');
+  };
+
+  $scope.expandTree = function (tree)
+  {
+    var idContent = 'expandable-' + tree;
+    var idHeader = 'expand-' + tree;
+
+    if ($('#' + idContent).is(':visible'))
+    {
+      $('#' + idContent).hide();
+      $('#' + idHeader+' img').css('transform','rotate(0deg)')
+                              .css('-webkit-transform','rotate(0deg)')
+                              .css('-ms-transform','rotate(0deg)');
+    }
+    else
+    {
+      $('#' + idContent).show();
+      $('#' + idHeader+' img').css('transform','rotate(90deg)')
+                              .css('-webkit-transform','rotate(90deg)')
+                              .css('-ms-transform','rotate(90deg)');
+    }
   };
 
   $scope.expandProperty = function (prop, modelName, linkShortName, linkName)
@@ -1066,7 +1090,6 @@ GZ3D.Gui.prototype.init = function()
         {
           if (modelStats[i].name === object)
           {
-            $('#modelsTree').collapsible({collapsed: false});
             modelStats[i].selected = 'selectedTreeItem';
             if (this.openTreeWhenSelected)
             {
@@ -1082,7 +1105,6 @@ GZ3D.Gui.prototype.init = function()
         {
           if (lightStats[i].name === object)
           {
-            $('#lightsTree').collapsible({collapsed: false});
             lightStats[i].selected = 'selectedTreeItem';
             if (this.openTreeWhenSelected)
             {
@@ -1282,6 +1304,21 @@ GZ3D.Gui.prototype.setRealTime = function(realTime)
 GZ3D.Gui.prototype.setSimTime = function(simTime)
 {
   $('.sim-time-value').text(simTime);
+};
+
+var sceneStats = {};
+/**
+ * Update scene stats on scene tree
+ * @param {} stats
+ */
+GZ3D.Gui.prototype.setSceneStats = function(stats)
+{
+  var formatted = this.formatStats({
+      ambient: stats.ambient,
+      background: stats.background});
+
+  sceneStats['ambient'] = formatted.ambient;
+  sceneStats['background'] = formatted.background;
 };
 
 var modelStats = [];
@@ -1574,18 +1611,21 @@ GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
  */
 GZ3D.Gui.prototype.formatStats = function(stats)
 {
-  var position = this.round(stats.pose.position);
+  var position, orientation;
+  if (stats.pose)
+  {
+    position = this.round(stats.pose.position);
 
-  var Quat = new THREE.Quaternion(stats.pose.orientation.x,
-      stats.pose.orientation.y, stats.pose.orientation.z,
-      stats.pose.orientation.w);
+    var Quat = new THREE.Quaternion(stats.pose.orientation.x,
+        stats.pose.orientation.y, stats.pose.orientation.z,
+        stats.pose.orientation.w);
 
-  var RPY = new THREE.Euler();
-  RPY.setFromQuaternion(Quat);
+    var RPY = new THREE.Euler();
+    RPY.setFromQuaternion(Quat);
 
-  var orientation = {roll: RPY._x, pitch: RPY._y, yaw: RPY._z};
-  orientation = this.round(orientation);
-
+    orientation = {roll: RPY._x, pitch: RPY._y, yaw: RPY._z};
+    orientation = this.round(orientation);
+  }
   var inertial;
   if (stats.inertial)
   {
@@ -1617,13 +1657,25 @@ GZ3D.Gui.prototype.formatStats = function(stats)
   {
     attenuation = this.round(stats.attenuation);
   }
+  var ambient;
+  if (stats.ambient)
+  {
+    ambient = this.round(stats.ambient);
+  }
+  var background;
+  if (stats.background)
+  {
+    background = this.round(stats.background);
+  }
 
   return {pose: {position: position, orientation: orientation},
           inertial: inertial,
           diffuse: diffuse,
           color: color,
           specular: specular,
-          attenuation: attenuation};
+          attenuation: attenuation,
+          ambient: ambient,
+          background: background};
 };
 
 /**
@@ -1782,6 +1834,27 @@ GZ3D.GZIface.prototype.onConnected = function()
       this.scene.createGrid();
     }
 
+    if (message.ambient)
+    {
+      var ambient = new THREE.Color();
+      ambient.r = message.ambient.r;
+      ambient.g = message.ambient.g;
+      ambient.b = message.ambient.b;
+
+      this.scene.ambient.color = ambient;
+    }
+
+    if (message.background)
+    {
+      var background = new THREE.Color();
+      background.r = message.background.r;
+      background.g = message.background.g;
+      background.b = message.background.b;
+
+      this.scene.renderer.clear();
+      this.scene.renderer.setClearColor(background, 1);
+    }
+
     for (var i = 0; i < message.light.length; ++i)
     {
       var light = message.light[i];
@@ -1798,6 +1871,7 @@ GZ3D.GZIface.prototype.onConnected = function()
       this.gui.setModelStats(model, 'update');
     }
 
+    this.gui.setSceneStats(message);
     this.sceneTopic.unsubscribe();
   };
   this.sceneTopic.subscribe(sceneUpdate.bind(this));

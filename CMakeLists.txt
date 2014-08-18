@@ -44,10 +44,9 @@ if (PKG_CONFIG_FOUND)
     set (HAVE_GTS TRUE)
   else ()
     set (HAVE_GTS FALSE)
-    BUILD_WARNING ("GNU Triangulation Surface library not found,
-	gzcoarse/mesh simplification functionality will be disabled.")
+    message (WARNING "GNU Triangulation Surface library not found,
+        gzcoarse/mesh simplification functionality will be disabled.")
   endif ()
-
 else()
   message(FATAL_ERROR "pkg-config is required; please install it")
 endif()
@@ -60,7 +59,7 @@ find_package(Protobuf REQUIRED)
 find_path (tinyxml_include_dir tinyxml.h ${tinyxml_include_dirs} ENV CPATH)
 if (NOT tinyxml_include_dir)
   message (STATUS "Looking for tinyxml.h - not found")
-  BUILD_ERROR("Missing: tinyxml")
+  message(FATAL_ERROR "Missing: tinyxml")
 else ()
   message (STATUS "Looking for tinyxml.h - found")
   set (tinyxml_include_dirs ${tinyxml_include_dir} CACHE STRING
@@ -68,10 +67,13 @@ else ()
   set (tinyxml_libraries "tinyxml" CACHE INTERNAL "tinyxml libraries")
 endif ()
 
+find_program(ImageMagick convert)
+if ("${ImageMagick}" STREQUAL "ImageMagick-NOTFOUND")
+  message(FATAL_ERROR "imagemagick not found")
+endif()
+
 add_subdirectory(gz3d)
 add_subdirectory(tools)
-
-
 
 ########### Add uninstall target ###############
 configure_file(

@@ -199,6 +199,26 @@ body
   margin-top: 0.6em;
 }
 /* world tree */
+.expandableTree
+{
+  font-weight: bolder;
+  padding-left: 0.5em;
+  width: calc(100% - 0.5em);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: none;
+  font-size: 1.2em;
+  background-color: #333333;
+  border-top: 1px solid #222222;
+  border-bottom: 1px solid #222222;
+  line-height: 2em;
+}
+.expandableTree:hover,
+.expandableTree:active
+{
+  background-color: #373737;
+}
 .treeItem
 {
   font-size: 1em;
@@ -238,15 +258,10 @@ body
   background-color: #aaaaaa;
 }
 /* property panel */
-.propertyPanels
-{
-  background-color: #eeeeee;
-}
 .propertyPanelImg
 {
   text-align: center;
   clear: both;
-  background-color: #2a2a2a;
 }
 .propertyPanelImg > img
 {
@@ -278,7 +293,6 @@ body
   text-overflow: ellipsis;
   white-space: nowrap;
   position: relative;
-  color: #000000;
   text-shadow: none;
   font-size: 0.9em;
 }
@@ -343,7 +357,8 @@ body
   padding: 0;
   border: 0;
   width: 80%;
-  background-color: #eeeeee;
+  background-color: #2a2a2a;
+  color: #ffffff;
   text-align: right;
 }
 .propertyColorEdit
@@ -374,14 +389,13 @@ body
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: #000000;
   text-shadow: none;
   font-size: 0.9em;
 }
 .expandableProperty:hover,
 .expandableProperty:active
 {
-  background-color: #e8e8e8;
+  background-color: #2e2e2e;
 }
 .expandableLevel2
 {
@@ -436,19 +450,19 @@ body
 }
 .redBg > div
 {
-  background-color: #ffdddd !important;
+  background-color: #772a2a !important;
 }
 .greenBg > div
 {
-  background-color: #ddffdd !important;
+  background-color: #2a772a !important;
 }
 .blueBg > div
 {
-  background-color: #ddddff !important;
+  background-color: #2a2a77 !important;
 }
-.darkBg div, .darkBg input
+.lightBg div, .lightBg input
 {
-  background-color: #dddddd;
+  background-color: #414141 !important;
 }
 /* model popup */
 #model-popup
@@ -534,5 +548,59 @@ body
   .tab:nth-of-type(3)
   {
     top: 9.8em;
+  }
+}
+/* touch devices */
+@media (pointer:coarse)
+{
+  .propertyLevel1 > div, .expandableProperty
+  {
+    font-size: 1.2em;
+    line-height: 1.9em;
+  }
+  .propertyLevel2 > div, .expandableLevel2
+  {
+    font-size: 1.1em;
+    line-height: 1.8em;
+  }
+  .propertyLevel3 > div, .expandableLevel3
+  {
+    font-size: 1.0em;
+    line-height: 1.7em;
+  }
+  .propertyLevel4 > div, .expandableLevel4
+  {
+    font-size: 0.9em;
+    line-height: 1.6em;
+  }
+  .propertyLevel1 > div:first-child
+  {
+    padding-left: 1.3em;
+    width: calc(60% - 1.3em);
+  }
+  .propertyLevel2 > div:first-child
+  {
+    padding-left: 2.3em;
+    width: calc(60% - 2.3em);
+  }
+  .propertyLevel3 > div:first-child
+  {
+    padding-left: 3.3em;
+    width: calc(60% - 3.3em);
+  }
+  .propertyLevel4 > div:first-child
+  {
+    padding-left: 4.6em;
+    width: calc(60% - 4.6em);
+  }
+  .expandableLevel2
+  {
+    padding-left: 1.2em;
+    width: calc(100% - 1.2em);
+  }
+  .expandableLevel3
+  {
+    padding-left: 2.4em;
+    width: calc(100% - 2.4em);
   }
 }

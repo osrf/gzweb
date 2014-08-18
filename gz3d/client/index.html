@@ -266,10 +266,69 @@
               <img src="style/images/close.png">
             </div>
             <div class="panelContent">
-              <ul>
+                <!-- scene -->
+                <div id="expand-SCENE" class="clickable expandableTree" ng-click="expandTree('SCENE')">
+                  <img src="style/images/play.png">
+                  Scene
+                </div>
+                <div id="expandable-SCENE" class="expandedContent">
+                  <div id="expand-ambient-SCENE" class="clickable expandableProperty" ng-click="expandProperty('ambient', 'SCENE')">
+                    <div>
+                      <img src="style/images/play.png">
+                      Ambient
+                    </div>
+                    <div class="colorDisplay" style="background-color: rgb({{scene.ambient.r}},{{scene.ambient.g}},{{scene.ambient.b}})"></div>
+                  </div>
+                  <div id="expandable-ambient-SCENE" class="expandedContent">
+                    <div class="property propertyLevel2 redBg">
+                      <div>Red</div>
+                      <div class="propertyNumber">{{scene.ambient.r}}</div>
+                    </div>
+                    <div class="property propertyLevel2 greenBg">
+                      <div>Green</div>
+                      <div class="propertyNumber">{{scene.ambient.g}}</div>
+                    </div>
+                    <div class="property propertyLevel2 blueBg">
+                      <div>Blue</div>
+                      <div class="propertyNumber">{{scene.ambient.b}}</div>
+                    </div>
+                    <div class="property propertyLevel2">
+                      <div>Alpha</div>
+                      <div class="propertyNumber">{{scene.ambient.a}}</div>
+                    </div>
+                  </div>
+                  <div id="expand-background-SCENE" class="clickable expandableProperty" ng-click="expandProperty('background', 'SCENE')">
+                    <div>
+                      <img src="style/images/play.png">
+                      Background
+                    </div>
+                    <div class="colorDisplay" style="background-color: rgb({{scene.background.r}},{{scene.background.g}},{{scene.background.b}})"></div>
+                  </div>
+                  <div id="expandable-background-SCENE" class="expandedContent">
+                    <div class="property propertyLevel2 redBg">
+                      <div>Red</div>
+                      <div class="propertyNumber">{{scene.background.r}}</div>
+                    </div>
+                    <div class="property propertyLevel2 greenBg">
+                      <div>Green</div>
+                      <div class="propertyNumber">{{scene.background.g}}</div>
+                    </div>
+                    <div class="property propertyLevel2 blueBg">
+                      <div>Blue</div>
+                      <div class="propertyNumber">{{scene.background.b}}</div>
+                    </div>
+                    <div class="property propertyLevel2">
+                      <div>Alpha</div>
+                      <div class="propertyNumber">{{scene.background.a}}</div>
+                    </div>
+                  </div>
+                </div>
                 <!-- models -->
-                <div id="modelsTree" data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
-                  <h3><span class="collapsible_header">Models</span></h3>
+                <div id="expand-MODELS" class="clickable expandableTree" ng-click="expandTree('MODELS')">
+                  <img src="style/images/play.png">
+                  Models
+                </div>
+                <div id="expandable-MODELS" class="expandedContent">
                   <ul data-role="listview">
                     <div class="clickable treeItem {{model.selected}}" ng-repeat="model in models" ng-click="selectEntity(model.name)" ng-right-click="openEntityMenu($event, model.name)" title="{{model.name}}">
                       <div class="treeItemImg"><img src="{{model.thumbnail}}"></div>
@@ -278,8 +337,11 @@
                   </ul>
                 </div>
                 <!-- lights -->
-                <div id="lightsTree" data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
-                  <h3><span class="collapsible_header">Lights</span></h3>
+                <div id="expand-LIGHTS" class="clickable expandableTree" ng-click="expandTree('LIGHTS')">
+                  <img src="style/images/play.png">
+                  Lights
+                </div>
+                <div id="expandable-LIGHTS" class="expandedContent">
                   <ul data-role="listview">
                     <div class="clickable treeItem {{light.selected}}" ng-repeat="light in lights" ng-click="selectEntity(light.name)" ng-right-click="openEntityMenu($event, light.name)" title="{{light.name}}">
                       <div class="treeItemImg"><img src="{{light.thumbnail}}"></div>
@@ -287,7 +349,6 @@
                     </div>
                   </ul>
                 </div>
-              </ul>
             </div>
           </div>
           <!-- property panels -->
@@ -331,7 +392,7 @@
                   Pose
                 </div>
                 <div id="expandable-pose-{{model.name}}" class="expandedContent">
-                  <div class="property propertyLevel3 darkBg">
+                  <div class="property propertyLevel3 lightBg">
                     <div>x</div>
                     <div class="propertyNumberEdit">
                       <input type="number" onClick="this.select();" ng-model="model.position.x" ng-change="changePose('position', 'x', model.name, model.position.x)" data-role="none"/>
@@ -343,7 +404,7 @@
                       <input type="number" onClick="this.select();" ng-model="model.position.y" ng-change="changePose('position', 'y', model.name, model.position.y)" data-role="none"/>
                     </div>
                   </div>
-                  <div class="property propertyLevel3 darkBg">
+                  <div class="property propertyLevel3 lightBg">
                     <div>z</div>
                     <div class="propertyNumberEdit">
                       <input type="number" onClick="this.select();" ng-model="model.position.z" ng-change="changePose('position', 'z', model.name, model.position.z)" data-role="none"/>
@@ -355,7 +416,7 @@
                       <input type="number" onClick="this.select();" ng-model="model.orientation.roll" ng-change="changePose('orientation', 'x', model.name, model.orientation.roll)" data-role="none"/>
                     </div>
                   </div>
-                  <div class="property propertyLevel3 darkBg">
+                  <div class="property propertyLevel3 lightBg">
                     <div>Pitch</div>
                     <div class="propertyNumberEdit">
                       <input type="number" onClick="this.select();" ng-model="model.orientation.pitch" ng-change="changePose('orientation', 'y', model.name, model.orientation.pitch)" data-role="none"/>
@@ -419,7 +480,7 @@
                       Pose
                     </div>
                     <div id="expandable-pose-{{model.name}}-{{link.shortName}}" class="expandedContent">
-                      <div class="property propertyLevel4 darkBg">
+                      <div class="property propertyLevel4 lightBg">
                         <div>x</div>
                         <div class="propertyNumber">{{link.position.x}}</div>
                       </div>
@@ -427,7 +488,7 @@
                         <div>y</div>
                         <div class="propertyNumber">{{link.position.y}}</div>
                       </div>
-                      <div class="property propertyLevel4 darkBg">
+                      <div class="property propertyLevel4 lightBg">
                         <div>z</div>
                         <div class="propertyNumber">{{link.position.z}}</div>
                       </div>
@@ -435,7 +496,7 @@
                         <div>Roll</div>
                         <div class="propertyNumber">{{link.orientation.roll}}</div>
                       </div>
-                      <div class="property propertyLevel4 darkBg">
+                      <div class="property propertyLevel4 lightBg">
                         <div>Pitch</div>
                         <div class="propertyNumber">{{link.orientation.pitch}}</div>
                       </div>
@@ -450,7 +511,7 @@
                       Inertial
                     </div>
                     <div id="expandable-inertial-{{model.name}}-{{link.shortName}}" class="expandedContent">
-                      <div class="property propertyLevel4 darkBg">
+                      <div class="property propertyLevel4 lightBg">
                         <div>Mass</div>
                         <div class="propertyNumber">{{link.inertial.mass}}</div>
                       </div>
@@ -458,7 +519,7 @@
                         <div>ixx</div>
                         <div class="propertyNumber">{{link.inertial.ixx}}</div>
                       </div>
-                      <div class="property propertyLevel4 darkBg">
+                      <div class="property propertyLevel4 lightBg">
                         <div>ixy</div>
                         <div class="propertyNumber">{{link.inertial.ixy}}</div>
                       </div>
@@ -466,7 +527,7 @@
                         <div>ixz</div>
                         <div class="propertyNumber">{{link.inertial.ixz}}</div>
                       </div>
-                      <div class="property propertyLevel4 darkBg">
+                      <div class="property propertyLevel4 lightBg">
                         <div>iyy</div>
                         <div class="propertyNumber">{{link.inertial.iyy}}</div>
                       </div>
@@ -474,7 +535,7 @@
                         <div>iyz</div>
                         <div class="propertyNumber">{{link.inertial.iyz}}</div>
                       </div>
-                      <div class="property propertyLevel4 darkBg">
+                      <div class="property propertyLevel4 lightBg">
                         <div>izz</div>
                         <div class="propertyNumber">{{link.inertial.izz}}</div>
                       </div>
@@ -512,7 +573,7 @@
                 Pose
               </div>
               <div id="expandable-pose-{{light.name}}" class="expandedContent">
-                <div class="property propertyLevel2 darkBg">
+                <div class="property propertyLevel2 lightBg">
                   <div>x</div>
                   <div class="propertyNumberEdit">
                     <input type="number" onClick="this.select();" ng-model="light.position.x" ng-change="changePose('position', 'x', light.name, light.position.x)" data-role="none"/>
@@ -524,7 +585,7 @@
                     <input type="number" onClick="this.select();" ng-model="light.position.y" ng-change="changePose('position', 'y', light.name, light.position.y)" data-role="none"/>
                   </div>
                 </div>
-                <div class="property propertyLevel2 darkBg">
+                <div class="property propertyLevel2 lightBg">
                   <div>z</div>
                   <div class="propertyNumberEdit">
                     <input type="number" onClick="this.select();" ng-model="light.position.z" ng-change="changePose('position', 'z', light.name, light.position.z)" data-role="none"/>
@@ -536,7 +597,7 @@
                     <input type="number" onClick="this.select();" ng-model="light.orientation.roll" ng-change="changePose('orientation', 'x', light.name, light.orientation.roll)" data-role="none"/>
                   </div>
                 </div>
-                <div class="property propertyLevel2 darkBg">
+                <div class="property propertyLevel2 lightBg">
                   <div>Pitch</div>
                   <div class="propertyNumberEdit">
                     <input type="number" onClick="this.select();" ng-model="light.orientation.pitch" ng-change="changePose('orientation', 'y', light.name, light.orientation.pitch)" data-role="none"/>
