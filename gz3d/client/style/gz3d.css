@@ -304,6 +304,10 @@ body
 {
   width: 40%;
 }
+.propertyLevel02 div
+{
+  font-size: 0.8em;
+}
 .propertyLevel2 div
 {
   font-size: 0.8em;
@@ -315,6 +319,11 @@ body
 .propertyLevel4 div
 {
   font-size: 0.65em;
+}
+.propertyLevel02 div:first-child
+{
+  padding-left: 2.8em;
+  width: calc(60% - 2.8em);
 }
 .propertyLevel1 div:first-child
 {
@@ -363,6 +372,12 @@ body
 .expandableProperty:active
 {
   background-color: #2e2e2e;
+}
+.expandableLevel01 > div:first-child
+{
+  padding-left: 0.2em;
+  width: calc(60% - 0.2em);
+  font-size: 1em;
 }
 .expandableLevel2
 {
@@ -514,6 +529,20 @@ body
 /* touch devices */
 @media (pointer:coarse)
 {
+  .expandableLevel01 > div:first-child
+  {
+    padding-left: 0.2em;
+    width: calc(80% - 0.2em);
+    font-size: 0.8em;
+  }
+  .expandableLevel01 > div:nth-child(2)
+  {
+    width: 20%;
+  }
+  .propertyLevel02 div
+  {
+    font-size: 0.8em;
+  }
   .propertyLevel1 div, .expandableProperty
   {
     font-size: 1.2em;
@@ -563,5 +592,9 @@ body
   {
     padding-left: 2.4em;
     width: calc(100% - 2.4em);
+  }
+  .colorDisplay
+  {
+    margin-top: 0.3em;
   }
 }
