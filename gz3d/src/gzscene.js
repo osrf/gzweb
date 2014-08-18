@@ -2122,13 +2122,13 @@ GZ3D.Scene.prototype.viewJoints = function(model)
         mainAxis.add(this.jointAxis['rotAxis'].clone());
       }
       // revolute2 or universal
-      if (model.joint[j].type === 2 || model.joint[j].type === 4)
+      else if (model.joint[j].type === 2 || model.joint[j].type === 4)
       {
         mainAxis.add(this.jointAxis['rotAxis'].clone());
         secondAxis.add(this.jointAxis['rotAxis'].clone());
       }
       // ball
-      if (model.joint[j].type === 5)
+      else if (model.joint[j].type === 5)
       {
         jointVisual.add(this.jointAxis['ballVisual'].clone());
       }
