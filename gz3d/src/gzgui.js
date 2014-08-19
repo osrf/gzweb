@@ -1635,13 +1635,21 @@ GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
       $('#view-wireframe').buttonMarkup({icon: 'false'});
     }
 
-    if (entity.getObjectByName('JOINT_VISUAL', true))
+    if (entity.joint === undefined || entity.joint.length === 0)
     {
-      $('#view-joints').buttonMarkup({icon: 'check'});
+      $('#view-joints a').css('color', '#888888');
     }
     else
     {
-      $('#view-joints').buttonMarkup({icon: 'false'});
+      $('#view-joints a').css('color', '#ffffff');
+      if (entity.getObjectByName('JOINT_VISUAL', true))
+      {
+        $('#view-joints').buttonMarkup({icon: 'check'});
+      }
+      else
+      {
+        $('#view-joints').buttonMarkup({icon: 'false'});
+      }
     }
 
     $('#view-transparent').css('visibility','visible');
