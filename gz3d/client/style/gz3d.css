@@ -304,46 +304,105 @@ body
 {
   width: 40%;
 }
+.propertyLevel02 div
+{
+  font-size: 0.8em;
+}
+.isTouchDevice .propertyLevel1 div
+{
+  font-size: 1.2em;
+  line-height: 1.9em;
+}
 .propertyLevel2 div
 {
   font-size: 0.8em;
+}
+.isTouchDevice .propertyLevel2 div
+{
+  font-size: 1.1em;
+  line-height: 1.8em;
 }
 .propertyLevel3 div
 {
   font-size: 0.7em;
 }
+.isTouchDevice .propertyLevel3 div
+{
+  font-size: 1.0em;
+  line-height: 1.7em;
+}
 .propertyLevel4 div
 {
   font-size: 0.65em;
 }
+.isTouchDevice .propertyLevel4 div
+{
+  font-size: 0.9em;
+  line-height: 1.6em;
+}
 .propertyLevel5 div
 {
   font-size: 0.6em;
+}
+.isTouchDevice .propertyLevel5 div
+{
+  font-size: 0.8em;
+  line-height: 1.5em;
+}
+.propertyLevel02 div:first-child
+{
+  padding-left: 2.8em;
+  width: calc(60% - 2.8em);
 }
 .propertyLevel1 div:first-child
 {
   padding-left: 1.7em;
   width: calc(60% - 1.7em);
 }
+.isTouchDevice .propertyLevel1 div:first-child
+{
+  padding-left: 1.3em;
+  width: calc(60% - 1.3em);
+}
 .propertyLevel2 div:first-child
 {
   padding-left: 2.8em;
   width: calc(60% - 2.8em);
+}
+.isTouchDevice .propertyLevel2 div:first-child
+{
+  padding-left: 2.3em;
+  width: calc(60% - 2.3em);
 }
 .propertyLevel3 div:first-child
 {
   padding-left: 4.5em;
   width: calc(60% - 4.5em);
 }
+.isTouchDevice .propertyLevel3 div:first-child
+{
+  padding-left: 3.3em;
+  width: calc(60% - 3.3em);
+}
 .propertyLevel4 div:first-child
 {
   padding-left: 6.2em;
   width: calc(60% - 6.2em);
 }
+.isTouchDevice .propertyLevel4 div:first-child
+{
+  padding-left: 4.3em;
+  width: calc(60% - 4.3em);
+}
 .propertyLevel5 div:first-child
 {
   padding-left: 7.9em;
   width: calc(60% - 7.9em);
+}
+.isTouchDevice .propertyLevel5 div:first-child
+{
+  padding-left: 5.6em;
+  width: calc(60% - 5.6em);
 }
 .propertyToggle img
 {
@@ -368,16 +427,44 @@ body
   text-shadow: none;
   font-size: 0.9em;
 }
+.isTouchDevice .expandableProperty
+{
+  font-size: 1.2em;
+  line-height: 1.9em;
+}
 .expandableProperty:hover,
 .expandableProperty:active
 {
   background-color: #2e2e2e;
 }
+.expandableLevel01 > div:first-child
+{
+  padding-left: 0.2em;
+  width: calc(60% - 0.2em);
+  font-size: 1em;
+}
+.isTouchDevice .expandableLevel01 > div:first-child
+{
+  padding-left: 0em;
+  width: calc(80% - 0.2em);
+  font-size: 0.8em;
+}
+.isTouchDevice .expandableLevel01 > div:nth-child(2)
+  {
+    width: 20% !important;
+  }
 .expandableLevel2
 {
   padding-left: 1.7em;
   width: calc(100% - 1.7em);
   font-size: 0.8em;
+}
+.isTouchDevice .expandableLevel2
+{
+  font-size: 1.1em;
+  line-height: 1.8em;
+  padding-left: 1.2em;
+  width: calc(100% - 1.2em);
 }
 .expandableLevel3
 {
@@ -385,11 +472,25 @@ body
   width: calc(100% - 3.5em);
   font-size: 0.7em;
 }
+.isTouchDevice .expandableLevel3
+{
+  font-size: 1.0em;
+  line-height: 1.7em;
+  padding-left: 2.4em;
+  width: calc(100% - 2.4em);
+}
 .expandableLevel4
 {
   padding-left: 5.2em;
   width: calc(100% - 5.2em);
   font-size: 0.65em;
+}
+.isTouchDevice .expandableLevel4
+{
+  font-size: 1.0em;
+  line-height: 1.7em;
+  padding-left: 3.0em;
+  width: calc(100% - 3.0em);
 }
 .expandableProperty img
 {
@@ -427,6 +528,10 @@ body
   height: 1em;
   width: calc(40% - 2em) !important;
   border: 1px solid white;
+}
+.isTouchDevice .colorDisplay
+{
+  margin-top: 0.3em;
 }
 .redBg div
 {
@@ -530,57 +635,4 @@ body
     top: 9.8em;
   }
 }
-/* touch devices */
-@media (pointer:coarse)
-{
-  .propertyLevel1 div, .expandableProperty
-  {
-    font-size: 1.2em;
-    line-height: 1.9em;
-  }
-  .propertyLevel2 div, .expandableLevel2
-  {
-    font-size: 1.1em;
-    line-height: 1.8em;
-  }
-  .propertyLevel3 div, .expandableLevel3
-  {
-    font-size: 1.0em;
-    line-height: 1.7em;
-  }
-  .propertyLevel4 div, .expandableLevel4
-  {
-    font-size: 0.9em;
-    line-height: 1.6em;
-  }
-  .propertyLevel1 div:first-child
-  {
-    padding-left: 1.3em;
-    width: calc(60% - 1.3em);
-  }
-  .propertyLevel2 div:first-child
-  {
-    padding-left: 2.3em;
-    width: calc(60% - 2.3em);
-  }
-  .propertyLevel3 div:first-child
-  {
-    padding-left: 3.3em;
-    width: calc(60% - 3.3em);
-  }
-  .propertyLevel4 div:first-child
-  {
-    padding-left: 4.6em;
-    width: calc(60% - 4.6em);
-  }
-  .expandableLevel2
-  {
-    padding-left: 1.2em;
-    width: calc(100% - 1.2em);
-  }
-  .expandableLevel3
-  {
-    padding-left: 2.4em;
-    width: calc(100% - 2.4em);
-  }
-}
+

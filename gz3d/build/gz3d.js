@@ -14,6 +14,7 @@ var emUnits = function(value)
     };
 
 var isTouchDevice = 'ontouchstart' in window || 'onmsgesturechange' in window;
+
 var isWideScreen = function()
     {
       return $(window).width() / emUnits(1) > 35;
@@ -180,6 +181,11 @@ var modelList =
 $(function()
 {
   //Initialize
+  if ('ontouchstart' in window || 'onmsgesturechange' in window)
+  {
+    $('body').addClass('isTouchDevice');
+  }
+
   // Toggle items
   $('#view-collisions').buttonMarkup({icon: 'false'});
   $('#snap-to-grid').buttonMarkup({icon: 'false'});
@@ -464,6 +470,11 @@ $(function()
   $('#reset-view').click(function()
       {
         guiEvents.emit('view_reset');
+        guiEvents.emit('closeTabs', false);
+      });
+  $('#view-grid').click(function()
+      {
+        guiEvents.emit('show_grid', 'toggle');
         guiEvents.emit('closeTabs', false);
       });
   $('#view-collisions').click(function()
@@ -810,6 +821,34 @@ GZ3D.Gui.prototype.init = function()
         {
           $('#view-collisions').buttonMarkup({icon: 'check'});
           guiEvents.emit('notification_popup','Viewing collisions');
+        }
+      }
+  );
+
+  guiEvents.on('show_grid', function(option)
+      {
+        if (option === 'show')
+        {
+          that.scene.grid.visible = true;
+        }
+        else if (option === 'hide')
+        {
+          that.scene.grid.visible = false;
+        }
+        else if (option === 'toggle')
+        {
+          that.scene.grid.visible = !that.scene.grid.visible;
+        }
+
+        if(!that.scene.grid.visible)
+        {
+          $('#view-grid').buttonMarkup({icon: 'false'});
+          guiEvents.emit('notification_popup','Hiding grid');
+        }
+        else
+        {
+          $('#view-grid').buttonMarkup({icon: 'check'});
+          guiEvents.emit('notification_popup','Viewing grid');
         }
       }
   );
@@ -1364,7 +1403,7 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
         }
 
         formatted = this.formatStats(stats.joint[j]);
-console.log(formatted);
+
         newModel.joints.push(
             {
               name: stats.joint[j].name,
@@ -1598,15 +1637,16 @@ GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
 GZ3D.Gui.prototype.formatStats = function(stats)
 {
   var position, orientation;
+  var Quat, RPY;
   if (stats.pose)
   {
     position = this.round(stats.pose.position);
 
-    var Quat = new THREE.Quaternion(stats.pose.orientation.x,
+    Quat = new THREE.Quaternion(stats.pose.orientation.x,
         stats.pose.orientation.y, stats.pose.orientation.z,
         stats.pose.orientation.w);
 
-    var RPY = new THREE.Euler();
+    RPY = new THREE.Euler();
     RPY.setFromQuaternion(Quat);
 
     orientation = {roll: RPY._x, pitch: RPY._y, yaw: RPY._z};
@@ -1616,6 +1656,25 @@ GZ3D.Gui.prototype.formatStats = function(stats)
   if (stats.inertial)
   {
     inertial = this.round(stats.inertial);
+
+    var inertialPose = stats.inertial.pose;
+    inertial.pose = {};
+
+    inertial.pose.position = {x: inertialPose.position.x,
+                              y: inertialPose.position.y,
+                              z: inertialPose.position.z};
+
+    inertial.pose.position = this.round(inertial.pose.position);
+
+    Quat = new THREE.Quaternion(inertialPose.orientation.x,
+        inertialPose.orientation.y, inertialPose.orientation.z,
+        inertialPose.orientation.w);
+
+    RPY = new THREE.Euler();
+    RPY.setFromQuaternion(Quat);
+
+    inertial.pose.orientation = {roll: RPY._x, pitch: RPY._y, yaw: RPY._z};
+    inertial.pose.orientation = this.round(inertial.pose.orientation);
   }
   var diffuse;
   if (stats.diffuse)
@@ -1822,7 +1881,7 @@ GZ3D.GZIface.prototype.onConnected = function()
 
     if (message.grid === true)
     {
-      this.scene.createGrid();
+      this.gui.guiEvents.emit('show_grid', 'show');
     }
 
     if (message.ambient)
@@ -4611,6 +4670,18 @@ GZ3D.Scene.prototype.init = function()
   this.defaultCameraPosition = new THREE.Vector3(0, -5, 5);
   this.resetView();
 
+  // Grid
+  this.grid = new THREE.GridHelper(10, 1);
+  this.grid.name = 'grid';
+  this.grid.position.z = 0.05;
+  this.grid.rotation.x = Math.PI * 0.5;
+  this.grid.castShadow = false;
+  this.grid.setColors(new THREE.Color( 0xCCCCCC ),new THREE.Color( 0x4D4D4D ));
+  this.grid.material.transparent = true;
+  this.grid.material.opacity = 0.5;
+  this.grid.visible = false;
+  this.scene.add(this.grid);
+
   this.showCollisions = false;
 
   this.spawnModel = new GZ3D.SpawnModel(
@@ -4728,7 +4799,7 @@ GZ3D.Scene.prototype.init = function()
 
 GZ3D.Scene.prototype.initScene = function()
 {
-  this.createGrid();
+  guiEvents.emit('show_grid', 'show');
 
   // create a sun light
   var obj = this.createLight(3, new THREE.Color(0.8, 0.8, 0.8), 0.9,
@@ -5157,24 +5228,6 @@ GZ3D.Scene.prototype.setPose = function(model, position, orientation)
   model.quaternion.x = orientation.x;
   model.quaternion.y = orientation.y;
   model.quaternion.z = orientation.z;
-};
-
-/**
- * Create grid and add it to the scene
- */
-GZ3D.Scene.prototype.createGrid = function()
-{
-  var grid = new THREE.GridHelper(10, 1);
-  grid.name = 'grid';
-  grid.position.z = 0.05;
-  grid.rotation.x = Math.PI * 0.5;
-  grid.castShadow = false;
-  // Color1: Central cross, Color2: grid
-  // 0xCCCCCC = 80%,80%,80% / 0x4D4D4D = 30%,30%,30%
-  grid.setColors(new THREE.Color( 0xCCCCCC ),new THREE.Color( 0x4D4D4D ));
-  grid.material.transparent = true;
-  grid.material.opacity = 0.5;
-  this.scene.add(grid);
 };
 
 /**
