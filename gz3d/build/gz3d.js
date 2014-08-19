@@ -14,6 +14,7 @@ var emUnits = function(value)
     };
 
 var isTouchDevice = 'ontouchstart' in window || 'onmsgesturechange' in window;
+
 var isWideScreen = function()
     {
       return $(window).width() / emUnits(1) > 35;
@@ -180,6 +181,11 @@ var modelList =
 $(function()
 {
   //Initialize
+  if ('ontouchstart' in window || 'onmsgesturechange' in window)
+  {
+    $('body').addClass('isTouchDevice');
+  }
+
   // Toggle items
   $('#view-collisions').buttonMarkup({icon: 'false'});
   $('#snap-to-grid').buttonMarkup({icon: 'false'});
@@ -201,6 +207,8 @@ $(function()
   if (isTallScreen())
   {
     $('.collapsible_header').click();
+    $('#expand-MODELS').click();
+    $('#expand-LIGHTS').click();
   }
 
   // Touch devices
@@ -465,6 +473,11 @@ $(function()
         guiEvents.emit('view_reset');
         guiEvents.emit('closeTabs', false);
       });
+  $('#view-grid').click(function()
+      {
+        guiEvents.emit('show_grid', 'toggle');
+        guiEvents.emit('closeTabs', false);
+      });
   $('#view-collisions').click(function()
       {
         guiEvents.emit('show_collision');
@@ -582,6 +595,7 @@ gzangular.controller('treeControl', ['$scope', function($scope)
   {
     $scope.models = modelStats;
     $scope.lights = lightStats;
+    $scope.scene = sceneStats;
     if (!$scope.$$phase)
     {
       $scope.$apply();
@@ -611,19 +625,40 @@ gzangular.controller('treeControl', ['$scope', function($scope)
     guiEvents.emit('openTab', 'treeMenu', 'treeMenu');
   };
 
-  $scope.expandProperty = function (prop, modelName, linkShortName, linkName)
+  $scope.expandTree = function (tree)
+  {
+    var idContent = 'expandable-' + tree;
+    var idHeader = 'expand-' + tree;
+
+    if ($('#' + idContent).is(':visible'))
+    {
+      $('#' + idContent).hide();
+      $('#' + idHeader+' img').css('transform','rotate(0deg)')
+                              .css('-webkit-transform','rotate(0deg)')
+                              .css('-ms-transform','rotate(0deg)');
+    }
+    else
+    {
+      $('#' + idContent).show();
+      $('#' + idHeader+' img').css('transform','rotate(90deg)')
+                              .css('-webkit-transform','rotate(90deg)')
+                              .css('-ms-transform','rotate(90deg)');
+    }
+  };
+
+  $scope.expandProperty = function (prop, modelName, subPropShortName, subPropName, parentProp)
   {
     var idContent = 'expandable-' + prop + '-' + modelName;
     var idHeader = 'expand-' + prop + '-' + modelName;
 
     var idContentOthers, idHeaderOthers;
 
-    if (linkShortName)
+    if (subPropShortName)
     {
       idContentOthers = idContent;
       idHeaderOthers = idHeader;
-      idContent = idContent + '-' + linkShortName;
-      idHeader = idHeader + '-' + linkShortName;
+      idContent = idContent + '-' + subPropShortName;
+      idHeader = idHeader + '-' + subPropShortName;
     }
 
     if ($('#' + idContent).is(':visible'))
@@ -635,7 +670,7 @@ gzangular.controller('treeControl', ['$scope', function($scope)
     }
     else
     {
-      if (linkShortName && prop === 'link')
+      if (subPropShortName && (prop === 'link' || prop === 'joint'))
       {
         $('[id^="' + idContentOthers + '-"]').hide();
         $('[id^="' + idHeaderOthers + '-"] img')
@@ -649,9 +684,9 @@ gzangular.controller('treeControl', ['$scope', function($scope)
                               .css('-webkit-transform','rotate(90deg)')
                               .css('-ms-transform','rotate(90deg)');
 
-      if (prop === 'pose')
+      if (prop === 'pose' && parentProp === 'link')
       {
-        guiEvents.emit('setPoseStats', modelName, linkName);
+        guiEvents.emit('setPoseStats', modelName, subPropName);
       }
     }
   };
@@ -792,6 +827,34 @@ GZ3D.Gui.prototype.init = function()
         {
           $('#view-collisions').buttonMarkup({icon: 'check'});
           guiEvents.emit('notification_popup','Viewing collisions');
+        }
+      }
+  );
+
+  guiEvents.on('show_grid', function(option)
+      {
+        if (option === 'show')
+        {
+          that.scene.grid.visible = true;
+        }
+        else if (option === 'hide')
+        {
+          that.scene.grid.visible = false;
+        }
+        else if (option === 'toggle')
+        {
+          that.scene.grid.visible = !that.scene.grid.visible;
+        }
+
+        if(!that.scene.grid.visible)
+        {
+          $('#view-grid').buttonMarkup({icon: 'false'});
+          guiEvents.emit('notification_popup','Hiding grid');
+        }
+        else
+        {
+          $('#view-grid').buttonMarkup({icon: 'check'});
+          guiEvents.emit('notification_popup','Viewing grid');
         }
       }
   );
@@ -1073,7 +1136,6 @@ GZ3D.Gui.prototype.init = function()
         {
           if (modelStats[i].name === object)
           {
-            $('#modelsTree').collapsible({collapsed: false});
             modelStats[i].selected = 'selectedTreeItem';
             if (this.openTreeWhenSelected)
             {
@@ -1089,7 +1151,6 @@ GZ3D.Gui.prototype.init = function()
         {
           if (lightStats[i].name === object)
           {
-            $('#lightsTree').collapsible({collapsed: false});
             lightStats[i].selected = 'selectedTreeItem';
             if (this.openTreeWhenSelected)
             {
@@ -1236,6 +1297,21 @@ GZ3D.Gui.prototype.setSimTime = function(simTime)
   $('.sim-time-value').text(simTime);
 };
 
+var sceneStats = {};
+/**
+ * Update scene stats on scene tree
+ * @param {} stats
+ */
+GZ3D.Gui.prototype.setSceneStats = function(stats)
+{
+  var formatted = this.formatStats({
+      ambient: stats.ambient,
+      background: stats.background});
+
+  sceneStats['ambient'] = formatted.ambient;
+  sceneStats['background'] = formatted.background;
+};
+
 var modelStats = [];
 /**
  * Update model stats on property panel
@@ -1277,12 +1353,13 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
             is_static: this.trueOrFalse(stats.is_static),
             position: formatted.pose.position,
             orientation: formatted.pose.orientation,
-            links: []
+            links: [],
+            joints: []
           });
 
-      // links
       var newModel = modelStats[modelStats.length-1];
 
+      // links
       for (var l = 0; l < stats.link.length; ++l)
       {
         var shortName = stats.link[l].name.substring(
@@ -1301,6 +1378,62 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
               position: formatted.pose.position,
               orientation: formatted.pose.orientation,
               inertial: formatted.inertial
+            });
+      }
+
+      // joints
+      for (var j = 0; j < stats.joint.length; ++j)
+      {
+        var jointShortName = stats.joint[j].name.substring(
+            stats.joint[j].name.lastIndexOf('::')+2);
+        var parentShortName = stats.joint[j].parent.substring(
+            stats.joint[j].parent.lastIndexOf('::')+2);
+        var childShortName = stats.joint[j].child.substring(
+            stats.joint[j].child.lastIndexOf('::')+2);
+
+        var type;
+        switch (stats.joint[j].type)
+        {
+          case 1:
+              type = 'Revolute';
+              break;
+          case 2:
+              type = 'Revolute2';
+              break;
+          case 3:
+              type = 'Prismatic';
+              break;
+          case 4:
+              type = 'Universal';
+              break;
+          case 5:
+              type = 'Ball';
+              break;
+          case 6:
+              type = 'Screw';
+              break;
+          case 7:
+              type = 'Gearbox';
+              break;
+          default:
+              type = 'Unknown';
+        }
+
+        formatted = this.formatStats(stats.joint[j]);
+
+        newModel.joints.push(
+            {
+              name: stats.joint[j].name,
+              shortName: jointShortName,
+              type: type,
+              parent: stats.joint[j].parent,
+              parentShortName: parentShortName,
+              child: stats.joint[j].child,
+              childShortName: childShortName,
+              position: formatted.pose.position,
+              orientation: formatted.pose.orientation,
+              axis1: formatted.axis1,
+              axis2: formatted.axis2
             });
       }
     }
@@ -1532,22 +1665,45 @@ GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
  */
 GZ3D.Gui.prototype.formatStats = function(stats)
 {
-  var position = this.round(stats.pose.position);
+  var position, orientation;
+  var Quat, RPY;
+  if (stats.pose)
+  {
+    position = this.round(stats.pose.position);
 
-  var Quat = new THREE.Quaternion(stats.pose.orientation.x,
-      stats.pose.orientation.y, stats.pose.orientation.z,
-      stats.pose.orientation.w);
+    Quat = new THREE.Quaternion(stats.pose.orientation.x,
+        stats.pose.orientation.y, stats.pose.orientation.z,
+        stats.pose.orientation.w);
 
-  var RPY = new THREE.Euler();
-  RPY.setFromQuaternion(Quat);
+    RPY = new THREE.Euler();
+    RPY.setFromQuaternion(Quat);
 
-  var orientation = {roll: RPY._x, pitch: RPY._y, yaw: RPY._z};
-  orientation = this.round(orientation);
-
+    orientation = {roll: RPY._x, pitch: RPY._y, yaw: RPY._z};
+    orientation = this.round(orientation);
+  }
   var inertial;
   if (stats.inertial)
   {
     inertial = this.round(stats.inertial);
+
+    var inertialPose = stats.inertial.pose;
+    inertial.pose = {};
+
+    inertial.pose.position = {x: inertialPose.position.x,
+                              y: inertialPose.position.y,
+                              z: inertialPose.position.z};
+
+    inertial.pose.position = this.round(inertial.pose.position);
+
+    Quat = new THREE.Quaternion(inertialPose.orientation.x,
+        inertialPose.orientation.y, inertialPose.orientation.z,
+        inertialPose.orientation.w);
+
+    RPY = new THREE.Euler();
+    RPY.setFromQuaternion(Quat);
+
+    inertial.pose.orientation = {roll: RPY._x, pitch: RPY._y, yaw: RPY._z};
+    inertial.pose.orientation = this.round(inertial.pose.orientation);
   }
   var diffuse;
   if (stats.diffuse)
@@ -1564,12 +1720,40 @@ GZ3D.Gui.prototype.formatStats = function(stats)
   {
     attenuation = this.round(stats.attenuation);
   }
+  var ambient;
+  if (stats.ambient)
+  {
+    ambient = this.round(stats.ambient);
+  }
+  var background;
+  if (stats.background)
+  {
+    background = this.round(stats.background);
+  }
+  var axis1;
+  if (stats.axis1)
+  {
+    axis1 = {};
+    axis1 = this.round(stats.axis1);
+    axis1.direction = this.round(stats.axis1.xyz);
+  }
+  var axis2;
+  if (stats.axis2)
+  {
+    axis2 = {};
+    axis2 = this.round(stats.axis2);
+    axis2.direction = this.round(stats.axis2.xyz);
+  }
 
   return {pose: {position: position, orientation: orientation},
           inertial: inertial,
           diffuse: diffuse,
           specular: specular,
-          attenuation: attenuation};
+          attenuation: attenuation,
+          ambient: ambient,
+          background: background,
+          axis1: axis1,
+          axis2: axis2};
 };
 
 /**
@@ -1581,13 +1765,16 @@ GZ3D.Gui.prototype.round = function(stats)
 {
   for (var key in stats)
   {
-    if (key === 'r' || key === 'g' || key === 'b' || key === 'a')
+    if (typeof stats[key] === 'number')
     {
-      stats[key] = Math.round(stats[key] * 255);
-    }
-    else
-    {
-      stats[key] = parseFloat(Math.round(stats[key] * 1000) / 1000).toFixed(3);
+      if (key === 'r' || key === 'g' || key === 'b' || key === 'a')
+      {
+        stats[key] = Math.round(stats[key] * 255);
+      }
+      else
+      {
+        stats[key] = parseFloat(Math.round(stats[key] * 1000) / 1000).toFixed(3);
+      }
     }
   }
   return stats;
@@ -1724,7 +1911,28 @@ GZ3D.GZIface.prototype.onConnected = function()
 
     if (message.grid === true)
     {
-      this.scene.createGrid();
+      this.gui.guiEvents.emit('show_grid', 'show');
+    }
+
+    if (message.ambient)
+    {
+      var ambient = new THREE.Color();
+      ambient.r = message.ambient.r;
+      ambient.g = message.ambient.g;
+      ambient.b = message.ambient.b;
+
+      this.scene.ambient.color = ambient;
+    }
+
+    if (message.background)
+    {
+      var background = new THREE.Color();
+      background.r = message.background.r;
+      background.g = message.background.g;
+      background.b = message.background.b;
+
+      this.scene.renderer.clear();
+      this.scene.renderer.setClearColor(background, 1);
     }
 
     for (var i = 0; i < message.light.length; ++i)
@@ -1743,6 +1951,7 @@ GZ3D.GZIface.prototype.onConnected = function()
       this.gui.setModelStats(model, 'update');
     }
 
+    this.gui.setSceneStats(message);
     this.sceneTopic.unsubscribe();
   };
   this.sceneTopic.subscribe(sceneUpdate.bind(this));
@@ -4502,6 +4711,18 @@ GZ3D.Scene.prototype.init = function()
   this.defaultCameraPosition = new THREE.Vector3(0, -5, 5);
   this.resetView();
 
+  // Grid
+  this.grid = new THREE.GridHelper(10, 1);
+  this.grid.name = 'grid';
+  this.grid.position.z = 0.05;
+  this.grid.rotation.x = Math.PI * 0.5;
+  this.grid.castShadow = false;
+  this.grid.setColors(new THREE.Color( 0xCCCCCC ),new THREE.Color( 0x4D4D4D ));
+  this.grid.material.transparent = true;
+  this.grid.material.opacity = 0.5;
+  this.grid.visible = false;
+  this.scene.add(this.grid);
+
   this.showCollisions = false;
 
   this.spawnModel = new GZ3D.SpawnModel(
@@ -4762,7 +4983,7 @@ GZ3D.Scene.prototype.init = function()
 
 GZ3D.Scene.prototype.initScene = function()
 {
-  this.createGrid();
+  guiEvents.emit('show_grid', 'show');
 
   // create a sun light
   var obj = this.createLight(3, new THREE.Color(0.8, 0.8, 0.8), 0.9,
@@ -5191,24 +5412,6 @@ GZ3D.Scene.prototype.setPose = function(model, position, orientation)
   model.quaternion.x = orientation.x;
   model.quaternion.y = orientation.y;
   model.quaternion.z = orientation.z;
-};
-
-/**
- * Create grid and add it to the scene
- */
-GZ3D.Scene.prototype.createGrid = function()
-{
-  var grid = new THREE.GridHelper(10, 1);
-  grid.name = 'grid';
-  grid.position.z = 0.05;
-  grid.rotation.x = Math.PI * 0.5;
-  grid.castShadow = false;
-  // Color1: Central cross, Color2: grid
-  // 0xCCCCCC = 80%,80%,80% / 0x4D4D4D = 30%,30%,30%
-  grid.setColors(new THREE.Color( 0xCCCCCC ),new THREE.Color( 0x4D4D4D ));
-  grid.material.transparent = true;
-  grid.material.opacity = 0.5;
-  this.scene.add(grid);
 };
 
 /**

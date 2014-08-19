@@ -2,15 +2,27 @@
 
 Install gazebo or drcsim if you haven't done so already.
 
-http://gazebosim.org/wiki/Install
+http://gazebosim.org/tutorials?tut=install&cat=get_started
 
 Dependencies: sudo apt-get install the following:
+
 * libjansson-dev
+
 * nodejs
+
 * npm
+
 * libboost-dev
 
-    sudo apt-get install libjansson-dev nodejs npm libboost-dev
+* imagemagick
+
+* libtinyxml-dev
+
+* mercurial
+
+In the terminal:
+
+    sudo apt-get install libjansson-dev nodejs npm libboost-dev imagemagick libtinyxml-dev mercurial
 
 # Build
 
@@ -21,7 +33,7 @@ you'll need to source the gazebo/drcsim setup.sh files, and run a deploy script.
     # if you have drcsim then source /usr/share/drcsim/setup.sh
     . /usr/share/gazebo/setup.sh
 
-Run the deploy script, this downloads models from the web and may take a couple of minutes.
+Run the deploy script, this downloads models from the web, converts media files to web-compatible format, and generates thumbnails for the models. This step may take a few minutes.
 
     ./deploy.sh -m
 
@@ -31,7 +43,14 @@ the `-m` flag will not be needed, i.e.:
 
     ./deploy.sh
 
-Mobile devices: 
+
+## Options
+
+To generate thumbnails manually, run the script with the `-t` flag, i.e.:
+
+    ./deploy.sh -t
+
+Mobile devices:
 
 If you'll use gzweb on mobile devices, you can create coarse versions of all models, which are lighter to load (50% of original quality). If you've already ran `./deploy.sh -m`, run just:
 
