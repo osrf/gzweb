@@ -340,6 +340,15 @@ body
   font-size: 0.9em;
   line-height: 1.6em;
 }
+.propertyLevel5 div
+{
+  font-size: 0.6em;
+}
+.isTouchDevice .propertyLevel5 div
+{
+  font-size: 0.8em;
+  line-height: 1.5em;
+}
 .propertyLevel02 div:first-child
 {
   padding-left: 2.8em;
@@ -367,8 +376,8 @@ body
 }
 .propertyLevel3 div:first-child
 {
-  padding-left: calc(2.8em + 1.7em);
-  width: calc(60% - 2.8em - 1.7em);
+  padding-left: 4.5em;
+  width: calc(60% - 4.5em);
 }
 .isTouchDevice .propertyLevel3 div:first-child
 {
@@ -377,13 +386,23 @@ body
 }
 .propertyLevel4 div:first-child
 {
-  padding-left: calc(2.8em + 3.4em);
-  width: calc(60% - 2.8em - 3.4em);
+  padding-left: 6.2em;
+  width: calc(60% - 6.2em);
 }
 .isTouchDevice .propertyLevel4 div:first-child
 {
-  padding-left: 4.6em;
-  width: calc(60% - 4.6em);
+  padding-left: 4.3em;
+  width: calc(60% - 4.3em);
+}
+.propertyLevel5 div:first-child
+{
+  padding-left: 7.9em;
+  width: calc(60% - 7.9em);
+}
+.isTouchDevice .propertyLevel5 div:first-child
+{
+  padding-left: 5.6em;
+  width: calc(60% - 5.6em);
 }
 .propertyToggle img
 {
@@ -493,6 +512,19 @@ body
   padding-left: 2.4em;
   width: calc(100% - 2.4em);
 }
+.expandableLevel4
+{
+  padding-left: 5.2em;
+  width: calc(100% - 5.2em);
+  font-size: 0.65em;
+}
+.isTouchDevice .expandableLevel4
+{
+  font-size: 1.0em;
+  line-height: 1.7em;
+  padding-left: 3.0em;
+  width: calc(100% - 3.0em);
+}
 .expandableProperty img
 {
   vertical-align: middle;
@@ -508,6 +540,10 @@ body
 .expandableLevel3 > img
 {
   height: 0.7em;
+}
+.expandableLevel4 > img
+{
+  height: 0.65em;
 }
 .expandableProperty > div:first-child
 {
