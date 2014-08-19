@@ -1696,9 +1696,10 @@ GZ3D.Gui.prototype.formatStats = function(stats)
   {
     background = this.round(stats.background);
   }
-  var axis1 = {};
+  var axis1;
   if (stats.axis1)
   {
+    axis1 = {};
     axis1 = this.round(stats.axis1);
     axis1.direction = this.round(stats.axis1.xyz);
   }

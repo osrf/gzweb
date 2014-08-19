@@ -628,7 +628,7 @@
                       </div>
                     </div>
                     <!-- joint axis 1 -->
-                    <div id="expand-axis1-{{model.name}}-{{joint.shortName}}" class="clickable expandableProperty expandableLevel3" ng-click="expandProperty('axis1', model.name, joint.shortName, joint.name, 'joint')">
+                    <div ng-if="joint.axis1" id="expand-axis1-{{model.name}}-{{joint.shortName}}" class="clickable expandableProperty expandableLevel3" ng-click="expandProperty('axis1', model.name, joint.shortName, joint.name, 'joint')">
                       <img src="style/images/play.png">
                       Axis 1
                     </div>
