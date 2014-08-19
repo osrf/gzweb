@@ -169,61 +169,54 @@ GZ3D.Scene.prototype.init = function()
 
   // Joint axis
   this.jointAxis = new THREE.Object3D();
-  this.jointAxis.name = 'jointAxis';
+  this.jointAxis.name = 'JOINT_VISUAL';
   var geometry, material, mesh;
-
-  var AxisMaterial = function(color)
-  {
-    var material = new THREE.MeshBasicMaterial();
-    material.color = color;
-    return material;
-  };
 
   // XYZ
   var XYZaxes = new THREE.Object3D();
 
   geometry = new THREE.CylinderGeometry(0.01, 0.01, 0.3, 10, 1, false);
 
-  material = new AxisMaterial(new THREE.Color(0xff0000));
+  material = new THREE.MeshBasicMaterial({color: new THREE.Color(0xff0000)});
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.x = 0.15;
   mesh.rotation.z = -Math.PI/2;
-  mesh.name = 'jointAxis';
+  mesh.name = 'JOINT_VISUAL';
   XYZaxes.add(mesh);
 
-  material = new AxisMaterial(new THREE.Color(0x00ff00));
+  material = new THREE.MeshBasicMaterial({color: new THREE.Color(0x00ff00)});
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.y = 0.15;
-  mesh.name = 'jointAxis';
+  mesh.name = 'JOINT_VISUAL';
   XYZaxes.add(mesh);
 
-  material = new AxisMaterial(new THREE.Color(0x0000ff));
+  material = new THREE.MeshBasicMaterial({color: new THREE.Color(0x0000ff)});
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.z = 0.15;
   mesh.rotation.x = Math.PI/2;
-  mesh.name = 'jointAxis';
+  mesh.name = 'JOINT_VISUAL';
   XYZaxes.add(mesh);
 
   geometry = new THREE.CylinderGeometry(0, 0.03, 0.1, 10, 1, true);
 
-  material = new AxisMaterial(new THREE.Color(0xff0000));
+  material = new THREE.MeshBasicMaterial({color: new THREE.Color(0xff0000)});
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.x = 0.3;
   mesh.rotation.z = -Math.PI/2;
-  mesh.name = 'jointAxis';
+  mesh.name = 'JOINT_VISUAL';
   XYZaxes.add(mesh);
 
-  material = new AxisMaterial(new THREE.Color(0x00ff00));
+  material = new THREE.MeshBasicMaterial({color: new THREE.Color(0x00ff00)});
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.y = 0.3;
-  mesh.name = 'jointAxis';
+  mesh.name = 'JOINT_VISUAL';
   XYZaxes.add(mesh);
 
-  material = new AxisMaterial(new THREE.Color(0x0000ff));
+  material = new THREE.MeshBasicMaterial({color: new THREE.Color(0x0000ff)});
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.z = 0.3;
   mesh.rotation.x = Math.PI/2;
-  mesh.name = 'jointAxis';
+  mesh.name = 'JOINT_VISUAL';
   XYZaxes.add(mesh);
 
   this.jointAxis['XYZaxes'] = XYZaxes;
@@ -239,14 +232,14 @@ GZ3D.Scene.prototype.init = function()
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.z = -0.175;
   mesh.rotation.x = Math.PI/2;
-  mesh.name = 'jointAxis';
+  mesh.name = 'JOINT_VISUAL';
   mainAxis.add(mesh);
 
   geometry = new THREE.CylinderGeometry(0, 0.05, 0.15, 36, 1, false);
 
   mesh = new THREE.Mesh(geometry, material);
   mesh.rotation.x = Math.PI/2;
-  mesh.name = 'jointAxis';
+  mesh.name = 'JOINT_VISUAL';
   mainAxis.add(mesh);
 
   this.jointAxis['mainAxis'] = mainAxis;
@@ -256,14 +249,14 @@ GZ3D.Scene.prototype.init = function()
   geometry = new THREE.TorusGeometry(0.06, 0.007, 10, 36, Math.PI * 3/2);
 
   mesh = new THREE.Mesh(geometry, material);
-  mesh.name = 'jointAxis';
+  mesh.name = 'JOINT_VISUAL';
   rotAxis.add(mesh);
 
   geometry = new THREE.CylinderGeometry(0.02, 0, 0.0375, 10, 1, false);
 
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.x = 0.06;
-  mesh.name = 'jointAxis';
+  mesh.name = 'JOINT_VISUAL';
   rotAxis.add(mesh);
 
   this.jointAxis['rotAxis'] = rotAxis;
@@ -277,7 +270,7 @@ GZ3D.Scene.prototype.init = function()
   mesh.position.y = 0.06;
   mesh.position.z = -0.175;
   mesh.rotation.x = Math.PI/2;
-  mesh.name = 'jointAxis';
+  mesh.name = 'JOINT_VISUAL';
   transAxis.add(mesh);
 
   geometry = new THREE.CylinderGeometry(0.02, 0, 0.0375, 10, 1, false);
@@ -287,7 +280,7 @@ GZ3D.Scene.prototype.init = function()
   mesh.position.y = 0.06;
   mesh.position.z = -0.175 + 0.05;
   mesh.rotation.x = -Math.PI/2;
-  mesh.name = 'jointAxis';
+  mesh.name = 'JOINT_VISUAL';
   transAxis.add(mesh);
 
   mesh = new THREE.Mesh(geometry, material);
@@ -295,7 +288,7 @@ GZ3D.Scene.prototype.init = function()
   mesh.position.y = 0.06;
   mesh.position.z = -0.175 - 0.05;
   mesh.rotation.x = Math.PI/2;
-  mesh.name = 'jointAxis';
+  mesh.name = 'JOINT_VISUAL';
   transAxis.add(mesh);
 
   this.jointAxis['transAxis'] = transAxis;
@@ -305,7 +298,7 @@ GZ3D.Scene.prototype.init = function()
   geometry = new THREE.SphereGeometry(0.06);
 
   mesh = new THREE.Mesh(geometry, material);
-  mesh.name = 'jointAxis';
+  mesh.name = 'JOINT_VISUAL';
   ballVisual.add(mesh);
 
   this.jointAxis['ballVisual'] = ballVisual;
@@ -563,7 +556,8 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
         break;
       }
 
-      if (model.name === 'grid' || model.name === 'boundingBox')
+      if (model.name === 'grid' || model.name === 'boundingBox' ||
+          model.name === 'JOINT_VISUAL')
       {
         point = objects[i].point;
         model = null;
@@ -1970,7 +1964,7 @@ GZ3D.Scene.prototype.setViewAs = function(model, viewAs)
         descendants[i].name.indexOf('COLLISION_VISUAL') === -1 &&
         !this.getParentByPartialName(descendants[i], 'COLLISION_VISUAL')&&
         descendants[i].name.indexOf('wireframe') === -1 &&
-        descendants[i].name.indexOf('jointAxis') === -1)
+        descendants[i].name.indexOf('JOINT_VISUAL') === -1)
     {
       if (descendants[i].material instanceof THREE.MeshFaceMaterial)
       {
@@ -2073,13 +2067,13 @@ GZ3D.Scene.prototype.viewJoints = function(model)
     return;
   }
 
-  var joint = model.getObjectByName('jointAxis', true);
+  var joint = model.getObjectByName('JOINT_VISUAL', true);
   if (joint)
   {
     do
     {
       joint.parent.remove(joint);
-      joint = model.getObjectByName('jointAxis', true);
+      joint = model.getObjectByName('JOINT_VISUAL', true);
     }
     while (joint);
   }

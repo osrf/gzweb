@@ -1635,7 +1635,7 @@ GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
       $('#view-wireframe').buttonMarkup({icon: 'false'});
     }
 
-    if (entity.getObjectByName('jointAxis', true))
+    if (entity.getObjectByName('JOINT_VISUAL', true))
     {
       $('#view-joints').buttonMarkup({icon: 'check'});
     }

@@ -144,7 +144,7 @@ GZ3D.RadialMenu.prototype.show = function(event,model)
   {
     this.menu.getObjectByName('wireframe').isHighlighted = true;
   }
-  if (this.model.getObjectByName('jointAxis', true))
+  if (this.model.getObjectByName('JOINT_VISUAL', true))
   {
     this.menu.getObjectByName('joints').isHighlighted = true;
   }
