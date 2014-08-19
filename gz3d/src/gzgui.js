@@ -1542,15 +1542,16 @@ GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
 GZ3D.Gui.prototype.formatStats = function(stats)
 {
   var position, orientation;
+  var Quat, RPY;
   if (stats.pose)
   {
     position = this.round(stats.pose.position);
 
-    var Quat = new THREE.Quaternion(stats.pose.orientation.x,
+    Quat = new THREE.Quaternion(stats.pose.orientation.x,
         stats.pose.orientation.y, stats.pose.orientation.z,
         stats.pose.orientation.w);
 
-    var RPY = new THREE.Euler();
+    RPY = new THREE.Euler();
     RPY.setFromQuaternion(Quat);
 
     orientation = {roll: RPY._x, pitch: RPY._y, yaw: RPY._z};
@@ -1560,6 +1561,25 @@ GZ3D.Gui.prototype.formatStats = function(stats)
   if (stats.inertial)
   {
     inertial = this.round(stats.inertial);
+
+    var inertialPose = stats.inertial.pose;
+    inertial.pose = {};
+
+    inertial.pose.position = {x: inertialPose.position.x,
+                              y: inertialPose.position.y,
+                              z: inertialPose.position.z};
+
+    inertial.pose.position = this.round(inertial.pose.position);
+
+    Quat = new THREE.Quaternion(inertialPose.orientation.x,
+        inertialPose.orientation.y, inertialPose.orientation.z,
+        inertialPose.orientation.w);
+
+    RPY = new THREE.Euler();
+    RPY.setFromQuaternion(Quat);
+
+    inertial.pose.orientation = {roll: RPY._x, pitch: RPY._y, yaw: RPY._z};
+    inertial.pose.orientation = this.round(inertial.pose.orientation);
   }
   var diffuse;
   if (stats.diffuse)
@@ -1605,13 +1625,16 @@ GZ3D.Gui.prototype.round = function(stats)
 {
   for (var key in stats)
   {
-    if (key === 'r' || key === 'g' || key === 'b' || key === 'a')
+    if (typeof stats[key] === 'number')
     {
-      stats[key] = Math.round(stats[key] * 255);
-    }
-    else
-    {
-      stats[key] = parseFloat(Math.round(stats[key] * 1000) / 1000).toFixed(3);
+      if (key === 'r' || key === 'g' || key === 'b' || key === 'a')
+      {
+        stats[key] = Math.round(stats[key] * 255);
+      }
+      else
+      {
+        stats[key] = parseFloat(Math.round(stats[key] * 1000) / 1000).toFixed(3);
+      }
     }
   }
   return stats;
