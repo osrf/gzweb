@@ -517,8 +517,11 @@ $(function()
   });
 
   $( '#view-joints' ).click(function() {
-    $('#model-popup').popup('close');
-    guiEvents.emit('view_joints');
+    if ($('#view-joints a').css('color') === 'rgb(255, 255, 255)')
+    {
+      $('#model-popup').popup('close');
+      guiEvents.emit('view_joints');
+    }
   });
 
   $( '#delete-entity' ).click(function() {
@@ -1643,6 +1646,7 @@ GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
     if (entity.joint === undefined || entity.joint.length === 0)
     {
       $('#view-joints a').css('color', '#888888');
+      $('#view-joints').buttonMarkup({icon: 'false'});
     }
     else
     {
