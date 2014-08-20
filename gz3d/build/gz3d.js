@@ -705,9 +705,20 @@ GZ3D.Gui.prototype.init = function()
       function(mode)
       {
         that.scene.setManipulationMode(mode);
-        guiEvents.emit('notification_popup',
-            mode.charAt(0).toUpperCase()+
-            mode.substring(1)+' mode');
+        var space = that.scene.modelManipulator.space;
+
+        if (mode === 'view')
+        {
+          guiEvents.emit('notification_popup', 'View mode');
+        }
+        else
+        {
+          guiEvents.emit('notification_popup',
+              mode.charAt(0).toUpperCase()+
+              mode.substring(1)+' mode in '+
+              space.charAt(0).toUpperCase()+
+              space.substring(1)+' space');
+        }
       }
   );
 
@@ -2917,7 +2928,7 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
   // Needs camera for perspective
   this.camera = camera;
 
-  // For mouse/key/touch events
+  // For mouse/touch events
   this.domElement = (domElement !== undefined) ? domElement : document;
   this.document = (doc !== undefined) ? doc : document;
 
@@ -2927,8 +2938,11 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
   // Object to be manipulated
   this.object = undefined;
 
-  // translate|rotate
+  // translate / rotate
   this.mode = 'translate';
+
+  // world / local
+  this.space = 'world';
 
   // hovered used for backwards compatibility
   // Whenever it wasn't an issue, hovered and active were combined
@@ -4811,19 +4825,16 @@ GZ3D.Scene.prototype.onKeyDown = function(event)
   // Esc/R/T for changing manipulation modes
   if (event.keyCode === 27) // Esc
   {
-    this.setManipulationMode('view');
     $( '#view-mode' ).click();
     $('input[type="radio"]').checkboxradio('refresh');
   }
   if (event.keyCode === 82) // R
   {
-    this.setManipulationMode('rotate');
     $( '#rotate-mode' ).click();
     $('input[type="radio"]').checkboxradio('refresh');
   }
   if (event.keyCode === 84) // T
   {
-    this.setManipulationMode('translate');
     $( '#translate-mode' ).click();
     $('input[type="radio"]').checkboxradio('refresh');
   }
@@ -6004,6 +6015,12 @@ GZ3D.Scene.prototype.setManipulationMode = function(mode)
   }
   else
   {
+    // Toggle manipulaion space (world / local)
+    if (this.modelManipulator.mode === this.manipulationMode)
+    {
+      this.modelManipulator.space =
+        (this.modelManipulator.space === 'world') ? 'local' : 'world';
+    }
     this.modelManipulator.mode = this.manipulationMode;
     this.modelManipulator.setMode(this.modelManipulator.mode);
     // model was selected during view mode

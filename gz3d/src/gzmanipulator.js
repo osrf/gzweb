@@ -11,7 +11,7 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
   // Needs camera for perspective
   this.camera = camera;
 
-  // For mouse/key/touch events
+  // For mouse/touch events
   this.domElement = (domElement !== undefined) ? domElement : document;
   this.document = (doc !== undefined) ? doc : document;
 
@@ -21,8 +21,11 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
   // Object to be manipulated
   this.object = undefined;
 
-  // translate|rotate
+  // translate / rotate
   this.mode = 'translate';
+
+  // world / local
+  this.space = 'world';
 
   // hovered used for backwards compatibility
   // Whenever it wasn't an issue, hovered and active were combined

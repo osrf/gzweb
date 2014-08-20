@@ -357,19 +357,16 @@ GZ3D.Scene.prototype.onKeyDown = function(event)
   // Esc/R/T for changing manipulation modes
   if (event.keyCode === 27) // Esc
   {
-    this.setManipulationMode('view');
     $( '#view-mode' ).click();
     $('input[type="radio"]').checkboxradio('refresh');
   }
   if (event.keyCode === 82) // R
   {
-    this.setManipulationMode('rotate');
     $( '#rotate-mode' ).click();
     $('input[type="radio"]').checkboxradio('refresh');
   }
   if (event.keyCode === 84) // T
   {
-    this.setManipulationMode('translate');
     $( '#translate-mode' ).click();
     $('input[type="radio"]').checkboxradio('refresh');
   }
@@ -1550,6 +1547,12 @@ GZ3D.Scene.prototype.setManipulationMode = function(mode)
   }
   else
   {
+    // Toggle manipulaion space (world / local)
+    if (this.modelManipulator.mode === this.manipulationMode)
+    {
+      this.modelManipulator.space =
+        (this.modelManipulator.space === 'world') ? 'local' : 'world';
+    }
     this.modelManipulator.mode = this.manipulationMode;
     this.modelManipulator.setMode(this.modelManipulator.mode);
     // model was selected during view mode
