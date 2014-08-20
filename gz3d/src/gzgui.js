@@ -1632,19 +1632,19 @@ GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
 GZ3D.Gui.prototype.formatStats = function(stats)
 {
   var position, orientation;
-  var Quat, RPY;
+  var quat, rpy;
   if (stats.pose)
   {
     position = this.round(stats.pose.position);
 
-    Quat = new THREE.Quaternion(stats.pose.orientation.x,
+    quat = new THREE.Quaternion(stats.pose.orientation.x,
         stats.pose.orientation.y, stats.pose.orientation.z,
         stats.pose.orientation.w);
 
-    RPY = new THREE.Euler();
-    RPY.setFromQuaternion(Quat);
+    rpy = new THREE.Euler();
+    rpy.setFromQuaternion(quat);
 
-    orientation = {roll: RPY._x, pitch: RPY._y, yaw: RPY._z};
+    orientation = {roll: rpy._x, pitch: rpy._y, yaw: rpy._z};
     orientation = this.round(orientation);
   }
   var inertial;
@@ -1661,14 +1661,14 @@ GZ3D.Gui.prototype.formatStats = function(stats)
 
     inertial.pose.position = this.round(inertial.pose.position);
 
-    Quat = new THREE.Quaternion(inertialPose.orientation.x,
+    quat = new THREE.Quaternion(inertialPose.orientation.x,
         inertialPose.orientation.y, inertialPose.orientation.z,
         inertialPose.orientation.w);
 
-    RPY = new THREE.Euler();
-    RPY.setFromQuaternion(Quat);
+    rpy = new THREE.Euler();
+    rpy.setFromQuaternion(quat);
 
-    inertial.pose.orientation = {roll: RPY._x, pitch: RPY._y, yaw: RPY._z};
+    inertial.pose.orientation = {roll: rpy._x, pitch: rpy._y, yaw: rpy._z};
     inertial.pose.orientation = this.round(inertial.pose.orientation);
   }
   var diffuse;
@@ -1739,7 +1739,8 @@ GZ3D.Gui.prototype.round = function(stats)
       }
       else
       {
-        stats[key] = parseFloat(Math.round(stats[key] * 1000) / 1000).toFixed(3);
+        stats[key] = parseFloat(Math.round(stats[key] * 1000) / 1000)
+            .toFixed(3);
       }
     }
   }
