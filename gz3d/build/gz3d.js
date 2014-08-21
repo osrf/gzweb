@@ -694,6 +694,11 @@ gzangular.controller('treeControl', ['$scope', function($scope)
   {
     guiEvents.emit('setLight', prop, name, value);
   };
+
+  $scope.toggleProperty = function(prop, entity, subEntity)
+  {
+    guiEvents.emit('toggleProperty', prop, entity, subEntity);
+  };
 }]);
 
 // Insert menu
@@ -1304,6 +1309,18 @@ GZ3D.Gui.prototype.init = function()
 
         // updating color too often, maybe only update when popup is closed
         that.scene.emitter.emit('entityChanged', entity);
+      }
+  );
+
+  guiEvents.on('toggleProperty', function (prop, entityName, subEntityName)
+      {
+        var entity = that.scene.getByName(subEntityName);
+        if (prop === 'gravity')
+        {
+          entity.serverProperties.gravity = !entity.serverProperties.gravity;
+        }
+
+        that.scene.emitter.emit('entityChanged', entity, 'link');
       }
   );
 };
@@ -2206,21 +2223,28 @@ GZ3D.GZIface.prototype.onConnected = function()
     this.scene.add(roadsObj);
   });
 
-  // Model modify messages - for modifying model pose
+  // Model modify messages - for modifying models
   this.modelModifyTopic = new ROSLIB.Topic({
     ros : this.webSocket,
     name : '~/model/modify',
     messageType : 'model',
   });
 
-  // Light messages - for modifying light pose
+  // Light messages - for modifying lights
   this.lightModifyTopic = new ROSLIB.Topic({
     ros : this.webSocket,
     name : '~/light',
     messageType : 'light',
   });
 
-  var publishEntityModify = function(entity)
+  // Link messages - for modifying links
+  this.linkModifyTopic = new ROSLIB.Topic({
+    ros : this.webSocket,
+    name : '~/link',
+    messageType : 'link',
+  });
+
+  var publishEntityModify = function(entity, type)
   {
     var matrix = entity.matrixWorld;
     var translation = new THREE.Vector3();
@@ -2260,6 +2284,16 @@ GZ3D.GZIface.prototype.onConnected = function()
       entityMsg.range = entity.children[0].distance;
 
       that.lightModifyTopic.publish(entityMsg);
+    }
+    else if (type === 'link')
+    {
+      console.log(entity);
+      entityMsg.serverProperties =
+      {
+        gravity: entity.serverProperties.gravity
+      };
+
+      that.linkModifyTopic.publish(entityMsg);
     }
     else
     {
@@ -2477,6 +2511,12 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
     var linkObj = new THREE.Object3D();
     linkObj.name = link.name;
     linkObj.userData = link.id;
+    linkObj.serverProperties =
+        {
+          gravity: link.gravity
+        };
+
+    console.log(link);
 
     if (link.pose)
     {

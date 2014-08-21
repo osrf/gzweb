@@ -689,6 +689,11 @@ gzangular.controller('treeControl', ['$scope', function($scope)
   {
     guiEvents.emit('setLight', prop, name, value);
   };
+
+  $scope.toggleProperty = function(prop, entity, subEntity)
+  {
+    guiEvents.emit('toggleProperty', prop, entity, subEntity);
+  };
 }]);
 
 // Insert menu
@@ -1299,6 +1304,18 @@ GZ3D.Gui.prototype.init = function()
 
         // updating color too often, maybe only update when popup is closed
         that.scene.emitter.emit('entityChanged', entity);
+      }
+  );
+
+  guiEvents.on('toggleProperty', function (prop, entityName, subEntityName)
+      {
+        var entity = that.scene.getByName(subEntityName);
+        if (prop === 'gravity')
+        {
+          entity.serverProperties.gravity = !entity.serverProperties.gravity;
+        }
+
+        that.scene.emitter.emit('entityChanged', entity, 'link');
       }
   );
 };

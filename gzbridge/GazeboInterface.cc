@@ -51,6 +51,7 @@ GazeboInterface::GazeboInterface()
   this->poseTopic = "~/pose/info";
   this->requestTopic = "~/request";
   this->lightTopic = "~/light";
+  this->linkTopic = "~/link";
   this->sceneTopic = "~/scene";
   this->modelModifyTopic = "~/model/modify";
   this->factoryTopic = "~/factory";
@@ -108,6 +109,10 @@ GazeboInterface::GazeboInterface()
   // For modifying lights
   this->lightPub =
       this->node->Advertise<gazebo::msgs::Light>(this->lightTopic);
+
+  // For modifying links
+  this->linkPub =
+      this->node->Advertise<gazebo::msgs::Link>(this->linkTopic);
 
   // For spawning models
   this->factoryPub =
@@ -167,6 +172,7 @@ GazeboInterface::~GazeboInterface()
   this->requestPub.reset();
   this->modelPub.reset();
   this->lightPub.reset();
+  this->linkPub.reset();
   this->responseSub.reset();
   this->node.reset();
 
@@ -280,7 +286,6 @@ void GazeboInterface::ProcessMessages()
         }
         else if (topic == this->modelModifyTopic)
         {
-          std::string type = get_value(msg, "messageType");
           std::string name = get_value(msg, "msg:name");
           int id = atoi(get_value(msg, "msg:id").c_str());
 
@@ -377,6 +382,36 @@ void GazeboInterface::ProcessMessages()
           }
 
           this->lightPub->Publish(lightMsg);
+        }
+        else if (topic == this->linkTopic)
+        {
+          int id = atoi(get_value(msg, "msg:id").c_str());
+          std::string linkName = get_value(msg, "msg:name");
+
+          if (linkName == "")
+            continue;
+
+          gazebo::msgs::Link linkMsg;
+
+          linkMsg.set_id(id);
+
+          size_t index = linkName.find_last_of("::");
+          if (index != std::string::npos)
+              linkName = linkName.substr(index+1);
+          linkMsg.set_name(linkName);
+
+          std::string gravityStr = get_value(msg, "msg:serverProperties:gravity").c_str();
+          bool gravity = false;
+          if (gravityStr == "1")
+          {
+            gravity = true;
+          }
+
+          std::cout << gravity << std::endl;
+
+          linkMsg.set_gravity(gravity);
+
+          this->modelPub->Publish(linkMsg);
         }
         else if (topic == this->factoryTopic)
         {
