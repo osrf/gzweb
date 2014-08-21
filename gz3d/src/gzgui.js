@@ -635,19 +635,19 @@ gzangular.controller('treeControl', ['$scope', function($scope)
     }
   };
 
-  $scope.expandProperty = function (prop, modelName, linkShortName, linkName)
+  $scope.expandProperty = function (prop, modelName, subPropShortName, subPropName, parentProp)
   {
     var idContent = 'expandable-' + prop + '-' + modelName;
     var idHeader = 'expand-' + prop + '-' + modelName;
 
     var idContentOthers, idHeaderOthers;
 
-    if (linkShortName)
+    if (subPropShortName)
     {
       idContentOthers = idContent;
       idHeaderOthers = idHeader;
-      idContent = idContent + '-' + linkShortName;
-      idHeader = idHeader + '-' + linkShortName;
+      idContent = idContent + '-' + subPropShortName;
+      idHeader = idHeader + '-' + subPropShortName;
     }
 
     if ($('#' + idContent).is(':visible'))
@@ -659,7 +659,7 @@ gzangular.controller('treeControl', ['$scope', function($scope)
     }
     else
     {
-      if (linkShortName && prop === 'link')
+      if (subPropShortName && (prop === 'link' || prop === 'joint'))
       {
         $('[id^="' + idContentOthers + '-"]').hide();
         $('[id^="' + idHeaderOthers + '-"] img')
@@ -673,9 +673,9 @@ gzangular.controller('treeControl', ['$scope', function($scope)
                               .css('-webkit-transform','rotate(90deg)')
                               .css('-ms-transform','rotate(90deg)');
 
-      if (prop === 'pose')
+      if (prop === 'pose' && parentProp === 'link')
       {
-        guiEvents.emit('setPoseStats', modelName, linkName);
+        guiEvents.emit('setPoseStats', modelName, subPropName);
       }
     }
   };
@@ -1396,12 +1396,13 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
             is_static: this.trueOrFalse(stats.is_static),
             position: formatted.pose.position,
             orientation: formatted.pose.orientation,
-            links: []
+            links: [],
+            joints: []
           });
 
-      // links
       var newModel = modelStats[modelStats.length-1];
 
+      // links
       for (var l = 0; l < stats.link.length; ++l)
       {
         var shortName = stats.link[l].name.substring(
@@ -1420,6 +1421,62 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
               position: formatted.pose.position,
               orientation: formatted.pose.orientation,
               inertial: formatted.inertial
+            });
+      }
+
+      // joints
+      for (var j = 0; j < stats.joint.length; ++j)
+      {
+        var jointShortName = stats.joint[j].name.substring(
+            stats.joint[j].name.lastIndexOf('::')+2);
+        var parentShortName = stats.joint[j].parent.substring(
+            stats.joint[j].parent.lastIndexOf('::')+2);
+        var childShortName = stats.joint[j].child.substring(
+            stats.joint[j].child.lastIndexOf('::')+2);
+
+        var type;
+        switch (stats.joint[j].type)
+        {
+          case 1:
+              type = 'Revolute';
+              break;
+          case 2:
+              type = 'Revolute2';
+              break;
+          case 3:
+              type = 'Prismatic';
+              break;
+          case 4:
+              type = 'Universal';
+              break;
+          case 5:
+              type = 'Ball';
+              break;
+          case 6:
+              type = 'Screw';
+              break;
+          case 7:
+              type = 'Gearbox';
+              break;
+          default:
+              type = 'Unknown';
+        }
+
+        formatted = this.formatStats(stats.joint[j]);
+
+        newModel.joints.push(
+            {
+              name: stats.joint[j].name,
+              shortName: jointShortName,
+              type: type,
+              parent: stats.joint[j].parent,
+              parentShortName: parentShortName,
+              child: stats.joint[j].child,
+              childShortName: childShortName,
+              position: formatted.pose.position,
+              orientation: formatted.pose.orientation,
+              axis1: formatted.axis1,
+              axis2: formatted.axis2
             });
       }
     }
@@ -1653,19 +1710,19 @@ GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
 GZ3D.Gui.prototype.formatStats = function(stats)
 {
   var position, orientation;
-  var Quat, RPY;
+  var quat, rpy;
   if (stats.pose)
   {
     position = this.round(stats.pose.position);
 
-    Quat = new THREE.Quaternion(stats.pose.orientation.x,
+    quat = new THREE.Quaternion(stats.pose.orientation.x,
         stats.pose.orientation.y, stats.pose.orientation.z,
         stats.pose.orientation.w);
 
-    RPY = new THREE.Euler();
-    RPY.setFromQuaternion(Quat);
+    rpy = new THREE.Euler();
+    rpy.setFromQuaternion(quat);
 
-    orientation = {roll: RPY._x, pitch: RPY._y, yaw: RPY._z};
+    orientation = {roll: rpy._x, pitch: rpy._y, yaw: rpy._z};
     orientation = this.round(orientation);
   }
   var inertial;
@@ -1682,14 +1739,14 @@ GZ3D.Gui.prototype.formatStats = function(stats)
 
     inertial.pose.position = this.round(inertial.pose.position);
 
-    Quat = new THREE.Quaternion(inertialPose.orientation.x,
+    quat = new THREE.Quaternion(inertialPose.orientation.x,
         inertialPose.orientation.y, inertialPose.orientation.z,
         inertialPose.orientation.w);
 
-    RPY = new THREE.Euler();
-    RPY.setFromQuaternion(Quat);
+    rpy = new THREE.Euler();
+    rpy.setFromQuaternion(quat);
 
-    inertial.pose.orientation = {roll: RPY._x, pitch: RPY._y, yaw: RPY._z};
+    inertial.pose.orientation = {roll: rpy._x, pitch: rpy._y, yaw: rpy._z};
     inertial.pose.orientation = this.round(inertial.pose.orientation);
   }
   var diffuse, color;
@@ -1728,6 +1785,20 @@ GZ3D.Gui.prototype.formatStats = function(stats)
   {
     background = this.round(stats.background);
   }
+  var axis1;
+  if (stats.axis1)
+  {
+    axis1 = {};
+    axis1 = this.round(stats.axis1);
+    axis1.direction = this.round(stats.axis1.xyz);
+  }
+  var axis2;
+  if (stats.axis2)
+  {
+    axis2 = {};
+    axis2 = this.round(stats.axis2);
+    axis2.direction = this.round(stats.axis2.xyz);
+  }
 
   return {pose: {position: position, orientation: orientation},
           inertial: inertial,
@@ -1736,7 +1807,9 @@ GZ3D.Gui.prototype.formatStats = function(stats)
           specular: specular,
           attenuation: attenuation,
           ambient: ambient,
-          background: background};
+          background: background,
+          axis1: axis1,
+          axis2: axis2};
 };
 
 /**
