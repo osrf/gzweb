@@ -345,6 +345,12 @@ void GazeboInterface::ProcessMessages()
                 atof(get_value(msg, "msg:diffuse:b").c_str()), 1);
             gazebo::msgs::Set(lightMsg.mutable_diffuse(), diffuse);
 
+            gazebo::common::Color specular(
+                atof(get_value(msg, "msg:specular:r").c_str()),
+                atof(get_value(msg, "msg:specular:g").c_str()),
+                atof(get_value(msg, "msg:specular:b").c_str()), 1);
+            gazebo::msgs::Set(lightMsg.mutable_specular(), specular);
+
             lightMsg.set_range(atof(get_value(msg, "msg:range").c_str()));
           }
           else

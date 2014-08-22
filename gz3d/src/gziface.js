@@ -375,6 +375,12 @@ GZ3D.GZIface.prototype.onConnected = function()
         g: entity.children[0].color.g,
         b: entity.children[0].color.b
       };
+      entityMsg.specular =
+      {
+        r: entity.serverProperties.specular.r,
+        g: entity.serverProperties.specular.g,
+        b: entity.serverProperties.specular.b
+      };
       entityMsg.direction = entity.direction;
       entityMsg.range = entity.children[0].distance;
 
@@ -678,7 +684,7 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
   obj = this.scene.createLight(light.type, light.diffuse,
         light.attenuation_constant * factor,
         light.pose, range, light.cast_shadows, light.name,
-        direction);
+        direction, light.specular);
 
   return obj;
 };

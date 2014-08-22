@@ -1292,6 +1292,10 @@ GZ3D.Gui.prototype.init = function()
         {
           entity.children[0].color = new THREE.Color(value);
         }
+        else if (prop === 'specular')
+        {
+          entity.serverProperties.specular = new THREE.Color(value);
+        }
         else if (prop === 'range')
         {
           entity.children[0].distance = value;
@@ -1605,6 +1609,11 @@ GZ3D.Gui.prototype.setLightStats = function(stats, action)
       {
         light[0].diffuse = formatted.diffuse;
       }
+
+      if (stats.specular)
+      {
+        light[0].specular = formatted.specular;
+      }
     }
   }
   else if (action === 'delete')
@@ -1749,13 +1758,14 @@ GZ3D.Gui.prototype.formatStats = function(stats)
     inertial.pose.orientation = {roll: rpy._x, pitch: rpy._y, yaw: rpy._z};
     inertial.pose.orientation = this.round(inertial.pose.orientation);
   }
-  var diffuse, color;
+  var diffuse, colorHex, comp;
+  var color = {};
   if (stats.diffuse)
   {
     diffuse = this.round(stats.diffuse);
 
-    var colorHex = {};
-    for (var comp in diffuse)
+    colorHex = {};
+    for (comp in diffuse)
     {
       colorHex[comp] = diffuse[comp].toString(16);
       if (colorHex[comp].length === 1)
@@ -1763,13 +1773,25 @@ GZ3D.Gui.prototype.formatStats = function(stats)
         colorHex[comp] = '0' + colorHex[comp];
       }
     }
-    color = '#' + colorHex['r'] + colorHex['g'] + colorHex['b'];
+    color.diffuse = '#' + colorHex['r'] + colorHex['g'] + colorHex['b'];
   }
   var specular;
   if (stats.specular)
   {
     specular = this.round(stats.specular);
+
+    colorHex = {};
+    for (comp in specular)
+    {
+      colorHex[comp] = specular[comp].toString(16);
+      if (colorHex[comp].length === 1)
+      {
+        colorHex[comp] = '0' + colorHex[comp];
+      }
+    }
+    color.specular = '#' + colorHex['r'] + colorHex['g'] + colorHex['b'];
   }
+
   var attenuation;
   if (stats.attenuation)
   {

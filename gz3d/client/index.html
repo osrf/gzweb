@@ -837,7 +837,7 @@
                   Diffuse
                 </div>
                 <div class="propertyColorEdit">
-                  <input class="clickable" type="color" ng-model="light.color" ng-change="changeLight('diffuse', light.name, light.color)"/>
+                  <input class="clickable" type="color" ng-model="light.color.diffuse" ng-change="changeLight('diffuse', light.name, light.color.diffuse)"/>
                 </div>
               </div>
               <div id="expandable-diffuse-{{light.name}}" class="expandedContent">
@@ -863,7 +863,9 @@
                   <img src="style/images/play.png">
                   Specular
                 </div>
-                <div class="colorDisplay" style="background-color: rgb({{light.specular.r}},{{light.specular.g}},{{light.specular.b}})"></div>
+                <div class="propertyColorEdit">
+                  <input class="clickable" type="color" ng-model="light.color.specular" ng-change="changeLight('specular', light.name, light.color.specular)"/>
+                </div>
               </div>
               <div id="expandable-specular-{{light.name}}" class="expandedContent">
                 <div class="property propertyLevel2 redBg">

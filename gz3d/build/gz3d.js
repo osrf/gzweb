@@ -1297,6 +1297,10 @@ GZ3D.Gui.prototype.init = function()
         {
           entity.children[0].color = new THREE.Color(value);
         }
+        else if (prop === 'specular')
+        {
+          entity.serverProperties.specular = new THREE.Color(value);
+        }
         else if (prop === 'range')
         {
           entity.children[0].distance = value;
@@ -1610,6 +1614,11 @@ GZ3D.Gui.prototype.setLightStats = function(stats, action)
       {
         light[0].diffuse = formatted.diffuse;
       }
+
+      if (stats.specular)
+      {
+        light[0].specular = formatted.specular;
+      }
     }
   }
   else if (action === 'delete')
@@ -1754,13 +1763,14 @@ GZ3D.Gui.prototype.formatStats = function(stats)
     inertial.pose.orientation = {roll: rpy._x, pitch: rpy._y, yaw: rpy._z};
     inertial.pose.orientation = this.round(inertial.pose.orientation);
   }
-  var diffuse, color;
+  var diffuse, colorHex, comp;
+  var color = {};
   if (stats.diffuse)
   {
     diffuse = this.round(stats.diffuse);
 
-    var colorHex = {};
-    for (var comp in diffuse)
+    colorHex = {};
+    for (comp in diffuse)
     {
       colorHex[comp] = diffuse[comp].toString(16);
       if (colorHex[comp].length === 1)
@@ -1768,13 +1778,25 @@ GZ3D.Gui.prototype.formatStats = function(stats)
         colorHex[comp] = '0' + colorHex[comp];
       }
     }
-    color = '#' + colorHex['r'] + colorHex['g'] + colorHex['b'];
+    color.diffuse = '#' + colorHex['r'] + colorHex['g'] + colorHex['b'];
   }
   var specular;
   if (stats.specular)
   {
     specular = this.round(stats.specular);
+
+    colorHex = {};
+    for (comp in specular)
+    {
+      colorHex[comp] = specular[comp].toString(16);
+      if (colorHex[comp].length === 1)
+      {
+        colorHex[comp] = '0' + colorHex[comp];
+      }
+    }
+    color.specular = '#' + colorHex['r'] + colorHex['g'] + colorHex['b'];
   }
+
   var attenuation;
   if (stats.attenuation)
   {
@@ -2256,6 +2278,12 @@ GZ3D.GZIface.prototype.onConnected = function()
         g: entity.children[0].color.g,
         b: entity.children[0].color.b
       };
+      entityMsg.specular =
+      {
+        r: entity.serverProperties.specular.r,
+        g: entity.serverProperties.specular.g,
+        b: entity.serverProperties.specular.b
+      };
       entityMsg.direction = entity.direction;
       entityMsg.range = entity.children[0].distance;
 
@@ -2559,7 +2587,7 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
   obj = this.scene.createLight(light.type, light.diffuse,
         light.attenuation_constant * factor,
         light.pose, range, light.cast_shadows, light.name,
-        direction);
+        direction, light.specular);
 
   return obj;
 };
@@ -5432,31 +5460,39 @@ GZ3D.Scene.prototype.createBox = function(width, height, depth)
 /**
  * Create light
  * @param {} type - 1: point, 2: spot, 3: directional
- * @param {} color
+ * @param {} diffuse
  * @param {} intensity
  * @param {} pose
  * @param {} distance
  * @param {} cast_shadows
  * @param {} name
  * @param {} direction
+ * @param {} specular
  * @returns {THREE.Object3D}
  */
-GZ3D.Scene.prototype.createLight = function(type, color, intensity, pose,
-    distance, cast_shadows, name, direction)
+GZ3D.Scene.prototype.createLight = function(type, diffuse, intensity, pose,
+    distance, cast_shadows, name, direction, specular)
 {
   var obj = new THREE.Object3D();
+  var color = new THREE.Color();
 
-  if (typeof(color) === 'undefined')
+  if (typeof(diffuse) === 'undefined')
   {
-    color = 0xffffff;
+    diffuse = 0xffffff;
   }
-  else if (typeof(color) !== THREE.Color)
+  else if (typeof(diffuse) !== THREE.Color)
   {
-    var Color = new THREE.Color();
-    Color.r = color.r;
-    Color.g = color.g;
-    Color.b = color.b;
-    color = Color;
+    color.r = diffuse.r;
+    color.g = diffuse.g;
+    color.b = diffuse.b;
+    diffuse = color.clone();
+  }
+  else if (typeof(specular) !== THREE.Color)
+  {
+    color.r = specular.r;
+    color.g = specular.g;
+    color.b = specular.b;
+    specular = color.clone();
   }
 
   var matrixWorld;
@@ -5484,17 +5520,17 @@ GZ3D.Scene.prototype.createLight = function(type, color, intensity, pose,
   var elements;
   if (type === 1)
   {
-    elements = this.createPointLight(obj, color, intensity,
+    elements = this.createPointLight(obj, diffuse, intensity,
         distance, cast_shadows);
   }
   else if (type === 2)
   {
-    elements = this.createSpotLight(obj, color, intensity,
+    elements = this.createSpotLight(obj, diffuse, intensity,
         distance, cast_shadows);
   }
   else if (type === 3)
   {
-    elements = this.createDirectionalLight(obj, color, intensity,
+    elements = this.createDirectionalLight(obj, diffuse, intensity,
         cast_shadows);
   }
 
@@ -5519,6 +5555,10 @@ GZ3D.Scene.prototype.createLight = function(type, color, intensity, pose,
     dir.applyMatrix4(matrixWorld); // localToWorld
     lightObj.target.position.copy(dir);
   }
+
+  // Add properties which exist on the server but have no meaning on THREE.js
+  obj.serverProperties = {};
+  obj.serverProperties.specular = specular;
 
   obj.add(lightObj);
   obj.add(helper);
