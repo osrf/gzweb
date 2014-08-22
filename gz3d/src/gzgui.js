@@ -1300,6 +1300,22 @@ GZ3D.Gui.prototype.init = function()
         {
           entity.children[0].distance = value;
         }
+        else if (prop === 'attenuation_constant')
+        {
+          // Adjust according to factor
+          var factor = 1;
+          if (entity instanceof THREE.PointLight)
+          {
+            factor = 1.5;
+          }
+          else if (entity instanceof THREE.SpotLight)
+          {
+            factor = 5;
+          }
+          value *= factor;
+
+          entity.children[0].intensity = value;
+        }
 
         // updating color too often, maybe only update when popup is closed
         that.scene.emitter.emit('entityChanged', entity);

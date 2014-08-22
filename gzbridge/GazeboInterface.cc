@@ -352,6 +352,8 @@ void GazeboInterface::ProcessMessages()
             gazebo::msgs::Set(lightMsg.mutable_specular(), specular);
 
             lightMsg.set_range(atof(get_value(msg, "msg:range").c_str()));
+            lightMsg.set_attenuation_constant(atof(
+                get_value(msg, "msg:attenuation_constant").c_str()));
           }
           else
           {

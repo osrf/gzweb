@@ -898,7 +898,9 @@
               <div id="expandable-attenuation-{{light.name}}" class="expandedContent">
                 <div class="property propertyLevel2">
                   <div>Constant</div>
-                  <div class="propertyNumber">{{light.attenuation.constant}}</div>
+                  <div class="propertyNumberEdit">
+                    <input type="number" onClick="this.select();" ng-model="light.attenuation.constant" ng-change="changeLight('attenuation_constant', light.name, light.attenuation.constant)" data-role="none"/>
+                  </div>
                 </div>
                 <div class="property propertyLevel2">
                   <div>Linear</div>

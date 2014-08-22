@@ -384,6 +384,19 @@ GZ3D.GZIface.prototype.onConnected = function()
       entityMsg.direction = entity.direction;
       entityMsg.range = entity.children[0].distance;
 
+      var attenuation_constant = entity.children[0].intensity;
+      // Adjust according to factor
+      if (entity instanceof THREE.PointLight)
+      {
+        attenuation_constant *= 1.5;
+      }
+      else if (entity instanceof THREE.SpotLight)
+      {
+        attenuation_constant *= 5;
+      }
+
+      entityMsg.attenuation_constant = attenuation_constant;
+
       that.lightModifyTopic.publish(entityMsg);
     }
     else
