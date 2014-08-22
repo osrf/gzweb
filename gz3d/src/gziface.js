@@ -404,7 +404,7 @@ GZ3D.GZIface.prototype.onConnected = function()
       link:
       {
         name: entity.name,
-        id: entity.id,
+        id: entity.userData,
         gravity: entity.serverProperties.gravity
       }
     };
@@ -626,8 +626,6 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
         {
           gravity: link.gravity
         };
-
-    console.log(link);
 
     if (link.pose)
     {
