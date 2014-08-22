@@ -4991,6 +4991,34 @@ GZ3D.Scene.prototype.init = function()
 
   this.jointAxis['transAxis'] = transAxis;
 
+  var screwAxis = new THREE.Object3D();
+
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.position.x = 0.065;
+  mesh.position.z = -0.13;
+  mesh.rotation.z = Math.PI/4;
+  mesh.rotation.x = -Math.PI/10;
+  mesh.name = 'JOINT_VISUAL';
+  screwAxis.add(mesh);
+
+  var radius = 0.06;
+  var length = 0.02;
+  var curve = new THREE.SplineCurve3([new THREE.Vector3(-radius, 0, 0*length),
+                                      new THREE.Vector3(0, radius, 1*length),
+                                      new THREE.Vector3(radius, 0, 2*length),
+                                      new THREE.Vector3(0, -radius, 3*length),
+                                      new THREE.Vector3(-radius, 0, 4*length),
+                                      new THREE.Vector3(0, radius, 5*length),
+                                      new THREE.Vector3(radius, 0, 6*length)]);
+  geometry = new THREE.TubeGeometry(curve, 36, 0.01, 10, false, false);
+
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.position.z = -0.25;
+  mesh.name = 'JOINT_VISUAL';
+  screwAxis.add(mesh);
+
+  this.jointAxis['screwAxis'] = screwAxis;
+
   var ballVisual = new THREE.Object3D();
 
   geometry = new THREE.SphereGeometry(0.06);
@@ -6823,9 +6851,10 @@ GZ3D.Scene.prototype.viewJoints = function(model)
       {
         mainAxis.add(this.jointAxis['transAxis'].clone());
       }
-      else
+      // screw (forces both axes to be the same...?)
+      else if (model.joint[j].type === 6)
       {
-        console.log(model.joint[j].type);
+        mainAxis.add(this.jointAxis['screwAxis'].clone());
       }
 
       var direction, rotMatrix;
