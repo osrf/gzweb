@@ -67,12 +67,33 @@ GZ3D.SdfParser.prototype.onConnectionError = function()
   this.scene.initScene();
   
   var that = this;
-  var entityCreated = function(model, type) {
-    if (!that.gziface.isConnected) {
+  var entityCreated = function(model, type)
+  {
+    if (!that.gziface.isConnected)
+    {
       that.addModelByType(model, type);
     }
   };
   this.gui.emitter.on('entityCreated', entityCreated);
+  
+  var deleteEntity = function(entity)
+  {
+    var name = entity.name;
+    var obj = that.scene.getByName(name);
+    if (obj !== undefined)
+    {
+      if (obj.children[0] instanceof THREE.Light)
+      {
+        that.gui.setLightStats({name: name}, 'delete');
+      }
+      else
+      {
+        that.gui.setModelStats({name: name}, 'delete');
+      }
+      that.scene.remove(obj);
+    }
+  };
+  this.gui.emitter.on('deleteEntity', deleteEntity);
 };
 
 /**
@@ -765,11 +786,32 @@ GZ3D.SdfParser.prototype.addModelByType = function(model, type)
     var sdfObj = this.loadSDF(type);
     modelObj = new THREE.Object3D();
     modelObj.add(sdfObj);
-    modelObj.matrixWorld = modelObj.matrixWorld;
+    modelObj.name = model.name;
     this.scene.setPose(modelObj, translation, quaternion);
   }
+  
+  var that = this;
+  
+  var addModelFunc;
+  addModelFunc = function()
+  {
+    // check whether object is removed
+    var obj = that.scene.getByName(modelObj.name);
+    if (obj === undefined)
+    {
+      that.scene.add(modelObj);
+      that.gui.setModelStats(modelObj, 'update');
+    }
+    else
+    {
+      setTimeout(addModelFunc, 100);
+    }
+  };
+  
+  setTimeout(addModelFunc , 100);
 
-  this.scene.add(modelObj);
+//  this.scene.add(modelObj);
+//  this.gui.setModelStats(modelObj, 'update');
 };
 
 /**
