@@ -273,6 +273,7 @@
                 Scene
               </div>
               <div id="expandable-SCENE" class="expandedContent">
+                <!-- scene ambient -->
                 <div id="expand-ambient-SCENE" class="clickable expandableProperty expandableLevel01" ng-click="expandProperty('ambient', 'SCENE')">
                   <div>
                     <img src="style/images/play.png">
@@ -298,6 +299,7 @@
                     <div class="propertyNumber">{{scene.ambient.a}}</div>
                   </div>
                 </div>
+                <!-- scene background -->
                 <div id="expand-background-SCENE" class="clickable expandableProperty expandableLevel01" ng-click="expandProperty('background', 'SCENE')">
                   <div>
                     <img src="style/images/play.png">
@@ -516,6 +518,7 @@
                         <div>Mass</div>
                         <div class="propertyNumber">{{link.inertial.mass}}</div>
                       </div>
+                      <!-- link inertial pose -->
                       <div id="expand-inertial-pose-{{model.name}}-{{link.shortName}}" class="clickable expandableProperty expandableLevel4" ng-click="expandProperty('inertial-pose', model.name, link.shortName)">
                         <img src="style/images/play.png">
                         Pose
@@ -546,6 +549,7 @@
                           <div class="propertyNumber">{{link.inertial.pose.orientation.yaw}}</div>
                         </div>
                       </div>
+                      <!-- link inertial moments -->
                       <div id="expand-inertial-moments-{{model.name}}-{{link.shortName}}" class="clickable expandableProperty expandableLevel4" ng-click="expandProperty('inertial-moments', model.name, link.shortName)">
                         <img src="style/images/play.png">
                         Moments
@@ -807,6 +811,7 @@
                   </div>
                 </div>
               </div>
+              <!-- light direction -->
               <div ng-if="light.direction" id="expand-direction-{{light.name}}" class="clickable expandableProperty" ng-click="expandProperty('direction', light.name)">
                 <img src="style/images/play.png">
                 Direction
@@ -831,6 +836,7 @@
                   </div>
                 </div>
               </div>
+              <!-- light diffuse -->
               <div id="expand-diffuse-{{light.name}}" class="clickable expandableProperty" ng-click="expandProperty('diffuse', light.name)">
                 <div>
                   <img src="style/images/play.png">
@@ -858,6 +864,7 @@
                   <div class="propertyNumber">{{light.diffuse.a}}</div>
                 </div>
               </div>
+              <!-- light specular -->
               <div id="expand-specular-{{light.name}}" class="clickable expandableProperty" ng-click="expandProperty('specular', light.name)">
                 <div>
                   <img src="style/images/play.png">
@@ -891,6 +898,7 @@
                   <input type="number" onClick="this.select();" ng-model="light.range" ng-change="changeLight('range', light.name, light.range)" data-role="none"/>
                 </div>
               </div>
+              <!-- light attenuation -->
               <div id="expand-attenuation-{{light.name}}" class="clickable expandableProperty" ng-click="expandProperty('attenuation', light.name)">
                 <img src="style/images/play.png">
                 Attenuation
