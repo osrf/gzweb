@@ -904,11 +904,15 @@
                 </div>
                 <div class="property propertyLevel2">
                   <div>Linear</div>
-                  <div class="propertyNumber">{{light.attenuation.linear}}</div>
+                  <div class="propertyNumberEdit">
+                    <input type="number" onClick="this.select();" ng-model="light.attenuation.linear" ng-change="changeLight('attenuation_linear', light.name, light.attenuation.linear)" data-role="none"/>
+                  </div>
                 </div>
                 <div class="property propertyLevel2">
                   <div>Quadratic</div>
-                  <div class="propertyNumber">{{light.attenuation.quadratic}}</div>
+                  <div class="propertyNumberEdit">
+                    <input type="number" onClick="this.select();" ng-model="light.attenuation.quadratic" ng-change="changeLight('attenuation_quadratic', light.name, light.attenuation.quadratic)" data-role="none"/>
+                  </div>
                 </div>
               </div>
             </div>

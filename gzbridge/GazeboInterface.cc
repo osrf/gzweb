@@ -354,6 +354,10 @@ void GazeboInterface::ProcessMessages()
             lightMsg.set_range(atof(get_value(msg, "msg:range").c_str()));
             lightMsg.set_attenuation_constant(atof(
                 get_value(msg, "msg:attenuation_constant").c_str()));
+            lightMsg.set_attenuation_linear(atof(
+                get_value(msg, "msg:attenuation_linear").c_str()));
+            lightMsg.set_attenuation_quadratic(atof(
+                get_value(msg, "msg:attenuation_quadratic").c_str()));
           }
           else
           {

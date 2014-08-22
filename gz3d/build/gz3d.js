@@ -1321,6 +1321,14 @@ GZ3D.Gui.prototype.init = function()
 
           entity.children[0].intensity = value;
         }
+        else if (prop === 'attenuation_linear')
+        {
+          entity.serverProperties.attenuation_linear = value;
+        }
+        else if (prop === 'attenuation_quadratic')
+        {
+          entity.serverProperties.attenuation_quadratic = value;
+        }
 
         // updating color too often, maybe only update when popup is closed
         that.scene.emitter.emit('entityChanged', entity);
@@ -2315,6 +2323,8 @@ GZ3D.GZIface.prototype.onConnected = function()
       }
 
       entityMsg.attenuation_constant = attenuation_constant;
+      entityMsg.attenuation_linear = entity.serverProperties.attenuation_linear;
+      entityMsg.attenuation_quadratic = entity.serverProperties.attenuation_quadratic;
 
       that.lightModifyTopic.publish(entityMsg);
     }
@@ -2616,7 +2626,8 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
   obj = this.scene.createLight(light.type, light.diffuse,
         light.attenuation_constant * factor,
         light.pose, range, light.cast_shadows, light.name,
-        direction, light.specular);
+        direction, light.specular, light.attenuation_linear,
+        light.attenuation_quadratic);
 
   return obj;
 };
@@ -5497,10 +5508,13 @@ GZ3D.Scene.prototype.createBox = function(width, height, depth)
  * @param {} name
  * @param {} direction
  * @param {} specular
+ * @param {} attenuation_linear
+ * @param {} attenuation_quadratic
  * @returns {THREE.Object3D}
  */
 GZ3D.Scene.prototype.createLight = function(type, diffuse, intensity, pose,
-    distance, cast_shadows, name, direction, specular)
+    distance, cast_shadows, name, direction, specular, attenuation_linear,
+    attenuation_quadratic)
 {
   var obj = new THREE.Object3D();
   var color = new THREE.Color();
@@ -5588,6 +5602,8 @@ GZ3D.Scene.prototype.createLight = function(type, diffuse, intensity, pose,
   // Add properties which exist on the server but have no meaning on THREE.js
   obj.serverProperties = {};
   obj.serverProperties.specular = specular;
+  obj.serverProperties.attenuation_linear = attenuation_linear;
+  obj.serverProperties.attenuation_quadratic = attenuation_quadratic;
 
   obj.add(lightObj);
   obj.add(helper);

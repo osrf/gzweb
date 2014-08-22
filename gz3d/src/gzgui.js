@@ -1316,6 +1316,14 @@ GZ3D.Gui.prototype.init = function()
 
           entity.children[0].intensity = value;
         }
+        else if (prop === 'attenuation_linear')
+        {
+          entity.serverProperties.attenuation_linear = value;
+        }
+        else if (prop === 'attenuation_quadratic')
+        {
+          entity.serverProperties.attenuation_quadratic = value;
+        }
 
         // updating color too often, maybe only update when popup is closed
         that.scene.emitter.emit('entityChanged', entity);
