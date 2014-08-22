@@ -68,23 +68,25 @@ for file in files:
 
       # find relatvie path to texture dir
       texture_dir = path
-      model_path, other = texture_dir.split('meshes')
-      subdir_count = len(other.split('/'))
-      relative_path = ''
-      for i in range(0, subdir_count):
-        relative_path = relative_path + '\.\.\/'
+      if (texture_dir.find('materials/textures') == -1 and
+          texture_dir.find('meshes') != -1):
+        model_path, other = texture_dir.split('meshes')
+        subdir_count = len(other.split('/'))
+        relative_path = ''
+        for i in range(0, subdir_count):
+          relative_path = relative_path + '\.\.\/'
 
-      # replace dae file png references to texture path
-      sed_cmd = ["sed", "-i","-e",
-        's/\(>\)\(.*\/\)\(.*\.png\)/\\1'+ relative_path + 'materials\/textures\/\\3/g', file]
-      print sed_cmd
-      subprocess.check_call(sed_cmd)
+        # replace dae file png references to texture path
+        sed_cmd = ["sed", "-i","-e",
+          's/\(>\)\(.*\/\)\(.*\.png\)/\\1'+ relative_path + 'materials\/textures\/\\3/g', file]
+        print sed_cmd
+        subprocess.check_call(sed_cmd)
 
-      sed_cmd = ["sed", "-i","-e",
-        '/[a-zA-Z0-9_\.\/\-]\+materials\/textures/!s/\([a-zA-Z0-9_\-]\+\)\(\.png\W\)/'+ relative_path + 'materials\/textures\/\\1\\2/g', file]
+        sed_cmd = ["sed", "-i","-e",
+          '/[a-zA-Z0-9_\.\/\-]\+materials\/textures/!s/\([a-zA-Z0-9_\-]\+\)\(\.png\W\)/'+ relative_path + 'materials\/textures\/\\1\\2/g', file]
 
-      print sed_cmd
-      subprocess.check_call(sed_cmd)
+        print sed_cmd
+        subprocess.check_call(sed_cmd)
 
     if format.lower() in ['material', 'txt', 'sdf']:
       sed_cmd = ["sed", "-i", "-e",

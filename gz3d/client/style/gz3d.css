@@ -41,7 +41,7 @@ body
 {
   width: 0;
   height: 4em;
-  border-left: 2em solid #2a2a2a;
+  border-left: 2em solid;
   border-top: 1em solid transparent;
   border-bottom: 1em solid transparent;
   z-index: 1001;
@@ -75,6 +75,12 @@ body
   left: 0;
   z-index: 1002;
 }
+.panelsGroup
+{
+  height: 100%;
+  position: absolute;
+  top: 0;
+}
 .leftPanels
 {
   display: none;
@@ -85,14 +91,14 @@ body
 .panelContent
 {
   height: calc(100% - 1.8em);
-  overflow-y:auto;
-  overflow-x:hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 .panelSubContent
 {
   height: calc(100% - 1.8em - 1.5em);
-  overflow-y:auto;
-  overflow-x:hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 .panelTitle
 {
@@ -121,6 +127,10 @@ body
 {
   margin: 0.1em;
   float: left;
+  width: 13em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .panelSubTitle img
 {
@@ -135,6 +145,10 @@ body
   padding: 0em;
   padding-left: 1em;
   margin: 0em;
+}
+.clickable:hover
+{
+  cursor: pointer;
 }
 /* main menu*/
 #mainMenu li
@@ -181,10 +195,30 @@ body
 }
 .insertMenuItemLight img
 {
-  height:4em;
-  margin-top:0.6em;
+  height: 4em;
+  margin-top: 0.6em;
 }
 /* world tree */
+.expandableTree
+{
+  font-weight: bolder;
+  padding-left: 0.5em;
+  width: calc(100% - 0.5em);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: none;
+  font-size: 1.2em;
+  background-color: #333333;
+  border-top: 1px solid #222222;
+  border-bottom: 1px solid #222222;
+  line-height: 2em;
+}
+.expandableTree:hover,
+.expandableTree:active
+{
+  background-color: #373737;
+}
 .treeItem
 {
   font-size: 1em;
@@ -212,6 +246,7 @@ body
   width: 10.5em;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
   float: left;
 }
 .unselectedTreeItem
@@ -221,6 +256,298 @@ body
 .selectedTreeItem
 {
   background-color: #aaaaaa;
+}
+/* property panel */
+.propertyPanelImg
+{
+  text-align: center;
+  clear: both;
+}
+.propertyPanelImg img
+{
+  height: 5em;
+}
+.propertyPanelHeader
+{
+  text-align: center;
+  clear: both;
+}
+.propertyPanelHeader h4
+{
+  background-color: #aaaaaa;
+  float: left;
+  margin: 0;
+}
+.propertyPanelHeader h4:first-child
+{
+  width: 60%;
+}
+.propertyPanelHeader h4:nth-child(2)
+{
+  width: 40%;
+}
+.property div
+{
+  float: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  position: relative;
+  text-shadow: none;
+  font-size: 0.9em;
+}
+.property div:first-child
+{
+  font-weight:bolder;
+}
+.property div:nth-child(2)
+{
+  width: 40%;
+}
+.propertyLevel02 div
+{
+  font-size: 0.8em;
+}
+.isTouchDevice .propertyLevel1 div
+{
+  font-size: 1.2em;
+  line-height: 1.9em;
+}
+.propertyLevel2 div
+{
+  font-size: 0.8em;
+}
+.isTouchDevice .propertyLevel2 div
+{
+  font-size: 1.1em;
+  line-height: 1.8em;
+}
+.propertyLevel3 div
+{
+  font-size: 0.7em;
+}
+.isTouchDevice .propertyLevel3 div
+{
+  font-size: 1.0em;
+  line-height: 1.7em;
+}
+.propertyLevel4 div
+{
+  font-size: 0.65em;
+}
+.isTouchDevice .propertyLevel4 div
+{
+  font-size: 0.9em;
+  line-height: 1.6em;
+}
+.propertyLevel5 div
+{
+  font-size: 0.6em;
+}
+.isTouchDevice .propertyLevel5 div
+{
+  font-size: 0.8em;
+  line-height: 1.5em;
+}
+.propertyLevel02 div:first-child
+{
+  padding-left: 2.8em;
+  width: calc(60% - 2.8em);
+}
+.propertyLevel1 div:first-child
+{
+  padding-left: 1.7em;
+  width: calc(60% - 1.7em);
+}
+.isTouchDevice .propertyLevel1 div:first-child
+{
+  padding-left: 1.3em;
+  width: calc(60% - 1.3em);
+}
+.propertyLevel2 div:first-child
+{
+  padding-left: 2.8em;
+  width: calc(60% - 2.8em);
+}
+.isTouchDevice .propertyLevel2 div:first-child
+{
+  padding-left: 2.3em;
+  width: calc(60% - 2.3em);
+}
+.propertyLevel3 div:first-child
+{
+  padding-left: 4.5em;
+  width: calc(60% - 4.5em);
+}
+.isTouchDevice .propertyLevel3 div:first-child
+{
+  padding-left: 3.3em;
+  width: calc(60% - 3.3em);
+}
+.propertyLevel4 div:first-child
+{
+  padding-left: 6.2em;
+  width: calc(60% - 6.2em);
+}
+.isTouchDevice .propertyLevel4 div:first-child
+{
+  padding-left: 4.3em;
+  width: calc(60% - 4.3em);
+}
+.propertyLevel5 div:first-child
+{
+  padding-left: 7.9em;
+  width: calc(60% - 7.9em);
+}
+.isTouchDevice .propertyLevel5 div:first-child
+{
+  padding-left: 5.6em;
+  width: calc(60% - 5.6em);
+}
+.propertyToggle img
+{
+  vertical-align: middle;
+  height: 0.8em;
+}
+.propertyNumber
+{
+  text-align: right;
+  padding-right: 3em;
+  width: calc(40% - 3em) !important;
+}
+.expandableProperty
+{
+  font-weight: bolder;
+  padding-left: 0.2em;
+  width: calc(100% - 0.2em);
+  float: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: none;
+  font-size: 0.9em;
+}
+.isTouchDevice .expandableProperty
+{
+  font-size: 1.2em;
+  line-height: 1.9em;
+}
+.expandableProperty:hover,
+.expandableProperty:active
+{
+  background-color: #2e2e2e;
+}
+.expandableLevel01 > div:first-child
+{
+  padding-left: 0.2em;
+  width: calc(60% - 0.2em);
+  font-size: 1em;
+}
+.isTouchDevice .expandableLevel01 > div:first-child
+{
+  padding-left: 0em;
+  width: calc(80% - 0.2em);
+  font-size: 0.8em;
+}
+.isTouchDevice .expandableLevel01 > div:nth-child(2)
+  {
+    width: 20% !important;
+  }
+.expandableLevel2
+{
+  padding-left: 1.7em;
+  width: calc(100% - 1.7em);
+  font-size: 0.8em;
+}
+.isTouchDevice .expandableLevel2
+{
+  font-size: 1.1em;
+  line-height: 1.8em;
+  padding-left: 1.2em;
+  width: calc(100% - 1.2em);
+}
+.expandableLevel3
+{
+  padding-left: 3.5em;
+  width: calc(100% - 3.5em);
+  font-size: 0.7em;
+}
+.isTouchDevice .expandableLevel3
+{
+  font-size: 1.0em;
+  line-height: 1.7em;
+  padding-left: 2.4em;
+  width: calc(100% - 2.4em);
+}
+.expandableLevel4
+{
+  padding-left: 5.2em;
+  width: calc(100% - 5.2em);
+  font-size: 0.65em;
+}
+.isTouchDevice .expandableLevel4
+{
+  font-size: 1.0em;
+  line-height: 1.7em;
+  padding-left: 3.0em;
+  width: calc(100% - 3.0em);
+}
+.expandableProperty img
+{
+  vertical-align: middle;
+}
+.expandableLevel1 img
+{
+  height: 1em;
+}
+.expandableLevel2 img
+{
+  height: 0.8em;
+}
+.expandableLevel3 img
+{
+  height: 0.7em;
+}
+.expandableLevel4 img
+{
+  height: 0.65em;
+}
+.expandableProperty div
+{
+  position: relative;
+  float: left;
+  width: calc(60% - 0.2em);
+}
+.expandedContent
+{
+  display: none;
+}
+.colorDisplay
+{
+  display: inline-block;
+  height: 1em;
+  width: calc(40% - 2em) !important;
+  border: 1px solid white;
+}
+.isTouchDevice .colorDisplay
+{
+  margin-top: 0.3em;
+}
+.redBg div
+{
+  background-color: #772a2a !important;
+}
+.greenBg div
+{
+  background-color: #2a772a !important;
+}
+.blueBg div
+{
+  background-color: #2a2a77 !important;
+}
+.lightBg div
+{
+  background-color: #414141;
 }
 /* model popup */
 #model-popup
@@ -238,6 +565,10 @@ body
     width: 10.5em;
   }
   .leftPanels ul
+  {
+    width: 8.5em;
+  }
+  .panelSubTitle h4
   {
     width: 8.5em;
   }
@@ -264,8 +595,8 @@ body
   }
   .insertMenuItemLight img
   {
-    height:2.7em;
-    margin-top:0.4em;
+    height: 2.7em;
+    margin-top: 0.4em;
   }
   /* world tree */
   .treeItem
@@ -304,3 +635,4 @@ body
     top: 9.8em;
   }
 }
+

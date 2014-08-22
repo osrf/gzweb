@@ -1,5 +1,5 @@
 /**
- * SDF parser constructor initializes SDF parser with the given parameters 
+ * SDF parser constructor initializes SDF parser with the given parameters
  * and defines a DOM parser function to parse SDF XML files
  * @param {object} scene - the gz3d scene object
  * @param {object} gui - the gz3d gui object
@@ -111,7 +111,7 @@ GZ3D.SdfParser.prototype.parse3DVector = function(vectorStr)
 };
 
 /**
- * Creates THREE light object according to properties of sdf object 
+ * Creates THREE light object according to properties of sdf object
  * which is parsed from sdf model of the light
  * @param {object} sdfObj - object which is parsed from the sdf string
  * @returns {THREE.Light} lightObj - THREE light object created
@@ -216,7 +216,7 @@ GZ3D.SdfParser.prototype.parsePose = function(poseStr)
  * Parses a string which is a 3D vector
  * @param {string} scaleStr - string which denotes scaling in x,y,z
  * where every value should be separated with single white space
- * @returns {THREE.Vector3} scale - THREE Vector3 object 
+ * @returns {THREE.Vector3} scale - THREE Vector3 object
  * which denotes scaling of an object in x,y,z
  */
 GZ3D.SdfParser.prototype.parseScale = function(scaleStr)
@@ -346,7 +346,7 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
  * Parses a string which is a size of an object
  * @param {string} sizeStr - string which denotes size in x,y,z
  * where every value should be separated with single white space
- * @returns {object} size - size object which denotes 
+ * @returns {object} size - size object which denotes
  * size of an object in x,y,z
  */
 GZ3D.SdfParser.prototype.parseSize = function(sizeStr)
@@ -372,7 +372,7 @@ GZ3D.SdfParser.prototype.parseSize = function(sizeStr)
  * @param {object} geom - SDF geometry object which determines the geometry
  *  of the object and can have following properties: box, cylinder, sphere,
  *   plane, mesh
- * @param {object} mat - SDF material object which is going to be parsed 
+ * @param {object} mat - SDF material object which is going to be parsed
  * by createMaterial function
  * @param {object} parent - parent 3D object
  */
@@ -527,11 +527,11 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
 };
 
 /**
- * Parses SDF visual element and creates THREE 3D object by parsing 
+ * Parses SDF visual element and creates THREE 3D object by parsing
  * geometry element using createGeom function
  * @param {object} visual - SDF visual element
  * @returns {THREE.Object3D} visualObj - 3D object which is created
- * according to SDF visual element. 
+ * according to SDF visual element.
  */
 GZ3D.SdfParser.prototype.createVisual = function(visual)
 {
@@ -597,7 +597,7 @@ GZ3D.SdfParser.prototype.spawnFromSDF = function(sdf)
  * Loads SDF file according to given model name
  * @param {string} modelName - name of the model
  * @returns {THREE.Object3D} modelObject - 3D object which is created
- * according to SDF model. 
+ * according to SDF model.
  */
 GZ3D.SdfParser.prototype.loadSDF = function(modelName)
 {
@@ -609,7 +609,7 @@ GZ3D.SdfParser.prototype.loadSDF = function(modelName)
  * Creates 3D object from parsed model SDF
  * @param {object} sdfObj - parsed SDF object
  * @returns {THREE.Object3D} modelObject - 3D object which is created
- * according to SDF model object. 
+ * according to SDF model object.
  */
 GZ3D.SdfParser.prototype.spawnModelFromSDF = function(sdfObj)
 {

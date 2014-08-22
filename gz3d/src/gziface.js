@@ -129,7 +129,28 @@ GZ3D.GZIface.prototype.onConnected = function()
 
     if (message.grid === true)
     {
-      this.scene.createGrid();
+      this.gui.guiEvents.emit('show_grid', 'show');
+    }
+
+    if (message.ambient)
+    {
+      var ambient = new THREE.Color();
+      ambient.r = message.ambient.r;
+      ambient.g = message.ambient.g;
+      ambient.b = message.ambient.b;
+
+      this.scene.ambient.color = ambient;
+    }
+
+    if (message.background)
+    {
+      var background = new THREE.Color();
+      background.r = message.background.r;
+      background.g = message.background.g;
+      background.b = message.background.b;
+
+      this.scene.renderer.clear();
+      this.scene.renderer.setClearColor(background, 1);
     }
 
     for (var i = 0; i < message.light.length; ++i)
@@ -148,6 +169,7 @@ GZ3D.GZIface.prototype.onConnected = function()
       this.gui.setModelStats(model, 'update');
     }
 
+    this.gui.setSceneStats(message);
     this.sceneTopic.unsubscribe();
   };
   this.sceneTopic.subscribe(sceneUpdate.bind(this));
@@ -163,9 +185,11 @@ GZ3D.GZIface.prototype.onConnected = function()
   var poseUpdate = function(message)
   {
     var entity = this.scene.getByName(message.name);
-    if (entity && entity !== this.scene.modelManipulator.object)
+    if (entity && entity !== this.scene.modelManipulator.object
+        && entity.parent !== this.scene.modelManipulator.object)
     {
       this.scene.updatePose(entity, message.position, message.orientation);
+      this.gui.setModelStats(message, 'update');
     }
   };
 
