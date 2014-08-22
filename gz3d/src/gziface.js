@@ -325,14 +325,14 @@ GZ3D.GZIface.prototype.onConnected = function()
     this.scene.add(roadsObj);
   });
 
-  // Model modify messages - for modifying model pose
+  // Model modify messages - for modifying models
   this.modelModifyTopic = new ROSLIB.Topic({
     ros : this.webSocket,
     name : '~/model/modify',
     messageType : 'model',
   });
 
-  // Light messages - for modifying light pose
+  // Light messages - for modifying lights
   this.lightModifyTopic = new ROSLIB.Topic({
     ros : this.webSocket,
     name : '~/light',
@@ -408,6 +408,34 @@ GZ3D.GZIface.prototype.onConnected = function()
   };
 
   this.scene.emitter.on('entityChanged', publishEntityModify);
+
+  // Link messages - for modifying links
+  this.linkModifyTopic = new ROSLIB.Topic({
+    ros : this.webSocket,
+    name : '~/link',
+    messageType : 'link',
+  });
+
+  var publishLinkModify = function(entity, type)
+  {
+    var modelMsg =
+    {
+      name : entity.parent.name,
+      id : entity.parent.userData,
+      link:
+      {
+        name: entity.name,
+        id: entity.userData,
+        self_collide: entity.serverProperties.self_collide,
+        gravity: entity.serverProperties.gravity,
+        kinematic: entity.serverProperties.kinematic
+      }
+    };
+
+    that.linkModifyTopic.publish(modelMsg);
+  };
+
+  this.scene.emitter.on('linkChanged', publishLinkModify);
 
   // Factory messages - for spawning new models
   this.factoryTopic = new ROSLIB.Topic({
@@ -617,6 +645,12 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
     var linkObj = new THREE.Object3D();
     linkObj.name = link.name;
     linkObj.userData = link.id;
+    linkObj.serverProperties =
+        {
+          self_collide: link.self_collide,
+          gravity: link.gravity,
+          kinematic: link.kinematic
+        };
 
     if (link.pose)
     {

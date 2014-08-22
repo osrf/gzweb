@@ -689,6 +689,12 @@ gzangular.controller('treeControl', ['$scope', function($scope)
   {
     guiEvents.emit('setLight', prop, name, value);
   };
+
+  $scope.toggleProperty = function(prop, entity, subEntity)
+  {
+    // only for links so far
+    guiEvents.emit('toggleProperty', prop, entity, subEntity);
+  };
 }]);
 
 // Insert menu
@@ -1329,6 +1335,15 @@ GZ3D.Gui.prototype.init = function()
         that.scene.emitter.emit('entityChanged', entity);
       }
   );
+
+  guiEvents.on('toggleProperty', function (prop, subEntityName)
+      {
+        var entity = that.scene.getByName(subEntityName);
+        entity.serverProperties[prop] = !entity.serverProperties[prop];
+
+        that.scene.emitter.emit('linkChanged', entity);
+      }
+  );
 };
 
 /**
@@ -1394,6 +1409,7 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
   var modelName = stats.name;
   var linkShortName;
 
+  // if it's a link
   if (stats.name.indexOf('::') >= 0)
   {
     modelName = stats.name.substring(0, stats.name.indexOf('::'));
@@ -1508,41 +1524,67 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
             });
       }
     }
-    // Update existing model's pose
+    // Update existing model
     else
     {
-      if ((linkShortName &&
+      var link;
+
+      if (stats.link && stats.link[0])
+      {
+        var LinkShortName = stats.link[0].name;
+
+        link = $.grep(model[0].links, function(e)
+            {
+              return e.shortName === LinkShortName;
+            });
+
+        if (link[0].self_collide)
+        {
+          link[0].self_collide = this.trueOrFalse(stats.link[0].self_collide);
+        }
+        if (link[0].gravity)
+        {
+          link[0].gravity = this.trueOrFalse(stats.link[0].gravity);
+        }
+        if (link[0].kinematic)
+        {
+          link[0].kinematic = this.trueOrFalse(stats.link[0].kinematic);
+        }
+      }
+
+      // Update pose stats only if they're being displayed
+      if (!((linkShortName &&
           !$('#expandable-pose-'+modelName+'-'+linkShortName).is(':visible'))||
           (!linkShortName &&
-          !$('#expandable-pose-'+modelName).is(':visible')))
+          !$('#expandable-pose-'+modelName).is(':visible'))))
       {
-        return;
-      }
 
-      if (stats.position)
-      {
-        stats.pose = {};
-        stats.pose.position = stats.position;
-        stats.pose.orientation = stats.orientation;
-      }
-
-      if (stats.pose)
-      {
-        formatted = this.formatStats(stats);
-
-        if (linkShortName === undefined)
+        if (stats.position)
         {
-          model[0].position = formatted.pose.position;
-          model[0].orientation = formatted.pose.orientation;
+          stats.pose = {};
+          stats.pose.position = stats.position;
+          stats.pose.orientation = stats.orientation;
         }
-        else
+
+        if (stats.pose)
         {
-          var link = $.grep(model[0].links, function(e)
+          formatted = this.formatStats(stats);
+
+          if (linkShortName === undefined)
+          {
+            model[0].position = formatted.pose.position;
+            model[0].orientation = formatted.pose.orientation;
+          }
+          else
+          {
+            link = $.grep(model[0].links, function(e)
               {
                 return e.shortName === linkShortName;
               });
-          link[0].position = formatted.pose.position;
-          link[0].orientation = formatted.pose.orientation;
+
+            link[0].position = formatted.pose.position;
+            link[0].orientation = formatted.pose.orientation;
+          }
         }
       }
     }

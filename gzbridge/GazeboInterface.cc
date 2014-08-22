@@ -51,6 +51,7 @@ GazeboInterface::GazeboInterface()
   this->poseTopic = "~/pose/info";
   this->requestTopic = "~/request";
   this->lightTopic = "~/light";
+  this->linkTopic = "~/link";
   this->sceneTopic = "~/scene";
   this->modelModifyTopic = "~/model/modify";
   this->factoryTopic = "~/factory";
@@ -280,7 +281,6 @@ void GazeboInterface::ProcessMessages()
         }
         else if (topic == this->modelModifyTopic)
         {
-          std::string type = get_value(msg, "messageType");
           std::string name = get_value(msg, "msg:name");
           int id = atoi(get_value(msg, "msg:id").c_str());
 
@@ -389,6 +389,55 @@ void GazeboInterface::ProcessMessages()
           }
 
           this->lightPub->Publish(lightMsg);
+        }
+        else if (topic == this->linkTopic)
+        {
+          std::string modelName = get_value(msg, "msg:name");
+          int modelId = atoi(get_value(msg, "msg:id").c_str());
+
+          std::string linkName = get_value(msg, "msg:link:name");
+          int linkId = atoi(get_value(msg, "msg:link:id").c_str());
+
+          if (modelName == "" || linkName == "")
+            continue;
+
+          gazebo::msgs::Model modelMsg;
+          modelMsg.set_id(modelId);
+          modelMsg.set_name(modelName);
+
+          gazebo::msgs::Link *linkMsg = modelMsg.add_link();
+          linkMsg->set_id(linkId);
+
+          size_t index = linkName.find_last_of("::");
+          if (index != std::string::npos)
+              linkName = linkName.substr(index+1);
+          linkMsg->set_name(linkName);
+
+          std::string self_collideStr = get_value(msg, "msg:link:self_collide").c_str();
+          bool self_collide = false;
+          if (self_collideStr == "1")
+          {
+            self_collide = true;
+          }
+          linkMsg->set_self_collide(self_collide);
+
+          std::string gravityStr = get_value(msg, "msg:link:gravity").c_str();
+          bool gravity = false;
+          if (gravityStr == "1")
+          {
+            gravity = true;
+          }
+          linkMsg->set_gravity(gravity);
+
+          std::string kinematicStr = get_value(msg, "msg:link:kinematic").c_str();
+          bool kinematic = false;
+          if (kinematicStr == "1")
+          {
+            kinematic = true;
+          }
+          linkMsg->set_kinematic(kinematic);
+
+          this->modelPub->Publish(modelMsg);
         }
         else if (topic == this->factoryTopic)
         {
