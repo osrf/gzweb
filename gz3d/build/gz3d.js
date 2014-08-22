@@ -1312,7 +1312,7 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('toggleProperty', function (prop, entityName, subEntityName)
+  guiEvents.on('toggleProperty', function (prop, subEntityName)
       {
         var entity = that.scene.getByName(subEntityName);
         if (prop === 'gravity')
@@ -1320,7 +1320,7 @@ GZ3D.Gui.prototype.init = function()
           entity.serverProperties.gravity = !entity.serverProperties.gravity;
         }
 
-        that.scene.emitter.emit('entityChanged', entity, 'link');
+        that.scene.emitter.emit('linkChanged', entity);
       }
   );
 };
@@ -2237,14 +2237,7 @@ GZ3D.GZIface.prototype.onConnected = function()
     messageType : 'light',
   });
 
-  // Link messages - for modifying links
-  this.linkModifyTopic = new ROSLIB.Topic({
-    ros : this.webSocket,
-    name : '~/link',
-    messageType : 'link',
-  });
-
-  var publishEntityModify = function(entity, type)
+  var publishEntityModify = function(entity)
   {
     var matrix = entity.matrixWorld;
     var translation = new THREE.Vector3();
@@ -2285,16 +2278,6 @@ GZ3D.GZIface.prototype.onConnected = function()
 
       that.lightModifyTopic.publish(entityMsg);
     }
-    else if (type === 'link')
-    {
-      console.log(entity);
-      entityMsg.serverProperties =
-      {
-        gravity: entity.serverProperties.gravity
-      };
-
-      that.linkModifyTopic.publish(entityMsg);
-    }
     else
     {
       that.modelModifyTopic.publish(entityMsg);
@@ -2302,6 +2285,32 @@ GZ3D.GZIface.prototype.onConnected = function()
   };
 
   this.scene.emitter.on('entityChanged', publishEntityModify);
+
+  // Link messages - for modifying links
+  this.linkModifyTopic = new ROSLIB.Topic({
+    ros : this.webSocket,
+    name : '~/link',
+    messageType : 'link',
+  });
+
+  var publishLinkModify = function(entity, type)
+  {
+    var modelMsg =
+    {
+      name : entity.parent.name,
+      id : entity.parent.userData,
+      link:
+      {
+        name: entity.name,
+        id: entity.id,
+        gravity: entity.serverProperties.gravity
+      }
+    };
+
+    that.linkModifyTopic.publish(modelMsg);
+  };
+
+  this.scene.emitter.on('linkChanged', publishLinkModify);
 
   // Factory messages - for spawning new models
   this.factoryTopic = new ROSLIB.Topic({

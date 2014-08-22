@@ -222,9 +222,6 @@ namespace gzweb
     /// \brief Publish light modify messages
     private: gazebo::transport::PublisherPtr lightPub;
 
-    /// \brief Publish link modify messages
-    private: gazebo::transport::PublisherPtr linkPub;
-
     /// \brief Publish factory messages
     private: gazebo::transport::PublisherPtr factoryPub;
 

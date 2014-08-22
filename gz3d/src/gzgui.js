@@ -1307,7 +1307,7 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('toggleProperty', function (prop, entityName, subEntityName)
+  guiEvents.on('toggleProperty', function (prop, subEntityName)
       {
         var entity = that.scene.getByName(subEntityName);
         if (prop === 'gravity')
@@ -1315,7 +1315,7 @@ GZ3D.Gui.prototype.init = function()
           entity.serverProperties.gravity = !entity.serverProperties.gravity;
         }
 
-        that.scene.emitter.emit('entityChanged', entity, 'link');
+        that.scene.emitter.emit('linkChanged', entity);
       }
   );
 };
