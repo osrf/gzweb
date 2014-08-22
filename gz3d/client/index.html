@@ -447,7 +447,7 @@
                       <div>Name</div>
                       <div>{{link.name}}</div>
                     </div>
-                    <div class="property propertyLevel3">
+                    <div class="clickable property propertyLevel3" ng-click="toggleProperty('self_collide', link.name)">
                       <div>Self Collide</div>
                       <div class="propertyToggle">
                         <img src="style/images/{{link.self_collide.icon}}.png">
@@ -461,7 +461,7 @@
                         {{link.gravity.title}}
                       </div>
                     </div>
-                    <div class="property propertyLevel3">
+                    <div class="clickable property propertyLevel3" ng-click="toggleProperty('kinematic', link.name)">
                       <div>Kinematic</div>
                       <div class="propertyToggle">
                         <img src="style/images/{{link.kinematic.icon}}.png">

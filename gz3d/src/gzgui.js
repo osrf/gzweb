@@ -692,6 +692,7 @@ gzangular.controller('treeControl', ['$scope', function($scope)
 
   $scope.toggleProperty = function(prop, entity, subEntity)
   {
+    // only for links so far
     guiEvents.emit('toggleProperty', prop, entity, subEntity);
   };
 }]);
@@ -1310,9 +1311,17 @@ GZ3D.Gui.prototype.init = function()
   guiEvents.on('toggleProperty', function (prop, subEntityName)
       {
         var entity = that.scene.getByName(subEntityName);
-        if (prop === 'gravity')
+        if (prop === 'self_collide')
+        {
+          entity.serverProperties.self_collide = !entity.serverProperties.self_collide;
+        }
+        else if (prop === 'gravity')
         {
           entity.serverProperties.gravity = !entity.serverProperties.gravity;
+        }
+        else if (prop === 'kinematic')
+        {
+          entity.serverProperties.kinematic = !entity.serverProperties.kinematic;
         }
 
         that.scene.emitter.emit('linkChanged', entity);
@@ -1512,7 +1521,18 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
               return e.shortName === LinkShortName;
             });
 
-        link[0].gravity = this.trueOrFalse(stats.link[0].gravity);
+        if (link[0].self_collide)
+        {
+          link[0].self_collide = this.trueOrFalse(stats.link[0].self_collide);
+        }
+        if (link[0].gravity)
+        {
+          link[0].gravity = this.trueOrFalse(stats.link[0].gravity);
+        }
+        if (link[0].kinematic)
+        {
+          link[0].kinematic = this.trueOrFalse(stats.link[0].kinematic);
+        }
       }
 
       // Update pose stats only if they're being displayed

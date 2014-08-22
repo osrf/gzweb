@@ -401,7 +401,13 @@ void GazeboInterface::ProcessMessages()
               linkName = linkName.substr(index+1);
           linkMsg->set_name(linkName);
 
-          std::cout << modelName << "  " << linkName << std::endl;
+          std::string self_collideStr = get_value(msg, "msg:link:self_collide").c_str();
+          bool self_collide = false;
+          if (self_collideStr == "1")
+          {
+            self_collide = true;
+          }
+          linkMsg->set_self_collide(self_collide);
 
           std::string gravityStr = get_value(msg, "msg:link:gravity").c_str();
           bool gravity = false;
@@ -410,6 +416,14 @@ void GazeboInterface::ProcessMessages()
             gravity = true;
           }
           linkMsg->set_gravity(gravity);
+
+          std::string kinematicStr = get_value(msg, "msg:link:kinematic").c_str();
+          bool kinematic = false;
+          if (kinematicStr == "1")
+          {
+            kinematic = true;
+          }
+          linkMsg->set_kinematic(kinematic);
 
           this->modelPub->Publish(modelMsg);
         }
