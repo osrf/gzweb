@@ -1,8 +1,10 @@
 {
   "targets": [
     {
-      "target_name": "gzbridge",
-      "sources": [ "GZNode.cc", "GZNode.hh",
+      "target_name": "gazebo",
+      "sources": [ 
+        "GZPubSub.cc", "GZPubSub.hh",
+        "GazeboPubSub.cc", "GazeboPubSub.hh",
         "GazeboInterface.cc", "GazeboInterface.hh",
         "pb2json.cc", "pb2json.hh",
         "ConfigLoader.cc", "ConfigLoader.hh",
