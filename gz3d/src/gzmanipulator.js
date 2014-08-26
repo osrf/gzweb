@@ -929,28 +929,28 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
 
         if (scope.space === 'local')
         {
-           point.applyMatrix4(tempMatrix.getInverse(worldRotationMatrix));
+          point.applyMatrix4(tempMatrix.getInverse(worldRotationMatrix));
 
-           if(!(isSelected('X')) || scope.modifierAxis.x !== 1)
-           {
-             point.x = 0;
-           }
-           if(!(isSelected('Y')) || scope.modifierAxis.y !== 1)
-           {
-             point.y = 0;
-           }
-           if(!(isSelected('Z')) || scope.modifierAxis.z !== 1)
-           {
-             point.z = 0;
-           }
-           if (isSelected('XYZ'))
-           {
-             point.set(0, 0, 0);
-           }
-           point.applyMatrix4(oldRotationMatrix);
+          if(!(isSelected('X')) || scope.modifierAxis.x !== 1)
+          {
+            point.x = 0;
+          }
+          if(!(isSelected('Y')) || scope.modifierAxis.y !== 1)
+          {
+            point.y = 0;
+          }
+          if(!(isSelected('Z')) || scope.modifierAxis.z !== 1)
+          {
+            point.z = 0;
+          }
+          if (isSelected('XYZ'))
+          {
+            point.set(0, 0, 0);
+          }
+          point.applyMatrix4(oldRotationMatrix);
 
-           scope.object.position.copy(oldPosition);
-           scope.object.position.add(point);
+          scope.object.position.copy(oldPosition);
+          scope.object.position.add(point);
         }
         if (scope.space === 'world' || isSelected('XYZ'))
         {
