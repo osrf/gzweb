@@ -5,7 +5,7 @@ var http = require('http');
 
 var connections = [];
 var materialScriptsMessage = {};
-var addon = require('./build/Release/gzbridge');
+var addon = require('./build/Debug/gzbridge');
 var gzconnection = new addon.GZNode();
 if (gzconnection.getIsGzServerConnected()) 
 {
