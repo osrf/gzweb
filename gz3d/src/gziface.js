@@ -11,7 +11,7 @@ GZ3D.GZIface = function(scene, gui)
 
   this.init();
   this.visualsToAdd = [];
-  
+
   this.numConnectionTrials = 0;
   this.maxConnectionTrials = 30; // try to connect 30 times
   this.timeToSleepBtwTrials = 1000; // wait 1 second between connection trials
@@ -29,7 +29,7 @@ GZ3D.GZIface.prototype.connect = function()
 {
   // connect to websocket
   this.webSocket = new ROSLIB.Ros({
-    url : 'ws://' + location.hostname + ':9876'
+    url : 'ws://' + location.hostname + ':7681'
   });
 
   var that = this;
@@ -39,7 +39,7 @@ GZ3D.GZIface.prototype.connect = function()
   this.webSocket.on('error', function() {
     that.onError();
   });
-  
+
   this.numConnectionTrials++;
 };
 
@@ -50,7 +50,7 @@ GZ3D.GZIface.prototype.onError = function()
   {
     this.emitter.emit('error');
   }
-  
+
   var that = this;
   // retry to connect after certain time
   if (this.numConnectionTrials < this.maxConnectionTrials)
@@ -83,13 +83,13 @@ GZ3D.GZIface.prototype.onConnected = function()
   };
 
   setInterval(publishHeartbeat, 5000);
-  
+
   var statusTopic = new ROSLIB.Topic({
     ros: this.webSocket,
     name: '~/status',
     messageType : 'status',
   });
-  
+
   var statusUpdate = function(message)
   {
     if (message.status === 'error')
@@ -110,7 +110,7 @@ GZ3D.GZIface.prototype.onConnected = function()
   {
     this.material = message;
     this.emitter.emit('material', this.material);
-    
+
   };
   materialTopic.subscribe(materialUpdate.bind(this));
 
