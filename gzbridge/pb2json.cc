@@ -43,22 +43,26 @@ namespace gzweb {
     return output;
   }
 
-  char *pb2json(const Message &msg)
+  std::string pb2json(const Message &msg)
   {
     json_t *root = parse_msg(&msg);
     char *json = json_dumps(root, 0);
     json_decref(root);
-    return json; // should be freed by caller
+    std::string retStr(json);
+    free(json);
+    return retStr;
   }
 
-  char *pb2json(Message *msg, const char *buf, int len)
+  std::string pb2json(Message *msg, const char *buf, int len)
   {
     std::string s (buf, len);
     msg->ParseFromString(s);
     json_t *root = parse_msg(msg);
     char *json = json_dumps(root, 0);
     json_decref(root);
-    return json; // should be freed by caller
+    std::string retStr(json);
+    free(json);
+    return retStr;
   }
 
   json_t *parse_repeated_field(const Message *msg,

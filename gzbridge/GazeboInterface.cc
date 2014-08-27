@@ -512,7 +512,7 @@ void GazeboInterface::ProcessMessages()
         ++sIter)
     {
       msg = this->PackOutgoingTopicMsg(this->sceneTopic,
-          pb2json(*(*sIter).get()));
+          pb2json(*(*sIter).get()).c_str());
       this->Send(msg);
     }
     this->sceneMsgs.clear();
@@ -522,7 +522,7 @@ void GazeboInterface::ProcessMessages()
         modelIter != this->modelMsgs.end(); ++modelIter)
     {
       msg = this->PackOutgoingTopicMsg(this->modelTopic,
-          pb2json(*(*modelIter).get()));
+          pb2json(*(*modelIter).get()).c_str());
       this->Send(msg);
     }
     this->modelMsgs.clear();
@@ -532,7 +532,7 @@ void GazeboInterface::ProcessMessages()
         sensorIter != this->sensorMsgs.end(); ++sensorIter)
     {
       msg = this->PackOutgoingTopicMsg(this->sensorTopic,
-          pb2json(*(*sensorIter).get()));
+          pb2json(*(*sensorIter).get()).c_str());
       this->Send(msg);
     }
     this->sensorMsgs.clear();
@@ -542,7 +542,7 @@ void GazeboInterface::ProcessMessages()
         lightIter != this->lightMsgs.end(); ++lightIter)
     {
       msg = this->PackOutgoingTopicMsg(this->lightTopic,
-          pb2json(*(*lightIter).get()));
+          pb2json(*(*lightIter).get()).c_str());
       this->Send(msg);
     }
     this->lightMsgs.clear();
@@ -552,7 +552,7 @@ void GazeboInterface::ProcessMessages()
         visualIter != this->visualMsgs.end(); ++visualIter)
     {
       msg = this->PackOutgoingTopicMsg(this->visualTopic,
-          pb2json(*(*visualIter).get()));
+          pb2json(*(*visualIter).get()).c_str());
       this->Send(msg);
       std::cerr << msg << std::endl;
     }
@@ -563,7 +563,7 @@ void GazeboInterface::ProcessMessages()
         jointIter != this->jointMsgs.end(); ++jointIter)
     {
       msg = this->PackOutgoingTopicMsg(this->jointTopic,
-          pb2json(*(*jointIter).get()));
+          pb2json(*(*jointIter).get())).c_str();
       this->Send(msg);
     }
     this->jointMsgs.clear();
@@ -573,7 +573,7 @@ void GazeboInterface::ProcessMessages()
         ++rIter)
     {
       msg = this->PackOutgoingTopicMsg(this->requestTopic,
-          pb2json(*(*rIter).get()));
+          pb2json(*(*rIter).get()).c_str());
       this->Send(msg);
     }
     this->requestMsgs.clear();
@@ -583,7 +583,7 @@ void GazeboInterface::ProcessMessages()
         ++wIter)
     {
       msg = this->PackOutgoingTopicMsg(this->statsTopic,
-          pb2json(*(*wIter).get()));
+          pb2json(*(*wIter).get()).c_str());
       this->Send(msg);
     }
     this->statsMsgs.clear();
@@ -593,7 +593,7 @@ void GazeboInterface::ProcessMessages()
     while (pIter != this->poseMsgs.end())
     {
       msg = this->PackOutgoingTopicMsg(this->poseTopic,
-          pb2json(*pIter));
+          pb2json(*pIter).c_str());
       this->Send(msg);
       ++pIter;
     }

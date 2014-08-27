@@ -24,9 +24,9 @@
 
 namespace gzweb
 {
-  char *pb2json(const google::protobuf::Message &msg);
+  std::string pb2json(const google::protobuf::Message &msg);
 
-  char *pb2json(google::protobuf::Message *msg,const char *buf,int len);
+  std::string pb2json(google::protobuf::Message *msg,const char *buf,int len);
 
   std::string get_value(const std::string &msg, const std::string &key);
 
