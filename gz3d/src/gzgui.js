@@ -1010,7 +1010,7 @@ GZ3D.Gui.prototype.init = function()
 
   var notificationTimeout;
   guiEvents.on('notification_popup',
-      function (notification)
+      function (notification, duration)
       {
         if (this.showNotifications)
         {
@@ -1019,10 +1019,15 @@ GZ3D.Gui.prototype.init = function()
           $( '#notification-popup' ).html('&nbsp;'+notification+'&nbsp;');
           $( '#notification-popup' ).popup('open', {
               y:window.innerHeight-50});
+          
+          if (duration === undefined)
+          {
+            duration = 2000;
+          }
           notificationTimeout = setTimeout(function()
           {
             $( '#notification-popup' ).popup('close');
-          }, 2000);
+          }, duration);
         }
       }
   );

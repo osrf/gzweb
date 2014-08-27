@@ -19,6 +19,7 @@
 #include "GZNode.hh"
 
 #include "GazeboInterface.hh"
+#include "OgreMaterialParser.hh"
 
 using namespace v8;
 using namespace gzweb;
@@ -26,9 +27,12 @@ using namespace gzweb;
 /////////////////////////////////////////////////
 GZNode::GZNode()
 {
-  if (!gazebo::transport::init())
+  isGzServerConnected = false;
+  if (!gazebo::transport::init()) {
     return;
+  }
 
+  isGzServerConnected = true;
   gazebo::transport::run();
 
   this->gzIface = new GazeboInterface();
@@ -93,6 +97,14 @@ void GZNode::Init(Handle<Object> exports)
       FunctionTemplate::New(
           SetConnected)->GetFunction());
 
+  tpl->PrototypeTemplate()->Set(
+       String::NewSymbol("getIsGzServerConnected"),
+       FunctionTemplate::New(
+           GetIsGzServerConnected)->GetFunction());
+
+  tpl->PrototypeTemplate()->Set(String::NewSymbol("getMaterialScriptsMessage"),
+       FunctionTemplate::New(GetMaterialScriptsMessage)->GetFunction());
+
   Persistent<Function> constructor =
       Persistent<Function>::New(tpl->GetFunction());
 
@@ -135,6 +147,38 @@ Handle<Value> GZNode::LoadMaterialScripts(const Arguments& args)
   obj->gzIface->LoadMaterialScripts(std::string(*path));
 
   return scope.Close(Undefined());
+}
+
+Handle<Value> GZNode::GetMaterialScriptsMessage(const Arguments& args)
+{
+  HandleScope scope;
+
+  if (args.Length() < 1)
+   {
+     ThrowException(Exception::TypeError(
+         String::New("Wrong number of arguments")));
+     return scope.Close(Undefined());
+   }
+
+   if (!args[0]->IsString())
+   {
+     ThrowException(Exception::TypeError(
+         String::New("Wrong argument type. String expected.")));
+     return scope.Close(Undefined());
+   }
+
+   String::Utf8Value path(args[0]->ToString());
+
+  OgreMaterialParser materialParser;
+  materialParser.Load(std::string(*path));
+  std::string topic = "~/material";
+  std::string materialJson = materialParser.GetMaterialAsJson();
+  std::string msg;
+  msg += "{\"op\":\"publish\",\"topic\":\"" + topic + "\", \"msg\":";
+  msg += materialJson;
+  msg += "}";
+
+  return scope.Close(String::New(msg.c_str()));
 }
 
 /////////////////////////////////////////////////
@@ -247,6 +291,16 @@ Handle<v8::Value> GZNode::SetConnected(const v8::Arguments& args)
   obj->gzIface->SetConnected(value);
 
   return scope.Close(Undefined());
+}
+
+Handle<v8::Value> GZNode::GetIsGzServerConnected(const v8::Arguments& args)
+{
+  HandleScope scope;
+
+  GZNode *obj = ObjectWrap::Unwrap<GZNode>(args.This());
+  bool value = obj->isGzServerConnected;
+
+  return scope.Close(Boolean::New(value));
 }
 
 /////////////////////////////////////////////////
