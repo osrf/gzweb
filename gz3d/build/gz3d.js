@@ -735,9 +735,20 @@ GZ3D.Gui.prototype.init = function()
       function(mode)
       {
         that.scene.setManipulationMode(mode);
-        guiEvents.emit('notification_popup',
-            mode.charAt(0).toUpperCase()+
-            mode.substring(1)+' mode');
+        var space = that.scene.modelManipulator.space;
+
+        if (mode === 'view')
+        {
+          guiEvents.emit('notification_popup', 'View mode');
+        }
+        else
+        {
+          guiEvents.emit('notification_popup',
+              mode.charAt(0).toUpperCase()+
+              mode.substring(1)+' mode in '+
+              space.charAt(0).toUpperCase()+
+              space.substring(1)+' space');
+        }
       }
   );
 
@@ -3136,7 +3147,7 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
   // Needs camera for perspective
   this.camera = camera;
 
-  // For mouse/key/touch events
+  // For mouse/touch events
   this.domElement = (domElement !== undefined) ? domElement : document;
   this.document = (doc !== undefined) ? doc : document;
 
@@ -3146,8 +3157,11 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
   // Object to be manipulated
   this.object = undefined;
 
-  // translate|rotate
+  // translate / rotate
   this.mode = 'translate';
+
+  // world / local
+  this.space = 'world';
 
   // hovered used for backwards compatibility
   // Whenever it wasn't an issue, hovered and active were combined
@@ -3633,7 +3647,7 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
   };
 
   /**
-   * Update gizmo
+   * Update gizmo's pose and scale
    */
   this.update = function()
   {
@@ -3667,8 +3681,39 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
         }
         else
         {
-            eye.copy(camPosition).sub(worldPosition).normalize();
+          eye.copy(camPosition).sub(worldPosition).normalize();
 
+          if (this.space === 'local')
+          {
+            tempQuaternion.setFromRotationMatrix(tempMatrix
+                .extractRotation(this.object.matrixWorld));
+
+            if (name.search('R') !== -1)
+            {
+              tempMatrix.makeRotationFromQuaternion(tempQuaternion)
+                  .getInverse(tempMatrix);
+              eye.applyProjection(tempMatrix);
+
+              if (name === 'RX')
+              {
+                quaternionX.setFromAxisAngle(unitX, Math.atan2(-eye.y, eye.z));
+                tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionX);
+              }
+              if (name ==='RY')
+              {
+                quaternionY.setFromAxisAngle(unitY, Math.atan2( eye.x, eye.z));
+                tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionY);
+              }
+              if (name === 'RZ')
+              {
+                quaternionZ.setFromAxisAngle(unitZ, Math.atan2( eye.y, eye.x));
+                tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionZ);
+              }
+            }
+            object.quaternion.copy(tempQuaternion);
+          }
+          else if (this.space === 'world')
+          {
             object.rotation.set(0, 0, 0);
 
             if(name === 'RX')
@@ -3683,6 +3728,7 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
             {
               object.rotation.z = Math.atan2( eye.y, eye.x);
             }
+          }
         }
       }
     }
@@ -3707,6 +3753,11 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
         pickerAxes[k].children[l].visible = false;
       }
     }
+
+    for(var m in intersectionPlaneList)
+    {
+      intersectionPlanes[intersectionPlaneList[m]].visible = false;
+    }
   };
 
   /**
@@ -3726,7 +3777,12 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
 
     for(var j in pickerAxes[this.mode].children)
     {
-      pickerAxes[this.mode].children[j].visible = false;
+      pickerAxes[this.mode].children[j].visible = false; // debug
+    }
+
+    for(var k in intersectionPlaneList)
+    {
+      intersectionPlanes[intersectionPlaneList[k]].visible = false; // debug
     }
 
     scope.update();
@@ -3738,6 +3794,11 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
   this.setIntersectionPlane = function()
   {
     eye.copy(camPosition).sub(worldPosition).normalize();
+
+    if (this.space === 'local')
+    {
+       eye.applyMatrix4(tempMatrix.getInverse(scope.object.matrixWorld));
+    }
 
     if (isSelected('TXYZ'))
     {
@@ -3858,7 +3919,7 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
       }
     }
 
-    scope.document.addEventListener('touchmove', onTouchMove, false);
+    scope.document.addEventListener('touchmove', onPointerMove, false);
     scope.document.addEventListener('touchend', onTouchEnd, false);
   }
 
@@ -3867,11 +3928,8 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
    * Window event callback
    * @param {} event
    */
-  // onTouchEnd
-  function onTouchEnd(event)
+  function onTouchEnd()
   {
-    event.preventDefault();
-
     // Previously selected picker back to its color
     if(selectedPicker)
     {
@@ -3885,68 +3943,8 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
     scope.selected = 'null';
     scope.hovered = false;
 
-    scope.document.removeEventListener('touchmove', onTouchMove, false);
+    scope.document.removeEventListener('touchmove', onPointerMove, false);
     scope.document.removeEventListener('touchend', onTouchEnd, false);
-  }
-
-
-  /**
-   * Window event callback
-   * @param {} event
-   */
-  function onTouchMove(event)
-  {
-    if(scope.selected === 'null')
-    {
-      return;
-    }
-
-    event.preventDefault();
-
-    var planeIntersect = intersectObjects(event,
-        [intersectionPlanes[currentPlane]]);
-    point.copy(planeIntersect.point);
-
-    if(scope.mode === 'translate')
-    {
-      // Equivalent to onMouseMove
-
-      point.sub(offset);
-      point.multiply(parentScale);
-
-      if(!(isSelected('X')) || scope.modifierAxis.x !== 1)
-      {
-        point.x = 0;
-      }
-      if(!(isSelected('Y')) || scope.modifierAxis.y !== 1)
-      {
-        point.y = 0;
-      }
-      if(!(isSelected('Z')) || scope.modifierAxis.z !== 1)
-      {
-        point.z = 0;
-      }
-
-      point.applyMatrix4(tempMatrix.getInverse(parentRotationMatrix));
-
-      translateObject(oldPosition, point);
-    }
-
-    // rotate depends on a tap (= mouse click) to select the axis of rotation
-    if(scope.mode === 'rotate')
-    {
-      // Equivalent to onMouseMove
-
-      point.sub(worldPosition);
-      point.multiply(parentScale);
-      tempVector.copy(offset).sub(worldPosition);
-      tempVector.multiply(parentScale);
-
-      rotateObjectXYZ(point, tempVector);
-    }
-
-    scope.update();
-    scope.dispatchEvent(changeEvent);
   }
 
   /**
@@ -3991,7 +3989,7 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
           scope.hovered = false;
       }
     }
-    scope.document.addEventListener('mousemove', onMouseMove, false);
+    scope.document.addEventListener('mousemove', onPointerMove, false);
     scope.document.addEventListener('mouseup', onMouseUp, false);
   }
 
@@ -4036,24 +4034,25 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
         }
     }
 
-    scope.document.addEventListener('mousemove', onMouseMove, false);
+    scope.document.addEventListener('mousemove', onPointerMove, false);
     scope.document.addEventListener('mouseup', onMouseUp, false);
   }
 
   /**
-   * Window event callback
+   * Window event callback (mouse move and touch move)
    * @param {} event
    */
-  function onMouseMove(event)
+  function onPointerMove(event)
   {
     if(scope.selected === 'null')
     {
-    return;
+      return;
     }
 
     event.preventDefault();
 
-    var planeIntersect = intersectObjects(event, [intersectionPlanes[currentPlane]]);
+    var planeIntersect = intersectObjects(event,
+        [intersectionPlanes[currentPlane]]);
 
     if(planeIntersect)
     {
@@ -4064,22 +4063,70 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
         point.sub(offset);
         point.multiply(parentScale);
 
-        if(!(isSelected('X')) || scope.modifierAxis.x !== 1)
+        if (scope.space === 'local')
         {
-          point.x = 0;
-        }
-        if(!(isSelected('Y')) || scope.modifierAxis.y !== 1)
-        {
-          point.y = 0;
-        }
-        if(!(isSelected('Z')) || scope.modifierAxis.z !== 1)
-        {
-          point.z = 0;
-        }
+          point.applyMatrix4(tempMatrix.getInverse(worldRotationMatrix));
 
-        point.applyMatrix4(tempMatrix.getInverse(parentRotationMatrix));
+          if(!(isSelected('X')) || scope.modifierAxis.x !== 1)
+          {
+            point.x = 0;
+          }
+          if(!(isSelected('Y')) || scope.modifierAxis.y !== 1)
+          {
+            point.y = 0;
+          }
+          if(!(isSelected('Z')) || scope.modifierAxis.z !== 1)
+          {
+            point.z = 0;
+          }
+          if (isSelected('XYZ'))
+          {
+            point.set(0, 0, 0);
+          }
+          point.applyMatrix4(oldRotationMatrix);
 
-        translateObject(oldPosition, point);
+          scope.object.position.copy(oldPosition);
+          scope.object.position.add(point);
+        }
+        if (scope.space === 'world' || isSelected('XYZ'))
+        {
+          if(!(isSelected('X')) || scope.modifierAxis.x !== 1)
+          {
+            point.x = 0;
+          }
+          if(!(isSelected('Y')) || scope.modifierAxis.y !== 1)
+          {
+            point.y = 0;
+          }
+          if(!(isSelected('Z')) || scope.modifierAxis.z !== 1)
+          {
+            point.z = 0;
+          }
+
+          point.applyMatrix4(tempMatrix.getInverse(parentRotationMatrix));
+
+          scope.object.position.copy(oldPosition);
+          scope.object.position.add(point);
+
+          if(scope.snapDist)
+          {
+            if(isSelected('X'))
+            {
+              scope.object.position.x = Math.round(scope.object.position.x /
+                  scope.snapDist) * scope.snapDist;
+            }
+            if(isSelected('Y'))
+            {
+              scope.object.position.y = Math.round(scope.object.position.y /
+                  scope.snapDist) * scope.snapDist;
+            }
+            if(isSelected('Z'))
+            {
+              scope.object.position.z = Math.round(scope.object.position.z /
+                  scope.snapDist) * scope.snapDist;
+            }
+          }
+        }
       }
       else if((scope.mode === 'rotate') && isSelected('R'))
       {
@@ -4093,8 +4140,12 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
           point.applyMatrix4(tempMatrix.getInverse(lookAtMatrix));
           tempVector.applyMatrix4(tempMatrix.getInverse(lookAtMatrix));
 
-          rotation.set(Math.atan2(point.z, point.y), Math.atan2(point.x, point.z), Math.atan2(point.y, point.x));
-          offsetRotation.set(Math.atan2(tempVector.z, tempVector.y), Math.atan2(tempVector.x, tempVector.z), Math.atan2(tempVector.y, tempVector.x));
+          rotation.set(Math.atan2(point.z, point.y),
+                       Math.atan2(point.x, point.z),
+                       Math.atan2(point.y, point.x));
+          offsetRotation.set(Math.atan2(tempVector.z, tempVector.y),
+                             Math.atan2(tempVector.x, tempVector.z),
+                             Math.atan2(tempVector.y, tempVector.x));
 
           tempQuaternion.setFromRotationMatrix(tempMatrix.getInverse(parentRotationMatrix));
 
@@ -4105,7 +4156,6 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
           tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionXYZ);
 
           scope.object.quaternion.copy(tempQuaternion);
-          moveLightTarget();
         }
         else if(scope.selected === 'RXYZE')
         {
@@ -4119,13 +4169,86 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
           tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionXYZ);
 
           scope.object.quaternion.copy(tempQuaternion);
-          moveLightTarget();
         }
         else
         {
-          rotateObjectXYZ(point, tempVector);
+          if (scope.space === 'local')
+          {
+            point.applyMatrix4(tempMatrix.getInverse(worldRotationMatrix));
+
+            tempVector.applyMatrix4(tempMatrix.getInverse(worldRotationMatrix));
+
+            rotation.set(Math.atan2(point.z, point.y), Math.atan2(point.x, point.z),
+                Math.atan2(point.y, point.x));
+            offsetRotation.set(Math.atan2(tempVector.z, tempVector.y), Math.atan2(
+                tempVector.x, tempVector.z), Math.atan2(tempVector.y, tempVector.x));
+
+            quaternionXYZ.setFromRotationMatrix(oldRotationMatrix);
+            quaternionX.setFromAxisAngle(unitX, rotation.x - offsetRotation.x);
+            quaternionY.setFromAxisAngle(unitY, rotation.y - offsetRotation.y);
+            quaternionZ.setFromAxisAngle(unitZ, rotation.z - offsetRotation.z);
+
+            if (scope.selected === 'RX')
+            {
+              quaternionXYZ.multiplyQuaternions(quaternionXYZ, quaternionX);
+            }
+            if (scope.selected === 'RY')
+            {
+              quaternionXYZ.multiplyQuaternions(quaternionXYZ, quaternionY);
+            }
+            if (scope.selected === 'RZ')
+            {
+              quaternionXYZ.multiplyQuaternions(quaternionXYZ, quaternionZ);
+            }
+
+            scope.object.quaternion.copy(quaternionXYZ);
+          }
+          else if (scope.space === 'world')
+          {
+            rotation.set(Math.atan2(point.z, point.y), Math.atan2(point.x, point.z),
+                Math.atan2(point.y, point.x));
+            offsetRotation.set(Math.atan2(tempVector.z, tempVector.y), Math.atan2(
+              tempVector.x, tempVector.z), Math.atan2(tempVector.y, tempVector.x));
+
+            tempQuaternion.setFromRotationMatrix(tempMatrix.getInverse(
+              parentRotationMatrix));
+
+            quaternionX.setFromAxisAngle(unitX, rotation.x - offsetRotation.x);
+            quaternionY.setFromAxisAngle(unitY, rotation.y - offsetRotation.y);
+            quaternionZ.setFromAxisAngle(unitZ, rotation.z - offsetRotation.z);
+            quaternionXYZ.setFromRotationMatrix(worldRotationMatrix);
+
+            if(scope.selected === 'RX')
+            {
+              tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionX);
+            }
+            if(scope.selected === 'RY')
+            {
+              tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionY);
+            }
+            if(scope.selected === 'RZ')
+            {
+              tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionZ);
+            }
+
+            tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionXYZ);
+
+            scope.object.quaternion.copy(tempQuaternion);
+          }
         }
       }
+    }
+
+    // Move light target
+    if (scope.object.children[0] &&
+       (scope.object.children[0] instanceof THREE.SpotLight ||
+        scope.object.children[0] instanceof THREE.DirectionalLight))
+    {
+      var lightObj = scope.object.children[0];
+      var dir = new THREE.Vector3(0,0,0);
+      dir.copy(scope.object.direction);
+      scope.object.localToWorld(dir);
+      lightObj.target.position.copy(dir);
     }
 
     scope.update();
@@ -4136,7 +4259,7 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
   {
     scope.selected = 'null';
 
-    scope.document.removeEventListener('mousemove', onMouseMove, false);
+    scope.document.removeEventListener('mousemove', onPointerMove, false);
     scope.document.removeEventListener('mouseup', onMouseUp, false);
   }
 
@@ -4193,94 +4316,6 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
     object.position.set(0, 0, 0);
     object.rotation.set(0, 0, 0);
     object.scale.set(1, 1, 1);
-  }
-
-  /*
-   * Translate object
-   * @param {} oldPosition
-   * @param {} point
-   */
-  function translateObject(oldPosition, point)
-  {
-    scope.object.position.copy(oldPosition);
-    scope.object.position.add(point);
-
-    if(scope.snapDist)
-    {
-      if(isSelected('X'))
-      {
-        scope.object.position.x = Math.round(scope.object.position.x /
-            scope.snapDist) * scope.snapDist;
-      }
-      if(isSelected('Y'))
-      {
-        scope.object.position.y = Math.round(scope.object.position.y /
-            scope.snapDist) * scope.snapDist;
-      }
-      if(isSelected('Z'))
-      {
-        scope.object.position.z = Math.round(scope.object.position.z /
-            scope.snapDist) * scope.snapDist;
-      }
-    }
-    moveLightTarget();
-  }
-
-  /*
-   * Rotate object
-   * @param {} point
-   * @param {} tempVector
-   */
-  function rotateObjectXYZ(point, tempVector)
-  {
-    rotation.set(Math.atan2(point.z, point.y), Math.atan2(point.x, point.z),
-        Math.atan2(point.y, point.x));
-    offsetRotation.set(Math.atan2(tempVector.z, tempVector.y), Math.atan2(
-      tempVector.x, tempVector.z), Math.atan2(tempVector.y, tempVector.x));
-
-    tempQuaternion.setFromRotationMatrix(tempMatrix.getInverse(
-      parentRotationMatrix));
-
-    quaternionX.setFromAxisAngle(unitX, rotation.x - offsetRotation.x);
-    quaternionY.setFromAxisAngle(unitY, rotation.y - offsetRotation.y);
-    quaternionZ.setFromAxisAngle(unitZ, rotation.z - offsetRotation.z);
-    quaternionXYZ.setFromRotationMatrix(worldRotationMatrix);
-
-    if(scope.selected === 'RX')
-    {
-      tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionX);
-    }
-    if(scope.selected === 'RY')
-    {
-      tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionY);
-    }
-    if(scope.selected === 'RZ')
-    {
-      tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionZ);
-    }
-
-    tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionXYZ);
-
-    scope.object.quaternion.copy(tempQuaternion);
-
-    moveLightTarget();
-  }
-
-  /*
-   * Move light target
-   */
-  function moveLightTarget()
-  {
-    if (scope.object.children[0] &&
-       (scope.object.children[0] instanceof THREE.SpotLight ||
-        scope.object.children[0] instanceof THREE.DirectionalLight))
-    {
-      var lightObj = scope.object.children[0];
-      var dir = new THREE.Vector3(0,0,0);
-      dir.copy(scope.object.direction);
-      scope.object.localToWorld(dir);
-      lightObj.target.position.copy(dir);
-    }
   }
 };
 
@@ -5035,19 +5070,16 @@ GZ3D.Scene.prototype.onKeyDown = function(event)
   // Esc/R/T for changing manipulation modes
   if (event.keyCode === 27) // Esc
   {
-    this.setManipulationMode('view');
     $( '#view-mode' ).click();
     $('input[type="radio"]').checkboxradio('refresh');
   }
   if (event.keyCode === 82) // R
   {
-    this.setManipulationMode('rotate');
     $( '#rotate-mode' ).click();
     $('input[type="radio"]').checkboxradio('refresh');
   }
   if (event.keyCode === 84) // T
   {
-    this.setManipulationMode('translate');
     $( '#translate-mode' ).click();
     $('input[type="radio"]').checkboxradio('refresh');
   }
@@ -6236,6 +6268,12 @@ GZ3D.Scene.prototype.setManipulationMode = function(mode)
   }
   else
   {
+    // Toggle manipulaion space (world / local)
+    if (this.modelManipulator.mode === this.manipulationMode)
+    {
+      this.modelManipulator.space =
+        (this.modelManipulator.space === 'world') ? 'local' : 'world';
+    }
     this.modelManipulator.mode = this.manipulationMode;
     this.modelManipulator.setMode(this.modelManipulator.mode);
     // model was selected during view mode
