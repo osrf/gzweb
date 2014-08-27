@@ -590,6 +590,7 @@ gzangular.controller('treeControl', ['$scope', function($scope)
     $scope.models = modelStats;
     $scope.lights = lightStats;
     $scope.scene = sceneStats;
+    $scope.physics = physicsStats;
     if (!$scope.$$phase)
     {
       $scope.$apply();
@@ -1295,6 +1296,17 @@ GZ3D.Gui.prototype.setSceneStats = function(stats)
   sceneStats['background'] = formatted.background;
 };
 
+var physicsStats = {};
+/**
+ * Update scene stats on scene tree
+ * @param {} stats
+ */
+GZ3D.Gui.prototype.setPhysicsStats = function(stats)
+{
+  physicsStats = stats;
+  physicsStats['enable_physics'] = this.trueOrFalse(physicsStats['enable_physics']);
+};
+
 var modelStats = [];
 /**
  * Update model stats on property panel
@@ -1927,6 +1939,18 @@ GZ3D.GZIface.prototype.onConnected = function()
     this.sceneTopic.unsubscribe();
   };
   this.sceneTopic.subscribe(sceneUpdate.bind(this));
+
+  this.physicsTopic = new ROSLIB.Topic({
+    ros : this.webSocket,
+    name : '~/physics',
+    messageType : 'physics',
+  });
+
+  var physicsUpdate = function(message)
+  {
+    this.gui.setPhysicsStats(message);
+  };
+  this.physicsTopic.subscribe(physicsUpdate.bind(this));
 
 
   // Update model pose

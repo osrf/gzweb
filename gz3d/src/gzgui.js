@@ -585,6 +585,7 @@ gzangular.controller('treeControl', ['$scope', function($scope)
     $scope.models = modelStats;
     $scope.lights = lightStats;
     $scope.scene = sceneStats;
+    $scope.physics = physicsStats;
     if (!$scope.$$phase)
     {
       $scope.$apply();
@@ -1288,6 +1289,17 @@ GZ3D.Gui.prototype.setSceneStats = function(stats)
 
   sceneStats['ambient'] = formatted.ambient;
   sceneStats['background'] = formatted.background;
+};
+
+var physicsStats = {};
+/**
+ * Update scene stats on scene tree
+ * @param {} stats
+ */
+GZ3D.Gui.prototype.setPhysicsStats = function(stats)
+{
+  physicsStats = stats;
+  physicsStats['enable_physics'] = this.trueOrFalse(physicsStats['enable_physics']);
 };
 
 var modelStats = [];

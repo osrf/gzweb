@@ -137,6 +137,18 @@ GZ3D.GZIface.prototype.onConnected = function()
   };
   this.sceneTopic.subscribe(sceneUpdate.bind(this));
 
+  this.physicsTopic = new ROSLIB.Topic({
+    ros : this.webSocket,
+    name : '~/physics',
+    messageType : 'physics',
+  });
+
+  var physicsUpdate = function(message)
+  {
+    this.gui.setPhysicsStats(message);
+  };
+  this.physicsTopic.subscribe(physicsUpdate.bind(this));
+
 
   // Update model pose
   var poseTopic = new ROSLIB.Topic({

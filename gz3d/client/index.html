@@ -324,6 +324,82 @@
                   </div>
                 </div>
               </div>
+              <!-- physics -->
+              <div id="expand-PHYSICS" class="clickable expandableTree" ng-click="expandTree('PHYSICS')">
+                <img src="style/images/play.png">
+                Physics
+              </div>
+              <div id="expandable-PHYSICS" class="expandedContent">
+                <div class="property propertyLevel02">
+                  <div>Enable Physics</div>
+                  <div class="propertyToggle">
+                    <img src="style/images/{{physics.enable_physics.icon}}.png">
+                    {{physics.enable_physics.title}}
+                  </div>
+                </div>
+                <div class="property propertyLevel02">
+                  <div>Real Time Update Rate</div>
+                  <div class="propertyNumber">{{physics.real_time_update_rate}}</div>
+                </div>
+                <div class="property propertyLevel02">
+                  <div>Max Step Size</div>
+                  <div class="propertyNumber">{{physics.max_step_size}}</div>
+                </div>
+                <div id="expand-gravity-PHYSICS" class="clickable expandableProperty expandableLevel2" ng-click="expandProperty('gravity', 'PHYSICS')">
+                  <img src="style/images/play.png">
+                  Gravity
+                </div>
+                <div id="expandable-gravity-PHYSICS" class="expandedContent">
+                  <div class="property propertyLevel3 lightBg">
+                    <div>x</div>
+                    <div class="propertyNumber">{{physics.gravity.x}}</div>
+                  </div>
+                  <div class="property propertyLevel3">
+                    <div>y</div>
+                    <div class="propertyNumber">{{physics.gravity.y}}</div>
+                  </div>
+                  <div class="property propertyLevel3 lightBg">
+                    <div>z</div>
+                    <div class="propertyNumber">{{physics.gravity.z}}</div>
+                  </div>
+                </div>
+                <div id="expand-solver-PHYSICS" class="clickable expandableProperty expandableLevel2" ng-click="expandProperty('solver', 'PHYSICS')">
+                  <img src="style/images/play.png">
+                  Solver
+                </div>
+                <div id="expandable-solver-PHYSICS" class="expandedContent">
+                  <div class="property propertyLevel3">
+                    <div>Iterations</div>
+                    <div class="propertyNumber">{{physics.iters}}</div>
+                  </div>
+                  <div class="property propertyLevel3">
+                    <div>SOR</div>
+                    <div class="propertyNumber">{{physics.sor}}</div>
+                  </div>
+                </div>
+                <div id="expand-constraints-PHYSICS" class="clickable expandableProperty expandableLevel2" ng-click="expandProperty('constraints', 'PHYSICS')">
+                  <img src="style/images/play.png">
+                  Constraints
+                </div>
+                <div id="expandable-constraints-PHYSICS" class="expandedContent">
+                  <div class="property propertyLevel3 lightBg">
+                    <div>CFM</div>
+                    <div class="propertyNumber">{{physics.cfm}}</div>
+                  </div>
+                  <div class="property propertyLevel3">
+                    <div>ERP</div>
+                    <div class="propertyNumber">{{physics.erp}}</div>
+                  </div>
+                  <div class="property propertyLevel3 lightBg">
+                    <div>Max Velocity</div>
+                    <div class="propertyNumber">{{physics.contact_max_correcting_vel}}</div>
+                  </div>
+                  <div class="property propertyLevel3 lightBg">
+                    <div>Surface Layer</div>
+                    <div class="propertyNumber">{{physics.contact_surface_layer}}</div>
+                  </div>
+                </div>
+              </div>
               <!-- models -->
               <div id="expand-MODELS" class="clickable expandableTree" ng-click="expandTree('MODELS')">
                 <img src="style/images/play.png">

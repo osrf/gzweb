@@ -143,6 +143,10 @@ namespace gzweb
     /// \param[in] _msg The message.
     private: void OnScene(ConstScenePtr &_msg);
 
+    /// \brief Physics message callback.
+    /// \param[in] _msg The message data.
+    private: void OnPhysicsMsg(ConstPhysicsPtr &_msg);
+
     /// \brief World stats message callback.
     /// \param[in] _msg The message.
     private: void OnStats(ConstWorldStatisticsPtr &_msg);
@@ -200,6 +204,9 @@ namespace gzweb
 
     /// \brief Subscribe to scene topic
     private: gazebo::transport::SubscriberPtr sceneSub;
+
+    /// \brief Subscribe to physics topic
+    private: gazebo::transport::SubscriberPtr physicsSub;
 
     /// \brief Subscribe to world stats topic
     private: gazebo::transport::SubscriberPtr statsSub;
@@ -308,6 +315,14 @@ namespace gzweb
     /// \brief List of scene message to process.
     private: SceneMsgs_L sceneMsgs;
 
+    /// \def PhysicsMsgs_L
+    /// \brief List of physics messages.
+    typedef std::list<boost::shared_ptr<gazebo::msgs::Physics const> >
+        PhysicsMsgs_L;
+
+    /// \brief List of physics message to process.
+    private: PhysicsMsgs_L physicsMsgs;
+
     /// \def SceneMsgs_L
     /// \brief List of world stats messages.
     typedef std::list<boost::shared_ptr<gazebo::msgs::WorldStatistics const> >
@@ -359,6 +374,9 @@ namespace gzweb
 
     /// \brief Name of scene topic.
     private: std::string sceneTopic;
+
+    /// \brief Name of physics topic.
+    private: std::string physicsTopic;
 
     /// \brief Name of world stats topic.
     private: std::string statsTopic;
