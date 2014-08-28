@@ -16,11 +16,19 @@
 */
 
 #include <iostream>
-
 #include <node.h>
-#include "GZPubSub.hh"
 
+///////////////
+#include <list>
+#include <map>
+#include <gazebo/msgs/msgs.hh>
+///////////////
+
+#include "GZPubSub.hh"
 #include "GazeboPubSub.hh"
+
+
+
 
 using namespace v8;
 using namespace gzscript;
@@ -61,6 +69,10 @@ void GZPubSub::Init(Handle<Object> exports)
   tpl->PrototypeTemplate()->Set(String::NewSymbol("messages"),
       FunctionTemplate::New(GetMessages)->GetFunction());
 
+  tpl->PrototypeTemplate()->Set(String::NewSymbol("materials"),
+      FunctionTemplate::New(GetMaterials)->GetFunction());
+
+
   tpl->PrototypeTemplate()->Set(String::NewSymbol("subscribe"),
       FunctionTemplate::New(Subscribe)->GetFunction());
 
@@ -69,6 +81,26 @@ void GZPubSub::Init(Handle<Object> exports)
 
   tpl->PrototypeTemplate()->Set(String::NewSymbol("subscriptions"),
       FunctionTemplate::New(Subscriptions)->GetFunction());
+
+/*
+  tpl->PrototypeTemplate()->Set(String::NewSymbol("advertise"),
+      FunctionTemplate::New(Advertise)->GetFunction());
+
+ tpl->PrototypeTemplate()->Set(String::NewSymbol("unadvertise"),
+      FunctionTemplate::New(Unadvertise)->GetFunction());
+
+ tpl->PrototypeTemplate()->Set(String::NewSymbol("adverts"),
+      FunctionTemplate::New(Adverts)->GetFunction());
+*/
+
+  tpl->PrototypeTemplate()->Set(String::NewSymbol("pause"),
+      FunctionTemplate::New(Pause)->GetFunction());
+
+  tpl->PrototypeTemplate()->Set(String::NewSymbol("play"),
+      FunctionTemplate::New(Play)->GetFunction());
+
+  tpl->PrototypeTemplate()->Set(String::NewSymbol("publish"),
+      FunctionTemplate::New(Publish)->GetFunction());
 
   Persistent<Function> constructor =
       Persistent<Function>::New(tpl->GetFunction());
@@ -90,6 +122,26 @@ Handle<Value> GZPubSub::New(const Arguments& args)
   return args.This();
 }
 
+//////////////////////////////////////////////////
+Handle<Value> GZPubSub::Pause(const Arguments& args)
+{
+  HandleScope scope;
+
+  GZPubSub* obj = ObjectWrap::Unwrap<GZPubSub>(args.This());
+  obj->gazebo->Pause();
+  return scope.Close(Undefined());
+}
+
+
+/////////////////////////////////////////////////
+Handle<Value> GZPubSub::Play(const Arguments& args)
+{
+  HandleScope scope;
+
+  GZPubSub* obj = ObjectWrap::Unwrap<GZPubSub>(args.This());
+  obj->gazebo->Play();
+  return scope.Close(Undefined());
+}
 
 /////////////////////////////////////////////////
 Handle<Value> GZPubSub::GetMessages(const Arguments& args)
@@ -105,6 +157,30 @@ Handle<Value> GZPubSub::GetMessages(const Arguments& args)
   }
 
   return scope.Close(arguments);
+}
+
+
+/////////////////////////////////////////////////
+Handle<Value> GZPubSub::GetMaterials(const Arguments& args)
+{
+  HandleScope scope;
+
+  GZPubSub* obj = ObjectWrap::Unwrap<GZPubSub>(args.This());
+
+  std::vector<std::string> msgs = obj->gazebo->GetMaterials();
+  Local<Array> arguments = Array::New(msgs.size());
+  for (unsigned int i = 0; i < msgs.size(); ++i) {
+    arguments->Set(i ,String::New(msgs[i].c_str()));
+  }
+
+  return scope.Close(arguments);
+
+
+
+//  return scope.Close(
+//    string s = "return";
+//    String::New( s.c_str() )
+//  );
 }
 
 /////////////////////////////////////////////////
@@ -130,7 +206,7 @@ Handle<Value> GZPubSub::Subscribe(const Arguments& args)
   HandleScope scope;
 
   // we expect one string argument
-  if (args.Length() < 1)
+  if ( (args.Length() < 1)  || (args.Length() > 2)  )
   {
     ThrowException(Exception::TypeError(
         String::New("Wrong number of arguments")));
@@ -140,18 +216,30 @@ Handle<Value> GZPubSub::Subscribe(const Arguments& args)
   if (!args[0]->IsString())
   {
     ThrowException(Exception::TypeError(
-        String::New("Wrong argument type. String expected.")));
+        String::New("Wrong argument type. Topic String expected as first argument.")));
     return scope.Close(Undefined());
-  }
+  } 
 
   String::Utf8Value sarg(args[0]->ToString());
   std::string topic(*sarg);
+
+  bool latch = false;
+  if(args.Length() >1 )
+  {
+    if (!args[1]->IsBoolean())
+    {
+      ThrowException(Exception::TypeError(
+          String::New("Wrong argument type. Latch Boolean expected as second arument.")));
+      return scope.Close(Undefined());
+    }
+    latch = *args[1]->ToBoolean();
+  }
 
   try
   {
     cout << "GZPubSub::Subscribe() topic = [" << topic << "]" << endl;  
     GZPubSub* obj = ObjectWrap::Unwrap<GZPubSub>(args.This());
-    obj->gazebo->Subscribe(topic.c_str());
+    obj->gazebo->Subscribe(topic.c_str(), latch);
   }
   catch(PubSubException &x)
   {
@@ -188,13 +276,71 @@ Handle<Value> GZPubSub::Unsubscribe(const Arguments& args)
   std::string topic(*sarg);
 
   cout << "GZPubSub::Unsubscribe() topic = [" << topic << "]" << endl;
-
+  GZPubSub* obj = ObjectWrap::Unwrap<GZPubSub>(args.This());
+  obj->gazebo->Unsubscribe(topic.c_str());
   return scope.Close(Undefined());
-
 
 }
 
 
+/////////////////////////////////////////////////
+Handle<Value> GZPubSub::Publish(const Arguments& args)
+{
+  HandleScope scope;
+
+  // we expect one string argument
+  if ( (args.Length() != 3)  )
+  {
+    ThrowException(Exception::TypeError(
+        String::New("Wrong number of arguments. 3 expected")));
+    return scope.Close(Undefined());
+  }
+
+  if (!args[0]->IsString())
+  {
+    ThrowException(Exception::TypeError(
+        String::New("Wrong argument type. Type String expected as first argument.")));
+    return scope.Close(Undefined());
+  }
+
+  if (!args[1]->IsString())
+  {
+    ThrowException(Exception::TypeError(
+        String::New("Wrong argument type. Topic String expected as second argument.")));
+    return scope.Close(Undefined());
+  }
+
+  if (!args[2]->IsString())
+  {
+    ThrowException(Exception::TypeError(
+        String::New("Wrong argument type. Message String expected as third argument.")));
+    return scope.Close(Undefined());
+  }
+
+  String::Utf8Value sarg0(args[0]->ToString());
+  std::string type(*sarg0);
+
+  String::Utf8Value sarg1(args[1]->ToString());
+  std::string topic(*sarg1);
+
+  String::Utf8Value sarg2(args[2]->ToString());
+  std::string msg(*sarg2);
+
+  try
+  {
+    cout << "GZPubSub::Publish()  [" << type << ", " << topic << "]: "  << msg << endl;
+    GZPubSub* obj = ObjectWrap::Unwrap<GZPubSub>(args.This());
+    obj->gazebo->Publish(type.c_str(), topic.c_str(), msg.c_str());
+  }
+  catch(PubSubException &x)
+  {
+    ThrowException(Exception::TypeError(
+        String::New(x.what() )));
+    return scope.Close(Undefined());
+  }
+
+   return scope.Close(Undefined());  
+}
 
 /////////////////////////////////////////////////
 NODE_MODULE(gazebo, InitAll)

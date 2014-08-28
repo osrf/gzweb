@@ -46,6 +46,27 @@ namespace gzscript
 
     private: static v8::Handle<v8::Value>
         Unsubscribe(const v8::Arguments& args);
+/*
+    private: static v8::Handle<v8::Value>
+        Advertise(const v8::Arguments& args);
+
+    private: static v8::Handle<v8::Value>
+        Unadvertise(const v8::Arguments& args);
+
+    private: static v8::Handle<v8::Value>
+        Adverts(const v8::Arguments& args);
+*/
+    private: static v8::Handle<v8::Value>
+        GetMaterials(const v8::Arguments& args);
+
+    private: static v8::Handle<v8::Value>
+        Publish(const v8::Arguments& args);
+
+    private: static v8::Handle<v8::Value>
+        Pause(const v8::Arguments& args);
+
+    private: static v8::Handle<v8::Value>
+        Play(const v8::Arguments& args);
 
    private: GazeboPubSub* gazebo;
 

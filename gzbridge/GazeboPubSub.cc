@@ -22,11 +22,184 @@
 #include "OgreMaterialParser.hh"
 #include "GazeboPubSub.hh"
 
+#include <gazebo/common/SystemPaths.hh>
+
 #define MAX_NUM_MSG_SIZE 1000
 
 using namespace gzscript;
 using namespace gzweb;
 using namespace std;
+
+
+Subscriber::Subscriber(const char* _topic, bool _latch)
+:topic(_topic)
+{
+
+}
+
+Subscriber::~Subscriber()
+{
+}
+
+
+Publisher::Publisher(const char *_type, const char *_topic)
+  :type(_type), topic(_topic)
+{
+}
+
+Publisher::~Publisher()
+{
+}
+
+
+void Subscriber::Callback(const char* _msg)
+{
+  cout << this->topic << ": " << _msg  <<endl;
+}
+
+
+class MocType : public gazebo::msgs::WorldControl
+{  
+  public: std::string GetTypeName() const {return globalName;}
+  public: static std::string globalName;
+
+};
+
+std::string MocType::globalName;
+
+class GzPublisher: public Publisher
+{
+  private: gazebo::transport::PublisherPtr pub;
+
+  public: GzPublisher(gazebo::transport::NodePtr &_node, const char* _type, const char* _topic)
+            :Publisher(_type, _topic)
+  {
+    // this->pub = _node->Advertise< ::google::protobuf::Message >(this->topic);
+    //  this->pub = _node->Advertise< string >(this->topic);
+    MocType::globalName = _type;
+    this->pub = _node->Advertise< MocType >(this->topic);
+  }
+
+  public: virtual void Publish(const char *topic, const char *msg)
+  {
+     ::google::protobuf::Message *pb = NULL;
+     this->pub->Publish(*pb);
+  }
+
+};
+
+class GzSubscriber: public Subscriber
+{
+  private: gazebo::transport::SubscriberPtr sub;
+
+  public: GzSubscriber(gazebo::transport::NodePtr &_node, const char* _topic, bool _latch)
+            :Subscriber(_topic, _latch)
+  {
+      string t(_topic);
+      this->sub = _node->Subscribe(t,
+         &GzSubscriber::PbCallback, this, _latch);
+  }
+
+  private: void PbCallback(const string &_msg)
+  {
+    string json = "{}";
+    this->Callback(json.c_str());
+  }
+
+  public: virtual ~GzSubscriber()
+  {
+    // clean up sub
+    
+  }
+
+};
+
+
+
+void GazeboPubSub::Pause()
+{
+  gazebo::msgs::WorldControl worldControlMsg;
+  worldControlMsg.set_pause(1);
+  this->worldControlPub->Publish(worldControlMsg);  
+}
+
+void GazeboPubSub::Play()
+{
+  gazebo::msgs::WorldControl worldControlMsg;
+  worldControlMsg.set_pause(0);
+  this->worldControlPub->Publish(worldControlMsg);  
+}
+
+
+// subscriber factory
+void GazeboPubSub::Subscribe(const char *_topic, bool latch)
+{
+  Subscriber *sub = new GzSubscriber(this->node, _topic, latch);
+  this->subs.push_back(sub);
+}
+
+
+
+void GazeboPubSub::Unsubscribe(const char *_topic)
+{
+  for (vector<Subscriber*>::iterator it = this->subs.begin();  it != this->subs.end(); it++)
+  {
+    Subscriber* p = *it;
+    if ( p->topic == _topic)
+    {
+      delete p;
+      this->subs.erase(it);
+      return;
+    }
+  }
+  // not found!
+}
+
+std::vector<std::string> GazeboPubSub::Subscriptions()
+{
+  vector<std::string> v;
+  for(unsigned int i=0; i < this->subs.size(); ++i)
+  {
+    v.push_back(this->subs[i]->topic);
+  }
+  return v;
+}
+
+vector<string> GazeboPubSub::GetMaterials()
+{
+
+  vector<string> v;
+
+  std::list<std::string> paths = gazebo::common::SystemPaths::Instance()->GetModelPaths();
+  for(std::list<std::string>::iterator it= paths.begin(); it != paths.end(); it++)
+  {
+    string path = *it;
+    this->materialParser->Load(path);
+    string mats =  this->materialParser->GetMaterialAsJson();
+    v.push_back(mats);
+  }
+  return v;
+}
+
+
+void GazeboPubSub::Publish(const char*_type, const char *_topic, const char *_msg)
+{
+  Publisher *pub;
+  string t(_topic);
+  std::map< string, Publisher*  >::iterator it = this->pubs.find(t);
+  if(it != this->pubs.end())
+  {
+    pub = it->second; 
+  }
+  else
+  {
+    pub = new GzPublisher(this->node, _type, _topic);
+    this->pubs[t] = pub;
+  }
+  pub->Publish(_msg);
+}
+
+
 
 std::vector<std::string> GazeboPubSub::incoming;
 std::vector<std::string> GazeboPubSub::outgoing;
@@ -35,40 +208,18 @@ boost::recursive_mutex inMutex;
 boost::recursive_mutex outMutex;
 
 
-void GazeboPubSub::Subscribe(const char *_topic)
-{
-  this->subs.push_back(_topic);
-}
-
-void GazeboPubSub::Unsubscribe(const char *_topic)
-{
-  vector<string>::iterator f = std::find(this->pubs.begin(), this->pubs.end(), _topic);
-  if(f != this->pubs.end())
-  {
-    this->subs.erase(f);
-
-  }
-/*  else
-  {
-    string msg("Not subscribed to topic: ");
-    msg += _topic;
-    throw PubSubException(m.c_str());
-  }
-*/
-}
-
-vector<string> GazeboPubSub::Subscriptions()
-{
-  return this->subs;
-}
-
-
 /////////////////////////////////////////////////
 GazeboPubSub::GazeboPubSub()
 {
 
   gazebo::transport::init();
   gazebo::transport::run();
+
+  this->worldControlTopic = "~/world_control";
+  // For controling world
+  this->worldControlPub =
+      this->node->Advertise<gazebo::msgs::WorldControl>(
+      this->worldControlTopic);
 
 
 //  this->socketServer = _server;
@@ -81,6 +232,13 @@ GazeboPubSub::GazeboPubSub()
   this->node->Init();
 
   // Gazebo topics
+  this->statsTopic = "~/world_stats";
+
+  this->statsSub = this->node->Subscribe(this->statsTopic,
+      &GazeboPubSub::OnStats, this);
+
+
+
   this->sensorTopic = "~/sensor";
   this->visualTopic = "~/visual";
   this->jointTopic = "~/joint";
@@ -91,14 +249,14 @@ GazeboPubSub::GazeboPubSub()
   this->sceneTopic = "~/scene";
   this->modelModifyTopic = "~/model/modify";
   this->factoryTopic = "~/factory";
-  this->worldControlTopic = "~/world_control";
-  this->statsTopic = "~/world_stats";
   this->roadTopic = "~/roads";
   this->heightmapService = "~/heightmap_data";
   this->deleteTopic = "~/entity_delete";
 
+
   // material topic
   this->materialTopic = "~/material";
+
 
   this->sensorSub = this->node->Subscribe(this->sensorTopic,
       &GazeboPubSub::OnSensorMsg, this, true);
@@ -121,16 +279,14 @@ GazeboPubSub::GazeboPubSub()
   this->requestSub = this->node->Subscribe(this->requestTopic,
       &GazeboPubSub::OnRequest, this);
 
+
+
   // For lights
   this->lightSub = this->node->Subscribe(this->lightTopic,
       &GazeboPubSub::OnLightMsg, this);
 
   this->sceneSub = this->node->Subscribe(this->sceneTopic,
       &GazeboPubSub::OnScene, this);
-
-  this->statsSub = this->node->Subscribe(this->statsTopic,
-      &GazeboPubSub::OnStats, this);
-
   this->roadSub = this->node->Subscribe(this->roadTopic,
       &GazeboPubSub::OnRoad, this, true);
 
@@ -149,16 +305,10 @@ GazeboPubSub::GazeboPubSub()
   // For spawning models
   this->factoryPub =
       this->node->Advertise<gazebo::msgs::Factory>(this->factoryTopic);
-
-  // For controling world
-  this->worldControlPub =
-      this->node->Advertise<gazebo::msgs::WorldControl>(
-      this->worldControlTopic);
-
   this->responseSub = this->node->Subscribe("~/response",
       &GazeboPubSub::OnResponse, this);
 
-  this->materialParser = new gzweb::OgreMaterialParser();
+
 
   this->lastStatsTime = gazebo::common::Time::Zero;
   this->lastPausedState = true;
@@ -179,16 +329,31 @@ GazeboPubSub::GazeboPubSub()
   this->connectionCondition = new boost::condition_variable();
   this->connectionMutex = new boost::mutex();
 
-  this->Init();
-  this->RunThread();
+/*
+  // this->Init();
+  this->requestPub->WaitForConnection();
+
+  // this->RunThread();
+  this->runThread = new boost::thread(boost::bind(&GazeboPubSub::Run, this));
+  this->serviceThread = new boost::thread(
+      boost::bind(&GazeboPubSub::RunService, this));
 
   this->SetConnected(true);
+*/
+  this->materialParser = new gzweb::OgreMaterialParser();
+
+
 }
 
 /////////////////////////////////////////////////
 GazeboPubSub::~GazeboPubSub()
 {
-  this->Fini();
+
+  cout << "GazeboPubSub::~GazeboPubSub()" << endl;
+
+  // this->Fini();
+  this->stop = true;
+
   this->node->Fini();
 
   this->modelMsgs.clear();
@@ -227,22 +392,11 @@ GazeboPubSub::~GazeboPubSub()
   delete this->serviceMutex;
   delete this->connectionCondition;
   delete this->connectionMutex;
+
+  delete this->materialParser;
 }
 
-/////////////////////////////////////////////////
-void GazeboPubSub::Init()
-{
-  this->requestPub->WaitForConnection();
-}
 
-/////////////////////////////////////////////////
-void GazeboPubSub::RunThread()
-{
-  this->runThread = new boost::thread(boost::bind(&GazeboPubSub::Run, this));
-  this->serviceThread = new boost::thread(
-      boost::bind(&GazeboPubSub::RunService, this));
-
-}
 
 /////////////////////////////////////////////////
 void GazeboPubSub::Run()
@@ -264,11 +418,6 @@ void GazeboPubSub::RunService()
   }
 }
 
-/////////////////////////////////////////////////
-void GazeboPubSub::Fini()
-{
-  this->stop = true;
-}
 
 /////////////////////////////////////////////////
 void GazeboPubSub::ProcessMessages()
@@ -518,17 +667,19 @@ void GazeboPubSub::ProcessMessages()
           if (!pause.empty() || !reset.empty())
             this->worldControlPub->Publish(worldControlMsg);
         }
-        else if (topic == this->materialTopic)
-        {
 
-          if (this->materialParser)
-          {
-            std::string msg =
-                this->PackOutgoingTopicMsg(this->materialTopic,
-                this->materialParser->GetMaterialAsJson());
-            this->Send(msg);
-          }
-        }
+//        else if (topic == this->materialTopic)
+//        {
+//
+//          if (this->materialParser)
+//          {
+//            std::string msg =
+//                this->PackOutgoingTopicMsg(this->materialTopic,
+//                this->materialParser->GetMaterialAsJson());
+//            this->Send(msg);
+//          }
+//        }
+
         else if (topic == this->deleteTopic)
         {
             std::string name = get_value(msg, "msg:name");
@@ -973,13 +1124,6 @@ std::vector<std::string> GazeboPubSub::PopIncomingMessages()
 }
 
 /////////////////////////////////////////////////
-void GazeboPubSub::ClearIncomingMessages()
-{
-  boost::recursive_mutex::scoped_lock lock(inMutex);
-  incoming.clear();
-}
-
-/////////////////////////////////////////////////
 std::vector<std::string> GazeboPubSub::PopOutgoingMessages()
 {
   boost::recursive_mutex::scoped_lock lock(outMutex);
@@ -988,12 +1132,6 @@ std::vector<std::string> GazeboPubSub::PopOutgoingMessages()
   return out;
 }
 
-/////////////////////////////////////////////////
-void GazeboPubSub::ClearOutgoingMessages()
-{
-  boost::recursive_mutex::scoped_lock lock(outMutex);
-  outgoing.clear();
-}
 
 /////////////////////////////////////////////////
 void GazeboPubSub::PushRequest(const std::string &_msg)
@@ -1003,12 +1141,6 @@ void GazeboPubSub::PushRequest(const std::string &_msg)
     incoming.push_back(_msg);
 }
 
-/////////////////////////////////////////////////
-void GazeboPubSub::LoadMaterialScripts(const std::string &_path)
-{
-  if (this->materialParser)
-    this->materialParser->Load(_path);
-}
 
 /////////////////////////////////////////////////
 void GazeboPubSub::WaitForConnection() const

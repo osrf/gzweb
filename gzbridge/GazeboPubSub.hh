@@ -15,15 +15,36 @@
  *
 */
 
+
 #ifndef _GAZEBO_PUBSUB_HH_
 #define _GAZEBO_PUBSUB_HH_
 
 #include <string>
+#include <stdexcept>
+#include <vector>
+
+/*
 #include <list>
 #include <map>
-#include <stdexcept>
-
 #include <gazebo/msgs/msgs.hh>
+#include <gazebo/transport/TransportIface.hh>
+
+*/
+
+
+/*
+class ConstModelPtr;
+class ConstPosesStampedPtr;
+class ConstRequestPtr;
+class ConstLightPtr;
+class ConstSensorPtr;
+class ConstVisualPtr;
+class ConstScenePtr;
+class ConstWorldStatisticsPtr;
+class ConstRoadPtr;
+class ConstResponsePtr;
+*/
+
 #include <gazebo/transport/TransportIface.hh>
 
 namespace boost
@@ -47,18 +68,48 @@ namespace gzscript
   };
 
 
+  class Publisher
+  {
+    public: Publisher(const char* type, const char* topic);
+    public: virtual ~Publisher();
+    public: virtual void Publish(const char* msg);
+    
+    public: std::string type;
+    public: std::string topic;
+  };
+
+  class Subscriber
+  {
+    public: Subscriber(const char* topic, bool latch);
+    public: virtual ~Subscriber();
+
+    public: virtual void Callback(const char *msg);
+    public: std::string topic;
+  };
+
   class GazeboPubSub
   {
 
-    std::vector<std::string> subs;
+    std::map<std::string, Publisher*> pubs;
+    std::vector<Subscriber*> subs;
 
-    std::vector<std::string> pubs;
+    public: void Subscribe(const char *topic, bool latch);
+    public: void Unsubscribe(const char* topic);
 
-    public: void Subscribe(const char *topic);
+//    public: void Advertiise(const char *topic, const char* type);
+//    public: void Unadvertise(const char *topic);
 
-    public: void Unsubscribe(const char *topic);
+//    public: std::vector<std::string> GetTopics(); // gz topic list
 
+    public: void Publish(const char* type, const char *topic, const char *msg);
+
+    public: std::vector<std::string> GetMaterials();
     public: std::vector<std::string> Subscriptions();
+    public: std::vector<std::string> Adverts();
+
+    public: void Pause();
+    public: void Play(); 
+    
 
     /// \brief Constructor.
     /// \param[in] _server Websocket server.
@@ -67,14 +118,6 @@ namespace gzscript
     /// \brief Destructor.
     public: virtual ~GazeboPubSub();
 
-    /// \brief Initialize gazebo interface.
-    public: void Init();
-
-    /// \brief Run the gazebo interface in a thread.
-    public: void RunThread();
-
-    /// \brief Stop the gazebo interace.
-    public: void Fini();
 
     /// \brief Push a request message to incoming messages buffer.
     /// \return Request message.
@@ -84,19 +127,13 @@ namespace gzscript
     /// \return Incoming messages.
     public: std::vector<std::string> PopIncomingMessages();
 
-    /// \brief Clear incoming messages
-    public: void ClearIncomingMessages();
-
     /// \brief Get outgoing messages.
     /// \return Outgoing messages.
     public: std::vector<std::string> PopOutgoingMessages();
 
-    /// \brief Clear outgoing messages
-    public: void ClearOutgoingMessages();
-
     /// \brief Receive message from websocket server.
     /// \param[in] _msg Message received.
-    public: void Receive(const std::string &_msg);
+    // public: void Receive(const std::string &_msg);
 
     /// \brief Load material scripts.
     /// \param[in] _path Path to the material scripts.
@@ -109,6 +146,7 @@ namespace gzscript
     /// \brief Get the connected state
     /// \return True if there are client connections.
     public: bool IsConnected() const;
+
 
     /// \brief Pack topic publish message.
     private: std::string PackOutgoingTopicMsg(const std::string &_topic,
