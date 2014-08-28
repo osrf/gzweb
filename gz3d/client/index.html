@@ -330,71 +330,77 @@
                 Physics
               </div>
               <div id="expandable-PHYSICS" class="expandedContent">
-                <div class="property propertyLevel02">
+                <div class="property propertyLevel01">
                   <div>Enable Physics</div>
                   <div class="propertyToggle">
                     <img src="style/images/{{physics.enable_physics.icon}}.png">
                     {{physics.enable_physics.title}}
                   </div>
                 </div>
-                <div class="property propertyLevel02">
+                <div class="property propertyLevel01">
                   <div>Real Time Update Rate</div>
                   <div class="propertyNumber">{{physics.real_time_update_rate}}</div>
                 </div>
-                <div class="property propertyLevel02">
+                <div class="property propertyLevel01">
                   <div>Max Step Size</div>
                   <div class="propertyNumber">{{physics.max_step_size}}</div>
                 </div>
-                <div id="expand-gravity-PHYSICS" class="clickable expandableProperty expandableLevel2" ng-click="expandProperty('gravity', 'PHYSICS')">
-                  <img src="style/images/play.png">
-                  Gravity
+                <div id="expand-gravity-PHYSICS" class="clickable expandableProperty expandableLevel01" ng-click="expandProperty('gravity', 'PHYSICS')">
+                  <div>
+                    <img src="style/images/play.png">
+                    Gravity
+                  </div>
                 </div>
                 <div id="expandable-gravity-PHYSICS" class="expandedContent">
-                  <div class="property propertyLevel3 lightBg">
+                  <div class="property propertyLevel02 lightBg">
                     <div>x</div>
                     <div class="propertyNumber">{{physics.gravity.x}}</div>
                   </div>
-                  <div class="property propertyLevel3">
+                  <div class="property propertyLevel02">
                     <div>y</div>
                     <div class="propertyNumber">{{physics.gravity.y}}</div>
                   </div>
-                  <div class="property propertyLevel3 lightBg">
+                  <div class="property propertyLevel02 lightBg">
                     <div>z</div>
                     <div class="propertyNumber">{{physics.gravity.z}}</div>
                   </div>
                 </div>
-                <div id="expand-solver-PHYSICS" class="clickable expandableProperty expandableLevel2" ng-click="expandProperty('solver', 'PHYSICS')">
-                  <img src="style/images/play.png">
-                  Solver
+                <div id="expand-solver-PHYSICS" class="clickable expandableProperty expandableLevel01" ng-click="expandProperty('solver', 'PHYSICS')">
+                  <div>
+                    <img src="style/images/play.png">
+                    Solver
+                  </div>
                 </div>
                 <div id="expandable-solver-PHYSICS" class="expandedContent">
-                  <div class="property propertyLevel3">
+                  <div class="property propertyLevel02">
                     <div>Iterations</div>
                     <div class="propertyNumber">{{physics.iters}}</div>
                   </div>
-                  <div class="property propertyLevel3">
+                  <div class="property propertyLevel02">
                     <div>SOR</div>
                     <div class="propertyNumber">{{physics.sor}}</div>
                   </div>
                 </div>
-                <div id="expand-constraints-PHYSICS" class="clickable expandableProperty expandableLevel2" ng-click="expandProperty('constraints', 'PHYSICS')">
-                  <img src="style/images/play.png">
-                  Constraints
+                <div id="expand-constraints-PHYSICS" class="clickable expandableProperty expandableLevel01" ng-click="expandProperty('constraints', 'PHYSICS')">
+                  <div>
+                    <img src="style/images/play.png">
+                    Constraints
+                  </div>
                 </div>
                 <div id="expandable-constraints-PHYSICS" class="expandedContent">
-                  <div class="property propertyLevel3 lightBg">
+                  <div class="property propertyLevel02 lightBg">
                     <div>CFM</div>
                     <div class="propertyNumber">{{physics.cfm}}</div>
                   </div>
-                  <div class="property propertyLevel3">
+                  <div class="property propertyLevel02">
                     <div>ERP</div>
                     <div class="propertyNumber">{{physics.erp}}</div>
                   </div>
-                  <div class="property propertyLevel3 lightBg">
+                  <div class="property propertyLevel02 lightBg">
                     <div>Max Velocity</div>
                     <div class="propertyNumber">{{physics.contact_max_correcting_vel}}</div>
                   </div>
-                  <div class="property propertyLevel3 lightBg">
+                  <div class="property propertyLevel02">
                     <div>Surface Layer</div>
                     <div class="propertyNumber">{{physics.contact_surface_layer}}</div>
                   </div>
