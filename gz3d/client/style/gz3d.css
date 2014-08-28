@@ -3,6 +3,20 @@ body
 {
   font-size-adjust: 0.5;
 }
+input:invalid
+{
+  box-shadow: none;
+}
+input[type=number]
+{
+  -moz-appearance:textfield;
+}
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button
+{
+  -webkit-appearance: none;
+  margin: 0;
+}
 .ui-content
 {
   overflow: hidden;

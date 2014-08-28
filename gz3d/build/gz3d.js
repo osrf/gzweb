@@ -1557,11 +1557,12 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
         }
       }
 
-      // Update pose stats only if they're being displayed
+      // Update pose stats only if they're being displayed and are not focused
       if (!((linkShortName &&
           !$('#expandable-pose-'+modelName+'-'+linkShortName).is(':visible'))||
           (!linkShortName &&
-          !$('#expandable-pose-'+modelName).is(':visible'))))
+          !$('#expandable-pose-'+modelName).is(':visible'))||
+          $('#expandable-pose-'+modelName+' input').is(':focus')))
       {
 
         if (stats.position)
