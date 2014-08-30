@@ -35,8 +35,8 @@ namespace gzscript
 
     private: static v8::Handle<v8::Value> New(const v8::Arguments& args);
 
-    private: static v8::Handle<v8::Value>
-        GetMessages(const v8::Arguments& args);
+//    private: static v8::Handle<v8::Value>
+//        GetMessages(const v8::Arguments& args);
 
     private: static v8::Handle<v8::Value>
         Subscribe(const v8::Arguments& args);
@@ -68,7 +68,12 @@ namespace gzscript
     private: static v8::Handle<v8::Value>
         Play(const v8::Arguments& args);
 
-   private: GazeboPubSub* gazebo;
+    private: static v8::Handle<v8::Value>
+        Spawn(const v8::Arguments& args);
+
+//     private: static Box
+    
+    private: GazeboPubSub* gazebo;
 
   };
 }

@@ -44,6 +44,7 @@ void InitAll(Handle<Object> exports)
 /////////////////////////////////////////////////
 GZPubSub::GZPubSub()
 {
+  cout << "GZPubSub::GZPubSub()" << endl;
   this->gazebo = new GazeboPubSub();
 };
 
@@ -66,13 +67,6 @@ void GZPubSub::Init(Handle<Object> exports)
   tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
   // Prototype
-  tpl->PrototypeTemplate()->Set(String::NewSymbol("messages"),
-      FunctionTemplate::New(GetMessages)->GetFunction());
-
-  tpl->PrototypeTemplate()->Set(String::NewSymbol("materials"),
-      FunctionTemplate::New(GetMaterials)->GetFunction());
-
-
   tpl->PrototypeTemplate()->Set(String::NewSymbol("subscribe"),
       FunctionTemplate::New(Subscribe)->GetFunction());
 
@@ -83,6 +77,9 @@ void GZPubSub::Init(Handle<Object> exports)
       FunctionTemplate::New(Subscriptions)->GetFunction());
 
 /*
+  tpl->PrototypeTemplate()->Set(String::NewSymbol("messages"),
+      FunctionTemplate::New(GetMessages)->GetFunction());
+
   tpl->PrototypeTemplate()->Set(String::NewSymbol("advertise"),
       FunctionTemplate::New(Advertise)->GetFunction());
 
@@ -93,18 +90,34 @@ void GZPubSub::Init(Handle<Object> exports)
       FunctionTemplate::New(Adverts)->GetFunction());
 */
 
-  tpl->PrototypeTemplate()->Set(String::NewSymbol("pause"),
+  Persistent<Function> constructor1 =
+      Persistent<Function>::New(tpl->GetFunction());
+  exports->Set(String::NewSymbol("GZPubSub"), constructor1);
+
+
+  // Sim
+  Local<FunctionTemplate> tp2 = FunctionTemplate::New(New);
+    tp2->SetClassName(String::NewSymbol("Sim"));
+    tp2->InstanceTemplate()->SetInternalFieldCount(1);
+
+  tp2->PrototypeTemplate()->Set(String::NewSymbol("materials"),
+      FunctionTemplate::New(GetMaterials)->GetFunction());
+
+  tp2->PrototypeTemplate()->Set(String::NewSymbol("pause"),
       FunctionTemplate::New(Pause)->GetFunction());
 
-  tpl->PrototypeTemplate()->Set(String::NewSymbol("play"),
+  tp2->PrototypeTemplate()->Set(String::NewSymbol("play"),
       FunctionTemplate::New(Play)->GetFunction());
 
-  tpl->PrototypeTemplate()->Set(String::NewSymbol("publish"),
+  tp2->PrototypeTemplate()->Set(String::NewSymbol("publish"),
       FunctionTemplate::New(Publish)->GetFunction());
 
-  Persistent<Function> constructor =
-      Persistent<Function>::New(tpl->GetFunction());
-  exports->Set(String::NewSymbol("GZPubSub"), constructor);
+  tp2->PrototypeTemplate()->Set(String::NewSymbol("spawn"),
+      FunctionTemplate::New(Spawn)->GetFunction());
+
+  Persistent<Function> constructor2 =
+      Persistent<Function>::New(tp2->GetFunction());
+  exports->Set(String::NewSymbol("Sim"), constructor2);
 
  //  cout << "GZPubSub::Init() done " << endl;
 
@@ -144,6 +157,38 @@ Handle<Value> GZPubSub::Play(const Arguments& args)
 }
 
 /////////////////////////////////////////////////
+Handle<Value> GZPubSub::Spawn(const Arguments& args)
+{
+  HandleScope scope;
+
+  // we expect one string argument
+  if ( (args.Length() < 1)  || (args.Length() > 1)  )
+  {
+    ThrowException(Exception::TypeError(
+        String::New("Wrong number of arguments")));
+    return scope.Close(Undefined());
+  }
+
+  if (!args[0]->IsString())
+  {
+    ThrowException(Exception::TypeError(
+        String::New("Wrong argument type. Type String expected as first argument.")));
+    return scope.Close(Undefined());
+  }
+
+  if (!args[1]->IsString())
+  {
+    ThrowException(Exception::TypeError(
+        String::New("Wrong argument type. Name String expected as first argument.")));
+    return scope.Close(Undefined());
+  }
+
+  GZPubSub* obj = ObjectWrap::Unwrap<GZPubSub>(args.This());
+  obj->gazebo->SpawnModel("box", "hugobox", 0,0,0 0,0,0);
+}
+
+/*
+/////////////////////////////////////////////////
 Handle<Value> GZPubSub::GetMessages(const Arguments& args)
 {
   HandleScope scope;
@@ -158,7 +203,7 @@ Handle<Value> GZPubSub::GetMessages(const Arguments& args)
 
   return scope.Close(arguments);
 }
-
+*/
 
 /////////////////////////////////////////////////
 Handle<Value> GZPubSub::GetMaterials(const Arguments& args)
