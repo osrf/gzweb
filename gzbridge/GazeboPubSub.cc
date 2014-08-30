@@ -126,29 +126,26 @@ class GzSubscriber: public Subscriber
 };
 
 
-
-void GazeboPubSub::Pause()
+void GazeboPubSub::Subscribe(const char *_topic, bool _latch)
 {
-  gazebo::msgs::WorldControl worldControlMsg;
-  worldControlMsg.set_pause(1);
-  this->worldControlPub->Publish(worldControlMsg);  
+  Subscriber *sub = this->CreateSubscriber(_topic, _latch);
+  this->subs.push_back(sub);
 }
 
-void GazeboPubSub::Play()
+
+Publisher *GazeboPubSub::CreatePublisher(const char* _type, const char *_topic)
 {
-  gazebo::msgs::WorldControl worldControlMsg;
-  worldControlMsg.set_pause(0);
-  this->worldControlPub->Publish(worldControlMsg);  
+  Publisher *pub = new GzPublisher(this->node, _type, _topic);
+  return pub;
 }
 
 
 // subscriber factory
-void GazeboPubSub::Subscribe(const char *_topic, bool latch)
+Subscriber *GazeboPubSub::CreateSubscriber(const char* _topic, bool _latch)
 {
-  Subscriber *sub = new GzSubscriber(this->node, _topic, latch);
-  this->subs.push_back(sub);
+  Subscriber *sub = new GzSubscriber(this->node, _topic, _latch);
+  return sub;
 }
-
 
 
 void GazeboPubSub::Unsubscribe(const char *_topic)
@@ -176,6 +173,41 @@ std::vector<std::string> GazeboPubSub::Subscriptions()
   return v;
 }
 
+
+void GazeboPubSub::Publish(const char*_type, const char *_topic, const char *_msg)
+{
+  Publisher *pub;
+  string t(_topic);
+  std::map< string, Publisher*  >::iterator it = this->pubs.find(t);
+  if(it != this->pubs.end())
+  {
+    pub = it->second; 
+  }
+  else
+  {
+    pub = this->CreatePublisher( _type, _topic);
+    this->pubs[t] = pub;
+  }
+  pub->Publish(_msg);
+}
+
+
+void GazeboPubSub::Pause()
+{
+  gazebo::msgs::WorldControl worldControlMsg;
+  worldControlMsg.set_pause(1);
+  this->worldControlPub->Publish(worldControlMsg);  
+}
+
+
+void GazeboPubSub::Play()
+{
+  gazebo::msgs::WorldControl worldControlMsg;
+  worldControlMsg.set_pause(0);
+  this->worldControlPub->Publish(worldControlMsg);  
+}
+
+
 vector<string> GazeboPubSub::GetMaterials()
 {
 
@@ -193,38 +225,11 @@ vector<string> GazeboPubSub::GetMaterials()
 }
 
 
-void GazeboPubSub::Publish(const char*_type, const char *_topic, const char *_msg)
-{
-  Publisher *pub;
-  string t(_topic);
-  std::map< string, Publisher*  >::iterator it = this->pubs.find(t);
-  if(it != this->pubs.end())
-  {
-    pub = it->second; 
-  }
-  else
-  {
-    pub = new GzPublisher(this->node, _type, _topic);
-    this->pubs[t] = pub;
-  }
-  pub->Publish(_msg);
-}
-
-
-
 /////////////////////////////////////////////////
 GazeboPubSub::GazeboPubSub()
 {
-cout << "init transport" << endl;
   gazebo::transport::init();
   gazebo::transport::run();
-cout << "world control" << endl;
-
-
-//  this->socketServer = _server;
-//  this->receiveMutex = new boost::recursive_mutex();
-//  this->serviceMutex = new boost::recursive_mutex();
-//  this->stop = false;
 
   // Create our node for communication
   this->node.reset(new gazebo::transport::Node());

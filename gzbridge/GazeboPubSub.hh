@@ -68,23 +68,32 @@ namespace gzscript
   class GazeboPubSub
   {
 
-    std::map<std::string, Publisher*> pubs;
-    std::vector<Subscriber*> subs;
+    /// \brief Constructor.
+    /// \param[in] _server Websocket server.
+    public: GazeboPubSub();
+
+    /// \brief Destructor.
+    public: virtual ~GazeboPubSub();
+
 
     public: void Subscribe(const char *topic, bool latch);
     public: void Unsubscribe(const char* topic);
 
-//  public: void Advertiise(const char *topic, const char* type);
-//  public: void Unadvertise(const char *topic);
-//  public: std::vector<std::string> Adverts();
-
     public: std::vector<std::string> GetTopics(); // gz topic list
     public: void Publish(const char* type, const char *topic, const char *msg);
 
-    public: std::vector<std::string> GetMaterials();
     public: std::vector<std::string> Subscriptions();
+
+    protected: virtual Subscriber *CreateSubscriber(const char* topic, bool latch);
+    protected: virtual Publisher  *CreatePublisher(const char* type, const char *topic);
+
+//  }
+//  class GazeboPubSub : public PubSub
+//  {
+
     public: void Pause();
     public: void Play(); 
+
     public: void SpawnModel(const char *_type,
                          const char *_name,
                          double x,
@@ -93,17 +102,8 @@ namespace gzscript
                          double rx,
                          double ry,
                          double rz);
-
-    /// \brief Constructor.
-    /// \param[in] _server Websocket server.
-    public: GazeboPubSub();
-
-    /// \brief Destructor.
-    public: virtual ~GazeboPubSub();
-
-    /// \brief the list ofi available  message types
-    private: std::vector<std::string> messageTypes;
-
+    public: std::vector<std::string> GetMaterials();
+ 
     /// \brief Ogre material parser.
     private: gzweb::OgreMaterialParser *materialParser;
 
@@ -116,7 +116,14 @@ namespace gzscript
     /// \brief Publish world control messages
     private: gazebo::transport::PublisherPtr worldControlPub;
 
+
+    std::map<std::string, Publisher*> pubs;
+    std::vector<Subscriber*> subs;
+
+ 
   };
+
 }
+
 
 #endif

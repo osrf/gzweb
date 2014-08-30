@@ -76,19 +76,8 @@ void GZPubSub::Init(Handle<Object> exports)
   tpl->PrototypeTemplate()->Set(String::NewSymbol("subscriptions"),
       FunctionTemplate::New(Subscriptions)->GetFunction());
 
-/*
-  tpl->PrototypeTemplate()->Set(String::NewSymbol("messages"),
-      FunctionTemplate::New(GetMessages)->GetFunction());
-
-  tpl->PrototypeTemplate()->Set(String::NewSymbol("advertise"),
-      FunctionTemplate::New(Advertise)->GetFunction());
-
- tpl->PrototypeTemplate()->Set(String::NewSymbol("unadvertise"),
-      FunctionTemplate::New(Unadvertise)->GetFunction());
-
- tpl->PrototypeTemplate()->Set(String::NewSymbol("adverts"),
-      FunctionTemplate::New(Adverts)->GetFunction());
-*/
+  tpl->PrototypeTemplate()->Set(String::NewSymbol("publish"),
+      FunctionTemplate::New(Publish)->GetFunction());
 
   Persistent<Function> constructor1 =
       Persistent<Function>::New(tpl->GetFunction());
@@ -109,9 +98,6 @@ void GZPubSub::Init(Handle<Object> exports)
   tp2->PrototypeTemplate()->Set(String::NewSymbol("play"),
       FunctionTemplate::New(Play)->GetFunction());
 
-  tp2->PrototypeTemplate()->Set(String::NewSymbol("publish"),
-      FunctionTemplate::New(Publish)->GetFunction());
-
   tp2->PrototypeTemplate()->Set(String::NewSymbol("spawn"),
       FunctionTemplate::New(Spawn)->GetFunction());
 
@@ -119,7 +105,8 @@ void GZPubSub::Init(Handle<Object> exports)
       Persistent<Function>::New(tp2->GetFunction());
   exports->Set(String::NewSymbol("Sim"), constructor2);
 
- //  cout << "GZPubSub::Init() done " << endl;
+
+  // 
 
 }
 
@@ -162,7 +149,7 @@ Handle<Value> GZPubSub::Spawn(const Arguments& args)
   HandleScope scope;
 
   // we expect one string argument
-  if ( (args.Length() < 1)  || (args.Length() > 1)  )
+  if ( (args.Length() < 2)  || (args.Length() > 8)  )
   {
     ThrowException(Exception::TypeError(
         String::New("Wrong number of arguments")));
@@ -184,7 +171,9 @@ Handle<Value> GZPubSub::Spawn(const Arguments& args)
   }
 
   GZPubSub* obj = ObjectWrap::Unwrap<GZPubSub>(args.This());
-  obj->gazebo->SpawnModel("box", "hugobox", 0,0,0 0,0,0);
+  obj->gazebo->SpawnModel("box", "hugobox", 0,0,0, 0,0,0);
+
+  return scope.Close(Undefined());
 }
 
 /*
