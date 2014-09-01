@@ -20,7 +20,6 @@
 #include <algorithm>
 #include <boost/thread.hpp>
 
-#include "pb2json.hh"
 #include "OgreMaterialParser.hh"
 #include "json2pb.h"
 
@@ -33,8 +32,8 @@ using namespace gzweb;
 using namespace std;
 
 
-Subscriber::Subscriber(const char* _topic, bool _latch)
-:topic(_topic)
+Subscriber::Subscriber(const char* _type, const char* _topic, bool _latch)
+:latch(_latch), type(_type), topic(_topic)
 {
 
 }
@@ -73,82 +72,81 @@ class MocType : public gazebo::msgs::WorldControl
 
 std::string MocType::globalName;
 
-class GzPublisher: public Publisher
+
+GzPublisher::GzPublisher(gazebo::transport::NodePtr &_node, const char* _type, const char* _topic)
+          :Publisher(_type, _topic)
 {
-  private: gazebo::transport::PublisherPtr pub;
+  // this->pub = _node->Advertise< ::google::protobuf::Message >(this->topic);
+  //  this->pub = _node->Advertise< string >(this->topic);
+  MocType::globalName = _type;
+  this->pub = _node->Advertise< MocType >(this->topic);
+}
 
-  public: GzPublisher(gazebo::transport::NodePtr &_node, const char* _type, const char* _topic)
-            :Publisher(_type, _topic)
-  {
-    // this->pub = _node->Advertise< ::google::protobuf::Message >(this->topic);
-    //  this->pub = _node->Advertise< string >(this->topic);
-    MocType::globalName = _type;
-    this->pub = _node->Advertise< MocType >(this->topic);
-  }
 
-  public: virtual void Publish(const char *msg)
-  {
-     // create a protobuf message
-     boost::shared_ptr<google::protobuf::Message> pb = gazebo::msgs::MsgFactory::NewMsg(this->type);
-     // fill it with json data
-     json2pb(*pb, msg, strlen(msg) ); 
-     // publish it
-     this->pub->Publish( *(pb.get()) );
-  }
-
-};
-
-class GzSubscriber: public Subscriber
+GzPublisher::~GzPublisher()
 {
-  private: gazebo::transport::SubscriberPtr sub;
+}
 
-  public: GzSubscriber(gazebo::transport::NodePtr &_node, const char* _topic, bool _latch)
-            :Subscriber(_topic, _latch)
-  {
-      cout << "GzSubscriber::GzSubscriber topic"  << _topic << endl;
-      string t(_topic);
-      this->sub = _node->Subscribe(t,
-         &GzSubscriber::PbCallback, this, _latch);
-  }
-
-  private: void PbCallback(const string &_msg)
-  {
-    string json = "{}";
-    this->Callback(json.c_str());
-  }
-
-  public: virtual ~GzSubscriber()
-  {
-    // clean up sub
-    
-  }
-
-};
-
-
-void GazeboPubSub::Subscribe(const char *_topic, bool _latch)
+void GzPublisher::Publish(const char *msg)
 {
-  Subscriber *sub = this->CreateSubscriber(_topic, _latch);
+   // create a protobuf message
+   boost::shared_ptr<google::protobuf::Message> pb = gazebo::msgs::MsgFactory::NewMsg(this->type);
+   // fill it with json data
+   json2pb(*pb, msg, strlen(msg) ); 
+   // publish it
+   this->pub->Publish( *(pb.get()) );
+   // pb auto cleans up
+}
+
+GzSubscriber::GzSubscriber(gazebo::transport::NodePtr &_node, const char* _type, const char* _topic, bool _latch)
+          :Subscriber(_type, _topic, _latch)
+{
+    cout << "GzSubscriber::GzSubscriber topic"  << _topic << endl;
+    string t(_topic);
+    this->sub = _node->Subscribe(t,
+       &GzSubscriber::GzCallback, this, _latch);
+}
+
+void GzSubscriber::GzCallback(const string &_msg)
+{
+  // make an empty protobuf 
+  boost::shared_ptr<google::protobuf::Message> pb = gazebo::msgs::MsgFactory::NewMsg(this->type);
+  // load it with the gazebo data
+  pb->ParseFromString(_msg);
+  // translate it to json
+  const google::protobuf::Message& cpb = *(pb.get());
+  string json = (std::string) pb2json( cpb );
+  // send it to the script engine
+  this->Callback(json.c_str());
+  // pb auto cleans up
+}
+
+GzSubscriber::~GzSubscriber()
+{
+  // clean up sub
+  
+}
+
+
+PubSub::PubSub()
+{
+
+}
+
+PubSub::~PubSub()
+{
+
+
+}
+
+void PubSub::Subscribe(const char *_type, const char *_topic, bool _latch)
+{
+  Subscriber *sub = this->CreateSubscriber(_type, _topic, _latch);
   this->subs.push_back(sub);
 }
 
 
-Publisher *GazeboPubSub::CreatePublisher(const char* _type, const char *_topic)
-{
-  Publisher *pub = new GzPublisher(this->node, _type, _topic);
-  return pub;
-}
-
-
-// subscriber factory
-Subscriber *GazeboPubSub::CreateSubscriber(const char* _topic, bool _latch)
-{
-  Subscriber *sub = new GzSubscriber(this->node, _topic, _latch);
-  return sub;
-}
-
-
-void GazeboPubSub::Unsubscribe(const char *_topic)
+void PubSub::Unsubscribe(const char *_topic)
 {
   for (vector<Subscriber*>::iterator it = this->subs.begin();  it != this->subs.end(); it++)
   {
@@ -163,7 +161,7 @@ void GazeboPubSub::Unsubscribe(const char *_topic)
   // not found!
 }
 
-std::vector<std::string> GazeboPubSub::Subscriptions()
+std::vector<std::string> PubSub::Subscriptions()
 {
   vector<std::string> v;
   for(unsigned int i=0; i < this->subs.size(); ++i)
@@ -174,7 +172,7 @@ std::vector<std::string> GazeboPubSub::Subscriptions()
 }
 
 
-void GazeboPubSub::Publish(const char*_type, const char *_topic, const char *_msg)
+void PubSub::Publish(const char*_type, const char *_topic, const char *_msg)
 {
   Publisher *pub;
   string t(_topic);
@@ -189,6 +187,21 @@ void GazeboPubSub::Publish(const char*_type, const char *_topic, const char *_ms
     this->pubs[t] = pub;
   }
   pub->Publish(_msg);
+}
+
+
+Publisher *GazeboPubSub::CreatePublisher(const char* _type, const char *_topic)
+{
+  Publisher *pub = new GzPublisher(this->node, _type, _topic);
+  return pub;
+}
+
+
+// subscriber factory
+Subscriber *GazeboPubSub::CreateSubscriber(const char* _type, const char* _topic, bool _latch)
+{
+  Subscriber *sub = new GzSubscriber(this->node, _type, _topic, _latch);
+  return sub;
 }
 
 
@@ -259,16 +272,6 @@ GazeboPubSub::~GazeboPubSub()
   this->factoryPub.reset();
   this->worldControlPub.reset();
 
-  // cleanup pubs
-  for(std::map<std::string, Publisher*>::iterator it = this->pubs.begin(); it != this->pubs.end(); it++)
-  {
-      delete(it->second);
-  }
-  // cleanup subs
-  for(unsigned int i = 0; i <  this->subs.size(); ++i)
-  {
-    delete this->subs[i];
-  }
   delete this->materialParser;
 
   this->node->Fini();

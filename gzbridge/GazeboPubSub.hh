@@ -49,49 +49,99 @@ namespace gzscript
   class Publisher
   {
     public: Publisher(const char* type, const char* topic);
+
     public: virtual ~Publisher();
+
     public: virtual void Publish(const char* msg);
     
-    public: std::string type;
-    public: std::string topic;
+    public: const std::string type;
+
+    public: const std::string topic;
   };
 
   class Subscriber
   {
-    public: Subscriber(const char* topic, bool latch);
+    public: Subscriber(const char *type, const char* topic, bool latch);
+
     public: virtual ~Subscriber();
 
     public: virtual void Callback(const char *msg);
-    public: std::string topic;
+
+    public: const bool latch;
+    
+    public: const std::string type;
+
+    public: const std::string topic;
   };
 
-  class GazeboPubSub
+
+  class PubSub
   {
 
     /// \brief Constructor.
-    /// \param[in] _server Websocket server.
-    public: GazeboPubSub();
+    public: PubSub();
 
     /// \brief Destructor.
-    public: virtual ~GazeboPubSub();
+    public: virtual ~PubSub();
 
 
-    public: void Subscribe(const char *topic, bool latch);
+    public: void Subscribe(const char *type, const char *topic, bool latch);
+
     public: void Unsubscribe(const char* topic);
 
     public: std::vector<std::string> GetTopics(); // gz topic list
+
     public: void Publish(const char* type, const char *topic, const char *msg);
 
     public: std::vector<std::string> Subscriptions();
 
-    protected: virtual Subscriber *CreateSubscriber(const char* topic, bool latch);
+    protected: virtual Subscriber *CreateSubscriber(const char* type, const char* topic, bool latch)=0;
+
+    protected: virtual Publisher  *CreatePublisher(const char* type, const char *topic)=0;
+
+    private: std::map<std::string, Publisher*> pubs;
+
+    private: std::vector<Subscriber*> subs;
+ 
+  };
+
+
+  class GzPublisher: public Publisher
+  {
+    public: GzPublisher(gazebo::transport::NodePtr &_node, const char* _type, const char* _topic);
+
+    public: virtual ~GzPublisher();
+
+    public: virtual void Publish(const char *msg);
+
+    private: gazebo::transport::PublisherPtr pub;
+     
+  };
+
+  class GzSubscriber: public Subscriber
+  {
+    public: GzSubscriber(gazebo::transport::NodePtr &_node, const char* _type, const char* _topic, bool _latch);
+
+    public: virtual ~GzSubscriber();
+
+    private: void GzCallback(const std::string &_msg);
+
+    private: gazebo::transport::SubscriberPtr sub;
+
+  };
+
+  class GazeboPubSub : public PubSub
+  {
+    public: GazeboPubSub();
+
+    public: virtual ~GazeboPubSub();
+
+    protected: virtual Subscriber *CreateSubscriber(const char* type, const char* topic, bool latch);
+
     protected: virtual Publisher  *CreatePublisher(const char* type, const char *topic);
 
-//  }
-//  class GazeboPubSub : public PubSub
-//  {
-
     public: void Pause();
+
     public: void Play(); 
 
     public: void SpawnModel(const char *_type,
@@ -116,13 +166,7 @@ namespace gzscript
     /// \brief Publish world control messages
     private: gazebo::transport::PublisherPtr worldControlPub;
 
-
-    std::map<std::string, Publisher*> pubs;
-    std::vector<Subscriber*> subs;
-
- 
   };
-
 }
 
 

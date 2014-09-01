@@ -5,7 +5,7 @@
       "sources": [ 
         "GZPubSub.cc", "GZPubSub.hh",
         "GazeboPubSub.cc", "GazeboPubSub.hh",
-        "json2pb.cc", "jsonp2b.hh",
+        "json2pb.c", "jsonp2b.h",
         "GazeboInterface.cc", "GazeboInterface.hh",
         "pb2json.cc", "pb2json.hh",
         "ConfigLoader.cc", "ConfigLoader.hh",

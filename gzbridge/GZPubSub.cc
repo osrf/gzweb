@@ -240,7 +240,7 @@ Handle<Value> GZPubSub::Subscribe(const Arguments& args)
   HandleScope scope;
 
   // we expect one string argument
-  if ( (args.Length() < 1)  || (args.Length() > 2)  )
+  if ( (args.Length() < 2)  || (args.Length() > 3)  )
   {
     ThrowException(Exception::TypeError(
         String::New("Wrong number of arguments")));
@@ -250,30 +250,40 @@ Handle<Value> GZPubSub::Subscribe(const Arguments& args)
   if (!args[0]->IsString())
   {
     ThrowException(Exception::TypeError(
-        String::New("Wrong argument type. Topic String expected as first argument.")));
+        String::New("Wrong argument type. Type String expected as first argument.")));
     return scope.Close(Undefined());
   } 
 
-  String::Utf8Value sarg(args[0]->ToString());
-  std::string topic(*sarg);
+  if (!args[1]->IsString())
+  {
+    ThrowException(Exception::TypeError(
+        String::New("Wrong argument type. Topic String expected as second argument.")));
+    return scope.Close(Undefined());
+  } 
+
+  String::Utf8Value sarg0(args[0]->ToString());
+  std::string type(*sarg0);
+
+  String::Utf8Value sarg1(args[1]->ToString());
+  std::string topic(*sarg1);
 
   bool latch = false;
-  if(args.Length() >1 )
+  if(args.Length() > 2 )
   {
-    if (!args[1]->IsBoolean())
+    if (!args[2]->IsBoolean())
     {
       ThrowException(Exception::TypeError(
-          String::New("Wrong argument type. Latch Boolean expected as second arument.")));
+          String::New("Wrong argument type. Latch Boolean expected as third arument.")));
       return scope.Close(Undefined());
     }
-    latch = *args[1]->ToBoolean();
+    latch = *args[2]->ToBoolean();
   }
 
   try
   {
     cout << "GZPubSub::Subscribe() topic = [" << topic << "]" << endl;  
     GZPubSub* obj = ObjectWrap::Unwrap<GZPubSub>(args.This());
-    obj->gazebo->Subscribe(topic.c_str(), latch);
+    obj->gazebo->Subscribe(type.c_str(), topic.c_str(), latch);
   }
   catch(PubSubException &x)
   {

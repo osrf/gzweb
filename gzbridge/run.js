@@ -2,7 +2,7 @@ var gazebo = require('./build/Debug/gazebo');
 var pubsub = new gazebo.GZPubSub();
 
 
-pubsub.subscribe("~/world_stats", true);
+pubsub.subscribe('gazebo.msgs.WorldControl', "~/world_stats", true);
 pubsub.subscriptions()
 pubsub.messages()
 pubsub.unsubscribe('~/world_stats')
