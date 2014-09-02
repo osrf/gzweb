@@ -1,0 +1,98 @@
+/*
+ * Copyright 2013 Open Source Robotics Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+*/
+
+
+#ifndef _PUBSUB_HH_
+#define _PUBSUB_HH_
+
+#include <string>
+#include <stdexcept>
+#include <vector>
+#include <map>
+
+namespace gzscript
+{
+
+  class PubSubException : public std::runtime_error
+  {
+    /// \brief Constructor
+    /// param[in] m the exception message 
+    public: PubSubException(const char*m) :std::runtime_error(m){}
+  };
+
+
+  class Publisher
+  {
+    public: Publisher(const char* type, const char* topic);
+
+    public: virtual ~Publisher();
+
+    public: virtual void Publish(const char* msg);
+    
+    public: const std::string type;
+
+    public: const std::string topic;
+  };
+
+
+  class Subscriber
+  {
+    public: Subscriber(const char *type, const char* topic, bool latch);
+
+    public: virtual ~Subscriber();
+
+    protected: virtual void Callback(const char *msg);
+
+    public: const bool latch;
+    
+    public: const std::string type;
+
+    public: const std::string topic;
+  };
+
+
+  class PubSub
+  {
+
+    /// \brief Constructor.
+    public: PubSub();
+
+    /// \brief Destructor.
+    public: virtual ~PubSub();
+
+    public: void Publish(const char* type, const char *topic, const char *msg);
+    
+    protected: void AddSubscriber(Subscriber *subscriber);
+
+    public: void Unsubscribe(const char* topic);
+
+    // public: std::vector<std::string> ListTopics(); 
+
+    public: std::vector<std::string> Subscriptions();
+
+    protected: virtual Publisher  *CreatePublisher(const char* type, const char *topic)=0;
+
+    private: std::map<std::string, Publisher*> pubs;
+
+    private: std::vector<Subscriber*> subs;
+
+
+  };
+
+}
+
+#endif
