@@ -19,92 +19,18 @@
 #ifndef _GAZEBO_PUBSUB_HH_
 #define _GAZEBO_PUBSUB_HH_
 
-#include <string>
-#include <stdexcept>
-#include <vector>
-
+#include "PubSub.hh"
 #include <gazebo/transport/TransportIface.hh>
 
-namespace boost
-{
-  class thread;
-}
 
 namespace gzweb
 {
   class OgreMaterialParser;
 }
 
+
 namespace gzscript
 {
-
-  class PubSubException : public std::runtime_error
-  {
-    /// \brief Constructor
-    /// param[in] m the exception message 
-    public: PubSubException(const char*m) :std::runtime_error(m){}
-  };
-
-
-  class Publisher
-  {
-    public: Publisher(const char* type, const char* topic);
-
-    public: virtual ~Publisher();
-
-    public: virtual void Publish(const char* msg);
-    
-    public: const std::string type;
-
-    public: const std::string topic;
-  };
-
-  class Subscriber
-  {
-    public: Subscriber(const char *type, const char* topic, bool latch);
-
-    public: virtual ~Subscriber();
-
-    public: virtual void Callback(const char *msg);
-
-    public: const bool latch;
-    
-    public: const std::string type;
-
-    public: const std::string topic;
-  };
-
-
-  class PubSub
-  {
-
-    /// \brief Constructor.
-    public: PubSub();
-
-    /// \brief Destructor.
-    public: virtual ~PubSub();
-
-
-    public: void Subscribe(const char *type, const char *topic, bool latch);
-
-    public: void Unsubscribe(const char* topic);
-
-    public: std::vector<std::string> GetTopics(); // gz topic list
-
-    public: void Publish(const char* type, const char *topic, const char *msg);
-
-    public: std::vector<std::string> Subscriptions();
-
-    protected: virtual Subscriber *CreateSubscriber(const char* type, const char* topic, bool latch)=0;
-
-    protected: virtual Publisher  *CreatePublisher(const char* type, const char *topic)=0;
-
-    private: std::map<std::string, Publisher*> pubs;
-
-    private: std::vector<Subscriber*> subs;
- 
-  };
-
 
   class GzPublisher: public Publisher
   {
@@ -118,6 +44,7 @@ namespace gzscript
      
   };
 
+
   class GzSubscriber: public Subscriber
   {
     public: GzSubscriber(gazebo::transport::NodePtr &_node, const char* _type, const char* _topic, bool _latch);
@@ -130,11 +57,14 @@ namespace gzscript
 
   };
 
+
   class GazeboPubSub : public PubSub
   {
     public: GazeboPubSub();
 
     public: virtual ~GazeboPubSub();
+
+    public: void Subscribe(const char * type, const char *topic, bool latch);
 
     protected: virtual Subscriber *CreateSubscriber(const char* type, const char* topic, bool latch);
 
@@ -152,6 +82,7 @@ namespace gzscript
                          double rx,
                          double ry,
                          double rz);
+
     public: std::vector<std::string> GetMaterials();
  
     /// \brief Ogre material parser.
@@ -167,6 +98,8 @@ namespace gzscript
     private: gazebo::transport::PublisherPtr worldControlPub;
 
   };
+
+
 }
 
 

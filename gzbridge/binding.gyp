@@ -4,6 +4,7 @@
       "target_name": "gazebo",
       "sources": [ 
         "GZPubSub.cc", "GZPubSub.hh",
+        "PubSub.cc", "PubSub.hh",
         "GazeboPubSub.cc", "GazeboPubSub.hh",
         "json2pb.c", "jsonp2b.h",
         "GazeboInterface.cc", "GazeboInterface.hh",

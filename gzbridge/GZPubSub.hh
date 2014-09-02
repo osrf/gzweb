@@ -20,10 +20,44 @@
 
 #include <node.h>
 
+#include "GazeboPubSub.hh"
+
+
 
 namespace gzscript
 {
-  class GazeboPubSub;
+
+  // inter thread communication data
+  struct payload
+  {
+    v8::Persistent<v8::Function>* func;
+    const char* data;
+  };
+
+
+  class GazeboJsSubscriber: public GzSubscriber
+  {
+    public: GazeboJsSubscriber(v8::Persistent<v8::Function>& function,  const char* type, const char* topic, bool latch);
+
+    public: virtual ~GazeboJsSubscriber();  
+
+    protected: virtual void Callback(const char* _msg);
+   
+    private:  static void doCallback(uv_async_t* handle, int status);
+
+    private:  static void close_cb (uv_handle_t* handle);
+ 
+    private: uv_async_t*  handle;
+
+    private: v8::Persistent<v8::Function>  function;
+  };
+
+
+  class GazeboJsPubSub : public GazeboPubSub
+  {
+    public: void  Subscribe(v8::Persistent<v8::Function>& function, const char* type, const char* topic, bool latch); 
+
+  };
 
   class GZPubSub : public node::ObjectWrap
   {
@@ -59,9 +93,7 @@ namespace gzscript
     private: static v8::Handle<v8::Value>
         Spawn(const v8::Arguments& args);
 
-//     private: static Box
-    
-    private: GazeboPubSub* gazebo;
+    private: GazeboJsPubSub* gazebo;
 
   };
 }

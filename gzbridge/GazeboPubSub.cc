@@ -31,38 +31,7 @@ using namespace gzscript;
 using namespace gzweb;
 using namespace std;
 
-
-Subscriber::Subscriber(const char* _type, const char* _topic, bool _latch)
-:latch(_latch), type(_type), topic(_topic)
-{
-
-}
-
-Subscriber::~Subscriber()
-{
-}
-
-
-Publisher::Publisher(const char *_type, const char *_topic)
-  :type(_type), topic(_topic)
-{
-}
-
-Publisher::~Publisher()
-{
-}
-
-void Publisher::Publish(const char *_msg)
-{
-  cout << "Publisher::Publish: " << _msg << endl;
-}
-
-void Subscriber::Callback(const char* _msg)
-{
-  cout << this->topic << ": " << _msg  <<endl;
-}
-
-
+/////////////////////////////////////////////////
 class MocType : public gazebo::msgs::WorldControl
 {  
   public: std::string GetTypeName() const {return globalName;}
@@ -72,7 +41,7 @@ class MocType : public gazebo::msgs::WorldControl
 
 std::string MocType::globalName;
 
-
+/////////////////////////////////////////////////
 GzPublisher::GzPublisher(gazebo::transport::NodePtr &_node, const char* _type, const char* _topic)
           :Publisher(_type, _topic)
 {
@@ -82,11 +51,12 @@ GzPublisher::GzPublisher(gazebo::transport::NodePtr &_node, const char* _type, c
   this->pub = _node->Advertise< MocType >(this->topic);
 }
 
-
+/////////////////////////////////////////////////
 GzPublisher::~GzPublisher()
 {
 }
 
+/////////////////////////////////////////////////
 void GzPublisher::Publish(const char *msg)
 {
    // create a protobuf message
@@ -98,6 +68,7 @@ void GzPublisher::Publish(const char *msg)
    // pb auto cleans up
 }
 
+/////////////////////////////////////////////////
 GzSubscriber::GzSubscriber(gazebo::transport::NodePtr &_node, const char* _type, const char* _topic, bool _latch)
           :Subscriber(_type, _topic, _latch)
 {
@@ -107,6 +78,7 @@ GzSubscriber::GzSubscriber(gazebo::transport::NodePtr &_node, const char* _type,
        &GzSubscriber::GzCallback, this, _latch);
 }
 
+/////////////////////////////////////////////////
 void GzSubscriber::GzCallback(const string &_msg)
 {
   // make an empty protobuf 
@@ -121,75 +93,14 @@ void GzSubscriber::GzCallback(const string &_msg)
   // pb auto cleans up
 }
 
+/////////////////////////////////////////////////
 GzSubscriber::~GzSubscriber()
 {
   // clean up sub
   
 }
 
-
-PubSub::PubSub()
-{
-
-}
-
-PubSub::~PubSub()
-{
-
-
-}
-
-void PubSub::Subscribe(const char *_type, const char *_topic, bool _latch)
-{
-  Subscriber *sub = this->CreateSubscriber(_type, _topic, _latch);
-  this->subs.push_back(sub);
-}
-
-
-void PubSub::Unsubscribe(const char *_topic)
-{
-  for (vector<Subscriber*>::iterator it = this->subs.begin();  it != this->subs.end(); it++)
-  {
-    Subscriber* p = *it;
-    if ( p->topic == _topic)
-    {
-      delete p;
-      this->subs.erase(it);
-      return;
-    }
-  }
-  // not found!
-}
-
-std::vector<std::string> PubSub::Subscriptions()
-{
-  vector<std::string> v;
-  for(unsigned int i=0; i < this->subs.size(); ++i)
-  {
-    v.push_back(this->subs[i]->topic);
-  }
-  return v;
-}
-
-
-void PubSub::Publish(const char*_type, const char *_topic, const char *_msg)
-{
-  Publisher *pub;
-  string t(_topic);
-  std::map< string, Publisher*  >::iterator it = this->pubs.find(t);
-  if(it != this->pubs.end())
-  {
-    pub = it->second; 
-  }
-  else
-  {
-    pub = this->CreatePublisher( _type, _topic);
-    this->pubs[t] = pub;
-  }
-  pub->Publish(_msg);
-}
-
-
+/////////////////////////////////////////////////
 Publisher *GazeboPubSub::CreatePublisher(const char* _type, const char *_topic)
 {
   Publisher *pub = new GzPublisher(this->node, _type, _topic);
@@ -197,14 +108,14 @@ Publisher *GazeboPubSub::CreatePublisher(const char* _type, const char *_topic)
 }
 
 
-// subscriber factory
+/////////////////////////////////////////////////
 Subscriber *GazeboPubSub::CreateSubscriber(const char* _type, const char* _topic, bool _latch)
 {
   Subscriber *sub = new GzSubscriber(this->node, _type, _topic, _latch);
   return sub;
 }
 
-
+/////////////////////////////////////////////////
 void GazeboPubSub::Pause()
 {
   gazebo::msgs::WorldControl worldControlMsg;
@@ -212,7 +123,7 @@ void GazeboPubSub::Pause()
   this->worldControlPub->Publish(worldControlMsg);  
 }
 
-
+/////////////////////////////////////////////////
 void GazeboPubSub::Play()
 {
   gazebo::msgs::WorldControl worldControlMsg;
@@ -220,7 +131,7 @@ void GazeboPubSub::Play()
   this->worldControlPub->Publish(worldControlMsg);  
 }
 
-
+/////////////////////////////////////////////////
 vector<string> GazeboPubSub::GetMaterials()
 {
 
@@ -278,7 +189,7 @@ GazeboPubSub::~GazeboPubSub()
   this->node.reset();
 }
 
-
+/////////////////////////////////////////////////
 void GazeboPubSub::SpawnModel(const char *_type,
                          const char *_name,
                          double x,

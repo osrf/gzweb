@@ -28,11 +28,12 @@
 #include "GazeboPubSub.hh"
 
 
-
-
 using namespace v8;
 using namespace gzscript;
 using namespace std;
+
+
+
 
 
 /////////////////////////////////////////////////
@@ -45,7 +46,7 @@ void InitAll(Handle<Object> exports)
 GZPubSub::GZPubSub()
 {
   cout << "GZPubSub::GZPubSub()" << endl;
-  this->gazebo = new GazeboPubSub();
+  this->gazebo = new GazeboJsPubSub();
 };
 
 /////////////////////////////////////////////////
@@ -240,7 +241,7 @@ Handle<Value> GZPubSub::Subscribe(const Arguments& args)
   HandleScope scope;
 
   // we expect one string argument
-  if ( (args.Length() < 2)  || (args.Length() > 3)  )
+  if ( (args.Length() < 3)  || (args.Length() > 4)  )
   {
     ThrowException(Exception::TypeError(
         String::New("Wrong number of arguments")));
@@ -261,29 +262,40 @@ Handle<Value> GZPubSub::Subscribe(const Arguments& args)
     return scope.Close(Undefined());
   } 
 
+  if (!args[2]->IsFunction())
+  {
+    ThrowException(Exception::TypeError(
+        String::New("Wrong argument type. Function  expected as third argument.")));
+    return scope.Close(Undefined());
+  }
+
+  bool latch = false;
+  if(args.Length() > 3 )
+  {
+    if (!args[3]->IsBoolean())
+    {
+      ThrowException(Exception::TypeError(
+          String::New("Wrong argument type. Latch Boolean expected as third arument.")));
+      return scope.Close(Undefined());
+    }
+    latch = *args[3]->ToBoolean();
+  }
+
+
   String::Utf8Value sarg0(args[0]->ToString());
   std::string type(*sarg0);
 
   String::Utf8Value sarg1(args[1]->ToString());
   std::string topic(*sarg1);
 
-  bool latch = false;
-  if(args.Length() > 2 )
-  {
-    if (!args[2]->IsBoolean())
-    {
-      ThrowException(Exception::TypeError(
-          String::New("Wrong argument type. Latch Boolean expected as third arument.")));
-      return scope.Close(Undefined());
-    }
-    latch = *args[2]->ToBoolean();
-  }
+  v8::Persistent<v8::Function> cb = v8::Persistent<v8::Function>::New(v8::Local<v8::Function>::Cast(args[2]));
+
 
   try
   {
     cout << "GZPubSub::Subscribe() topic = [" << topic << "]" << endl;  
     GZPubSub* obj = ObjectWrap::Unwrap<GZPubSub>(args.This());
-    obj->gazebo->Subscribe(type.c_str(), topic.c_str(), latch);
+    obj->gazebo->Subscribe(cb, type.c_str(), topic.c_str(), latch);
   }
   catch(PubSubException &x)
   {
@@ -385,6 +397,20 @@ Handle<Value> GZPubSub::Publish(const Arguments& args)
 
    return scope.Close(Undefined());  
 }
+
+
+void GazeboJsPubSub::Subscribe(v8::Persistent<v8::Function>& function, const char* type, const char* topic, bool latch)
+{
+  Subscriber *sub = new GazeboJsSubscriber(function, type, topic, latch);
+  this->AddSubscriber(sub);
+}
+
+
+void  GazeboJsSubscriber::Callback(const char *_msg)
+{
+  cout << "CALLBACK: " << _msg <<endl;
+}
+
 
 /////////////////////////////////////////////////
 NODE_MODULE(gazebo, InitAll)
