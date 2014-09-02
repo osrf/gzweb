@@ -19,6 +19,8 @@
 #define _GZNODE_HH_
 
 #include <node.h>
+#include <string>
+#include <vector>
 
 namespace gzweb
 {
@@ -65,7 +67,15 @@ namespace gzweb
     private: static v8::Handle<v8::Value>
         LoadMaterialScripts(const v8::Arguments& args);
 
+    private: static v8::Handle<v8::Value>
+        GetIsGzServerConnected(const v8::Arguments& args);
+
+    private: static v8::Handle<v8::Value>
+        GetMaterialScriptsMessage(const v8::Arguments& args);
+
     private: GazeboInterface* gzIface;
+    private: bool isGzServerConnected;
+
   };
 }
 

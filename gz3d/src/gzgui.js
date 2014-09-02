@@ -746,9 +746,20 @@ GZ3D.Gui.prototype.init = function()
       function(mode)
       {
         that.scene.setManipulationMode(mode);
-        guiEvents.emit('notification_popup',
-            mode.charAt(0).toUpperCase()+
-            mode.substring(1)+' mode');
+        var space = that.scene.modelManipulator.space;
+
+        if (mode === 'view')
+        {
+          guiEvents.emit('notification_popup', 'View mode');
+        }
+        else
+        {
+          guiEvents.emit('notification_popup',
+              mode.charAt(0).toUpperCase()+
+              mode.substring(1)+' mode in '+
+              space.charAt(0).toUpperCase()+
+              space.substring(1)+' space');
+        }
       }
   );
 
@@ -1026,7 +1037,7 @@ GZ3D.Gui.prototype.init = function()
 
   var notificationTimeout;
   guiEvents.on('notification_popup',
-      function (notification)
+      function (notification, duration)
       {
         if (this.showNotifications)
         {
@@ -1035,10 +1046,15 @@ GZ3D.Gui.prototype.init = function()
           $( '#notification-popup' ).html('&nbsp;'+notification+'&nbsp;');
           $( '#notification-popup' ).popup('open', {
               y:window.innerHeight-50});
+          
+          if (duration === undefined)
+          {
+            duration = 2000;
+          }
           notificationTimeout = setTimeout(function()
           {
             $( '#notification-popup' ).popup('close');
-          }, 2000);
+          }, duration);
         }
       }
   );

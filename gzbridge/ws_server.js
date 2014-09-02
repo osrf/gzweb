@@ -4,24 +4,30 @@ var WebSocketServer = require('websocket').server;
 var http = require('http');
 
 var connections = [];
+var materialScriptsMessage = {};
 var addon = require('./build/Debug/gzbridge');
 var gzconnection = new addon.GZNode();
-gzconnection.loadMaterialScripts('../http/client/assets');
+if (gzconnection.getIsGzServerConnected())
+{
+  gzconnection.loadMaterialScripts('../http/client/assets');
+  gzconnection.setPoseMsgFilterMinimumAge(0.02);
+  gzconnection.setPoseMsgFilterMinimumDistanceSquared(0.00001);
+  gzconnection.setPoseMsgFilterMinimumQuaternionSquared(0.00001);
 
-gzconnection.setPoseMsgFilterMinimumAge(0.02);
-gzconnection.setPoseMsgFilterMinimumDistanceSquared(0.00001);
-gzconnection.setPoseMsgFilterMinimumQuaternionSquared(0.00001);
-
-console.log('Pose message filter parameters: ');
-console.log('  minimum seconds between successive messages: ' +
-    gzconnection.getPoseMsgFilterMinimumAge());
-console.log('  minimum XYZ distance squared between successive messages: ' +
-    gzconnection.getPoseMsgFilterMinimumDistanceSquared());
-console.log('  minimum Quartenion distance squared between successive messages:'
-    + ' ' + gzconnection.getPoseMsgFilterMinimumQuaternionSquared());
+  console.log('Pose message filter parameters: ');
+  console.log('  minimum seconds between successive messages: ' +
+      gzconnection.getPoseMsgFilterMinimumAge());
+  console.log('  minimum XYZ distance squared between successive messages: ' +
+      gzconnection.getPoseMsgFilterMinimumDistanceSquared());
+  console.log('  minimum Quartenion distance squared between successive messages:'
+      + ' ' + gzconnection.getPoseMsgFilterMinimumQuaternionSquared());
+}
+else
+{
+  materialScriptsMessage = gzconnection.getMaterialScriptsMessage('../http/client/assets');
+}
 
 var isConnected = false;
-
 
 var server = http.createServer(function(request, response) {
     console.log((new Date()) + ' Received request for ' + request.url);
@@ -57,6 +63,17 @@ wsServer.on('request', function(request) {
     }
 
     var connection = request.accept(null, request.origin);
+
+    // if gzserver is not connected just send material scripts and status
+    if (!gzconnection.getIsGzServerConnected())
+    {
+      // create error status and send it
+      var statusMessage = '{"op":"publish","topic":"~/status","msg":{"status":"error"}}';
+      connection.sendUTF(statusMessage);
+      // send material scripts message
+      connection.sendUTF(materialScriptsMessage);
+      return;
+    }
 
     connections.push(connection);
 
@@ -95,15 +112,15 @@ wsServer.on('request', function(request) {
     });
 });
 
-setInterval(update, 10);
-
-function update()
+if (gzconnection.getIsGzServerConnected())
 {
-  if (connections.length > 0) {
-    var msgs = gzconnection.getMessages();
+  setInterval(update, 10);
 
+  function update()
+  {
     for (var i = 0; i < connections.length; ++i)
     {
+      var msgs = gzconnection.getMessages();
       for (var j = 0; j < msgs.length; ++j)
       {
         connections[i].sendUTF(msgs[j]);
