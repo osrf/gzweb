@@ -366,7 +366,7 @@ body
 {
   margin-top: 0.3em;
 }
-/* Level 0x go on Scene Tree */
+/* Levels 0x go on Scene Tree */
 /* Level 01 */
 .propertyLevel01
 {
@@ -542,7 +542,7 @@ body
   padding-left: 3.0em;
   width: calc(100% - 3.0em);
 }
-/* Level 4 */
+/* Level 5 */
 .propertyLevel5 div
 {
   font-size: 0.6em;

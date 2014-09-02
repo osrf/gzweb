@@ -1298,7 +1298,7 @@ GZ3D.Gui.prototype.setSceneStats = function(stats)
 
 var physicsStats = {};
 /**
- * Update scene stats on scene tree
+ * Update physics stats on scene tree
  * @param {} stats
  */
 GZ3D.Gui.prototype.setPhysicsStats = function(stats)
@@ -1750,7 +1750,7 @@ GZ3D.Gui.prototype.formatStats = function(stats)
 };
 
 /**
- * Round all number children and format color
+ * Round numbers to 3 decimals and format colors
  * @param {} stats
  * @returns stats
  */
