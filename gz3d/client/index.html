@@ -274,6 +274,7 @@
                 Scene
               </div>
               <div id="expandable-SCENE" class="expandedContent">
+                <!-- scene ambient -->
                 <div id="expand-ambient-SCENE" class="clickable expandableProperty expandableLevel01" ng-click="expandProperty('ambient', 'SCENE')">
                   <div>
                     <img src="style/images/play.png">
@@ -299,6 +300,7 @@
                     <div class="propertyNumber">{{scene.ambient.a}}</div>
                   </div>
                 </div>
+                <!-- scene background -->
                 <div id="expand-background-SCENE" class="clickable expandableProperty expandableLevel01" ng-click="expandProperty('background', 'SCENE')">
                   <div>
                     <img src="style/images/play.png">
@@ -396,27 +398,39 @@
                 <div id="expandable-pose-{{model.name}}" class="expandedContent">
                   <div class="property propertyLevel3 lightBg">
                     <div>x</div>
-                    <div class="propertyNumber">{{model.position.x}}</div>
+                    <div class="propertyNumberEdit">
+                      <input type="number" onClick="this.select();" ng-model="model.position.x" ng-change="changePose('position', 'x', model.name, model.position.x)" data-role="none"/>
+                    </div>
                   </div>
                   <div class="property propertyLevel3">
                     <div>y</div>
-                    <div class="propertyNumber">{{model.position.y}}</div>
+                    <div class="propertyNumberEdit">
+                      <input type="number" onClick="this.select();" ng-model="model.position.y" ng-change="changePose('position', 'y', model.name, model.position.y)" data-role="none"/>
+                    </div>
                   </div>
                   <div class="property propertyLevel3 lightBg">
                     <div>z</div>
-                    <div class="propertyNumber">{{model.position.z}}</div>
+                    <div class="propertyNumberEdit">
+                      <input type="number" onClick="this.select();" ng-model="model.position.z" ng-change="changePose('position', 'z', model.name, model.position.z)" data-role="none"/>
+                    </div>
                   </div>
                   <div class="property propertyLevel3">
                     <div>Roll</div>
-                    <div class="propertyNumber">{{model.orientation.roll}}</div>
+                    <div class="propertyNumberEdit">
+                      <input type="number" onClick="this.select();" ng-model="model.orientation.roll" ng-change="changePose('orientation', 'x', model.name, model.orientation.roll)" data-role="none"/>
+                    </div>
                   </div>
                   <div class="property propertyLevel3 lightBg">
                     <div>Pitch</div>
-                    <div class="propertyNumber">{{model.orientation.pitch}}</div>
+                    <div class="propertyNumberEdit">
+                      <input type="number" onClick="this.select();" ng-model="model.orientation.pitch" ng-change="changePose('orientation', 'y', model.name, model.orientation.pitch)" data-role="none"/>
+                    </div>
                   </div>
                   <div class="property propertyLevel3">
                     <div>Yaw</div>
-                    <div class="propertyNumber">{{model.orientation.yaw}}</div>
+                    <div class="propertyNumberEdit">
+                      <input type="number" onClick="this.select();" ng-model="model.orientation.yaw" ng-change="changePose('orientation', 'z', model.name, model.orientation.yaw)" data-role="none"/>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -436,21 +450,21 @@
                       <div>Name</div>
                       <div>{{link.name}}</div>
                     </div>
-                    <div class="property propertyLevel3">
+                    <div class="clickable property propertyLevel3" ng-click="toggleProperty('self_collide', link.name)">
                       <div>Self Collide</div>
                       <div class="propertyToggle">
                         <img src="style/images/{{link.self_collide.icon}}.png">
                         {{link.self_collide.title}}
                       </div>
                     </div>
-                    <div class="property propertyLevel3">
+                    <div class="clickable property propertyLevel3" ng-click="toggleProperty('gravity', link.name)">
                       <div>Gravity</div>
                       <div class="propertyToggle">
                         <img src="style/images/{{link.gravity.icon}}.png">
                         {{link.gravity.title}}
                       </div>
                     </div>
-                    <div class="property propertyLevel3">
+                    <div class="clickable property propertyLevel3" ng-click="toggleProperty('kinematic', link.name)">
                       <div>Kinematic</div>
                       <div class="propertyToggle">
                         <img src="style/images/{{link.kinematic.icon}}.png">
@@ -505,6 +519,7 @@
                         <div>Mass</div>
                         <div class="propertyNumber">{{link.inertial.mass}}</div>
                       </div>
+                      <!-- link inertial pose -->
                       <div id="expand-inertial-pose-{{model.name}}-{{link.shortName}}" class="clickable expandableProperty expandableLevel4" ng-click="expandProperty('inertial-pose', model.name, link.shortName)">
                         <img src="style/images/play.png">
                         Pose
@@ -535,6 +550,7 @@
                           <div class="propertyNumber">{{link.inertial.pose.orientation.yaw}}</div>
                         </div>
                       </div>
+                      <!-- link inertial moments -->
                       <div id="expand-inertial-moments-{{model.name}}-{{link.shortName}}" class="clickable expandableProperty expandableLevel4" ng-click="expandProperty('inertial-moments', model.name, link.shortName)">
                         <img src="style/images/play.png">
                         Moments
@@ -753,6 +769,7 @@
                 <div>Name</div>
                 <div>{{light.name}}</div>
               </div>
+              <!-- light pose -->
               <div id="expand-pose-{{light.name}}" class="clickable expandableProperty" ng-click="expandProperty('pose', light.name)">
                 <img src="style/images/play.png">
                 Pose
@@ -760,35 +777,75 @@
               <div id="expandable-pose-{{light.name}}" class="expandedContent">
                 <div class="property propertyLevel2 lightBg">
                   <div>x</div>
-                  <div class="propertyNumber">{{light.position.x}}</div>
+                  <div class="propertyNumberEdit">
+                    <input type="number" onClick="this.select();" ng-model="light.position.x" ng-change="changePose('position', 'x', light.name, light.position.x)" data-role="none"/>
+                  </div>
                 </div>
                 <div class="property propertyLevel2">
                   <div>y</div>
-                  <div class="propertyNumber">{{light.position.y}}</div>
+                  <div class="propertyNumberEdit">
+                    <input type="number" onClick="this.select();" ng-model="light.position.y" ng-change="changePose('position', 'y', light.name, light.position.y)" data-role="none"/>
+                  </div>
                 </div>
                 <div class="property propertyLevel2 lightBg">
                   <div>z</div>
-                  <div class="propertyNumber">{{light.position.z}}</div>
+                  <div class="propertyNumberEdit">
+                    <input type="number" onClick="this.select();" ng-model="light.position.z" ng-change="changePose('position', 'z', light.name, light.position.z)" data-role="none"/>
+                  </div>
                 </div>
                 <div class="property propertyLevel2">
                   <div>Roll</div>
-                  <div class="propertyNumber">{{light.orientation.roll}}</div>
+                  <div class="propertyNumberEdit">
+                    <input type="number" onClick="this.select();" ng-model="light.orientation.roll" ng-change="changePose('orientation', 'x', light.name, light.orientation.roll)" data-role="none"/>
+                  </div>
                 </div>
                 <div class="property propertyLevel2 lightBg">
                   <div>Pitch</div>
-                  <div class="propertyNumber">{{light.orientation.pitch}}</div>
+                  <div class="propertyNumberEdit">
+                    <input type="number" onClick="this.select();" ng-model="light.orientation.pitch" ng-change="changePose('orientation', 'y', light.name, light.orientation.pitch)" data-role="none"/>
+                  </div>
                 </div>
                 <div class="property propertyLevel2">
                   <div>Yaw</div>
-                  <div class="propertyNumber">{{light.orientation.yaw}}</div>
+                  <div class="propertyNumberEdit">
+                    <input type="number" onClick="this.select();" ng-model="light.orientation.yaw" ng-change="changePose('orientation', 'z', light.name, light.orientation.yaw)" data-role="none"/>
+                  </div>
                 </div>
               </div>
+              <!-- light direction -->
+              <div ng-if="light.direction" id="expand-direction-{{light.name}}" class="clickable expandableProperty" ng-click="expandProperty('direction', light.name)">
+                <img src="style/images/play.png">
+                Direction
+              </div>
+              <div id="expandable-direction-{{light.name}}" class="expandedContent">
+                <div class="property propertyLevel2 lightBg">
+                  <div>x</div>
+                  <div class="propertyNumberEdit">
+                    <input type="number" onClick="this.select();" ng-model="light.direction.x" ng-change="changePose('direction', 'x', light.name, light.direction.x)" data-role="none"/>
+                  </div>
+                </div>
+                <div class="property propertyLevel2">
+                  <div>y</div>
+                  <div class="propertyNumberEdit">
+                    <input type="number" onClick="this.select();" ng-model="light.direction.y" ng-change="changePose('direction', 'y', light.name, light.direction.y)" data-role="none"/>
+                  </div>
+                </div>
+                <div class="property propertyLevel2 lightBg">
+                  <div>z</div>
+                  <div class="propertyNumberEdit">
+                    <input type="number" onClick="this.select();" ng-model="light.direction.z" ng-change="changePose('direction', 'z', light.name, light.direction.z)" data-role="none"/>
+                  </div>
+                </div>
+              </div>
+              <!-- light diffuse -->
               <div id="expand-diffuse-{{light.name}}" class="clickable expandableProperty" ng-click="expandProperty('diffuse', light.name)">
                 <div>
                   <img src="style/images/play.png">
                   Diffuse
                 </div>
-                <div class="colorDisplay" style="background-color: rgb({{light.diffuse.r}},{{light.diffuse.g}},{{light.diffuse.b}})"></div>
+                <div class="propertyColorEdit">
+                  <input class="clickable" type="color" ng-model="light.color.diffuse" ng-change="changeLight('diffuse', light.name, light.color.diffuse)"/>
+                </div>
               </div>
               <div id="expandable-diffuse-{{light.name}}" class="expandedContent">
                 <div class="property propertyLevel2 redBg">
@@ -808,12 +865,15 @@
                   <div class="propertyNumber">{{light.diffuse.a}}</div>
                 </div>
               </div>
+              <!-- light specular -->
               <div id="expand-specular-{{light.name}}" class="clickable expandableProperty" ng-click="expandProperty('specular', light.name)">
                 <div>
                   <img src="style/images/play.png">
                   Specular
                 </div>
-                <div class="colorDisplay" style="background-color: rgb({{light.specular.r}},{{light.specular.g}},{{light.specular.b}})"></div>
+                <div class="propertyColorEdit">
+                  <input class="clickable" type="color" ng-model="light.color.specular" ng-change="changeLight('specular', light.name, light.color.specular)"/>
+                </div>
               </div>
               <div id="expandable-specular-{{light.name}}" class="expandedContent">
                 <div class="property propertyLevel2 redBg">
@@ -835,8 +895,11 @@
               </div>
               <div class="property propertyLevel1">
                 <div>Range</div>
-                <div class="propertyNumber">{{light.range}}</div>
+                <div class="propertyNumberEdit">
+                  <input type="number" onClick="this.select();" ng-model="light.range" ng-change="changeLight('range', light.name, light.range)" data-role="none"/>
+                </div>
               </div>
+              <!-- light attenuation -->
               <div id="expand-attenuation-{{light.name}}" class="clickable expandableProperty" ng-click="expandProperty('attenuation', light.name)">
                 <img src="style/images/play.png">
                 Attenuation
@@ -844,15 +907,21 @@
               <div id="expandable-attenuation-{{light.name}}" class="expandedContent">
                 <div class="property propertyLevel2">
                   <div>Constant</div>
-                  <div class="propertyNumber">{{light.attenuation.constant}}</div>
+                  <div class="propertyNumberEdit">
+                    <input type="number" onClick="this.select();" ng-model="light.attenuation.constant" ng-change="changeLight('attenuation_constant', light.name, light.attenuation.constant)" data-role="none"/>
+                  </div>
                 </div>
                 <div class="property propertyLevel2">
                   <div>Linear</div>
-                  <div class="propertyNumber">{{light.attenuation.linear}}</div>
+                  <div class="propertyNumberEdit">
+                    <input type="number" onClick="this.select();" ng-model="light.attenuation.linear" ng-change="changeLight('attenuation_linear', light.name, light.attenuation.linear)" data-role="none"/>
+                  </div>
                 </div>
                 <div class="property propertyLevel2">
                   <div>Quadratic</div>
-                  <div class="propertyNumber">{{light.attenuation.quadratic}}</div>
+                  <div class="propertyNumberEdit">
+                    <input type="number" onClick="this.select();" ng-model="light.attenuation.quadratic" ng-change="changeLight('attenuation_quadratic', light.name, light.attenuation.quadratic)" data-role="none"/>
+                  </div>
                 </div>
               </div>
             </div>

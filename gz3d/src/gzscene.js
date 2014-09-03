@@ -714,31 +714,42 @@ GZ3D.Scene.prototype.createBox = function(width, height, depth)
 /**
  * Create light
  * @param {} type - 1: point, 2: spot, 3: directional
- * @param {} color
+ * @param {} diffuse
  * @param {} intensity
  * @param {} pose
  * @param {} distance
  * @param {} cast_shadows
  * @param {} name
  * @param {} direction
+ * @param {} specular
+ * @param {} attenuation_linear
+ * @param {} attenuation_quadratic
  * @returns {THREE.Object3D}
  */
-GZ3D.Scene.prototype.createLight = function(type, color, intensity, pose,
-    distance, cast_shadows, name, direction)
+GZ3D.Scene.prototype.createLight = function(type, diffuse, intensity, pose,
+    distance, cast_shadows, name, direction, specular, attenuation_linear,
+    attenuation_quadratic)
 {
   var obj = new THREE.Object3D();
+  var color = new THREE.Color();
 
-  if (typeof(color) === 'undefined')
+  if (typeof(diffuse) === 'undefined')
   {
-    color = 0xffffff;
+    diffuse = 0xffffff;
   }
-  else if (typeof(color) !== THREE.Color)
+  else if (typeof(diffuse) !== THREE.Color)
   {
-    var Color = new THREE.Color();
-    Color.r = color.r;
-    Color.g = color.g;
-    Color.b = color.b;
-    color = Color;
+    color.r = diffuse.r;
+    color.g = diffuse.g;
+    color.b = diffuse.b;
+    diffuse = color.clone();
+  }
+  else if (typeof(specular) !== THREE.Color)
+  {
+    color.r = specular.r;
+    color.g = specular.g;
+    color.b = specular.b;
+    specular = color.clone();
   }
 
   var matrixWorld;
@@ -766,17 +777,17 @@ GZ3D.Scene.prototype.createLight = function(type, color, intensity, pose,
   var elements;
   if (type === 1)
   {
-    elements = this.createPointLight(obj, color, intensity,
+    elements = this.createPointLight(obj, diffuse, intensity,
         distance, cast_shadows);
   }
   else if (type === 2)
   {
-    elements = this.createSpotLight(obj, color, intensity,
+    elements = this.createSpotLight(obj, diffuse, intensity,
         distance, cast_shadows);
   }
   else if (type === 3)
   {
-    elements = this.createDirectionalLight(obj, color, intensity,
+    elements = this.createDirectionalLight(obj, diffuse, intensity,
         cast_shadows);
   }
 
@@ -801,6 +812,12 @@ GZ3D.Scene.prototype.createLight = function(type, color, intensity, pose,
     dir.applyMatrix4(matrixWorld); // localToWorld
     lightObj.target.position.copy(dir);
   }
+
+  // Add properties which exist on the server but have no meaning on THREE.js
+  obj.serverProperties = {};
+  obj.serverProperties.specular = specular;
+  obj.serverProperties.attenuation_linear = attenuation_linear;
+  obj.serverProperties.attenuation_quadratic = attenuation_quadratic;
 
   obj.add(lightObj);
   obj.add(helper);
@@ -1554,7 +1571,7 @@ GZ3D.Scene.prototype.setManipulationMode = function(mode)
   {
     if (this.modelManipulator.object)
     {
-      this.emitter.emit('poseChanged', this.modelManipulator.object);
+      this.emitter.emit('entityChanged', this.modelManipulator.object);
     }
     this.selectEntity(null);
   }
@@ -1619,7 +1636,7 @@ GZ3D.Scene.prototype.attachManipulator = function(model,mode)
 {
   if (this.modelManipulator.object)
   {
-    this.emitter.emit('poseChanged', this.modelManipulator.object);
+    this.emitter.emit('entityChanged', this.modelManipulator.object);
   }
 
   if (mode !== 'view')
