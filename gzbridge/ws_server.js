@@ -118,11 +118,9 @@ if (gzconnection.getIsGzServerConnected())
 
   function update()
   {
-    if (connections.length > 0) {
-      var msgs = gzconnection.getMessages();
-    }
     for (var i = 0; i < connections.length; ++i)
     {
+      var msgs = gzconnection.getMessages();
       for (var j = 0; j < msgs.length; ++j)
       {
         connections[i].sendUTF(msgs[j]);
