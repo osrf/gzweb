@@ -9,6 +9,7 @@ GZ3D.SpawnModel = function(scene, domElement)
   this.init();
   this.obj = undefined;
   this.callback = undefined;
+  this.sdfParser = undefined;
 };
 
 /**
@@ -67,8 +68,8 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
   }
   else
   {
-    // temp box for now
-    mesh = this.scene.createBox(1, 1, 1);
+    mesh = this.sdfParser.loadSDF(entity);
+    //TODO: add transparency to the object
   }
 
   this.obj.name = this.generateUniqueName(entity);

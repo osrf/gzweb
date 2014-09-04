@@ -180,6 +180,11 @@ GZ3D.Scene.prototype.initScene = function()
   this.add(obj);
 };
 
+GZ3D.Scene.prototype.setSDFParser = function(sdfParser)
+{
+  this.spawnModel.sdfParser = sdfParser;
+};
+
 /**
  * Window event callback
  * @param {} event - mousedown or touchdown events
@@ -599,6 +604,14 @@ GZ3D.Scene.prototype.setPose = function(model, position, orientation)
   model.quaternion.x = orientation.x;
   model.quaternion.y = orientation.y;
   model.quaternion.z = orientation.z;
+};
+
+GZ3D.Scene.prototype.removeAll = function()
+{
+  while(this.scene.children.length > 0)
+  {
+    this.scene.remove(this.scene.children[0]);
+  }
 };
 
 /**
