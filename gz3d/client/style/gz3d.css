@@ -277,7 +277,7 @@ input[type=number]::-webkit-inner-spin-button
   text-align: center;
   clear: both;
 }
-.propertyPanelImg img
+.propertyPanelImg > img
 {
   height: 5em;
 }
@@ -286,17 +286,17 @@ input[type=number]::-webkit-inner-spin-button
   text-align: center;
   clear: both;
 }
-.propertyPanelHeader h4
+.propertyPanelHeader > h4
 {
   background-color: #aaaaaa;
   float: left;
   margin: 0;
 }
-.propertyPanelHeader h4:first-child
+.propertyPanelHeader > h4:first-child
 {
   width: 60%;
 }
-.propertyPanelHeader h4:nth-child(2)
+.propertyPanelHeader > h4:nth-child(2)
 {
   width: 40%;
 }
@@ -421,7 +421,7 @@ input[type=number]::-webkit-inner-spin-button
 }
 /* Levels 0x go on Scene Tree */
 /* Level 01 */
-.propertyLevel01
+.propertyLevel01 div
 {
   font-size: 0.8em;
 }
@@ -567,12 +567,6 @@ input[type=number]::-webkit-inner-spin-button
   padding-left: 6.2em;
   width: calc(60% - 6.2em);
 }
-
-.isTouchDevice .propertyLevel4 div
-{
-  font-size: 0.9em;
-  line-height: 1.6em;
-}
 .expandableLevel4
 {
   padding-left: 5.2em;
@@ -582,6 +576,11 @@ input[type=number]::-webkit-inner-spin-button
 .expandableLevel4 img
 {
   height: 0.65em;
+}
+.isTouchDevice .propertyLevel4 div
+{
+  font-size: 0.9em;
+  line-height: 1.6em;
 }
 .isTouchDevice .propertyLevel4 > div:first-child
 {
