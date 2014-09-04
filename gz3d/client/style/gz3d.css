@@ -108,49 +108,29 @@ input[type=number]::-webkit-inner-spin-button
   overflow-y: auto;
   overflow-x: hidden;
 }
-.panelSubContent
-{
-  height: calc(100% - 1.8em - 1.5em);
-  overflow-y: auto;
-  overflow-x: hidden;
-}
 .panelTitle
 {
   width: 100%;
-  height: 1.8em;
+  height: 2.5em;
+  line-height: 1.8em;
   background-color: #1d1d1d;
 }
 .panelTitle h3
 {
-  margin: 0.1em;
+  margin: 0.3em;
   float: left;
-}
-.panelTitle img
-{
-  height: 1.2em;
-  margin: 0.1em;
-  float: right;
-}
-.panelSubTitle
-{
-  width: 100%;
-  height: 1.5em;
-  background-color: #333333;
-}
-.panelSubTitle h4
-{
-  margin: 0.1em;
-  float: left;
-  width: 13em;
+  width: 11em;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.panelSubTitle img
+.panelTitle img
 {
   height: 1.2em;
-  margin: 0.1em;
-  float: right;
+  margin: 0.3em;
+  position: absolute;
+  right: 0;
+  top: 0.3em;
 }
 .leftPanels ul
 {
@@ -650,9 +630,9 @@ input[type=number]::-webkit-inner-spin-button
   {
     width: 8.5em;
   }
-  .panelSubTitle h4
+  .panelTitle h3
   {
-    width: 8.5em;
+    width: 7em;
   }
   /* main menu */
   #mainMenu li

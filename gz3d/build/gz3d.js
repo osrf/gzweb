@@ -395,16 +395,9 @@ $(function()
         }
       });
 
-  $('.panelTitle').click(function()
+  $('.closePanels').click(function()
       {
         guiEvents.emit('closeTabs', true);
-      });
-
-  $('.panelSubTitle').click(function()
-      {
-        var id = $('.leftPanels:visible').attr('id');
-        id = id.substring(0,id.indexOf('-'));
-        guiEvents.emit('openTab', id, id);
       });
 
   $('#view-mode').click(function()
@@ -610,11 +603,6 @@ gzangular.controller('treeControl', ['$scope', function($scope)
     guiEvents.emit('openEntityPopup', event, name);
   };
 
-  $scope.closePanels = function ()
-  {
-    guiEvents.emit('closeTabs', true);
-  };
-
   $scope.backToTree = function ()
   {
     guiEvents.emit('openTab', 'treeMenu', 'treeMenu');
@@ -717,6 +705,11 @@ gzangular.controller('insertControl', ['$scope', function($scope)
   $scope.spawnEntity = function(path)
   {
     guiEvents.emit('spawn_entity_start', path);
+  };
+
+  $scope.backToInsert = function ()
+  {
+    guiEvents.emit('openTab', 'insertMenu', 'insertMenu');
   };
 }]);
 
