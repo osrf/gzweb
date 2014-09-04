@@ -374,6 +374,12 @@ input[type=number]::-webkit-inner-spin-button
   float: left;
   width: calc(60% - 0.2em);
 }
+.expandableProperty > div:nth-child(2)
+{
+  position: relative;
+  float: left;
+  width: 40%;
+}
 .expandableProperty img
 {
   vertical-align: middle;
