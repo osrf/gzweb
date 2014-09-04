@@ -104,7 +104,7 @@ input[type=number]::-webkit-inner-spin-button
 }
 .panelContent
 {
-  height: calc(100% - 1.8em);
+  height: calc(100% - 2.5em);
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -119,7 +119,7 @@ input[type=number]::-webkit-inner-spin-button
 {
   margin: 0.3em;
   float: left;
-  width: 11em;
+  width: calc(100% - 1.5em);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -450,7 +450,20 @@ input[type=number]::-webkit-inner-spin-button
 .propertyLevel02 > div:first-child
 {
   padding-left: 2.8em;
-  width: calc(60% - 2.8em);
+  width: calc(70% - 2.8em);
+}
+.propertyLevel02 > div:nth-child(2)
+{
+  width: 30%;
+}
+.propertyLevel02 .propertyNumber
+{
+  width: calc(30% - 3em) !important;
+}
+.isTouchDevice .propertyLevel02 .propertyNumber
+{
+  padding-right: 1em;
+  width: calc(30% - 1em) !important;
 }
 /* Level 1 */
 .isTouchDevice .propertyLevel1 div
@@ -629,10 +642,6 @@ input[type=number]::-webkit-inner-spin-button
   .leftPanels ul
   {
     width: 8.5em;
-  }
-  .panelTitle h3
-  {
-    width: 7em;
   }
   /* main menu */
   #mainMenu li
