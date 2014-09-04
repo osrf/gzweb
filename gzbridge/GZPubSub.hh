@@ -28,16 +28,15 @@ namespace gzscript
 {
 
   // inter thread communication data
-  struct payload
-  {
-    v8::Persistent<v8::Function>* func;
-    const char* data;
+  class JsCallbackData {
+    public: v8::Persistent<v8::Function>* func;
+    public: std::string pbData;
   };
 
 
   class GazeboJsSubscriber: public GzSubscriber
   {
-    public: GazeboJsSubscriber(v8::Persistent<v8::Function>& function,  const char* type, const char* topic, bool latch);
+    public: GazeboJsSubscriber(gazebo::transport::NodePtr &_node, v8::Persistent<v8::Function>& function,  const char* type, const char* topic, bool latch);
 
     public: virtual ~GazeboJsSubscriber();  
 
@@ -52,11 +51,11 @@ namespace gzscript
     private: v8::Persistent<v8::Function>  function;
   };
 
-
   class GazeboJsPubSub : public GazeboPubSub
   {
     public: void  Subscribe(v8::Persistent<v8::Function>& function, const char* type, const char* topic, bool latch); 
 
+//    public: void  ImageSubscribe(v8::Persistent<v8::Function>& function, const char* type, const char* topic, bool compressed);
   };
 
   class GZPubSub : public node::ObjectWrap
@@ -78,7 +77,7 @@ namespace gzscript
     private: static v8::Handle<v8::Value>
         Unsubscribe(const v8::Arguments& args);
 
-   private: static v8::Handle<v8::Value>
+    private: static v8::Handle<v8::Value>
         GetMaterials(const v8::Arguments& args);
 
     private: static v8::Handle<v8::Value>
@@ -93,6 +92,9 @@ namespace gzscript
     private: static v8::Handle<v8::Value>
         Spawn(const v8::Arguments& args);
 
+    private: static v8::Handle<v8::Value>
+        GetModelFile(const v8::Arguments& args);
+  
     private: GazeboJsPubSub* gazebo;
 
   };

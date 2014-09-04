@@ -72,13 +72,6 @@ void PubSub::AddSubscriber(Subscriber *sub)
   this->subs.push_back(sub);
 }
 
-//void PubSub::Subscribe(const char *_type, const char *_topic, bool _latch)
-//{
-//  Subscriber *sub = this->CreateSubscriber(_type, _topic, _latch);
-//  this->subs.push_back(sub);
-//}
-
-
 void PubSub::Unsubscribe(const char *_topic)
 {
   for (vector<Subscriber*>::iterator it = this->subs.begin();  it != this->subs.end(); it++)

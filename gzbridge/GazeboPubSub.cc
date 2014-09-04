@@ -109,13 +109,6 @@ Publisher *GazeboPubSub::CreatePublisher(const char* _type, const char *_topic)
 
 
 /////////////////////////////////////////////////
-Subscriber *GazeboPubSub::CreateSubscriber(const char* _type, const char* _topic, bool _latch)
-{
-  Subscriber *sub = new GzSubscriber(this->node, _type, _topic, _latch);
-  return sub;
-}
-
-/////////////////////////////////////////////////
 void GazeboPubSub::Pause()
 {
   gazebo::msgs::WorldControl worldControlMsg;
@@ -130,6 +123,7 @@ void GazeboPubSub::Play()
   worldControlMsg.set_pause(0);
   this->worldControlPub->Publish(worldControlMsg);  
 }
+
 
 /////////////////////////////////////////////////
 vector<string> GazeboPubSub::GetMaterials()
@@ -266,7 +260,7 @@ void GazeboPubSub::SpawnModel(const char *_type,
                         << pos.z << " " << rpy.x << " "
                         << rpy.y << " " << rpy.z << "</pose>"
           << "  <include>"
-          << "    <uri>model://" << type << "</uri>"
+          << "    <uri>" << type << "</uri>"
           << "  </include>"
           << "</model>"
           << "</sdf>";

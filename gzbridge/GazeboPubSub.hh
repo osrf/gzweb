@@ -64,9 +64,7 @@ namespace gzscript
 
     public: virtual ~GazeboPubSub();
 
-    public: void Subscribe(const char * type, const char *topic, bool latch);
-
-    protected: virtual Subscriber *CreateSubscriber(const char* type, const char* topic, bool latch);
+    // public: void Subscribe(const char * type, const char *topic, bool latch);
 
     protected: virtual Publisher  *CreatePublisher(const char* type, const char *topic);
 
@@ -85,11 +83,11 @@ namespace gzscript
 
     public: std::vector<std::string> GetMaterials();
  
+    /// \brief Gazebo transport node.
+    protected: gazebo::transport::NodePtr node;
+
     /// \brief Ogre material parser.
     private: gzweb::OgreMaterialParser *materialParser;
-
-    /// \brief Gazebo transport node.
-    private: gazebo::transport::NodePtr node;
 
     /// \brief lots of spawn 
     private: gazebo::transport::PublisherPtr factoryPub;

@@ -18,6 +18,12 @@
 #include <iostream>
 #include <node.h>
 
+#include <v8.h>
+#include <uv.h>
+//#include <unistd.h>
+//#include <sys/syscall.h>
+
+
 ///////////////
 #include <list>
 #include <map>
@@ -26,6 +32,8 @@
 
 #include "GZPubSub.hh"
 #include "GazeboPubSub.hh"
+
+#include <gazebo/common/ModelDatabase.hh>
 
 
 using namespace v8;
@@ -79,7 +87,8 @@ void GZPubSub::Init(Handle<Object> exports)
 
   tpl->PrototypeTemplate()->Set(String::NewSymbol("publish"),
       FunctionTemplate::New(Publish)->GetFunction());
-
+  
+  // export the template
   Persistent<Function> constructor1 =
       Persistent<Function>::New(tpl->GetFunction());
   exports->Set(String::NewSymbol("GZPubSub"), constructor1);
@@ -102,6 +111,10 @@ void GZPubSub::Init(Handle<Object> exports)
   tp2->PrototypeTemplate()->Set(String::NewSymbol("spawn"),
       FunctionTemplate::New(Spawn)->GetFunction());
 
+  tp2->PrototypeTemplate()->Set(String::NewSymbol("modelFile"),
+      FunctionTemplate::New(GetModelFile)->GetFunction());
+
+  // export the template
   Persistent<Function> constructor2 =
       Persistent<Function>::New(tp2->GetFunction());
   exports->Set(String::NewSymbol("Sim"), constructor2);
@@ -145,6 +158,32 @@ Handle<Value> GZPubSub::Play(const Arguments& args)
 }
 
 /////////////////////////////////////////////////
+Handle<Value> GZPubSub::GetModelFile(const Arguments& args)
+{
+  HandleScope scope;
+
+  if ( args.Length() != 1 )
+  {
+    ThrowException(Exception::TypeError(
+        String::New("Wrong number of arguments. 1 expected")));
+    return scope.Close(Undefined());
+  }
+
+  if (!args[0]->IsString())
+  {
+    ThrowException(Exception::TypeError(
+        String::New("Wrong argument type. Uri String model name expected.")));
+    return scope.Close(Undefined());
+  }
+
+  String::Utf8Value sarg0(args[0]->ToString());
+  std::string uri(*sarg0);
+  std::string model = gazebo::common::ModelDatabase::Instance()->GetModelFile(uri);
+
+  return scope.Close(String::New(model.c_str()));
+}
+
+/////////////////////////////////////////////////
 Handle<Value> GZPubSub::Spawn(const Arguments& args)
 {
   HandleScope scope;
@@ -171,29 +210,35 @@ Handle<Value> GZPubSub::Spawn(const Arguments& args)
     return scope.Close(Undefined());
   }
 
+  double pose[6];
+  for(unsigned int i = 0; i < 6; ++i)
+  {
+    pose[i] = 0;
+    unsigned int argIndex = i +2;
+    if ((unsigned int)args.Length() > argIndex)
+    {
+      if (!args[argIndex]->IsNumber())
+      {
+        ThrowException(Exception::TypeError(
+        String::New("Wrong argument type. Number expected.")));
+        return scope.Close(Undefined());
+      }
+      pose[i] = args[argIndex]->ToNumber()->NumberValue();
+      
+    }
+  }
+
+  String::Utf8Value sarg0(args[0]->ToString());
+  std::string type(*sarg0);
+  String::Utf8Value sarg1(args[1]->ToString());
+  std::string name(*sarg1);
   GZPubSub* obj = ObjectWrap::Unwrap<GZPubSub>(args.This());
-  obj->gazebo->SpawnModel("box", "hugobox", 0,0,0, 0,0,0);
+
+  obj->gazebo->SpawnModel(type.c_str(), name.c_str(),  pose[0], pose[1], pose[2], pose[3], pose[4], pose[5]);
 
   return scope.Close(Undefined());
 }
 
-/*
-/////////////////////////////////////////////////
-Handle<Value> GZPubSub::GetMessages(const Arguments& args)
-{
-  HandleScope scope;
-
-  GZPubSub* obj = ObjectWrap::Unwrap<GZPubSub>(args.This());
-
-  std::vector<std::string> msgs = obj->gazebo->PopOutgoingMessages();
-  Local<Array> arguments = Array::New(msgs.size());
-  for (unsigned int i = 0; i < msgs.size(); ++i) {
-    arguments->Set(i ,String::New(msgs[i].c_str()));
-  }
-
-  return scope.Close(arguments);
-}
-*/
 
 /////////////////////////////////////////////////
 Handle<Value> GZPubSub::GetMaterials(const Arguments& args)
@@ -395,20 +440,71 @@ Handle<Value> GZPubSub::Publish(const Arguments& args)
     return scope.Close(Undefined());
   }
 
-   return scope.Close(Undefined());  
+  return scope.Close(Undefined());  
 }
 
-
-void GazeboJsPubSub::Subscribe(v8::Persistent<v8::Function>& function, const char* type, const char* topic, bool latch)
+/////////////////////////////////////////////////
+void GazeboJsPubSub::Subscribe(v8::Persistent<v8::Function>& _function, const char* _type, const char* _topic, bool _latch)
 {
-  Subscriber *sub = new GazeboJsSubscriber(function, type, topic, latch);
+  Subscriber *sub = new GazeboJsSubscriber(this->node, _function, _type, _topic, _latch);
   this->AddSubscriber(sub);
 }
 
+/////////////////////////////////////////////////
+GazeboJsSubscriber::GazeboJsSubscriber(gazebo::transport::NodePtr &_node, v8::Persistent<v8::Function>& _function,  const char* _type, const char* _topic, bool _latch)
+  :GzSubscriber(_node, _type, _topic, _latch), function(_function)
+{
+  // setup the inter thread notification handle (from the main script engine thread)
+  this->handle = (uv_async_t*)malloc(sizeof(uv_async_t));
+  uv_async_init(uv_default_loop(), this->handle, GazeboJsSubscriber::doCallback);
+}
 
+
+/////////////////////////////////////////////////
+GazeboJsSubscriber::~GazeboJsSubscriber()
+{
+  // tear down the inter thread communication
+  uv_close((uv_handle_t*)this->handle, close_cb);
+}
+
+
+/////////////////////////////////////////////////
+void GazeboJsSubscriber::close_cb(uv_handle_t* _handle)
+{
+  free(_handle);
+}
+
+
+/////////////////////////////////////////////////
+void GazeboJsSubscriber::doCallback(uv_async_t* _handle, int _status)
+{
+  v8::HandleScope scope;
+  const unsigned argc = 1;
+  JsCallbackData* p = (JsCallbackData*)_handle->data;
+  v8::Handle<v8::Value> argv[argc] = {
+    v8::Local<v8::Value>::New(v8::String::New(p->pbData.c_str()))
+  };
+
+  v8::TryCatch try_catch;
+  (*p->func)->Call(v8::Context::GetCurrent()->Global(), argc, argv);
+
+  delete p;
+
+  if (try_catch.HasCaught()) {
+    node::FatalException(try_catch);
+  }
+}
+
+
+/////////////////////////////////////////////////
 void  GazeboJsSubscriber::Callback(const char *_msg)
 {
-  cout << "CALLBACK: " << _msg <<endl;
+  JsCallbackData* p = new JsCallbackData();
+  p->func = &function;
+  p->pbData = _msg;
+  //  fprintf(stderr, "receiving message (thread::%d) ->\n", thread_id());
+  this->handle->data = (void *)p;
+  uv_async_send(handle);
 }
 
 
