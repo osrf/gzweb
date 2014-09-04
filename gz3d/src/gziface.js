@@ -7,8 +7,14 @@ GZ3D.GZIface = function(scene, gui)
 
   this.isConnected = false;
 
+  this.emitter = new EventEmitter2({ verbose: true });
+
   this.init();
   this.visualsToAdd = [];
+
+  this.numConnectionTrials = 0;
+  this.maxConnectionTrials = 30; // try to connect 30 times
+  this.timeToSleepBtwTrials = 1000; // wait 1 second between connection trials
 };
 
 GZ3D.GZIface.prototype.init = function()
@@ -25,7 +31,7 @@ GZ3D.GZIface.prototype.connect = function()
   this.webSocket = new ROSLIB.Ros({
     url : 'ws://' + location.hostname + ':7681'
   });
-  
+
   var that = this;
   this.webSocket.on('connection', function() {
     that.onConnected();
@@ -33,19 +39,32 @@ GZ3D.GZIface.prototype.connect = function()
   this.webSocket.on('error', function() {
     that.onError();
   });
+
+  this.numConnectionTrials++;
 };
 
 GZ3D.GZIface.prototype.onError = function()
 {
-//  this.emitter.emit('error');
-  this.scene.initScene();
-  this.gui.guiEvents.emit('notification_popup', 'GzWeb is currently running without a server');
+  // init scene and show popup only for the first connection error
+  if (this.numConnectionTrials === 1)
+  {
+    this.emitter.emit('error');
+  }
+
+  var that = this;
+  // retry to connect after certain time
+  if (this.numConnectionTrials < this.maxConnectionTrials)
+  {
+    setTimeout(function() {
+      that.connect();
+    }, this.timeToSleepBtwTrials);
+  }
 };
 
 GZ3D.GZIface.prototype.onConnected = function()
 {
   this.isConnected = true;
-//this.emitter.emit('connection');
+  this.emitter.emit('connection');
 
   this.heartbeatTopic = new ROSLIB.Topic({
     ros : this.webSocket,
@@ -65,6 +84,22 @@ GZ3D.GZIface.prototype.onConnected = function()
 
   setInterval(publishHeartbeat, 5000);
 
+  var statusTopic = new ROSLIB.Topic({
+    ros: this.webSocket,
+    name: '~/status',
+    messageType : 'status',
+  });
+
+  var statusUpdate = function(message)
+  {
+    if (message.status === 'error')
+    {
+      that.isConnected = false;
+      this.emitter.emit('gzstatus', 'error');
+    }
+  };
+  statusTopic.subscribe(statusUpdate.bind(this));
+
   var materialTopic = new ROSLIB.Topic({
     ros : this.webSocket,
     name : '~/material',
@@ -74,6 +109,8 @@ GZ3D.GZIface.prototype.onConnected = function()
   var materialUpdate = function(message)
   {
     this.material = message;
+    this.emitter.emit('material', this.material);
+
   };
   materialTopic.subscribe(materialUpdate.bind(this));
 
@@ -325,32 +362,32 @@ GZ3D.GZIface.prototype.onConnected = function()
     this.scene.add(roadsObj);
   });
 
-  // Model modify messages - for modifying model pose
+  // Model modify messages - for modifying models
   this.modelModifyTopic = new ROSLIB.Topic({
     ros : this.webSocket,
     name : '~/model/modify',
     messageType : 'model',
   });
 
-  // Light messages - for modifying light pose
+  // Light messages - for modifying lights
   this.lightModifyTopic = new ROSLIB.Topic({
     ros : this.webSocket,
     name : '~/light',
     messageType : 'light',
   });
 
-  var publishModelModify = function(model)
+  var publishEntityModify = function(entity)
   {
-    var matrix = model.matrixWorld;
+    var matrix = entity.matrixWorld;
     var translation = new THREE.Vector3();
     var quaternion = new THREE.Quaternion();
     var scale = new THREE.Vector3();
     matrix.decompose(translation, quaternion, scale);
 
-    var modelMsg =
+    var entityMsg =
     {
-      name : model.name,
-      id : model.userData,
+      name : entity.name,
+      id : entity.userData,
       createEntity : 0,
       position :
       {
@@ -366,18 +403,76 @@ GZ3D.GZIface.prototype.onConnected = function()
         z: quaternion.z
       }
     };
-    if (model.children[0] &&
-        model.children[0] instanceof THREE.Light)
+    if (entity.children[0] &&
+        entity.children[0] instanceof THREE.Light)
     {
-      that.lightModifyTopic.publish(modelMsg);
+      entityMsg.diffuse =
+      {
+        r: entity.children[0].color.r,
+        g: entity.children[0].color.g,
+        b: entity.children[0].color.b
+      };
+      entityMsg.specular =
+      {
+        r: entity.serverProperties.specular.r,
+        g: entity.serverProperties.specular.g,
+        b: entity.serverProperties.specular.b
+      };
+      entityMsg.direction = entity.direction;
+      entityMsg.range = entity.children[0].distance;
+
+      var attenuation_constant = entity.children[0].intensity;
+      // Adjust according to factor
+      if (entity instanceof THREE.PointLight)
+      {
+        attenuation_constant *= 1.5;
+      }
+      else if (entity instanceof THREE.SpotLight)
+      {
+        attenuation_constant *= 5;
+      }
+
+      entityMsg.attenuation_constant = attenuation_constant;
+      entityMsg.attenuation_linear = entity.serverProperties.attenuation_linear;
+      entityMsg.attenuation_quadratic = entity.serverProperties.attenuation_quadratic;
+
+      that.lightModifyTopic.publish(entityMsg);
     }
     else
     {
-      that.modelModifyTopic.publish(modelMsg);
+      that.modelModifyTopic.publish(entityMsg);
     }
   };
 
-  this.scene.emitter.on('poseChanged', publishModelModify);
+  this.scene.emitter.on('entityChanged', publishEntityModify);
+
+  // Link messages - for modifying links
+  this.linkModifyTopic = new ROSLIB.Topic({
+    ros : this.webSocket,
+    name : '~/link',
+    messageType : 'link',
+  });
+
+  var publishLinkModify = function(entity, type)
+  {
+    var modelMsg =
+    {
+      name : entity.parent.name,
+      id : entity.parent.userData,
+      link:
+      {
+        name: entity.name,
+        id: entity.userData,
+        self_collide: entity.serverProperties.self_collide,
+        gravity: entity.serverProperties.gravity,
+        kinematic: entity.serverProperties.kinematic
+      }
+    };
+
+    that.linkModifyTopic.publish(modelMsg);
+  };
+
+  this.scene.emitter.on('linkChanged', publishLinkModify);
 
   // Factory messages - for spawning new models
   this.factoryTopic = new ROSLIB.Topic({
@@ -473,8 +568,6 @@ GZ3D.GZIface.prototype.onConnected = function()
     }
     that.worldControlTopic.publish(worldControlMsg);
   };
-
-  this.scene.emitter.on('poseChanged', publishModelModify);
 
   this.gui.emitter.on('entityCreated', publishFactory);
 
@@ -589,6 +682,12 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
     var linkObj = new THREE.Object3D();
     linkObj.name = link.name;
     linkObj.userData = link.id;
+    linkObj.serverProperties =
+        {
+          self_collide: link.self_collide,
+          gravity: link.gravity,
+          kinematic: link.kinematic
+        };
 
     if (link.pose)
     {
@@ -676,7 +775,8 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
   obj = this.scene.createLight(light.type, light.diffuse,
         light.attenuation_constant * factor,
         light.pose, range, light.cast_shadows, light.name,
-        direction);
+        direction, light.specular, light.attenuation_linear,
+        light.attenuation_quadratic);
 
   return obj;
 };

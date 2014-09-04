@@ -3,6 +3,20 @@ body
 {
   font-size-adjust: 0.5;
 }
+input:invalid
+{
+  box-shadow: none;
+}
+input[type=number]
+{
+  -moz-appearance:textfield;
+}
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button
+{
+  -webkit-appearance: none;
+  margin: 0;
+}
 .ui-content
 {
   overflow: hidden;
@@ -263,7 +277,7 @@ body
   text-align: center;
   clear: both;
 }
-.propertyPanelImg img
+.propertyPanelImg > img
 {
   height: 5em;
 }
@@ -272,21 +286,21 @@ body
   text-align: center;
   clear: both;
 }
-.propertyPanelHeader h4
+.propertyPanelHeader > h4
 {
   background-color: #aaaaaa;
   float: left;
   margin: 0;
 }
-.propertyPanelHeader h4:first-child
+.propertyPanelHeader > h4:first-child
 {
   width: 60%;
 }
-.propertyPanelHeader h4:nth-child(2)
+.propertyPanelHeader > h4:nth-child(2)
 {
   width: 40%;
 }
-.property div
+.property > div
 {
   float: left;
   overflow: hidden;
@@ -296,11 +310,11 @@ body
   text-shadow: none;
   font-size: 0.9em;
 }
-.property div:first-child
+.property > div:first-child
 {
   font-weight:bolder;
 }
-.property div:nth-child(2)
+.property > div:nth-child(2)
 {
   width: 40%;
 }
@@ -415,6 +429,39 @@ body
   padding-right: 3em;
   width: calc(40% - 3em) !important;
 }
+.propertyNumberEdit > div
+{
+  margin: 0;
+}
+.propertyNumberEdit input
+{
+  margin: 0;
+  padding: 0;
+  border: 0;
+  width: 80%;
+  background-color: #2a2a2a;
+  color: #ffffff;
+  text-align: right;
+}
+.propertyColorEdit
+{
+  height: 100%;
+}
+.propertyColorEdit div
+{
+  background-color: #aaaaaa !important;
+  padding: 0;
+  margin: 0;
+  height: 100%;
+  border: none;
+}
+.propertyColorEdit input
+{
+  padding: 0;
+  margin: 0;
+  min-height: 1em;
+  height: 1.2em;
+}
 .expandableProperty
 {
   font-weight: bolder;
@@ -496,27 +543,33 @@ body
 {
   vertical-align: middle;
 }
-.expandableLevel1 img
+.expandableLevel1 > img
 {
   height: 1em;
 }
-.expandableLevel2 img
+.expandableLevel2 > img
 {
   height: 0.8em;
 }
-.expandableLevel3 img
+.expandableLevel3 > img
 {
   height: 0.7em;
 }
-.expandableLevel4 img
+.expandableLevel4 > img
 {
   height: 0.65em;
 }
-.expandableProperty div
+.expandableProperty > div:first-child
 {
   position: relative;
   float: left;
   width: calc(60% - 0.2em);
+}
+.expandableProperty > div:nth-child(2)
+{
+  position: relative;
+  float: left;
+  width: 40%;
 }
 .expandedContent
 {
@@ -537,17 +590,17 @@ body
 {
   background-color: #772a2a !important;
 }
-.greenBg div
+.greenBg > div
 {
   background-color: #2a772a !important;
 }
-.blueBg div
+.blueBg > div
 {
   background-color: #2a2a77 !important;
 }
-.lightBg div
+.lightBg div, .lightBg input
 {
-  background-color: #414141;
+  background-color: #414141 !important;
 }
 /* model popup */
 #model-popup
