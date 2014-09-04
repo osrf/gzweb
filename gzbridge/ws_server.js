@@ -118,12 +118,15 @@ if (gzconnection.getIsGzServerConnected())
 
   function update()
   {
-    for (var i = 0; i < connections.length; ++i)
+    if (connections.length > 0)
     {
       var msgs = gzconnection.getMessages();
-      for (var j = 0; j < msgs.length; ++j)
+      for (var i = 0; i < connections.length; ++i)
       {
-        connections[i].sendUTF(msgs[j]);
+        for (var j = 0; j < msgs.length; ++j)
+        {
+          connections[i].sendUTF(msgs[j]);
+        }
       }
     }
   }

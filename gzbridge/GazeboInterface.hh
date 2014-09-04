@@ -372,6 +372,9 @@ namespace gzweb
     /// \brief Name of light topic.
     private: std::string lightTopic;
 
+    /// \brief Name of link topic.
+    private: std::string linkTopic;
+
     /// \brief Name of scene topic.
     private: std::string sceneTopic;
 

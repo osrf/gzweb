@@ -51,6 +51,7 @@ GazeboInterface::GazeboInterface()
   this->poseTopic = "~/pose/info";
   this->requestTopic = "~/request";
   this->lightTopic = "~/light";
+  this->linkTopic = "~/link";
   this->sceneTopic = "~/scene";
   this->physicsTopic = "~/physics";
   this->modelModifyTopic = "~/model/modify";
@@ -295,7 +296,6 @@ void GazeboInterface::ProcessMessages()
         }
         else if (topic == this->modelModifyTopic)
         {
-          std::string type = get_value(msg, "messageType");
           std::string name = get_value(msg, "msg:name");
           int id = atoi(get_value(msg, "msg:id").c_str());
 
@@ -331,22 +331,50 @@ void GazeboInterface::ProcessMessages()
           if (name == "")
             continue;
 
-          gazebo::math::Vector3 pos(
-            atof(get_value(msg, "msg:position:x").c_str()),
-            atof(get_value(msg, "msg:position:y").c_str()),
-            atof(get_value(msg, "msg:position:z").c_str()));
-          gazebo::math::Quaternion quat(
-            atof(get_value(msg, "msg:orientation:w").c_str()),
-            atof(get_value(msg, "msg:orientation:x").c_str()),
-            atof(get_value(msg, "msg:orientation:y").c_str()),
-            atof(get_value(msg, "msg:orientation:z").c_str()));
-          gazebo::math::Pose pose(pos, quat);
-
           gazebo::msgs::Light lightMsg;
           lightMsg.set_name(name);
+
+          gazebo::math::Vector3 pos(
+              atof(get_value(msg, "msg:position:x").c_str()),
+              atof(get_value(msg, "msg:position:y").c_str()),
+              atof(get_value(msg, "msg:position:z").c_str()));
+          gazebo::math::Quaternion quat(
+              atof(get_value(msg, "msg:orientation:w").c_str()),
+              atof(get_value(msg, "msg:orientation:x").c_str()),
+              atof(get_value(msg, "msg:orientation:y").c_str()),
+              atof(get_value(msg, "msg:orientation:z").c_str()));
+          gazebo::math::Pose pose(pos, quat);
           gazebo::msgs::Set(lightMsg.mutable_pose(), pose);
 
-          if (createEntity.compare("1") == 0)
+          if (createEntity.compare("0") == 0)
+          {
+            gazebo::math::Vector3 direction(
+              atof(get_value(msg, "msg:direction:x").c_str()),
+              atof(get_value(msg, "msg:direction:y").c_str()),
+              atof(get_value(msg, "msg:direction:z").c_str()));
+            gazebo::msgs::Set(lightMsg.mutable_direction(), direction);
+
+            gazebo::common::Color diffuse(
+                atof(get_value(msg, "msg:diffuse:r").c_str()),
+                atof(get_value(msg, "msg:diffuse:g").c_str()),
+                atof(get_value(msg, "msg:diffuse:b").c_str()), 1);
+            gazebo::msgs::Set(lightMsg.mutable_diffuse(), diffuse);
+
+            gazebo::common::Color specular(
+                atof(get_value(msg, "msg:specular:r").c_str()),
+                atof(get_value(msg, "msg:specular:g").c_str()),
+                atof(get_value(msg, "msg:specular:b").c_str()), 1);
+            gazebo::msgs::Set(lightMsg.mutable_specular(), specular);
+
+            lightMsg.set_range(atof(get_value(msg, "msg:range").c_str()));
+            lightMsg.set_attenuation_constant(atof(
+                get_value(msg, "msg:attenuation_constant").c_str()));
+            lightMsg.set_attenuation_linear(atof(
+                get_value(msg, "msg:attenuation_linear").c_str()));
+            lightMsg.set_attenuation_quadratic(atof(
+                get_value(msg, "msg:attenuation_quadratic").c_str()));
+          }
+          else
           {
             if (type.compare("pointlight") == 0)
             {
@@ -376,6 +404,55 @@ void GazeboInterface::ProcessMessages()
           }
 
           this->lightPub->Publish(lightMsg);
+        }
+        else if (topic == this->linkTopic)
+        {
+          std::string modelName = get_value(msg, "msg:name");
+          int modelId = atoi(get_value(msg, "msg:id").c_str());
+
+          std::string linkName = get_value(msg, "msg:link:name");
+          int linkId = atoi(get_value(msg, "msg:link:id").c_str());
+
+          if (modelName == "" || linkName == "")
+            continue;
+
+          gazebo::msgs::Model modelMsg;
+          modelMsg.set_id(modelId);
+          modelMsg.set_name(modelName);
+
+          gazebo::msgs::Link *linkMsg = modelMsg.add_link();
+          linkMsg->set_id(linkId);
+
+          size_t index = linkName.find_last_of("::");
+          if (index != std::string::npos)
+              linkName = linkName.substr(index+1);
+          linkMsg->set_name(linkName);
+
+          std::string self_collideStr = get_value(msg, "msg:link:self_collide").c_str();
+          bool self_collide = false;
+          if (self_collideStr == "1")
+          {
+            self_collide = true;
+          }
+          linkMsg->set_self_collide(self_collide);
+
+          std::string gravityStr = get_value(msg, "msg:link:gravity").c_str();
+          bool gravity = false;
+          if (gravityStr == "1")
+          {
+            gravity = true;
+          }
+          linkMsg->set_gravity(gravity);
+
+          std::string kinematicStr = get_value(msg, "msg:link:kinematic").c_str();
+          bool kinematic = false;
+          if (kinematicStr == "1")
+          {
+            kinematic = true;
+          }
+          linkMsg->set_kinematic(kinematic);
+
+          this->modelPub->Publish(modelMsg);
         }
         else if (topic == this->factoryTopic)
         {

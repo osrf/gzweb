@@ -3,6 +3,20 @@ body
 {
   font-size-adjust: 0.5;
 }
+input:invalid
+{
+  box-shadow: none;
+}
+input[type=number]
+{
+  -moz-appearance:textfield;
+}
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button
+{
+  -webkit-appearance: none;
+  margin: 0;
+}
 .ui-content
 {
   overflow: hidden;
@@ -297,13 +311,13 @@ body
   text-shadow: none;
   font-size: 0.9em;
 }
-.property div:first-child
+.property > div:first-child
 {
   font-weight:bolder;
   padding-left: 1.7em;
   width: calc(60% - 1.7em);
 }
-.property div:nth-child(2)
+.property > div:nth-child(2)
 {
   width: 40%;
 }
@@ -317,6 +331,20 @@ body
   text-align: right;
   padding-right: 3em;
   width: calc(40% - 3em) !important;
+}
+.propertyNumberEdit div
+{
+  margin: 0;
+}
+.propertyNumberEdit input
+{
+  margin: 0;
+  padding: 0;
+  border: 0;
+  width: 80%;
+  background-color: #2a2a2a;
+  color: #ffffff;
+  text-align: right;
 }
 .expandableProperty
 {
@@ -362,6 +390,25 @@ body
   width: calc(40% - 2em) !important;
   border: 1px solid white;
 }
+.propertyColorEdit
+{
+  height: 100%;
+}
+.propertyColorEdit div
+{
+  background-color: #aaaaaa !important;
+  padding: 0;
+  margin: 0;
+  height: 100%;
+  border: none;
+}
+.propertyColorEdit input
+{
+  padding: 0;
+  margin: 0;
+  min-height: 1em;
+  height: 1.2em;
+}
 .isTouchDevice .colorDisplay
 {
   margin-top: 0.3em;
@@ -372,12 +419,12 @@ body
 {
   font-size: 0.8em;
 }
-.propertyLevel01 div:first-child
+.propertyLevel01 > div:first-child
 {
   padding-left: 2em;
   width: calc(70% - 2em);
 }
-.propertyLevel01 div:nth-child(2)
+.propertyLevel01 > div:nth-child(2)
 {
   width: 30%;
 }
@@ -414,7 +461,7 @@ body
 {
   font-size: 0.75em;
 }
-.propertyLevel02 div:first-child
+.propertyLevel02 > div:first-child
 {
   padding-left: 2.8em;
   width: calc(60% - 2.8em);
@@ -425,7 +472,7 @@ body
   font-size: 1.2em;
   line-height: 1.9em;
 }
-.isTouchDevice .propertyLevel1 div:first-child
+.isTouchDevice .propertyLevel1 > div:first-child
 {
   padding-left: 1.3em;
   width: calc(60% - 1.3em);
@@ -435,7 +482,7 @@ body
 {
   font-size: 0.8em;
 }
-.propertyLevel2 div:first-child
+.propertyLevel2 > div:first-child
 {
   padding-left: 2.8em;
   width: calc(60% - 2.8em);
@@ -455,7 +502,7 @@ body
   font-size: 1.1em;
   line-height: 1.8em;
 }
-.isTouchDevice .propertyLevel2 div:first-child
+.isTouchDevice .propertyLevel2 > div:first-child
 {
   padding-left: 2.3em;
   width: calc(60% - 2.3em);
@@ -472,7 +519,7 @@ body
 {
   font-size: 0.7em;
 }
-.propertyLevel3 div:first-child
+.propertyLevel3 > div:first-child
 {
   padding-left: 4.5em;
   width: calc(60% - 4.5em);
@@ -492,7 +539,7 @@ body
   font-size: 1.0em;
   line-height: 1.7em;
 }
-.isTouchDevice .propertyLevel3 div:first-child
+.isTouchDevice .propertyLevel3 > div:first-child
 {
   padding-left: 3.3em;
   width: calc(60% - 3.3em);
@@ -509,7 +556,7 @@ body
 {
   font-size: 0.65em;
 }
-.propertyLevel4 div:first-child
+.propertyLevel4 > div:first-child
 {
   padding-left: 6.2em;
   width: calc(60% - 6.2em);
@@ -530,7 +577,7 @@ body
 {
   height: 0.65em;
 }
-.isTouchDevice .propertyLevel4 div:first-child
+.isTouchDevice .propertyLevel4 > div:first-child
 {
   padding-left: 4.3em;
   width: calc(60% - 4.3em);
@@ -547,7 +594,7 @@ body
 {
   font-size: 0.6em;
 }
-.propertyLevel5 div:first-child
+.propertyLevel5 > div:first-child
 {
   padding-left: 7.9em;
   width: calc(60% - 7.9em);
@@ -557,7 +604,7 @@ body
   font-size: 0.8em;
   line-height: 1.5em;
 }
-.isTouchDevice .propertyLevel5 div:first-child
+.isTouchDevice .propertyLevel5 > div:first-child
 {
   padding-left: 5.6em;
   width: calc(60% - 5.6em);
@@ -575,9 +622,9 @@ body
 {
   background-color: #2a2a77 !important;
 }
-.lightBg div
+.lightBg div, .lightBg input
 {
-  background-color: #414141;
+  background-color: #414141 !important;
 }
 /* model popup */
 #model-popup

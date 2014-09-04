@@ -680,6 +680,22 @@ gzangular.controller('treeControl', ['$scope', function($scope)
       }
     }
   };
+
+  $scope.changePose = function(prop1, prop2, name, value)
+  {
+    guiEvents.emit('setPose', prop1, prop2, name, value);
+  };
+
+  $scope.changeLight = function(prop, name, value)
+  {
+    guiEvents.emit('setLight', prop, name, value);
+  };
+
+  $scope.toggleProperty = function(prop, entity, subEntity)
+  {
+    // only for links so far
+    guiEvents.emit('toggleProperty', prop, entity, subEntity);
+  };
 }]);
 
 // Insert menu
@@ -1253,6 +1269,98 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
+  guiEvents.on('setPose', function (prop1, prop2, name, value)
+      {
+        if (value === undefined)
+        {
+          return;
+        }
+
+        var entity = that.scene.getByName(name);
+        if (prop1 === 'orientation')
+        {
+          entity['rotation']['_'+prop2] = value;
+          entity['quaternion'].setFromEuler(entity['rotation']);
+        }
+        else
+        {
+          entity[prop1][prop2] = value;
+        }
+        entity.updateMatrixWorld();
+
+        if (entity.children[0] &&
+           (entity.children[0] instanceof THREE.SpotLight ||
+            entity.children[0] instanceof THREE.DirectionalLight))
+        {
+          var lightObj = entity.children[0];
+          var dir = new THREE.Vector3(0,0,0);
+          dir.copy(entity.direction);
+          entity.localToWorld(dir);
+          lightObj.target.position.copy(dir);
+        }
+
+        that.scene.emitter.emit('entityChanged', entity);
+      }
+  );
+
+  guiEvents.on('setLight', function (prop, name, value)
+      {
+        if (value === undefined)
+        {
+          return;
+        }
+
+        var entity = that.scene.getByName(name);
+        if (prop === 'diffuse')
+        {
+          entity.children[0].color = new THREE.Color(value);
+        }
+        else if (prop === 'specular')
+        {
+          entity.serverProperties.specular = new THREE.Color(value);
+        }
+        else if (prop === 'range')
+        {
+          entity.children[0].distance = value;
+        }
+        else if (prop === 'attenuation_constant')
+        {
+          // Adjust according to factor
+          var factor = 1;
+          if (entity instanceof THREE.PointLight)
+          {
+            factor = 1.5;
+          }
+          else if (entity instanceof THREE.SpotLight)
+          {
+            factor = 5;
+          }
+          value *= factor;
+
+          entity.children[0].intensity = value;
+        }
+        else if (prop === 'attenuation_linear')
+        {
+          entity.serverProperties.attenuation_linear = value;
+        }
+        else if (prop === 'attenuation_quadratic')
+        {
+          entity.serverProperties.attenuation_quadratic = value;
+        }
+
+        // updating color too often, maybe only update when popup is closed
+        that.scene.emitter.emit('entityChanged', entity);
+      }
+  );
+
+  guiEvents.on('toggleProperty', function (prop, subEntityName)
+      {
+        var entity = that.scene.getByName(subEntityName);
+        entity.serverProperties[prop] = !entity.serverProperties[prop];
+
+        that.scene.emitter.emit('linkChanged', entity);
+      }
+  );
 };
 
 /**
@@ -1339,6 +1447,7 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
   var modelName = stats.name;
   var linkShortName;
 
+  // if it's a link
   if (stats.name.indexOf('::') >= 0)
   {
     modelName = stats.name.substring(0, stats.name.indexOf('::'));
@@ -1453,41 +1562,68 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
             });
       }
     }
-    // Update existing model's pose
+    // Update existing model
     else
     {
-      if ((linkShortName &&
+      var link;
+
+      if (stats.link && stats.link[0])
+      {
+        var LinkShortName = stats.link[0].name;
+
+        link = $.grep(model[0].links, function(e)
+            {
+              return e.shortName === LinkShortName;
+            });
+
+        if (link[0].self_collide)
+        {
+          link[0].self_collide = this.trueOrFalse(stats.link[0].self_collide);
+        }
+        if (link[0].gravity)
+        {
+          link[0].gravity = this.trueOrFalse(stats.link[0].gravity);
+        }
+        if (link[0].kinematic)
+        {
+          link[0].kinematic = this.trueOrFalse(stats.link[0].kinematic);
+        }
+      }
+
+      // Update pose stats only if they're being displayed and are not focused
+      if (!((linkShortName &&
           !$('#expandable-pose-'+modelName+'-'+linkShortName).is(':visible'))||
           (!linkShortName &&
-          !$('#expandable-pose-'+modelName).is(':visible')))
+          !$('#expandable-pose-'+modelName).is(':visible'))||
+          $('#expandable-pose-'+modelName+' input').is(':focus')))
       {
-        return;
-      }
 
-      if (stats.position)
-      {
-        stats.pose = {};
-        stats.pose.position = stats.position;
-        stats.pose.orientation = stats.orientation;
-      }
-
-      if (stats.pose)
-      {
-        formatted = this.formatStats(stats);
-
-        if (linkShortName === undefined)
+        if (stats.position)
         {
-          model[0].position = formatted.pose.position;
-          model[0].orientation = formatted.pose.orientation;
+          stats.pose = {};
+          stats.pose.position = stats.position;
+          stats.pose.orientation = stats.orientation;
         }
-        else
+
+        if (stats.pose)
         {
-          var link = $.grep(model[0].links, function(e)
+          formatted = this.formatStats(stats);
+
+          if (linkShortName === undefined)
+          {
+            model[0].position = formatted.pose.position;
+            model[0].orientation = formatted.pose.orientation;
+          }
+          else
+          {
+            link = $.grep(model[0].links, function(e)
               {
                 return e.shortName === linkShortName;
               });
-          link[0].position = formatted.pose.position;
-          link[0].orientation = formatted.pose.orientation;
+
+            link[0].position = formatted.pose.position;
+            link[0].orientation = formatted.pose.orientation;
+          }
         }
       }
     }
@@ -1543,6 +1679,12 @@ GZ3D.Gui.prototype.setLightStats = function(stats, action)
 
       formatted = this.formatStats(stats);
 
+      var direction;
+      if (stats.direction)
+      {
+        direction = stats.direction;
+      }
+
       lightStats.push(
           {
             name: name,
@@ -1552,18 +1694,30 @@ GZ3D.Gui.prototype.setLightStats = function(stats, action)
             orientation: formatted.pose.orientation,
             diffuse: formatted.diffuse,
             specular: formatted.specular,
+            color: formatted.color,
             range: stats.range,
-            attenuation: formatted.attenuation
+            attenuation: formatted.attenuation,
+            direction: direction
           });
     }
     else
     {
+      formatted = this.formatStats(stats);
+
       if (stats.pose)
       {
-        formatted = this.formatStats(stats);
-
         light[0].position = formatted.pose.position;
         light[0].orientation = formatted.pose.orientation;
+      }
+
+      if (stats.diffuse)
+      {
+        light[0].diffuse = formatted.diffuse;
+      }
+
+      if (stats.specular)
+      {
+        light[0].specular = formatted.specular;
       }
     }
   }
@@ -1709,15 +1863,38 @@ GZ3D.Gui.prototype.formatStats = function(stats)
     inertial.pose.orientation = {roll: rpy._x, pitch: rpy._y, yaw: rpy._z};
     inertial.pose.orientation = this.round(inertial.pose.orientation);
   }
-  var diffuse;
+  var diffuse, colorHex, comp;
+  var color = {};
   if (stats.diffuse)
   {
     diffuse = this.round(stats.diffuse);
+
+    colorHex = {};
+    for (comp in diffuse)
+    {
+      colorHex[comp] = diffuse[comp].toString(16);
+      if (colorHex[comp].length === 1)
+      {
+        colorHex[comp] = '0' + colorHex[comp];
+      }
+    }
+    color.diffuse = '#' + colorHex['r'] + colorHex['g'] + colorHex['b'];
   }
   var specular;
   if (stats.specular)
   {
     specular = this.round(stats.specular);
+
+    colorHex = {};
+    for (comp in specular)
+    {
+      colorHex[comp] = specular[comp].toString(16);
+      if (colorHex[comp].length === 1)
+      {
+        colorHex[comp] = '0' + colorHex[comp];
+      }
+    }
+    color.specular = '#' + colorHex['r'] + colorHex['g'] + colorHex['b'];
   }
   var attenuation;
   if (stats.attenuation)
@@ -1753,6 +1930,7 @@ GZ3D.Gui.prototype.formatStats = function(stats)
           inertial: inertial,
           diffuse: diffuse,
           specular: specular,
+          color: color,
           attenuation: attenuation,
           ambient: ambient,
           background: background,
@@ -1784,8 +1962,9 @@ GZ3D.Gui.prototype.round = function(stats)
         }
         else
         {
-          stats[key] = parseFloat(Math.round(stats[key] * 1000) / 1000)
-              .toFixed(3);
+          stats[key] = Math.round(stats[key]*1000)/1000;
+        //stats[key] = parseFloat(Math.round(stats[key]*1000)/1000)
+        //    .toFixed(3);
         }
       }
     }
