@@ -1435,6 +1435,8 @@ GZ3D.Gui.prototype.setPhysicsStats = function(stats)
       physicsStats['contact_max_correcting_vel']);
   physicsStats['contact_surface_layer'] = this.round(
       physicsStats['contact_surface_layer']);
+
+  this.updateStats();
 };
 
 var modelStats = [];
