@@ -731,9 +731,20 @@ GZ3D.Gui.prototype.init = function()
       function(mode)
       {
         that.scene.setManipulationMode(mode);
-        guiEvents.emit('notification_popup',
-            mode.charAt(0).toUpperCase()+
-            mode.substring(1)+' mode');
+        var space = that.scene.modelManipulator.space;
+
+        if (mode === 'view')
+        {
+          guiEvents.emit('notification_popup', 'View mode');
+        }
+        else
+        {
+          guiEvents.emit('notification_popup',
+              mode.charAt(0).toUpperCase()+
+              mode.substring(1)+' mode in '+
+              space.charAt(0).toUpperCase()+
+              space.substring(1)+' space');
+        }
       }
   );
 

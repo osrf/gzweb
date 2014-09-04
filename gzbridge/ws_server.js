@@ -7,13 +7,13 @@ var connections = [];
 var materialScriptsMessage = {};
 var addon = require('./build/Debug/gzbridge');
 var gzconnection = new addon.GZNode();
-if (gzconnection.getIsGzServerConnected()) 
+if (gzconnection.getIsGzServerConnected())
 {
   gzconnection.loadMaterialScripts('../http/client/assets');
   gzconnection.setPoseMsgFilterMinimumAge(0.02);
   gzconnection.setPoseMsgFilterMinimumDistanceSquared(0.00001);
   gzconnection.setPoseMsgFilterMinimumQuaternionSquared(0.00001);
-  
+
   console.log('Pose message filter parameters: ');
   console.log('  minimum seconds between successive messages: ' +
       gzconnection.getPoseMsgFilterMinimumAge());
@@ -21,8 +21,8 @@ if (gzconnection.getIsGzServerConnected())
       gzconnection.getPoseMsgFilterMinimumDistanceSquared());
   console.log('  minimum Quartenion distance squared between successive messages:'
       + ' ' + gzconnection.getPoseMsgFilterMinimumQuaternionSquared());
-} 
-else 
+}
+else
 {
   materialScriptsMessage = gzconnection.getMaterialScriptsMessage('../http/client/assets');
 }
@@ -34,8 +34,8 @@ var server = http.createServer(function(request, response) {
     response.writeHead(404);
     response.end();
 });
-server.listen(9876, function() {
-    console.log((new Date()) + ' Server is listening on port 9876');
+server.listen(7681, function() {
+    console.log((new Date()) + ' Server is listening on port 7681');
 });
 
 wsServer = new WebSocketServer({
@@ -74,7 +74,7 @@ wsServer.on('request', function(request) {
       connection.sendUTF(materialScriptsMessage);
       return;
     }
-    
+
     connections.push(connection);
 
     if (!isConnected)
