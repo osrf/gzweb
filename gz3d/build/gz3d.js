@@ -1412,12 +1412,8 @@ var sceneStats = {};
  */
 GZ3D.Gui.prototype.setSceneStats = function(stats)
 {
-  var formatted = this.formatStats({
-      ambient: stats.ambient,
-      background: stats.background});
-
-  sceneStats['ambient'] = formatted.ambient;
-  sceneStats['background'] = formatted.background;
+  sceneStats['ambient'] = this.round(stats.ambient);
+  sceneStats['background'] = this.round(stats.background);
 };
 
 var physicsStats = {};
@@ -1701,7 +1697,7 @@ GZ3D.Gui.prototype.setLightStats = function(stats, action)
             specular: formatted.specular,
             color: formatted.color,
             range: stats.range,
-            attenuation: formatted.attenuation,
+            attenuation: this.round(stats.attenuation, true),
             direction: direction
           });
     }
@@ -1832,7 +1828,7 @@ GZ3D.Gui.prototype.formatStats = function(stats)
   var quat, rpy;
   if (stats.pose)
   {
-    position = this.round(stats.pose.position);
+    position = this.round(stats.pose.position, true);
 
     quat = new THREE.Quaternion(stats.pose.orientation.x,
         stats.pose.orientation.y, stats.pose.orientation.z,
@@ -1842,7 +1838,7 @@ GZ3D.Gui.prototype.formatStats = function(stats)
     rpy.setFromQuaternion(quat);
 
     orientation = {roll: rpy._x, pitch: rpy._y, yaw: rpy._z};
-    orientation = this.round(orientation);
+    orientation = this.round(orientation, true);
   }
   var inertial;
   if (stats.inertial)
@@ -1901,21 +1897,6 @@ GZ3D.Gui.prototype.formatStats = function(stats)
     }
     color.specular = '#' + colorHex['r'] + colorHex['g'] + colorHex['b'];
   }
-  var attenuation;
-  if (stats.attenuation)
-  {
-    attenuation = this.round(stats.attenuation);
-  }
-  var ambient;
-  if (stats.ambient)
-  {
-    ambient = this.round(stats.ambient);
-  }
-  var background;
-  if (stats.background)
-  {
-    background = this.round(stats.background);
-  }
   var axis1;
   if (stats.axis1)
   {
@@ -1936,9 +1917,6 @@ GZ3D.Gui.prototype.formatStats = function(stats)
           diffuse: diffuse,
           specular: specular,
           color: color,
-          attenuation: attenuation,
-          ambient: ambient,
-          background: background,
           axis1: axis1,
           axis2: axis2};
 };
@@ -1946,30 +1924,45 @@ GZ3D.Gui.prototype.formatStats = function(stats)
 /**
  * Round numbers to 3 decimals and format colors
  * @param {} stats
+ * @param {} returnNumber - not fixed to 3 decimals, for input fields
  * @returns stats
  */
-GZ3D.Gui.prototype.round = function(stats)
+GZ3D.Gui.prototype.round = function(stats, returnNumber)
 {
   if (typeof stats === 'number')
   {
-    stats = parseFloat(Math.round(stats * 1000) / 1000)
-            .toFixed(3);
+    if (returnNumber)
+    {
+      stats = Math.round(stats*1000)/1000;
+    }
+    else
+    {
+      stats = parseFloat(Math.round(stats*1000)/1000)
+          .toFixed(3);
+    }
   }
-  else
+  else // array of numbers
   {
     for (var key in stats)
     {
       if (typeof stats[key] === 'number')
       {
+        // colors
         if (key === 'r' || key === 'g' || key === 'b' || key === 'a')
         {
           stats[key] = Math.round(stats[key] * 255);
         }
         else
         {
-          stats[key] = Math.round(stats[key]*1000)/1000;
-        //stats[key] = parseFloat(Math.round(stats[key]*1000)/1000)
-        //    .toFixed(3);
+          if (returnNumber)
+          {
+            stats[key] = Math.round(stats[key]*1000)/1000;
+          }
+          else
+          {
+            stats[key] = parseFloat(Math.round(stats[key]*1000)/1000)
+                .toFixed(3);
+          }
         }
       }
     }
