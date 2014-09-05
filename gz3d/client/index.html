@@ -153,19 +153,19 @@
             <div class="panelContent">
               <ul>
                 <li>
-                  <a href="#" ng-click="openCategory('simple_shapes')" data-role="button" class="insertMenuItem" title="Shapes">
+                  <a href="#" ng-click="openTab('insertMenu-simple_shapes')" data-role="button" class="insertMenuItem" title="Shapes">
                     Shapes<br>
                     <img src="style/images/box.png">
                   </a>
                 </li>
                 <li>
-                  <a href="#" ng-click="openCategory('lights')" data-role="button" class="insertMenuItem" title="Lights">
+                  <a href="#" ng-click="openTab('insertMenu-lights')" data-role="button" class="insertMenuItem" title="Lights">
                     Lights<br>
                     <img src="style/images/light_thumb.png">
                   </a>
                 </li>
                 <li ng-repeat="category in categories">
-                  <a href="#" ng-click="openCategory(category.path)" data-role="button" class="insertMenuItem" title="{{category.title}}">
+                  <a href="#" ng-click="openTab('insertMenu-'+category.path)" data-role="button" class="insertMenuItem" title="{{category.title}}">
                     {{category.title}}<br>
                     <img src="/assets/{{category.examplePath}}/thumbnails/0.png">
                   </a>
@@ -174,7 +174,7 @@
             </div>
           </div>
           <div id="insertMenu-simple_shapes" class="leftPanels insertMenus insertCategory ui-overlay-shadow">
-            <div class="clickable panelTitle" ng-click="backToInsert()" title="Simple Shapes">
+            <div class="clickable panelTitle" ng-click="openTab('insertMenu')" title="Simple Shapes">
               <h3>Simple Shapes</h3>
               <img src="style/images/back.png">
             </div>
@@ -202,7 +202,7 @@
             </div>
           </div>
           <div id="insertMenu-lights" class="leftPanels insertMenus insertCategory ui-overlay-shadow">
-            <div class="clickable panelTitle" ng-click="backToInsert()" title="Lights">
+            <div class="clickable panelTitle" ng-click="openTab('insertMenu')" title="Lights">
               <h3>Lights</h3>
               <img src="style/images/back.png">
             </div>
@@ -230,7 +230,7 @@
             </div>
           </div>
           <div ng-repeat="category in categories" id="insertMenu-{{category.path}}" class="leftPanels insertMenus insertCategory ui-overlay-shadow">
-            <div class="clickable panelTitle" ng-click="backToInsert()" title="{{category.title}}">
+            <div class="clickable panelTitle" ng-click="openTab('insertMenu')" title="{{category.title}}">
               <h3>{{category.title}}</h3>
               <img src="style/images/back.png">
             </div>
@@ -254,145 +254,12 @@
             </div>
             <div class="panelContent">
               <!-- scene -->
-              <div id="expand-SCENE" class="clickable expandableTree" ng-click="expandTree('SCENE')">
-                <img src="style/images/play.png">
+              <div class="clickable expandableTree notExpandableTree" ng-click="openTab('sceneProperties')">
                 Scene
               </div>
-              <div id="expandable-SCENE" class="expandedContent">
-                <!-- scene ambient -->
-                <div id="expand-ambient-SCENE" class="clickable expandableProperty expandableLevel01" ng-click="expandProperty('ambient', 'SCENE')">
-                  <div>
-                    <img src="style/images/play.png">
-                    Ambient
-                  </div>
-                  <div class="colorDisplay" style="background-color: rgb({{scene.ambient.r}},{{scene.ambient.g}},{{scene.ambient.b}})"></div>
-                </div>
-                <div id="expandable-ambient-SCENE" class="expandedContent">
-                  <div class="property propertyLevel02 redBg">
-                    <div>Red</div>
-                    <div class="propertyNumber">{{scene.ambient.r}}</div>
-                  </div>
-                  <div class="property propertyLevel02 greenBg">
-                    <div>Green</div>
-                    <div class="propertyNumber">{{scene.ambient.g}}</div>
-                  </div>
-                  <div class="property propertyLevel02 blueBg">
-                    <div>Blue</div>
-                    <div class="propertyNumber">{{scene.ambient.b}}</div>
-                  </div>
-                  <div class="property propertyLevel02">
-                    <div>Alpha</div>
-                    <div class="propertyNumber">{{scene.ambient.a}}</div>
-                  </div>
-                </div>
-                <!-- scene background -->
-                <div id="expand-background-SCENE" class="clickable expandableProperty expandableLevel01" ng-click="expandProperty('background', 'SCENE')">
-                  <div>
-                    <img src="style/images/play.png">
-                    Background
-                  </div>
-                  <div class="colorDisplay" style="background-color: rgb({{scene.background.r}},{{scene.background.g}},{{scene.background.b}})"></div>
-                </div>
-                <div id="expandable-background-SCENE" class="expandedContent">
-                  <div class="property propertyLevel02 redBg">
-                    <div>Red</div>
-                    <div class="propertyNumber">{{scene.background.r}}</div>
-                  </div>
-                  <div class="property propertyLevel02 greenBg">
-                    <div>Green</div>
-                    <div class="propertyNumber">{{scene.background.g}}</div>
-                  </div>
-                  <div class="property propertyLevel02 blueBg">
-                    <div>Blue</div>
-                    <div class="propertyNumber">{{scene.background.b}}</div>
-                  </div>
-                  <div class="property propertyLevel02">
-                    <div>Alpha</div>
-                    <div class="propertyNumber">{{scene.background.a}}</div>
-                  </div>
-                </div>
-              </div>
               <!-- physics -->
-              <div id="expand-PHYSICS" class="clickable expandableTree" ng-click="expandTree('PHYSICS')">
-                <img src="style/images/play.png">
+              <div id="expand-PHYSICS" class="clickable expandableTree notExpandableTree" ng-click="openTab('physicsProperties')">
                 Physics
-              </div>
-              <div id="expandable-PHYSICS" class="expandedContent">
-                <div class="property propertyLevel01">
-                  <div>Enable Physics</div>
-                  <div class="propertyToggle">
-                    <img src="style/images/{{physics.enable_physics.icon}}.png">
-                    {{physics.enable_physics.title}}
-                  </div>
-                </div>
-                <div class="property propertyLevel01">
-                  <div>Real Time Update Rate</div>
-                  <div class="propertyNumber">{{physics.real_time_update_rate}}</div>
-                </div>
-                <div class="property propertyLevel01">
-                  <div>Max Step Size</div>
-                  <div class="propertyNumber">{{physics.max_step_size}}</div>
-                </div>
-                <div id="expand-gravity-PHYSICS" class="clickable expandableProperty expandableLevel01" ng-click="expandProperty('gravity', 'PHYSICS')">
-                  <div>
-                    <img src="style/images/play.png">
-                    Gravity
-                  </div>
-                </div>
-                <div id="expandable-gravity-PHYSICS" class="expandedContent">
-                  <div class="property propertyLevel02 lightBg">
-                    <div>x</div>
-                    <div class="propertyNumber">{{physics.gravity.x}}</div>
-                  </div>
-                  <div class="property propertyLevel02">
-                    <div>y</div>
-                    <div class="propertyNumber">{{physics.gravity.y}}</div>
-                  </div>
-                  <div class="property propertyLevel02 lightBg">
-                    <div>z</div>
-                    <div class="propertyNumber">{{physics.gravity.z}}</div>
-                  </div>
-                </div>
-                <div id="expand-solver-PHYSICS" class="clickable expandableProperty expandableLevel01" ng-click="expandProperty('solver', 'PHYSICS')">
-                  <div>
-                    <img src="style/images/play.png">
-                    Solver
-                  </div>
-                </div>
-                <div id="expandable-solver-PHYSICS" class="expandedContent">
-                  <div class="property propertyLevel02">
-                    <div>Iterations</div>
-                    <div class="propertyNumber">{{physics.iters}}</div>
-                  </div>
-                  <div class="property propertyLevel02">
-                    <div>SOR</div>
-                    <div class="propertyNumber">{{physics.sor}}</div>
-                  </div>
-                </div>
-                <div id="expand-constraints-PHYSICS" class="clickable expandableProperty expandableLevel01" ng-click="expandProperty('constraints', 'PHYSICS')">
-                  <div>
-                    <img src="style/images/play.png">
-                    Constraints
-                  </div>
-                </div>
-                <div id="expandable-constraints-PHYSICS" class="expandedContent">
-                  <div class="property propertyLevel02 lightBg">
-                    <div>CFM</div>
-                    <div class="propertyNumber">{{physics.cfm}}</div>
-                  </div>
-                  <div class="property propertyLevel02">
-                    <div>ERP</div>
-                    <div class="propertyNumber">{{physics.erp}}</div>
-                  </div>
-                  <div class="property propertyLevel02 lightBg">
-                    <div>Max Velocity</div>
-                    <div class="propertyNumber">{{physics.contact_max_correcting_vel}}</div>
-                  </div>
-                  <div class="property propertyLevel02">
-                    <div>Surface Layer</div>
-                    <div class="propertyNumber">{{physics.contact_surface_layer}}</div>
-                  </div>
-                </div>
               </div>
               <!-- models -->
               <div id="expand-MODELS" class="clickable expandableTree" ng-click="expandTree('MODELS')">
@@ -424,7 +291,7 @@
           </div>
           <!-- property panels -->
           <div ng-repeat="model in models" id="propertyPanel-{{model.name}}" class="leftPanels propertyPanels ui-overlay-shadow">
-            <div class="clickable panelTitle" ng-click="backToTree()" title="{{model.name}}">
+            <div class="clickable panelTitle" ng-click="openTab('treeMenu')" title="{{model.name}}">
               <h3>{{model.name}}</h3>
               <img src="style/images/back.png">
             </div>
@@ -812,7 +679,7 @@
           </div>
           <!-- lights -->
           <div ng-repeat="light in lights" id="propertyPanel-{{light.name}}" class="leftPanels propertyPanels ui-overlay-shadow">
-            <div class="clickable panelTitle" ng-click="backToTree()" title="{{light.name}}">
+            <div class="clickable panelTitle" ng-click="openTab('treeMenu')" title="{{light.name}}">
               <h3>{{light.name}}</h3>
               <img src="style/images/back.png">
             </div>
@@ -981,6 +848,159 @@
                   <div class="propertyNumberEdit">
                     <input type="number" onClick="this.select();" ng-model="light.attenuation.quadratic" ng-change="changeLight('attenuation_quadratic', light.name, light.attenuation.quadratic)" data-role="none"/>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- scene -->
+          <div id="sceneProperties" class="leftPanels propertyPanels ui-overlay-shadow">
+            <div class="clickable panelTitle" ng-click="openTab('treeMenu')" title="Scene">
+              <h3>Scene</h3>
+              <img src="style/images/back.png">
+            </div>
+            <div class="panelContent">
+              <div class="propertyPanelHeader">
+                <h4>Property</h4>
+                <h4>Value</h4>
+              </div>
+              <!-- scene ambient -->
+              <div id="expand-ambient-SCENE" class="clickable expandableProperty expandableLevel1" ng-click="expandProperty('ambient', 'SCENE')">
+                <div>
+                  <img src="style/images/play.png">
+                  Ambient
+                </div>
+                <div class="colorDisplay" style="background-color: rgb({{scene.ambient.r}},{{scene.ambient.g}},{{scene.ambient.b}})"></div>
+              </div>
+              <div id="expandable-ambient-SCENE" class="expandedContent">
+                <div class="property propertyLevel2 redBg">
+                  <div>Red</div>
+                  <div class="propertyNumber">{{scene.ambient.r}}</div>
+                </div>
+                <div class="property propertyLevel2 greenBg">
+                  <div>Green</div>
+                  <div class="propertyNumber">{{scene.ambient.g}}</div>
+                </div>
+                <div class="property propertyLevel2 blueBg">
+                  <div>Blue</div>
+                  <div class="propertyNumber">{{scene.ambient.b}}</div>
+                </div>
+                <div class="property propertyLevel2">
+                  <div>Alpha</div>
+                  <div class="propertyNumber">{{scene.ambient.a}}</div>
+                </div>
+              </div>
+              <!-- scene background -->
+              <div id="expand-background-SCENE" class="clickable expandableProperty expandableLevel1" ng-click="expandProperty('background', 'SCENE')">
+                <div>
+                  <img src="style/images/play.png">
+                  Background
+                </div>
+                <div class="colorDisplay" style="background-color: rgb({{scene.background.r}},{{scene.background.g}},{{scene.background.b}})"></div>
+              </div>
+              <div id="expandable-background-SCENE" class="expandedContent">
+                <div class="property propertyLevel2 redBg">
+                  <div>Red</div>
+                  <div class="propertyNumber">{{scene.background.r}}</div>
+                </div>
+                <div class="property propertyLevel2 greenBg">
+                  <div>Green</div>
+                  <div class="propertyNumber">{{scene.background.g}}</div>
+                </div>
+                <div class="property propertyLevel2 blueBg">
+                  <div>Blue</div>
+                  <div class="propertyNumber">{{scene.background.b}}</div>
+                </div>
+                <div class="property propertyLevel2">
+                  <div>Alpha</div>
+                  <div class="propertyNumber">{{scene.background.a}}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- physics -->
+          <div id="physicsProperties" class="leftPanels propertyPanels ui-overlay-shadow">
+            <div class="clickable panelTitle" ng-click="openTab('treeMenu')" title="Physics">
+              <h3>Physics</h3>
+              <img src="style/images/back.png">
+            </div>
+            <div class="panelContent">
+              <div class="propertyPanelHeader">
+                <h4>Property</h4>
+                <h4>Value</h4>
+              </div>
+              <div class="property propertyLevel1">
+                <div>Enable Physics</div>
+                <div class="propertyToggle">
+                  <img src="style/images/{{physics.enable_physics.icon}}.png">
+                  {{physics.enable_physics.title}}
+                </div>
+              </div>
+              <div class="property propertyLevel1">
+                <div id="real-time-update-rate">Real Time Update Rate</div>
+                <div class="propertyNumber">{{physics.real_time_update_rate}}</div>
+              </div>
+              <div class="property propertyLevel1">
+                <div>Max Step Size</div>
+                <div class="propertyNumber">{{physics.max_step_size}}</div>
+              </div>
+              <div id="expand-gravity-PHYSICS" class="clickable expandableProperty expandableLevel1" ng-click="expandProperty('gravity', 'PHYSICS')">
+                <div>
+                  <img src="style/images/play.png">
+                  Gravity
+                </div>
+              </div>
+              <div id="expandable-gravity-PHYSICS" class="expandedContent">
+                <div class="property propertyLevel2 lightBg">
+                  <div>x</div>
+                  <div class="propertyNumber">{{physics.gravity.x}}</div>
+                </div>
+                <div class="property propertyLevel2">
+                  <div>y</div>
+                  <div class="propertyNumber">{{physics.gravity.y}}</div>
+                </div>
+                <div class="property propertyLevel2 lightBg">
+                  <div>z</div>
+                  <div class="propertyNumber">{{physics.gravity.z}}</div>
+                </div>
+              </div>
+              <div id="expand-solver-PHYSICS" class="clickable expandableProperty expandableLevel1" ng-click="expandProperty('solver', 'PHYSICS')">
+                <div>
+                  <img src="style/images/play.png">
+                  Solver
+                </div>
+              </div>
+              <div id="expandable-solver-PHYSICS" class="expandedContent">
+                <div class="property propertyLevel2">
+                  <div>Iterations</div>
+                  <div class="propertyNumber">{{physics.iters}}</div>
+                </div>
+                <div class="property propertyLevel2">
+                  <div>SOR</div>
+                  <div class="propertyNumber">{{physics.sor}}</div>
+                </div>
+              </div>
+              <div id="expand-constraints-PHYSICS" class="clickable expandableProperty expandableLevel1" ng-click="expandProperty('constraints', 'PHYSICS')">
+                <div>
+                  <img src="style/images/play.png">
+                  Constraints
+                </div>
+              </div>
+              <div id="expandable-constraints-PHYSICS" class="expandedContent">
+                <div class="property propertyLevel2 lightBg">
+                  <div>CFM</div>
+                  <div class="propertyNumber">{{physics.cfm}}</div>
+                </div>
+                <div class="property propertyLevel2">
+                  <div>ERP</div>
+                  <div class="propertyNumber">{{physics.erp}}</div>
+                </div>
+                <div class="property propertyLevel2 lightBg">
+                  <div>Max Velocity</div>
+                  <div class="propertyNumber">{{physics.contact_max_correcting_vel}}</div>
+                </div>
+                <div class="property propertyLevel2">
+                  <div>Surface Layer</div>
+                  <div class="propertyNumber">{{physics.contact_surface_layer}}</div>
                 </div>
               </div>
             </div>

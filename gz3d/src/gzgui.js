@@ -598,9 +598,9 @@ gzangular.controller('treeControl', ['$scope', function($scope)
     guiEvents.emit('openEntityPopup', event, name);
   };
 
-  $scope.backToTree = function ()
+  $scope.openTab = function (tab)
   {
-    guiEvents.emit('openTab', 'treeMenu', 'treeMenu');
+    guiEvents.emit('openTab', tab, 'treeMenu');
   };
 
   $scope.expandTree = function (tree)
@@ -691,20 +691,14 @@ gzangular.controller('insertControl', ['$scope', function($scope)
 {
   $scope.categories = modelList;
 
-  $scope.openCategory = function(category)
-  {
-    var categoryID = 'insertMenu-'+category;
-    guiEvents.emit('openTab', categoryID, 'insertMenu');
-  };
-
   $scope.spawnEntity = function(path)
   {
     guiEvents.emit('spawn_entity_start', path);
   };
 
-  $scope.backToInsert = function ()
+  $scope.openTab = function (tab)
   {
-    guiEvents.emit('openTab', 'insertMenu', 'insertMenu');
+    guiEvents.emit('openTab', tab, 'insertMenu');
   };
 }]);
 

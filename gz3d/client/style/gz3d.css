@@ -213,6 +213,11 @@ input[type=number]::-webkit-inner-spin-button
 {
   background-color: #373737;
 }
+.notExpandableTree
+{
+  padding-left: 1.6em;
+  width: calc(100% - 1.6em);
+}
 .treeItem
 {
   font-size: 1em;
@@ -399,72 +404,6 @@ input[type=number]::-webkit-inner-spin-button
 {
   margin-top: 0.3em;
 }
-/* Levels 0x go on Scene Tree */
-/* Level 01 */
-.propertyLevel01 div
-{
-  font-size: 0.8em;
-}
-.propertyLevel01 > div:first-child
-{
-  padding-left: 2em;
-  width: calc(70% - 2em);
-}
-.propertyLevel01 > div:nth-child(2)
-{
-  width: 30%;
-}
-.propertyLevel01 .propertyNumber
-{
-  width: calc(30% - 3em) !important;
-}
-.expandableLevel01
-{
-  font-size: 0.8em;
-}
-.expandableLevel01 > div:first-child
-{
-  padding-left: 0.2em;
-  width: calc(60% - 0.2em);
-}
-.isTouchDevice .propertyLevel01 .propertyNumber
-{
-  padding-right: 1em;
-  width: calc(30% - 1em) !important;
-}
-.isTouchDevice .expandableLevel01 > div:first-child
-{
-  padding-left: 0em;
-  width: calc(80% - 0.2em);
-  font-size: 0.8em;
-}
-.isTouchDevice .expandableLevel01 > div:nth-child(2)
-{
-  width: 20% !important;
-}
-/* Level 02 */
-.propertyLevel02 div
-{
-  font-size: 0.75em;
-}
-.propertyLevel02 > div:first-child
-{
-  padding-left: 2.8em;
-  width: calc(70% - 2.8em);
-}
-.propertyLevel02 > div:nth-child(2)
-{
-  width: 30%;
-}
-.propertyLevel02 .propertyNumber
-{
-  width: calc(30% - 3em) !important;
-}
-.isTouchDevice .propertyLevel02 .propertyNumber
-{
-  padding-right: 1em;
-  width: calc(30% - 1em) !important;
-}
 /* Level 1 */
 .isTouchDevice .propertyLevel1 div
 {
@@ -606,6 +545,12 @@ input[type=number]::-webkit-inner-spin-button
 {
   padding-left: 5.6em;
   width: calc(60% - 5.6em);
+}
+#real-time-update-rate
+{
+  font-size: 1.1em;
+  padding-left: 1.4em;
+  width: calc(60% - 1.4em);
 }
 /* Background colors */
 .redBg div
