@@ -167,7 +167,17 @@ GZ3D.Scene.prototype.init = function()
       THREE.LinePieces);
   this.boundingBox.visible = false;
 
-  // Joint axis
+  // Joint visuals
+  this.jointTypes =
+      {
+        REVOLUTE: 1,
+        REVOLUTE2: 2,
+        PRISMATIC: 3,
+        UNIVERSAL: 4,
+        BALL: 5,
+        SCREW: 6,
+        GEARBOX: 7
+      };
   this.jointAxis = new THREE.Object3D();
   this.jointAxis.name = 'JOINT_VISUAL';
   var geometry, material, mesh;
@@ -255,7 +265,8 @@ GZ3D.Scene.prototype.init = function()
   geometry = new THREE.CylinderGeometry(0.02, 0, 0.0375, 10, 1, false);
 
   mesh = new THREE.Mesh(geometry, material);
-  mesh.position.x = 0.06;
+  mesh.position.y = -0.06;
+  mesh.rotation.z = Math.PI/2;
   mesh.name = 'JOINT_VISUAL';
   rotAxis.add(mesh);
 
@@ -296,22 +307,22 @@ GZ3D.Scene.prototype.init = function()
   var screwAxis = new THREE.Object3D();
 
   mesh = new THREE.Mesh(geometry, material);
-  mesh.position.x = 0.065;
+  mesh.position.x = -0.065;
   mesh.position.z = -0.13;
-  mesh.rotation.z = Math.PI/4;
+  mesh.rotation.z = -Math.PI/4;
   mesh.rotation.x = -Math.PI/10;
   mesh.name = 'JOINT_VISUAL';
   screwAxis.add(mesh);
 
   var radius = 0.06;
   var length = 0.02;
-  var curve = new THREE.SplineCurve3([new THREE.Vector3(-radius, 0, 0*length),
+  var curve = new THREE.SplineCurve3([new THREE.Vector3(radius, 0, 0*length),
                                       new THREE.Vector3(0, radius, 1*length),
-                                      new THREE.Vector3(radius, 0, 2*length),
+                                      new THREE.Vector3(-radius, 0, 2*length),
                                       new THREE.Vector3(0, -radius, 3*length),
-                                      new THREE.Vector3(-radius, 0, 4*length),
+                                      new THREE.Vector3(radius, 0, 4*length),
                                       new THREE.Vector3(0, radius, 5*length),
-                                      new THREE.Vector3(radius, 0, 6*length)]);
+                                      new THREE.Vector3(-radius, 0, 6*length)]);
   geometry = new THREE.TubeGeometry(curve, 36, 0.01, 10, false, false);
 
   mesh = new THREE.Mesh(geometry, material);
@@ -2150,44 +2161,40 @@ GZ3D.Scene.prototype.viewJoints = function(model)
           model.joint[j].pose.orientation);
 
       var mainAxis;
-      // except for ball joint
-      if (model.joint[j].type !== 5)
+      if (model.joint[j].type !== this.jointTypes.BALL)
       {
         mainAxis = this.jointAxis['mainAxis'].clone();
         jointVisual.add(mainAxis);
       }
 
       var secondAxis;
-      // revolute2 or universal
-      if (model.joint[j].type === 2 || model.joint[j].type === 4)
+      if (model.joint[j].type === this.jointTypes.REVOLUTE2 ||
+          model.joint[j].type === this.jointTypes.UNIVERSAL)
       {
         secondAxis = this.jointAxis['mainAxis'].clone();
         jointVisual.add(secondAxis);
       }
 
-      // revolute or gearbox
-      if (model.joint[j].type === 1 || model.joint[j].type === 7)
+      if (model.joint[j].type === this.jointTypes.REVOLUTE ||
+          model.joint[j].type === this.jointTypes.GEARBOX)
       {
         mainAxis.add(this.jointAxis['rotAxis'].clone());
       }
-      // revolute2 or universal
-      else if (model.joint[j].type === 2 || model.joint[j].type === 4)
+      else if (model.joint[j].type === this.jointTypes.REVOLUTE2 ||
+               model.joint[j].type === this.jointTypes.UNIVERSAL)
       {
         mainAxis.add(this.jointAxis['rotAxis'].clone());
         secondAxis.add(this.jointAxis['rotAxis'].clone());
       }
-      // ball
-      else if (model.joint[j].type === 5)
+      else if (model.joint[j].type === this.jointTypes.BALL)
       {
         jointVisual.add(this.jointAxis['ballVisual'].clone());
       }
-      // prismatic
-      else if (model.joint[j].type === 3)
+      else if (model.joint[j].type === this.jointTypes.PRISMATIC)
       {
         mainAxis.add(this.jointAxis['transAxis'].clone());
       }
-      // screw (forces both axes to be the same...?)
-      else if (model.joint[j].type === 6)
+      else if (model.joint[j].type === this.jointTypes.SCREW)
       {
         mainAxis.add(this.jointAxis['screwAxis'].clone());
       }
