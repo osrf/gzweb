@@ -2155,6 +2155,7 @@ GZ3D.Scene.prototype.viewJoints = function(model)
     {
       var child = this.getByName(model.joint[j].child);
 
+      // XYZ expressed w.r.t. child
       var jointVisual = this.jointAxis['XYZaxes'].clone();
       child.add(jointVisual);
       this.setPose(jointVisual, model.joint[j].pose.position,
@@ -2202,12 +2203,27 @@ GZ3D.Scene.prototype.viewJoints = function(model)
       var direction, rotMatrix;
       if (mainAxis)
       {
+        // main axis expressed w.r.t. parent model or joint frame
+        // needs Gazebo issue #1268 fixed to receive use_parent_model_frame on msg
+        // for now, true by default
+        if (model.joint[j].axis1.use_parent_model_frame === undefined)
+        {
+          model.joint[j].axis1.use_parent_model_frame = true;
+        }
+
         direction = new THREE.Vector3(
             model.joint[j].axis1.xyz.x,
             model.joint[j].axis1.xyz.y,
             model.joint[j].axis1.xyz.z);
         direction.normalize();
-
+/*
+        var tempMatrix = new THREE.Matrix4();
+        if (model.joint[j].axis1.use_parent_model_frame)
+        {
+          direction.applyMatrix4(tempMatrix.extractRotation(jointVisual.matrix));
+          direction.applyMatrix4(tempMatrix.extractRotation(child.matrix));
+        }
+*/
         mainAxis.position =  direction.multiplyScalar(0.3);
         rotMatrix = new THREE.Matrix4();
         rotMatrix.lookAt(direction, new THREE.Vector3(0, 0, 0), mainAxis.up);
@@ -2216,6 +2232,11 @@ GZ3D.Scene.prototype.viewJoints = function(model)
 
       if (secondAxis)
       {
+        if (model.joint[j].axis2.use_parent_model_frame === undefined)
+        {
+          model.joint[j].axis2.use_parent_model_frame = true;
+        }
+
         direction = new THREE.Vector3(
             model.joint[j].axis2.xyz.x,
             model.joint[j].axis2.xyz.y,
