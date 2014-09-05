@@ -306,6 +306,20 @@ input[type=number]::-webkit-inner-spin-button
 {
   width: 40%;
 }
+.propertyToggle
+{
+  text-align: right;
+  padding-right: 1em;
+  width: calc(40% - 1em) !important;
+}
+.propertyToggle > div:nth-child(2)
+{
+  float: right;
+  width: 3em;
+  text-align: left;
+  padding-left: 0.2em;
+  font-size: 1em;
+}
 .propertyToggle img
 {
   vertical-align: middle;
@@ -314,8 +328,8 @@ input[type=number]::-webkit-inner-spin-button
 .propertyNumber
 {
   text-align: right;
-  padding-right: 3em;
-  width: calc(40% - 3em) !important;
+  padding-right: 1em;
+  width: calc(40% - 1em) !important;
 }
 .propertyNumberEdit div
 {
@@ -330,6 +344,8 @@ input[type=number]::-webkit-inner-spin-button
   background-color: #2a2a2a;
   color: #ffffff;
   text-align: right;
+  float:right;
+  padding-right: 1em;
 }
 .expandableProperty
 {
@@ -435,10 +451,11 @@ input[type=number]::-webkit-inner-spin-button
 {
   height: 0.8em;
 }
-.isTouchDevice .propertyLevel2 div
+.isTouchDevice .propertyLevel2 div, input
 {
   font-size: 1.1em;
   line-height: 1.8em;
+  height: 1.8em;
 }
 .isTouchDevice .propertyLevel2 > div:first-child
 {
@@ -472,10 +489,11 @@ input[type=number]::-webkit-inner-spin-button
 {
   height: 0.7em;
 }
-.isTouchDevice .propertyLevel3 div
+.isTouchDevice .propertyLevel3 div, input
 {
   font-size: 1.0em;
   line-height: 1.7em;
+  height: 1.7em;
 }
 .isTouchDevice .propertyLevel3 > div:first-child
 {
@@ -509,10 +527,11 @@ input[type=number]::-webkit-inner-spin-button
 {
   height: 0.65em;
 }
-.isTouchDevice .propertyLevel4 div
+.isTouchDevice .propertyLevel4 div, input
 {
   font-size: 0.9em;
   line-height: 1.6em;
+  height: 1.6em;
 }
 .isTouchDevice .propertyLevel4 > div:first-child
 {
@@ -536,17 +555,18 @@ input[type=number]::-webkit-inner-spin-button
   padding-left: 7.9em;
   width: calc(60% - 7.9em);
 }
-.isTouchDevice .propertyLevel5 div
+.isTouchDevice .propertyLevel5 div, input
 {
   font-size: 0.8em;
   line-height: 1.5em;
+  height: 1.5em;
 }
 .isTouchDevice .propertyLevel5 > div:first-child
 {
   padding-left: 5.6em;
   width: calc(60% - 5.6em);
 }
-#real-time-update-rate
+.isTouchDevice #real-time-update-rate
 {
   font-size: 1.1em;
   padding-left: 1.4em;
