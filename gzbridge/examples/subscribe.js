@@ -4,7 +4,7 @@ var gazebo = require('../build/Debug/gazebo');
 if (process.argv.length != 5)
 {
   console.log('node subscribe.js [msg type] [topic name] [number of messages]');
-  console.log('ex:\nnode subscribe.js "gazebo.msgs.WorldControl" "~/world_stats" 10\n');
+  console.log('ex:\nnode subscribe.js "gazebo.msgs.WorldStatistics" "~/world_stats" 10\n');
   process.exit(-1);
 }
 
