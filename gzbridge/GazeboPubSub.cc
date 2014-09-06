@@ -45,8 +45,6 @@ std::string MocType::globalName;
 GzPublisher::GzPublisher(gazebo::transport::NodePtr &_node, const char* _type, const char* _topic)
           :Publisher(_type, _topic)
 {
-  // this->pub = _node->Advertise< ::google::protobuf::Message >(this->topic);
-  //  this->pub = _node->Advertise< string >(this->topic);
   MocType::globalName = _type;
   this->pub = _node->Advertise< MocType >(this->topic);
 }
@@ -72,7 +70,7 @@ void GzPublisher::Publish(const char *msg)
 GzSubscriber::GzSubscriber(gazebo::transport::NodePtr &_node, const char* _type, const char* _topic, bool _latch)
           :Subscriber(_type, _topic, _latch)
 {
-    cout << "GzSubscriber::GzSubscriber topic"  << _topic << endl;
+    // cout << "GzSubscriber::GzSubscriber topic ["  << _topic << "]" << endl;
     string t(_topic);
     this->sub = _node->Subscribe(t,
        &GzSubscriber::GzCallback, this, _latch);
@@ -87,7 +85,7 @@ void GzSubscriber::GzCallback(const string &_msg)
   pb->ParseFromString(_msg);
   // translate it to json
   const google::protobuf::Message& cpb = *(pb.get());
-  string json = (std::string) pb2json( cpb );
+  string json = pb2json( cpb );
   // send it to the script engine
   this->Callback(json.c_str());
   // pb auto cleans up

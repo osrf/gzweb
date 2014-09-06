@@ -53,7 +53,6 @@ void InitAll(Handle<Object> exports)
 /////////////////////////////////////////////////
 GZPubSub::GZPubSub()
 {
-  cout << "GZPubSub::GZPubSub()" << endl;
   this->gazebo = new GazeboJsPubSub();
 };
 
@@ -67,8 +66,6 @@ GZPubSub::~GZPubSub()
 /////////////////////////////////////////////////
 void GZPubSub::Init(Handle<Object> exports)
 {
-
-  // cout << "GZPubSub::Init() " << endl;
 
   // Prepare constructor template
   Local<FunctionTemplate> tpl = FunctionTemplate::New(New);
@@ -213,6 +210,7 @@ Handle<Value> GZPubSub::Spawn(const Arguments& args)
   double pose[6];
   for(unsigned int i = 0; i < 6; ++i)
   {
+    // verify that arguments 3 to 8 are numbers or undefined
     pose[i] = 0;
     unsigned int argIndex = i +2;
     if ((unsigned int)args.Length() > argIndex)
@@ -254,13 +252,6 @@ Handle<Value> GZPubSub::GetMaterials(const Arguments& args)
   }
 
   return scope.Close(arguments);
-
-
-
-//  return scope.Close(
-//    string s = "return";
-//    String::New( s.c_str() )
-//  );
 }
 
 /////////////////////////////////////////////////
@@ -335,10 +326,9 @@ Handle<Value> GZPubSub::Subscribe(const Arguments& args)
 
   v8::Persistent<v8::Function> cb = v8::Persistent<v8::Function>::New(v8::Local<v8::Function>::Cast(args[2]));
 
-
   try
   {
-    cout << "GZPubSub::Subscribe() topic = [" << topic << "]" << endl;  
+    // cout << "GZPubSub::Subscribe() topic = [" << topic << "]" << endl;  
     GZPubSub* obj = ObjectWrap::Unwrap<GZPubSub>(args.This());
     obj->gazebo->Subscribe(cb, type.c_str(), topic.c_str(), latch);
   }
@@ -429,7 +419,6 @@ Handle<Value> GZPubSub::Publish(const Arguments& args)
 
   try
   {
-    cout << "GZPubSub::Publish()  [" << type << ", " << topic << "]: "  << msg << endl;
     GZPubSub* obj = ObjectWrap::Unwrap<GZPubSub>(args.This());
     obj->gazebo->Publish(type.c_str(), topic.c_str(), msg.c_str());
   }
@@ -479,9 +468,10 @@ void GazeboJsSubscriber::close_cb(uv_handle_t* _handle)
 void GazeboJsSubscriber::doCallback(uv_async_t* _handle, int _status)
 {
   v8::HandleScope scope;
-  const unsigned argc = 1;
+  const unsigned argc = 2;
   JsCallbackData* p = (JsCallbackData*)_handle->data;
   v8::Handle<v8::Value> argv[argc] = {
+    v8::Local<Value>::New(Null()),    
     v8::Local<v8::Value>::New(v8::String::New(p->pbData.c_str()))
   };
 
@@ -493,6 +483,7 @@ void GazeboJsSubscriber::doCallback(uv_async_t* _handle, int _status)
   if (try_catch.HasCaught()) {
     node::FatalException(try_catch);
   }
+
 }
 
 

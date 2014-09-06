@@ -81,7 +81,7 @@ void PubSub::Unsubscribe(const char *_topic)
     {
       delete p;
       this->subs.erase(it);
-      return;
+      // return;
     }
   }
   // not found!

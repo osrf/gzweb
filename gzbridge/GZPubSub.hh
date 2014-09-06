@@ -55,7 +55,7 @@ namespace gzscript
   {
     public: void  Subscribe(v8::Persistent<v8::Function>& function, const char* type, const char* topic, bool latch); 
 
-//    public: void  ImageSubscribe(v8::Persistent<v8::Function>& function, const char* type, const char* topic, bool compressed);
+//  public: void  ImageSubscribe(v8::Persistent<v8::Function>& function, const char* type, const char* topic, bool compressed);
   };
 
   class GZPubSub : public node::ObjectWrap
