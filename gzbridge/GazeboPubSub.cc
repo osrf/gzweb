@@ -31,9 +31,17 @@ using namespace gzscript;
 using namespace gzweb;
 using namespace std;
 
+static bool trace = false;
+
+void Trace(const char *m)
+{
+  if(trace) cout << "[GazeboPubSub] "  << m << endl;
+  
+}
+
 /////////////////////////////////////////////////
 class MocType : public gazebo::msgs::WorldControl
-{  
+{
   public: std::string GetTypeName() const {return globalName;}
   public: static std::string globalName;
 
@@ -70,7 +78,9 @@ void GzPublisher::Publish(const char *msg)
 GzSubscriber::GzSubscriber(gazebo::transport::NodePtr &_node, const char* _type, const char* _topic, bool _latch)
           :Subscriber(_type, _topic, _latch)
 {
-    // cout << "GzSubscriber::GzSubscriber topic ["  << _topic << "]" << endl;
+    Trace("GzSubscriber::GzSubscriber ");
+    Trace(_topic);
+
     string t(_topic);
     this->sub = _node->Subscribe(t,
        &GzSubscriber::GzCallback, this, _latch);
@@ -79,6 +89,7 @@ GzSubscriber::GzSubscriber(gazebo::transport::NodePtr &_node, const char* _type,
 /////////////////////////////////////////////////
 void GzSubscriber::GzCallback(const string &_msg)
 {
+  Trace("GzCallback");
   // make an empty protobuf 
   boost::shared_ptr<google::protobuf::Message> pb = gazebo::msgs::MsgFactory::NewMsg(this->type);
   // load it with the gazebo data
@@ -95,7 +106,7 @@ void GzSubscriber::GzCallback(const string &_msg)
 GzSubscriber::~GzSubscriber()
 {
   // clean up sub
-  
+  Trace( "GzSubscriber::GzCallback");  
 }
 
 /////////////////////////////////////////////////
