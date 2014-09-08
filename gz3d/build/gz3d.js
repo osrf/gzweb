@@ -1240,7 +1240,7 @@ GZ3D.Gui.prototype.init = function()
         {
           if (isWideScreen())
           {
-            $('.tab').css('left', '15em');
+            $('.tab').css('left', '23em');
           }
           else
           {
@@ -1253,7 +1253,7 @@ GZ3D.Gui.prototype.init = function()
           var maxWidth = $(window).width();
           if (isWideScreen())
           {
-            maxWidth = emUnits(15);
+            maxWidth = emUnits(23);
           }
 
           $('.propertyPanels').css('width', maxWidth);
