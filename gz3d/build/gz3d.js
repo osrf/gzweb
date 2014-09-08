@@ -7218,12 +7218,12 @@ GZ3D.Scene.prototype.viewJoints = function(model)
         mainAxis.add(this.jointAxis['screwAxis'].clone());
       }
 
-      var direction, rotMatrix;
+      var direction, tempMatrix, rotMatrix;
       if (mainAxis)
       {
         // main axis expressed w.r.t. parent model or joint frame
-        // needs Gazebo issue #1268 fixed to receive use_parent_model_frame on msg
-        // for now, true by default
+        // needs Gazebo issue #1268 fixed, receive use_parent_model_frame on msg
+        // for now, true by default because most old models have it true
         if (model.joint[j].axis1.use_parent_model_frame === undefined)
         {
           model.joint[j].axis1.use_parent_model_frame = true;
@@ -7234,14 +7234,18 @@ GZ3D.Scene.prototype.viewJoints = function(model)
             model.joint[j].axis1.xyz.y,
             model.joint[j].axis1.xyz.z);
         direction.normalize();
-/*
-        var tempMatrix = new THREE.Matrix4();
+
+        tempMatrix = new THREE.Matrix4();
         if (model.joint[j].axis1.use_parent_model_frame)
         {
-          direction.applyMatrix4(tempMatrix.extractRotation(jointVisual.matrix));
-          direction.applyMatrix4(tempMatrix.extractRotation(child.matrix));
+          tempMatrix.extractRotation(jointVisual.matrix);
+          tempMatrix.getInverse(tempMatrix);
+          direction.applyMatrix4(tempMatrix);
+          tempMatrix.extractRotation(child.matrix);
+          tempMatrix.getInverse(tempMatrix);
+          direction.applyMatrix4(tempMatrix);
         }
-*/
+
         mainAxis.position =  direction.multiplyScalar(0.3);
         rotMatrix = new THREE.Matrix4();
         rotMatrix.lookAt(direction, new THREE.Vector3(0, 0, 0), mainAxis.up);
@@ -7260,6 +7264,17 @@ GZ3D.Scene.prototype.viewJoints = function(model)
             model.joint[j].axis2.xyz.y,
             model.joint[j].axis2.xyz.z);
         direction.normalize();
+
+        tempMatrix = new THREE.Matrix4();
+        if (model.joint[j].axis2.use_parent_model_frame)
+        {
+          tempMatrix.extractRotation(jointVisual.matrix);
+          tempMatrix.getInverse(tempMatrix);
+          direction.applyMatrix4(tempMatrix);
+          tempMatrix.extractRotation(child.matrix);
+          tempMatrix.getInverse(tempMatrix);
+          direction.applyMatrix4(tempMatrix);
+        }
 
         secondAxis.position =  direction.multiplyScalar(0.3);
         rotMatrix = new THREE.Matrix4();
