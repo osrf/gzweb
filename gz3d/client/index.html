@@ -151,26 +151,25 @@
               <h3>Insert</h3>
             </div>
             <div class="panelContent">
-              <ul>
-                <li>
-                  <a href="#" ng-click="openTab('insertMenu-simple_shapes')" data-role="button" class="insertMenuItem" title="Shapes">
-                    Shapes<br>
-                    <img src="style/images/box.png">
-                  </a>
-                </li>
-                <li>
-                  <a href="#" ng-click="openTab('insertMenu-lights')" data-role="button" class="insertMenuItem" title="Lights">
-                    Lights<br>
-                    <img src="style/images/light_thumb.png">
-                  </a>
-                </li>
-                <li ng-repeat="category in categories">
-                  <a href="#" ng-click="openTab('insertMenu-'+category.path)" data-role="button" class="insertMenuItem" title="{{category.title}}">
-                    {{category.title}}<br>
-                    <img src="/assets/{{category.examplePath}}/thumbnails/0.png">
-                  </a>
-                </li>
-              </ul>
+              <a ng-click="openTab('insertMenu-simple_shapes')" data-role="button" class="insertMenuItem insertMenuCategoryItem" title="Shapes">
+                Shapes<br>
+                <img src="style/images/cylinder.png">
+                <img src="style/images/sphere.png">
+                <img src="style/images/box.png">
+              </a>
+              <a ng-click="openTab('insertMenu-lights')" data-role="button" class="insertMenuItem insertMenuCategoryItem insertMenuCategoryItemLight" title="Lights">
+                Lights<br>
+                <img src="style/images/pointlight.png">
+                <img src="style/images/spotlight.png">
+                <img src="style/images/directionallight.png">
+                <img src="style/images/light_thumb.png">
+              </a>
+              <a ng-repeat="category in categories" ng-click="openTab('insertMenu-'+category.path)" data-role="button" class="insertMenuItem insertMenuCategoryItem" title="{{category.title}}">
+                {{category.title}}<br>
+                <img src="/assets/{{category.examplePath1}}/thumbnails/0.png">
+                <img src="/assets/{{category.examplePath2}}/thumbnails/0.png">
+                <img src="/assets/{{category.examplePath3}}/thumbnails/0.png">
+              </a>
             </div>
           </div>
           <div id="insertMenu-simple_shapes" class="leftPanels insertMenus insertCategory ui-overlay-shadow">
@@ -179,26 +178,18 @@
               <img src="style/images/back.png">
             </div>
             <div class="panelContent">
-              <ul>
-                <li>
-                  <a href="#" id="insert-entity-box" ng-mousedown="spawnEntity('box')" data-role="button" class="insertMenuItem" title="Box">
-                    Box<br>
-                    <img src="style/images/box.png">
-                  </a>
-                </li>
-                <li>
-                  <a href="#" id="insert-entity-sphere" ng-mousedown="spawnEntity('sphere')" data-role="button" class="insertMenuItem" title="Sphere">
-                    Sphere<br>
-                    <img src="style/images/sphere.png">
-                  </a>
-                </li>
-                <li>
-                  <a href="#" id="insert-entity-cylinder" ng-mousedown="spawnEntity('cylinder')" data-role="button" class="insertMenuItem" title="Cylinder">
-                    Cylinder<br>
-                    <img src="style/images/cylinder.png">
-                  </a>
-                </li>
-              </ul>
+              <a id="insert-entity-box" ng-mousedown="spawnEntity('box')" data-role="button" class="insertMenuItem" title="Box">
+                Box<br>
+                <img src="style/images/box.png">
+              </a>
+              <a id="insert-entity-sphere" ng-mousedown="spawnEntity('sphere')" data-role="button" class="insertMenuItem" title="Sphere">
+                Sphere<br>
+                <img src="style/images/sphere.png">
+              </a>
+              <a id="insert-entity-cylinder" ng-mousedown="spawnEntity('cylinder')" data-role="button" class="insertMenuItem" title="Cylinder">
+                Cylinder<br>
+                <img src="style/images/cylinder.png">
+              </a>
             </div>
           </div>
           <div id="insertMenu-lights" class="leftPanels insertMenus insertCategory ui-overlay-shadow">
@@ -207,26 +198,18 @@
               <img src="style/images/back.png">
             </div>
             <div class="panelContent">
-              <ul>
-                <li>
-                  <a href="#" id="insert-entity-pointlight" ng-mousedown="spawnEntity('pointlight')" data-role="button" class="insertMenuItem insertMenuItemLight" title="Point Light">
-                    Point<br>
-                    <img src="style/images/pointlight.png">
-                  </a>
-                </li>
-                <li>
-                  <a href="#" id="insert-entity-spotlight" ng-mousedown="spawnEntity('spotlight')" data-role="button" class="insertMenuItem insertMenuItemLight" title="Spot Light">
-                    Spot<br>
-                    <img src="style/images/spotlight.png">
-                  </a>
-                </li>
-                <li>
-                  <a href="#" id="insert-entity-directionallight" ng-mousedown="spawnEntity('directionallight')" data-role="button" class="insertMenuItem insertMenuItemLight" title="Directional Light">
-                    Directional<br>
-                    <img src="style/images/directionallight.png">
-                  </a>
-                </li>
-              </ul>
+              <a id="insert-entity-pointlight" ng-mousedown="spawnEntity('pointlight')" data-role="button" class="insertMenuItem insertMenuItemLight" title="Point Light">
+                Point<br>
+                <img src="style/images/pointlight.png">
+              </a>
+              <a id="insert-entity-spotlight" ng-mousedown="spawnEntity('spotlight')" data-role="button" class="insertMenuItem insertMenuItemLight" title="Spot Light">
+                Spot<br>
+                <img src="style/images/spotlight.png">
+              </a>
+              <a id="insert-entity-directionallight" ng-mousedown="spawnEntity('directionallight')" data-role="button" class="insertMenuItem insertMenuItemLight" title="Directional Light">
+                Directional<br>
+                <img src="style/images/directionallight.png">
+              </a>
             </div>
           </div>
           <div ng-repeat="category in categories" id="insertMenu-{{category.path}}" class="leftPanels insertMenus insertCategory ui-overlay-shadow">
@@ -235,14 +218,10 @@
               <img src="style/images/back.png">
             </div>
             <div class="panelContent">
-              <ul>
-                <li ng-repeat="model in category.models">
-                  <a href="#" id="insert-entity-{{model.modelPath}}" ng-mousedown="spawnEntity(model.modelPath)" data-role="button" class="insertMenuItem" title="{{model.modelTitle}}">
-                    {{model.modelTitle}}<br>
-                    <img src="/assets/{{model.modelPath}}/thumbnails/0.png">
-                  </a>
-                </li>
-              </ul>
+              <a ng-repeat="model in category.models" id="insert-entity-{{model.modelPath}}" ng-mousedown="spawnEntity(model.modelPath)" data-role="button" class="insertMenuItem" title="{{model.modelTitle}}">
+              {{model.modelTitle}}<br>
+              <img src="/assets/{{model.modelPath}}/thumbnails/0.png">
+            </a>
             </div>
           </div>
         </div>
@@ -1022,28 +1001,28 @@
       <!-- left panel -->
 
       <!-- tabs -->
-      <a href="#" id="mainMenuTab" class="gzGUI tab"><img src="style/images/bars.png" title="Menu"></a>
-      <a href="#" id="insertMenuTab" class="gzGUI tab"><img src="style/images/insert.png" title="Insert"></a>
-      <a href="#" id="treeMenuTab" class="gzGUI tab"><img src="style/images/tree.png" title="Scene Tree"></a>
+      <a id="mainMenuTab" class="gzGUI tab clickable"><img src="style/images/bars.png" title="Menu"></a>
+      <a id="insertMenuTab" class="gzGUI tab clickable"><img src="style/images/insert.png" title="Insert"></a>
+      <a id="treeMenuTab" class="gzGUI tab clickable"><img src="style/images/tree.png" title="Scene Tree"></a>
       <!-- tabs -->
 
       <!-- header -->
       <fieldset class="gzGUI" id="play-header-fieldset">
-        <a href="#" data-role="button" class="header-button" id="play"><span id="playText"><img src="style/images/play.png" title="Play"></span></a>
+        <a data-role="button" class="header-button" id="play"><span id="playText"><img src="style/images/play.png" title="Play"></span></a>
       </fieldset>
 
       <fieldset id="clock-header-fieldset"  class="gzGUI touch-only">
-        <a href="#" data-role="button" id="clock" class="header-button" data-rel="popup"><span><img src="style/images/clock.png"></span></a>
+        <a data-role="button" id="clock" class="header-button" data-rel="popup"><span><img src="style/images/clock.png"></span></a>
       </fieldset>
 
       <fieldset id="clock-mouse" class="gzGUI mouse-only">
-        <p style='margin:0px;margin-left:0.2em'>Real Time: <span class='real-time-value'>00 00:00:00</span></p>
-        <p style='margin:0px;margin-left:0.45em'>Sim Time: <span class='sim-time-value'>00 00:00:00</span></p>
+        <p>Real Time: <span class='real-time-value'>00 00:00:00</span></p>
+        <p>Sim Time: <span class='sim-time-value'>00 00:00:00</span></p>
       </fieldset>
 
       <div class="gzGUI" id="clock-touch" data-role="popup" data-history="false">
-        <p style='margin:0px;margin-left:0.2em'>Real Time: <span class='real-time-value'>00 00:00:00</span></p>
-        <p style='margin:0px;margin-left:0.45em'>Sim Time: <span class='sim-time-value'>00 00:00:00</span></p>
+        <p>Real Time: <span class='real-time-value'>00 00:00:00</span></p>
+        <p>Sim Time: <span class='sim-time-value'>00 00:00:00</span></p>
       </div>
 
       <fieldset class="gzGUI" data-role="controlgroup" data-mini="true" data-type="horizontal" id="mode-header-fieldset">
@@ -1058,23 +1037,23 @@
       </fieldset>
 
       <fieldset id="box-header-fieldset" class="gzGUI mouse-only">
-        <a href="#" data-role="button" id="header-insert-box" class="header-button"><span><img src="style/images/box.png" title="Insert box"></span></a>
+        <a data-role="button" id="header-insert-box" class="header-button"><span><img src="style/images/box.png" title="Insert box"></span></a>
       </fieldset>
       <fieldset id="sphere-header-fieldset" class="gzGUI mouse-only">
-        <a href="#" data-role="button" id="header-insert-sphere" class="header-button"><span><img src="style/images/sphere.png" title="Insert sphere"></span></a>
+        <a data-role="button" id="header-insert-sphere" class="header-button"><span><img src="style/images/sphere.png" title="Insert sphere"></span></a>
       </fieldset>
       <fieldset id="cylinder-header-fieldset" class="gzGUI mouse-only">
-        <a href="#" data-role="button" id="header-insert-cylinder" class="header-button"><span><img src="style/images/cylinder.png" title="Insert cylinder"></span></a>
+        <a data-role="button" id="header-insert-cylinder" class="header-button"><span><img src="style/images/cylinder.png" title="Insert cylinder"></span></a>
       </fieldset>
 
       <fieldset id="pointlight-header-fieldset" class="gzGUI mouse-only">
-        <a href="#" data-role="button" id="header-insert-pointlight" class="header-button"><span><img style="height:1.45em;" src="style/images/pointlight.png" title="Insert point light"></span></a>
+        <a data-role="button" id="header-insert-pointlight" class="header-button"><span><img style="height:1.45em;" src="style/images/pointlight.png" title="Insert point light"></span></a>
       </fieldset>
       <fieldset id="spotlight-header-fieldset" class="gzGUI mouse-only">
-        <a href="#" data-role="button" id="header-insert-spotlight" class="header-button"><span><img src="style/images/spotlight.png" title="Insert spot light"></span></a>
+        <a data-role="button" id="header-insert-spotlight" class="header-button"><span><img src="style/images/spotlight.png" title="Insert spot light"></span></a>
       </fieldset>
       <fieldset id="directionallight-header-fieldset" class="gzGUI mouse-only">
-        <a href="#" data-role="button" id="header-insert-directionallight" class="header-button"><span><img src="style/images/directionallight.png" title="Insert directional light"></span></a>
+        <a data-role="button" id="header-insert-directionallight" class="header-button"><span><img src="style/images/directionallight.png" title="Insert directional light"></span></a>
       </fieldset>
       <!-- header -->
 

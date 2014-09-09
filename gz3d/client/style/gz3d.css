@@ -50,6 +50,16 @@ input[type=number]::-webkit-inner-spin-button
 {
   z-index: 100;
 }
+#clock-touch > p
+{
+  text-align: right;
+}
+#clock-mouse > p
+{
+  margin: 0;
+  margin-right: 0.25em;
+  text-align: right;
+}
 /* tabs */
 .tab
 {
@@ -100,7 +110,7 @@ input[type=number]::-webkit-inner-spin-button
   display: none;
   background-color: #2a2a2a;
   height: 100%;
-  width: 15em;
+  width: 23em;
 }
 .panelContent
 {
@@ -114,6 +124,10 @@ input[type=number]::-webkit-inner-spin-button
   height: 2.5em;
   line-height: 1.8em;
   background-color: #1d1d1d;
+}
+.panelTitle:hover
+{
+  background-color: #212121;
 }
 .panelTitle h3
 {
@@ -135,7 +149,7 @@ input[type=number]::-webkit-inner-spin-button
 .leftPanels ul
 {
   list-style: none;
-  width: 13em;
+  width: 21em;
   padding: 0em;
   padding-left: 1em;
   margin: 0em;
@@ -150,7 +164,7 @@ input[type=number]::-webkit-inner-spin-button
   left: -1em;
   padding: 0;
   margin: 0;
-  width: 15em;
+  width: 23em;
 }
 .collapsible_header
 {
@@ -161,20 +175,13 @@ input[type=number]::-webkit-inner-spin-button
   font-size: 0.9em;
   color: #bdbdbd;
 }
-#open-tree-when-selected a
-{
-  font-size: 0.9em;
-}
 /* insert menu */
-.insertMenus li
-{
-  width: 0em;
-}
 .insertMenuItem
 {
   width: 7em;
   height: 6.5em;
-  margin-left: 1.5em;
+  margin-left: 1.3em;
+  float: left;
 }
 .insertMenuItem img
 {
@@ -191,6 +198,22 @@ input[type=number]::-webkit-inner-spin-button
 {
   height: 4em;
   margin-top: 0.6em;
+}
+.insertMenuCategoryItem
+{
+  width: calc(100% - 5em);
+}
+.insertMenuCategoryItem img
+{
+  vertical-align: middle;
+  margin-left: 1em;
+  height: 4em;
+  max-width: 4em;
+  padding-top: 1em;
+}
+.insertMenuCategoryItemLight > img:nth-child(5)
+{
+  display: none;
 }
 /* world tree */
 .expandableTree
@@ -223,7 +246,7 @@ input[type=number]::-webkit-inner-spin-button
   font-size: 1em;
   line-height: 2em;
   padding: 0;
-  width: 15em;
+  width: 23em;
   clear: both;
   margin-left: -1em;
 }
@@ -359,7 +382,7 @@ input[type=number]::-webkit-inner-spin-button
   text-shadow: none;
   font-size: 0.9em;
 }
-.isTouchDevice .expandableProperty
+.expandableProperty
 {
   font-size: 1.2em;
   line-height: 1.9em;
@@ -416,17 +439,17 @@ input[type=number]::-webkit-inner-spin-button
   min-height: 1em;
   height: 1.2em;
 }
-.isTouchDevice .colorDisplay
+.colorDisplay
 {
   margin-top: 0.3em;
 }
 /* Level 1 */
-.isTouchDevice .propertyLevel1 div
+.propertyLevel1 div
 {
   font-size: 1.2em;
   line-height: 1.9em;
 }
-.isTouchDevice .propertyLevel1 > div:first-child
+.propertyLevel1 > div:first-child
 {
   padding-left: 1.3em;
   width: calc(60% - 1.3em);
@@ -451,18 +474,18 @@ input[type=number]::-webkit-inner-spin-button
 {
   height: 0.8em;
 }
-.isTouchDevice .propertyLevel2 div, input
+.propertyLevel2 div, input
 {
   font-size: 1.1em;
   line-height: 1.8em;
   height: 1.8em;
 }
-.isTouchDevice .propertyLevel2 > div:first-child
+.propertyLevel2 > div:first-child
 {
   padding-left: 2.3em;
   width: calc(60% - 2.3em);
 }
-.isTouchDevice .expandableLevel2
+.expandableLevel2
 {
   font-size: 1.1em;
   line-height: 1.8em;
@@ -489,18 +512,18 @@ input[type=number]::-webkit-inner-spin-button
 {
   height: 0.7em;
 }
-.isTouchDevice .propertyLevel3 div, input
+.propertyLevel3 div, input
 {
   font-size: 1.0em;
   line-height: 1.7em;
   height: 1.7em;
 }
-.isTouchDevice .propertyLevel3 > div:first-child
+.propertyLevel3 > div:first-child
 {
   padding-left: 3.3em;
   width: calc(60% - 3.3em);
 }
-.isTouchDevice .expandableLevel3
+.expandableLevel3
 {
   font-size: 1.0em;
   line-height: 1.7em;
@@ -527,18 +550,18 @@ input[type=number]::-webkit-inner-spin-button
 {
   height: 0.65em;
 }
-.isTouchDevice .propertyLevel4 div, input
+.propertyLevel4 div, input
 {
   font-size: 0.9em;
   line-height: 1.6em;
   height: 1.6em;
 }
-.isTouchDevice .propertyLevel4 > div:first-child
+.propertyLevel4 > div:first-child
 {
   padding-left: 4.3em;
   width: calc(60% - 4.3em);
 }
-.isTouchDevice .expandableLevel4
+.expandableLevel4
 {
   font-size: 1.0em;
   line-height: 1.7em;
@@ -555,18 +578,18 @@ input[type=number]::-webkit-inner-spin-button
   padding-left: 7.9em;
   width: calc(60% - 7.9em);
 }
-.isTouchDevice .propertyLevel5 div, input
+.propertyLevel5 div, input
 {
   font-size: 0.8em;
   line-height: 1.5em;
   height: 1.5em;
 }
-.isTouchDevice .propertyLevel5 > div:first-child
+.propertyLevel5 > div:first-child
 {
   padding-left: 5.6em;
   width: calc(60% - 5.6em);
 }
-.isTouchDevice #real-time-update-rate
+#real-time-update-rate
 {
   font-size: 1.1em;
   padding-left: 1.4em;
@@ -616,7 +639,7 @@ input[type=number]::-webkit-inner-spin-button
   /* insert menu */
   .insertMenuItem
   {
-    width: 4.6em;
+    width: calc(100% - 3.2em);
     height: 4.3em;
     margin-left: 0.5em;
   }
@@ -633,6 +656,21 @@ input[type=number]::-webkit-inner-spin-button
   {
     height: 2.7em;
     margin-top: 0.4em;
+  }
+  .insertMenuCategoryItem img
+  {
+    margin-left: 0;
+    padding-top: 0;
+  }
+  .insertMenuCategoryItem > img:nth-child(2),
+  .insertMenuCategoryItem > img:nth-child(3),
+  .insertMenuCategoryItemLight > img:nth-child(4)
+  {
+    display: none;
+  }
+  .insertMenuCategoryItemLight > img:nth-child(5)
+  {
+    display: initial;
   }
   /* world tree */
   .treeItem

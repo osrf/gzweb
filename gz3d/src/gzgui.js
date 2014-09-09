@@ -25,7 +25,8 @@ var tabColors = {selected: 'rgb(34, 170, 221)', unselected: 'rgb(42, 42, 42)'};
 
 var modelList =
   [
-    {path:'buildings', title:'Buildings', examplePath:'house_1', models:
+    {path:'buildings', title:'Buildings',
+    examplePath1:'fast_food', examplePath2:'kitchen_dining', examplePath3:'house_1', models:
     [
       {modelPath:'fast_food', modelTitle:'Fast Food'},
       {modelPath:'gas_station', modelTitle:'Gas Station'},
@@ -41,7 +42,8 @@ var modelList =
       {modelPath:'willowgarage', modelTitle:'Willow Garage'}
     ]},
 
-    {path:'furniture', title:'Furniture', examplePath:'table', models:
+    {path:'furniture', title:'Furniture',
+    examplePath1:'hinged_door', examplePath2:'bookshelf', examplePath3:'table', models:
     [
       {modelPath:'bookshelf', modelTitle:'Book Shelf'},
       {modelPath:'cabinet', modelTitle:'Cabinet'},
@@ -75,7 +77,8 @@ var modelList =
       {modelPath:'nist_stairs_120', modelTitle:'Stairs'}
     ]},
 
-    {path:'kitchen', title:'Kitchen', examplePath:'bowl', models:
+    {path:'kitchen', title:'Kitchen',
+    examplePath1:'saucepan',  examplePath2:'beer',  examplePath3:'bowl', models:
     [
       {modelPath:'beer', modelTitle:'Beer'},
       {modelPath:'bowl', modelTitle:'Bowl'},
@@ -83,7 +86,8 @@ var modelList =
       {modelPath:'saucepan', modelTitle:'Saucepan'}
     ]},
 
-    {path:'robocup', title:'Robocup', examplePath:'robocup09_spl_field', models:
+    {path:'robocup', title:'Robocup', examplePath1:'robocup_3Dsim_ball',
+    examplePath2:'robocup14_spl_goal', examplePath3:'robocup09_spl_field', models:
     [
       {modelPath:'robocup09_spl_field', modelTitle:'2009 SPL Field'},
       {modelPath:'robocup14_spl_field', modelTitle:'2014 SPL Field'},
@@ -94,7 +98,8 @@ var modelList =
       {modelPath:'robocup_3Dsim_ball', modelTitle:'3D Sim. Ball'}
     ]},
 
-    {path:'robots', title:'Robots', examplePath:'pr2', models:
+    {path:'robots', title:'Robots',
+    examplePath1:'pioneer3at', examplePath2:'turtlebot', examplePath3:'pr2', models:
     [
       {modelPath:'create', modelTitle:'Create'},
       {modelPath:'husky', modelTitle:'Husky'},
@@ -110,7 +115,8 @@ var modelList =
       {modelPath:'youbot', modelTitle:'YouBot'}
     ]},
 
-    {path:'sensors', title:'Sensors', examplePath:'kinect', models:
+    {path:'sensors', title:'Sensors',
+    examplePath1:'camera', examplePath2:'hokuyo', examplePath3:'kinect', models:
     [
       {modelPath:'camera', modelTitle:'Camera'},
       {modelPath:'stereo_camera', modelTitle:'Stereo Camera'},
@@ -118,7 +124,8 @@ var modelList =
       {modelPath:'kinect', modelTitle:'Kinect'}
     ]},
 
-    {path:'street', title:'Street', examplePath:'fire_hydrant', models:
+    {path:'street', title:'Street', examplePath1:'dumpster',
+    examplePath2:'drc_practice_angled_barrier_45', examplePath3:'fire_hydrant', models:
     [
       {modelPath:'cinder_block', modelTitle:'Cinder Block'},
       {modelPath:'cinder_block_2', modelTitle:'Cinder Block 2'},
@@ -144,7 +151,8 @@ var modelList =
 
     ]},
 
-    {path:'tools', title:'Tools', examplePath:'cordless_drill', models:
+    {path:'tools', title:'Tools', examplePath1:'hammer',
+    examplePath2:'polaris_ranger_ev', examplePath3:'cordless_drill', models:
     [
       {modelPath:'cordless_drill', modelTitle:'Cordless Drill'},
       {modelPath:'fire_hose_long', modelTitle:'Fire Hose'},
@@ -157,7 +165,8 @@ var modelList =
       {modelPath:'utility_cart', modelTitle:'Utility Cart'}
     ]},
 
-    {path:'misc', title:'Misc.', examplePath:'double_pendulum_with_base', models:
+    {path:'misc', title:'Misc.', examplePath1:'brick_box_3x1x3',
+    examplePath2:'drc_practice_4x4x20', examplePath3:'double_pendulum_with_base', models:
     [
       {modelPath:'double_pendulum_with_base', modelTitle:'Double Pendulum With Base'},
       {modelPath:'breakable_test', modelTitle:'Breakable_test'},
@@ -1235,7 +1244,7 @@ GZ3D.Gui.prototype.init = function()
         {
           if (isWideScreen())
           {
-            $('.tab').css('left', '15em');
+            $('.tab').css('left', '23em');
           }
           else
           {
@@ -1248,7 +1257,7 @@ GZ3D.Gui.prototype.init = function()
           var maxWidth = $(window).width();
           if (isWideScreen())
           {
-            maxWidth = emUnits(15);
+            maxWidth = emUnits(23);
           }
 
           $('.propertyPanels').css('width', maxWidth);
