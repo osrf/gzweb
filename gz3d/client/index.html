@@ -157,10 +157,11 @@
                 <img src="style/images/sphere.png">
                 <img src="style/images/box.png">
               </a>
-              <a ng-click="openTab('insertMenu-lights')" data-role="button" class="insertMenuItem insertMenuCategoryItem" title="Lights">
+              <a ng-click="openTab('insertMenu-lights')" data-role="button" class="insertMenuItem insertMenuCategoryItem insertMenuCategoryItemLight" title="Lights">
                 Lights<br>
                 <img src="style/images/pointlight.png">
                 <img src="style/images/spotlight.png">
+                <img src="style/images/directionallight.png">
                 <img src="style/images/light_thumb.png">
               </a>
               <a ng-repeat="category in categories" ng-click="openTab('insertMenu-'+category.path)" data-role="button" class="insertMenuItem insertMenuCategoryItem" title="{{category.title}}">
@@ -1015,13 +1016,13 @@
       </fieldset>
 
       <fieldset id="clock-mouse" class="gzGUI mouse-only">
-        <p style='margin:0px;margin-left:0.2em'>Real Time: <span class='real-time-value'>00 00:00:00</span></p>
-        <p style='margin:0px;margin-left:0.45em'>Sim Time: <span class='sim-time-value'>00 00:00:00</span></p>
+        <p>Real Time: <span class='real-time-value'>00 00:00:00</span></p>
+        <p>Sim Time: <span class='sim-time-value'>00 00:00:00</span></p>
       </fieldset>
 
       <div class="gzGUI" id="clock-touch" data-role="popup" data-history="false">
-        <p style='margin:0px;margin-left:0.2em'>Real Time: <span class='real-time-value'>00 00:00:00</span></p>
-        <p style='margin:0px;margin-left:0.45em'>Sim Time: <span class='sim-time-value'>00 00:00:00</span></p>
+        <p>Real Time: <span class='real-time-value'>00 00:00:00</span></p>
+        <p>Sim Time: <span class='sim-time-value'>00 00:00:00</span></p>
       </div>
 
       <fieldset class="gzGUI" data-role="controlgroup" data-mini="true" data-type="horizontal" id="mode-header-fieldset">

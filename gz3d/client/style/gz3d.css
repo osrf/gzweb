@@ -50,6 +50,16 @@ input[type=number]::-webkit-inner-spin-button
 {
   z-index: 100;
 }
+#clock-touch > p
+{
+  text-align: right;
+}
+#clock-mouse > p
+{
+  margin: 0;
+  margin-right: 0.25em;
+  text-align: right;
+}
 /* tabs */
 .tab
 {
@@ -165,10 +175,6 @@ input[type=number]::-webkit-inner-spin-button
   font-size: 0.9em;
   color: #bdbdbd;
 }
-#open-tree-when-selected a
-{
-  font-size: 0.9em;
-}
 /* insert menu */
 .insertMenuItem
 {
@@ -201,18 +207,13 @@ input[type=number]::-webkit-inner-spin-button
 {
   vertical-align: middle;
   margin-left: 1em;
-}
-.insertMenuCategoryItem > img:nth-child(2)
-{
-  height: 3em;
-  max-width: 3em;
-  opacity: 0.3;
-}
-.insertMenuCategoryItem > img:nth-child(3)
-{
   height: 4em;
   max-width: 4em;
-  opacity: 0.5;
+  padding-top: 1em;
+}
+.insertMenuCategoryItemLight > img:nth-child(5)
+{
+  display: none;
 }
 /* world tree */
 .expandableTree
@@ -659,14 +660,17 @@ input[type=number]::-webkit-inner-spin-button
   .insertMenuCategoryItem img
   {
     margin-left: 0;
+    padding-top: 0;
   }
-  .insertMenuCategoryItem > img:nth-child(2)
+  .insertMenuCategoryItem > img:nth-child(2),
+  .insertMenuCategoryItem > img:nth-child(3),
+  .insertMenuCategoryItemLight > img:nth-child(4)
   {
     display: none;
   }
-  .insertMenuCategoryItem > img:nth-child(3)
+  .insertMenuCategoryItemLight > img:nth-child(5)
   {
-    display: none;
+    display: initial;
   }
   /* world tree */
   .treeItem
