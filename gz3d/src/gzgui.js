@@ -1394,8 +1394,8 @@ var sceneStats = {};
  */
 GZ3D.Gui.prototype.setSceneStats = function(stats)
 {
-  sceneStats['ambient'] = this.round(stats.ambient);
-  sceneStats['background'] = this.round(stats.background);
+  sceneStats['ambient'] = this.round(stats.ambient, true);
+  sceneStats['background'] = this.round(stats.background, true);
 };
 
 var physicsStats = {};
@@ -1408,15 +1408,20 @@ GZ3D.Gui.prototype.setPhysicsStats = function(stats)
   physicsStats = stats;
   physicsStats['enable_physics'] = this.trueOrFalse(
       physicsStats['enable_physics']);
-  physicsStats['max_step_size'] = this.round(physicsStats['max_step_size']);
-  physicsStats['gravity'] = this.round(physicsStats['gravity']);
-  physicsStats['sor'] = this.round(physicsStats['sor']);
-  physicsStats['cfm'] = this.round(physicsStats['cfm']);
-  physicsStats['erp'] = this.round(physicsStats['erp']);
+  physicsStats['max_step_size'] = this.round(
+      physicsStats['max_step_size'], false, 3);
+  physicsStats['gravity'] = this.round(
+      physicsStats['gravity'], false, 3);
+  physicsStats['sor'] = this.round(
+      physicsStats['sor'], false, 3);
+  physicsStats['cfm'] = this.round(
+      physicsStats['cfm'], false, 3);
+  physicsStats['erp'] = this.round(
+      physicsStats['erp'], false, 3);
   physicsStats['contact_max_correcting_vel'] = this.round(
-      physicsStats['contact_max_correcting_vel']);
+      physicsStats['contact_max_correcting_vel'], false, 3);
   physicsStats['contact_surface_layer'] = this.round(
-      physicsStats['contact_surface_layer']);
+      physicsStats['contact_surface_layer'], false, 3);
 
   this.updateStats();
 };
@@ -1681,7 +1686,7 @@ GZ3D.Gui.prototype.setLightStats = function(stats, action)
             specular: formatted.specular,
             color: formatted.color,
             range: stats.range,
-            attenuation: this.round(stats.attenuation, true),
+            attenuation: this.round(stats.attenuation, false, null),
             direction: direction
           });
     }
@@ -1812,7 +1817,7 @@ GZ3D.Gui.prototype.formatStats = function(stats)
   var quat, rpy;
   if (stats.pose)
   {
-    position = this.round(stats.pose.position, true);
+    position = this.round(stats.pose.position, false, null);
 
     quat = new THREE.Quaternion(stats.pose.orientation.x,
         stats.pose.orientation.y, stats.pose.orientation.z,
@@ -1822,12 +1827,12 @@ GZ3D.Gui.prototype.formatStats = function(stats)
     rpy.setFromQuaternion(quat);
 
     orientation = {roll: rpy._x, pitch: rpy._y, yaw: rpy._z};
-    orientation = this.round(orientation, true);
+    orientation = this.round(orientation, false, null);
   }
   var inertial;
   if (stats.inertial)
   {
-    inertial = this.round(stats.inertial);
+    inertial = this.round(stats.inertial, false, 3);
 
     var inertialPose = stats.inertial.pose;
     inertial.pose = {};
@@ -1836,7 +1841,7 @@ GZ3D.Gui.prototype.formatStats = function(stats)
                               y: inertialPose.position.y,
                               z: inertialPose.position.z};
 
-    inertial.pose.position = this.round(inertial.pose.position);
+    inertial.pose.position = this.round(inertial.pose.position, false, 3);
 
     quat = new THREE.Quaternion(inertialPose.orientation.x,
         inertialPose.orientation.y, inertialPose.orientation.z,
@@ -1846,13 +1851,13 @@ GZ3D.Gui.prototype.formatStats = function(stats)
     rpy.setFromQuaternion(quat);
 
     inertial.pose.orientation = {roll: rpy._x, pitch: rpy._y, yaw: rpy._z};
-    inertial.pose.orientation = this.round(inertial.pose.orientation);
+    inertial.pose.orientation = this.round(inertial.pose.orientation, false, 3);
   }
   var diffuse, colorHex, comp;
   var color = {};
   if (stats.diffuse)
   {
-    diffuse = this.round(stats.diffuse);
+    diffuse = this.round(stats.diffuse, true);
 
     colorHex = {};
     for (comp in diffuse)
@@ -1868,7 +1873,7 @@ GZ3D.Gui.prototype.formatStats = function(stats)
   var specular;
   if (stats.specular)
   {
-    specular = this.round(stats.specular);
+    specular = this.round(stats.specular, true);
 
     colorHex = {};
     for (comp in specular)
@@ -1886,14 +1891,14 @@ GZ3D.Gui.prototype.formatStats = function(stats)
   {
     axis1 = {};
     axis1 = this.round(stats.axis1);
-    axis1.direction = this.round(stats.axis1.xyz);
+    axis1.direction = this.round(stats.axis1.xyz, false, 3);
   }
   var axis2;
   if (stats.axis2)
   {
     axis2 = {};
     axis2 = this.round(stats.axis2);
-    axis2.direction = this.round(stats.axis2.xyz);
+    axis2.direction = this.round(stats.axis2.xyz, false, 3);
   }
 
   return {pose: {position: position, orientation: orientation},
@@ -1906,49 +1911,63 @@ GZ3D.Gui.prototype.formatStats = function(stats)
 };
 
 /**
- * Round numbers to 3 decimals and format colors
+ * Round numbers and format colors
  * @param {} stats
- * @param {} returnNumber - not fixed to 3 decimals, for input fields
+ * @param {} decimals - number of decimals to display, null for input fields
  * @returns stats
  */
-GZ3D.Gui.prototype.round = function(stats, returnNumber)
+GZ3D.Gui.prototype.round = function(stats, isColor, decimals)
 {
   if (typeof stats === 'number')
   {
-    if (returnNumber)
+    stats = this.roundNumber(stats, isColor, decimals);
+  }
+  else // array of numbers
+  {
+    stats = this.roundArray(stats, isColor, decimals);
+  }
+  return stats;
+};
+
+/**
+ * Round number and format color
+ * @param {} stats
+ * @param {} decimals - number of decimals to display, null for input fields
+ * @returns stats
+ */
+GZ3D.Gui.prototype.roundNumber = function(stats, isColor, decimals)
+{
+  if (isColor)
+  {
+    stats = Math.round(stats * 255);
+  }
+  else
+  {
+    if (decimals === null)
     {
       stats = Math.round(stats*1000)/1000;
     }
     else
     {
-      stats = parseFloat(Math.round(stats*1000)/1000)
-          .toFixed(3);
+      stats = stats.toFixed(decimals);
     }
   }
-  else // array of numbers
+  return stats;
+};
+
+/**
+ * Round each number in an array
+ * @param {} stats
+ * @param {} decimals - number of decimals to display, null for input fields
+ * @returns stats
+ */
+GZ3D.Gui.prototype.roundArray = function(stats, isColor, decimals)
+{
+  for (var key in stats)
   {
-    for (var key in stats)
+    if (typeof stats[key] === 'number')
     {
-      if (typeof stats[key] === 'number')
-      {
-        // colors
-        if (key === 'r' || key === 'g' || key === 'b' || key === 'a')
-        {
-          stats[key] = Math.round(stats[key] * 255);
-        }
-        else
-        {
-          if (returnNumber)
-          {
-            stats[key] = Math.round(stats[key]*1000)/1000;
-          }
-          else
-          {
-            stats[key] = parseFloat(Math.round(stats[key]*1000)/1000)
-                .toFixed(3);
-          }
-        }
-      }
+      stats[key] = this.roundNumber(stats[key], isColor, decimals);
     }
   }
   return stats;
