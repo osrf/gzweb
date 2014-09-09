@@ -115,6 +115,10 @@ input[type=number]::-webkit-inner-spin-button
   line-height: 1.8em;
   background-color: #1d1d1d;
 }
+.panelTitle:hover
+{
+  background-color: #212121;
+}
 .panelTitle h3
 {
   margin: 0.3em;
@@ -166,15 +170,12 @@ input[type=number]::-webkit-inner-spin-button
   font-size: 0.9em;
 }
 /* insert menu */
-.insertMenus li
-{
-  width: 0em;
-}
 .insertMenuItem
 {
   width: 7em;
   height: 6.5em;
-  margin-left: 1.5em;
+  margin-left: 1.3em;
+  float: left;
 }
 .insertMenuItem img
 {
@@ -191,6 +192,27 @@ input[type=number]::-webkit-inner-spin-button
 {
   height: 4em;
   margin-top: 0.6em;
+}
+.insertMenuCategoryItem
+{
+  width: calc(100% - 5em);
+}
+.insertMenuCategoryItem img
+{
+  vertical-align: middle;
+  margin-left: 1em;
+}
+.insertMenuCategoryItem > img:nth-child(2)
+{
+  height: 3em;
+  max-width: 3em;
+  opacity: 0.3;
+}
+.insertMenuCategoryItem > img:nth-child(3)
+{
+  height: 4em;
+  max-width: 4em;
+  opacity: 0.5;
 }
 /* world tree */
 .expandableTree
@@ -616,7 +638,7 @@ input[type=number]::-webkit-inner-spin-button
   /* insert menu */
   .insertMenuItem
   {
-    width: 4.6em;
+    width: calc(100% - 3.2em);
     height: 4.3em;
     margin-left: 0.5em;
   }
@@ -633,6 +655,18 @@ input[type=number]::-webkit-inner-spin-button
   {
     height: 2.7em;
     margin-top: 0.4em;
+  }
+  .insertMenuCategoryItem img
+  {
+    margin-left: 0;
+  }
+  .insertMenuCategoryItem > img:nth-child(2)
+  {
+    display: none;
+  }
+  .insertMenuCategoryItem > img:nth-child(3)
+  {
+    display: none;
   }
   /* world tree */
   .treeItem
