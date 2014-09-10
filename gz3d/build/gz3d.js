@@ -5355,6 +5355,15 @@ GZ3D.Scene.prototype.onKeyDown = function(event)
     }
   }
 
+  // DEL to delete entities
+  if (event.keyCode === 46)
+  {
+    if (this.selectedEntity)
+    {
+      guiEvents.emit('delete_entity');
+    }
+  }
+
   // F2 for turning on effects
   if (event.keyCode === 113)
   {
@@ -6993,7 +7002,6 @@ GZ3D.SdfParser.prototype.init = function()
     that.gui.guiEvents.emit('notification_popup', 'GzWeb is currently running' +
             'without a server, and materials could not be loaded.' +
             'When connected scene will be reinitialized', 5000);
-            console.log('a');
     that.onConnectionError();
   });
   
@@ -7006,7 +7014,6 @@ GZ3D.SdfParser.prototype.init = function()
     {
       that.gui.guiEvents.emit('notification_popup', 'GzWeb is currently ' +
               'running without a GzServer, and Scene is reinitialized.', 5000);
-              console.log('b');
       that.onConnectionError();
     }
   });
