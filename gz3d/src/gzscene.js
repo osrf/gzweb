@@ -237,7 +237,7 @@ GZ3D.Scene.prototype.init = function()
   material.color = new THREE.Color(0xffff00);
   material.ambient = material.color;
 
-  geometry = new THREE.CylinderGeometry(0.03, 0.03, 0.25, 36, 1, false);
+  geometry = new THREE.CylinderGeometry(0.02, 0.02, 0.25, 36, 1, false);
 
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.z = -0.175;
@@ -245,7 +245,7 @@ GZ3D.Scene.prototype.init = function()
   mesh.name = 'JOINT_VISUAL';
   mainAxis.add(mesh);
 
-  geometry = new THREE.CylinderGeometry(0, 0.05, 0.15, 36, 1, false);
+  geometry = new THREE.CylinderGeometry(0, 0.035, 0.1, 36, 1, false);
 
   mesh = new THREE.Mesh(geometry, material);
   mesh.rotation.x = Math.PI/2;
@@ -256,16 +256,16 @@ GZ3D.Scene.prototype.init = function()
 
   var rotAxis = new THREE.Object3D();
 
-  geometry = new THREE.TorusGeometry(0.06, 0.007, 10, 36, Math.PI * 3/2);
+  geometry = new THREE.TorusGeometry(0.04, 0.006, 10, 36, Math.PI * 3/2);
 
   mesh = new THREE.Mesh(geometry, material);
   mesh.name = 'JOINT_VISUAL';
   rotAxis.add(mesh);
 
-  geometry = new THREE.CylinderGeometry(0.02, 0, 0.0375, 10, 1, false);
+  geometry = new THREE.CylinderGeometry(0.015, 0, 0.025, 10, 1, false);
 
   mesh = new THREE.Mesh(geometry, material);
-  mesh.position.y = -0.06;
+  mesh.position.y = -0.04;
   mesh.rotation.z = Math.PI/2;
   mesh.name = 'JOINT_VISUAL';
   rotAxis.add(mesh);
@@ -277,9 +277,9 @@ GZ3D.Scene.prototype.init = function()
   geometry = new THREE.CylinderGeometry(0.01, 0.01, 0.1, 10, 1, true);
 
   mesh = new THREE.Mesh(geometry, material);
-  mesh.position.x = 0.06;
-  mesh.position.y = 0.06;
-  mesh.position.z = -0.175;
+  mesh.position.x = 0.03;
+  mesh.position.y = 0.03;
+  mesh.position.z = -0.15;
   mesh.rotation.x = Math.PI/2;
   mesh.name = 'JOINT_VISUAL';
   transAxis.add(mesh);
@@ -287,17 +287,17 @@ GZ3D.Scene.prototype.init = function()
   geometry = new THREE.CylinderGeometry(0.02, 0, 0.0375, 10, 1, false);
 
   mesh = new THREE.Mesh(geometry, material);
-  mesh.position.x = 0.06;
-  mesh.position.y = 0.06;
-  mesh.position.z = -0.175 + 0.05;
+  mesh.position.x = 0.03;
+  mesh.position.y = 0.03;
+  mesh.position.z = -0.15 + 0.05;
   mesh.rotation.x = -Math.PI/2;
   mesh.name = 'JOINT_VISUAL';
   transAxis.add(mesh);
 
   mesh = new THREE.Mesh(geometry, material);
-  mesh.position.x = 0.06;
-  mesh.position.y = 0.06;
-  mesh.position.z = -0.175 - 0.05;
+  mesh.position.x = 0.03;
+  mesh.position.y = 0.03;
+  mesh.position.z = -0.15 - 0.05;
   mesh.rotation.x = Math.PI/2;
   mesh.name = 'JOINT_VISUAL';
   transAxis.add(mesh);
@@ -307,14 +307,14 @@ GZ3D.Scene.prototype.init = function()
   var screwAxis = new THREE.Object3D();
 
   mesh = new THREE.Mesh(geometry, material);
-  mesh.position.x = -0.065;
-  mesh.position.z = -0.13;
+  mesh.position.x = -0.04;
+  mesh.position.z = -0.11;
   mesh.rotation.z = -Math.PI/4;
   mesh.rotation.x = -Math.PI/10;
   mesh.name = 'JOINT_VISUAL';
   screwAxis.add(mesh);
 
-  var radius = 0.06;
+  var radius = 0.04;
   var length = 0.02;
   var curve = new THREE.SplineCurve3([new THREE.Vector3(radius, 0, 0*length),
                                       new THREE.Vector3(0, radius, 1*length),
@@ -326,7 +326,7 @@ GZ3D.Scene.prototype.init = function()
   geometry = new THREE.TubeGeometry(curve, 36, 0.01, 10, false, false);
 
   mesh = new THREE.Mesh(geometry, material);
-  mesh.position.z = -0.25;
+  mesh.position.z = -0.23;
   mesh.name = 'JOINT_VISUAL';
   screwAxis.add(mesh);
 
