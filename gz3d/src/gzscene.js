@@ -2130,6 +2130,7 @@ GZ3D.Scene.prototype.selectEntity = function(object)
 
 /**
  * View joints
+ * Toggle: if there are joints, hide, otherwise, show.
  * @param {} model
  */
 GZ3D.Scene.prototype.viewJoints = function(model)
@@ -2139,25 +2140,51 @@ GZ3D.Scene.prototype.viewJoints = function(model)
     return;
   }
 
-  var joint = model.getObjectByName('JOINT_VISUAL', true);
-  if (joint)
+  // Visuals already exist
+  if (model.jointVisuals)
   {
-    do
+    // Hide = remove from parent
+    if (model.jointVisuals[0].parent !== undefined)
     {
-      joint.parent.remove(joint);
-      joint = model.getObjectByName('JOINT_VISUAL', true);
+      for (var v = 0; v < model.jointVisuals.length; ++v)
+      {
+        model.jointVisuals[v].parent.remove(model.jointVisuals[v]);
+      }
     }
-    while (joint);
+    // Show: attach to parent
+    else
+    {
+      for (var s = 0; s < model.joint.length; ++s)
+      {
+        var Child = model.getObjectByName(model.joint[s].child);
+
+        if (!Child)
+        {
+          return;
+        }
+
+        Child.add(model.jointVisuals[s]);
+      }
+    }
   }
+  // Create visuals
   else
   {
+    model.jointVisuals = [];
     for (var j = 0; j < model.joint.length; ++j)
     {
-      var child = this.getByName(model.joint[j].child);
+      var child = model.getObjectByName(model.joint[j].child);
+
+      if (!child)
+      {
+        return;
+      }
 
       // XYZ expressed w.r.t. child
       var jointVisual = this.jointAxis['XYZaxes'].clone();
       child.add(jointVisual);
+      model.jointVisuals.push(jointVisual);
+
       this.setPose(jointVisual, model.joint[j].pose.position,
           model.joint[j].pose.orientation);
 
