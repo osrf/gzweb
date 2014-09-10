@@ -53,6 +53,7 @@ GazeboInterface::GazeboInterface()
   this->lightTopic = "~/light";
   this->linkTopic = "~/link";
   this->sceneTopic = "~/scene";
+  this->physicsTopic = "~/physics";
   this->modelModifyTopic = "~/model/modify";
   this->factoryTopic = "~/factory";
   this->worldControlTopic = "~/world_control";
@@ -91,6 +92,9 @@ GazeboInterface::GazeboInterface()
 
   this->sceneSub = this->node->Subscribe(this->sceneTopic,
       &GazeboInterface::OnScene, this);
+
+  this->physicsSub = this->node->Subscribe(this->physicsTopic,
+      &GazeboInterface::OnPhysicsMsg, this);
 
   this->statsSub = this->node->Subscribe(this->statsTopic,
       &GazeboInterface::OnStats, this);
@@ -156,6 +160,7 @@ GazeboInterface::~GazeboInterface()
   this->lightMsgs.clear();
   this->visualMsgs.clear();
   this->sceneMsgs.clear();
+  this->physicsMsgs.clear();
   this->jointMsgs.clear();
   this->sensorMsgs.clear();
 
@@ -234,6 +239,7 @@ void GazeboInterface::ProcessMessages()
 {
   static RequestMsgs_L::iterator rIter;
   static SceneMsgs_L::iterator sIter;
+  static PhysicsMsgs_L::iterator physicsIter;
   static WorldStatsMsgs_L::iterator wIter;
   static ModelMsgs_L::iterator modelIter;
   static VisualMsgs_L::iterator visualIter;
@@ -272,6 +278,15 @@ void GazeboInterface::ProcessMessages()
             requests.erase(requestMsg->id());
           this->requests[requestMsg->id()] = requestMsg;
           this->requestPub->Publish(*requestMsg);
+        }
+        else if (topic == this->physicsTopic)
+        {
+          gazebo::msgs::Request *requestPhysicsMsg;
+          requestPhysicsMsg = gazebo::msgs::CreateRequest("physics_info", "");
+          if (this->requests.find(requestPhysicsMsg->id()) != this->requests.end())
+            requests.erase(requestPhysicsMsg->id());
+          this->requests[requestPhysicsMsg->id()] = requestPhysicsMsg;
+          this->requestPub->Publish(*requestPhysicsMsg);
         }
         else if (topic == this->poseTopic)
         {
@@ -594,6 +609,16 @@ void GazeboInterface::ProcessMessages()
     }
     this->sceneMsgs.clear();
 
+    // Forward the physics messages.
+    for (physicsIter = this->physicsMsgs.begin();
+        physicsIter != this->physicsMsgs.end(); ++physicsIter)
+    {
+      msg = this->PackOutgoingTopicMsg(this->physicsTopic,
+          pb2json(*(*physicsIter).get()));
+      this->Send(msg);
+    }
+    this->physicsMsgs.clear();
+
     // Forward the model messages.
     for (modelIter = this->modelMsgs.begin();
         modelIter != this->modelMsgs.end(); ++modelIter)
@@ -866,11 +891,22 @@ void GazeboInterface::OnResponse(ConstResponsePtr &_msg)
   if (this->requests.find(_msg->id()) == this->requests.end())
     return;
 
-  gazebo::msgs::Scene sceneMsg;
-  sceneMsg.ParseFromString(_msg->serialized_data());
-  boost::shared_ptr<gazebo::msgs::Scene> sm(new gazebo::msgs::Scene(sceneMsg));
-  this->sceneMsgs.push_back(sm);
-  this->requests.erase(_msg->id());
+  if (_msg->has_type() && _msg->type() == "gazebo.msgs.Scene")
+  {
+    gazebo::msgs::Scene sceneMsg;
+    sceneMsg.ParseFromString(_msg->serialized_data());
+    boost::shared_ptr<gazebo::msgs::Scene> sm(new gazebo::msgs::Scene(sceneMsg));
+    this->sceneMsgs.push_back(sm);
+    this->requests.erase(_msg->id());
+  }
+  else if (_msg->has_type() && _msg->type() == "gazebo.msgs.Physics")
+  {
+    gazebo::msgs::Physics physicsMsg;
+    physicsMsg.ParseFromString(_msg->serialized_data());
+    boost::shared_ptr<gazebo::msgs::Physics> pm(new gazebo::msgs::Physics(physicsMsg));
+    this->physicsMsgs.push_back(pm);
+    this->requests.erase(_msg->id());
+  }
 }
 
 /////////////////////////////////////////////////
@@ -891,6 +927,16 @@ void GazeboInterface::OnScene(ConstScenePtr &_msg)
 
   boost::recursive_mutex::scoped_lock lock(*this->receiveMutex);
   this->sceneMsgs.push_back(_msg);
+}
+
+/////////////////////////////////////////////////
+void GazeboInterface::OnPhysicsMsg(ConstPhysicsPtr &_msg)
+{
+  if (!this->IsConnected())
+    return;
+
+  boost::recursive_mutex::scoped_lock lock(*this->receiveMutex);
+  this->physicsMsgs.push_back(_msg);
 }
 
 /////////////////////////////////////////////////
