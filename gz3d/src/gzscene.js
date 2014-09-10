@@ -2140,6 +2140,8 @@ GZ3D.Scene.prototype.viewJoints = function(model)
     return;
   }
 
+  var child;
+
   // Visuals already exist
   if (model.jointVisuals)
   {
@@ -2156,14 +2158,14 @@ GZ3D.Scene.prototype.viewJoints = function(model)
     {
       for (var s = 0; s < model.joint.length; ++s)
       {
-        var Child = model.getObjectByName(model.joint[s].child);
+        child = model.getObjectByName(model.joint[s].child);
 
-        if (!Child)
+        if (!child)
         {
-          return;
+          continue;
         }
 
-        Child.add(model.jointVisuals[s]);
+        child.add(model.jointVisuals[s]);
       }
     }
   }
@@ -2173,17 +2175,18 @@ GZ3D.Scene.prototype.viewJoints = function(model)
     model.jointVisuals = [];
     for (var j = 0; j < model.joint.length; ++j)
     {
-      var child = model.getObjectByName(model.joint[j].child);
+      child = model.getObjectByName(model.joint[j].child);
 
       if (!child)
       {
-        return;
+        continue;
       }
 
       // XYZ expressed w.r.t. child
       var jointVisual = this.jointAxis['XYZaxes'].clone();
       child.add(jointVisual);
       model.jointVisuals.push(jointVisual);
+      jointVisual.scale.set(0.7, 0.7, 0.7);
 
       this.setPose(jointVisual, model.joint[j].pose.position,
           model.joint[j].pose.orientation);
