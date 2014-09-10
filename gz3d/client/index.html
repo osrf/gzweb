@@ -113,9 +113,8 @@
       <div id="leftPanel" class="gzGUI">
         <!-- main menu -->
         <div id="mainMenu" class="leftPanels ui-overlay-shadow">
-          <div class="clickable panelTitle">
+          <div class="clickable panelTitle closePanels">
             <h3>Menu</h3>
-            <img src="style/images/close.png">
           </div>
           <div class="panelContent">
             <ul>
@@ -148,184 +147,98 @@
         <!-- insert menu -->
         <div ng-controller="insertControl" class="panelsGroup">
           <div id="insertMenu" class="leftPanels insertMenus ui-overlay-shadow">
-            <div class="clickable panelTitle">
+            <div class="clickable panelTitle closePanels" title="Insert">
               <h3>Insert</h3>
-              <img src="style/images/close.png">
             </div>
             <div class="panelContent">
-              <ul>
-                <li>
-                  <a href="#" ng-click="openCategory('simple_shapes')" data-role="button" class="insertMenuItem" title="Shapes">
-                    Shapes<br>
-                    <img src="style/images/box.png">
-                  </a>
-                </li>
-                <li>
-                  <a href="#" ng-click="openCategory('lights')" data-role="button" class="insertMenuItem" title="Lights">
-                    Lights<br>
-                    <img src="style/images/light_thumb.png">
-                  </a>
-                </li>
-                <li ng-repeat="category in categories">
-                  <a href="#" ng-click="openCategory(category.path)" data-role="button" class="insertMenuItem" title="{{category.title}}">
-                    {{category.title}}<br>
-                    <img src="/assets/{{category.examplePath}}/thumbnails/0.png">
-                  </a>
-                </li>
-              </ul>
+              <a ng-click="openTab('insertMenu-simple_shapes')" data-role="button" class="insertMenuItem insertMenuCategoryItem" title="Shapes">
+                Shapes<br>
+                <img src="style/images/cylinder.png">
+                <img src="style/images/sphere.png">
+                <img src="style/images/box.png">
+              </a>
+              <a ng-click="openTab('insertMenu-lights')" data-role="button" class="insertMenuItem insertMenuCategoryItem insertMenuCategoryItemLight" title="Lights">
+                Lights<br>
+                <img src="style/images/pointlight.png">
+                <img src="style/images/spotlight.png">
+                <img src="style/images/directionallight.png">
+                <img src="style/images/light_thumb.png">
+              </a>
+              <a ng-repeat="category in categories" ng-click="openTab('insertMenu-'+category.path)" data-role="button" class="insertMenuItem insertMenuCategoryItem" title="{{category.title}}">
+                {{category.title}}<br>
+                <img src="/assets/{{category.examplePath1}}/thumbnails/0.png">
+                <img src="/assets/{{category.examplePath2}}/thumbnails/0.png">
+                <img src="/assets/{{category.examplePath3}}/thumbnails/0.png">
+              </a>
             </div>
           </div>
           <div id="insertMenu-simple_shapes" class="leftPanels insertMenus insertCategory ui-overlay-shadow">
-            <div class="clickable panelTitle">
-              <h3>Insert</h3>
-              <img src="style/images/close.png">
-            </div>
-            <div class="clickable panelSubTitle">
-              <h4>Simple Shapes</h4>
+            <div class="clickable panelTitle" ng-click="openTab('insertMenu')" title="Simple Shapes">
+              <h3>Simple Shapes</h3>
               <img src="style/images/back.png">
             </div>
-            <div class="panelSubContent">
-              <ul>
-                <li>
-                  <a href="#" id="insert-entity-box" ng-mousedown="spawnEntity('box')" data-role="button" class="insertMenuItem" title="Box">
-                    Box<br>
-                    <img src="style/images/box.png">
-                  </a>
-                </li>
-                <li>
-                  <a href="#" id="insert-entity-sphere" ng-mousedown="spawnEntity('sphere')" data-role="button" class="insertMenuItem" title="Sphere">
-                    Sphere<br>
-                    <img src="style/images/sphere.png">
-                  </a>
-                </li>
-                <li>
-                  <a href="#" id="insert-entity-cylinder" ng-mousedown="spawnEntity('cylinder')" data-role="button" class="insertMenuItem" title="Cylinder">
-                    Cylinder<br>
-                    <img src="style/images/cylinder.png">
-                  </a>
-                </li>
-              </ul>
+            <div class="panelContent">
+              <a id="insert-entity-box" ng-mousedown="spawnEntity('box')" data-role="button" class="insertMenuItem" title="Box">
+                Box<br>
+                <img src="style/images/box.png">
+              </a>
+              <a id="insert-entity-sphere" ng-mousedown="spawnEntity('sphere')" data-role="button" class="insertMenuItem" title="Sphere">
+                Sphere<br>
+                <img src="style/images/sphere.png">
+              </a>
+              <a id="insert-entity-cylinder" ng-mousedown="spawnEntity('cylinder')" data-role="button" class="insertMenuItem" title="Cylinder">
+                Cylinder<br>
+                <img src="style/images/cylinder.png">
+              </a>
             </div>
           </div>
           <div id="insertMenu-lights" class="leftPanels insertMenus insertCategory ui-overlay-shadow">
-            <div class="clickable panelTitle">
-              <h3>Insert</h3>
-              <img src="style/images/close.png">
-            </div>
-            <div class="clickable panelSubTitle">
-              <h4>Lights</h4>
+            <div class="clickable panelTitle" ng-click="openTab('insertMenu')" title="Lights">
+              <h3>Lights</h3>
               <img src="style/images/back.png">
             </div>
-            <div class="panelSubContent">
-              <ul>
-                <li>
-                  <a href="#" id="insert-entity-pointlight" ng-mousedown="spawnEntity('pointlight')" data-role="button" class="insertMenuItem insertMenuItemLight" title="Point Light">
-                    Point<br>
-                    <img src="style/images/pointlight.png">
-                  </a>
-                </li>
-                <li>
-                  <a href="#" id="insert-entity-spotlight" ng-mousedown="spawnEntity('spotlight')" data-role="button" class="insertMenuItem insertMenuItemLight" title="Spot Light">
-                    Spot<br>
-                    <img src="style/images/spotlight.png">
-                  </a>
-                </li>
-                <li>
-                  <a href="#" id="insert-entity-directionallight" ng-mousedown="spawnEntity('directionallight')" data-role="button" class="insertMenuItem insertMenuItemLight" title="Directional Light">
-                    Directional<br>
-                    <img src="style/images/directionallight.png">
-                  </a>
-                </li>
-              </ul>
+            <div class="panelContent">
+              <a id="insert-entity-pointlight" ng-mousedown="spawnEntity('pointlight')" data-role="button" class="insertMenuItem insertMenuItemLight" title="Point Light">
+                Point<br>
+                <img src="style/images/pointlight.png">
+              </a>
+              <a id="insert-entity-spotlight" ng-mousedown="spawnEntity('spotlight')" data-role="button" class="insertMenuItem insertMenuItemLight" title="Spot Light">
+                Spot<br>
+                <img src="style/images/spotlight.png">
+              </a>
+              <a id="insert-entity-directionallight" ng-mousedown="spawnEntity('directionallight')" data-role="button" class="insertMenuItem insertMenuItemLight" title="Directional Light">
+                Directional<br>
+                <img src="style/images/directionallight.png">
+              </a>
             </div>
           </div>
           <div ng-repeat="category in categories" id="insertMenu-{{category.path}}" class="leftPanels insertMenus insertCategory ui-overlay-shadow">
-            <div class="clickable panelTitle">
-              <h3>Insert</h3>
-              <img src="style/images/close.png">
-            </div>
-            <div class="clickable panelSubTitle">
-              <h4>{{category.title}}</h4>
+            <div class="clickable panelTitle" ng-click="openTab('insertMenu')" title="{{category.title}}">
+              <h3>{{category.title}}</h3>
               <img src="style/images/back.png">
             </div>
-            <div class="panelSubContent">
-              <ul>
-                <li ng-repeat="model in category.models">
-                  <a href="#" id="insert-entity-{{model.modelPath}}" ng-mousedown="spawnEntity(model.modelPath)" data-role="button" class="insertMenuItem" title="{{model.modelTitle}}">
-                    {{model.modelTitle}}<br>
-                    <img src="/assets/{{model.modelPath}}/thumbnails/0.png">
-                  </a>
-                </li>
-              </ul>
+            <div class="panelContent">
+              <a ng-repeat="model in category.models" id="insert-entity-{{model.modelPath}}" ng-mousedown="spawnEntity(model.modelPath)" data-role="button" class="insertMenuItem" title="{{model.modelTitle}}">
+              {{model.modelTitle}}<br>
+              <img src="/assets/{{model.modelPath}}/thumbnails/0.png">
+            </a>
             </div>
           </div>
         </div>
         <!-- scene tree -->
         <div ng-controller="treeControl" class="panelsGroup">
           <div id="treeMenu" class="leftPanels ui-overlay-shadow">
-            <div class="clickable panelTitle">
+            <div class="clickable panelTitle closePanels" title="Scene Tree">
               <h3>Scene Tree</h3>
-              <img src="style/images/close.png">
             </div>
             <div class="panelContent">
               <!-- scene -->
-              <div id="expand-SCENE" class="clickable expandableTree" ng-click="expandTree('SCENE')">
-                <img src="style/images/play.png">
+              <div class="clickable expandableTree notExpandableTree" ng-click="openTab('sceneProperties')">
                 Scene
               </div>
-              <div id="expandable-SCENE" class="expandedContent">
-                <!-- scene ambient -->
-                <div id="expand-ambient-SCENE" class="clickable expandableProperty expandableLevel01" ng-click="expandProperty('ambient', 'SCENE')">
-                  <div>
-                    <img src="style/images/play.png">
-                    Ambient
-                  </div>
-                  <div class="colorDisplay" style="background-color: rgb({{scene.ambient.r}},{{scene.ambient.g}},{{scene.ambient.b}})"></div>
-                </div>
-                <div id="expandable-ambient-SCENE" class="expandedContent">
-                  <div class="property propertyLevel02 redBg">
-                    <div>Red</div>
-                    <div class="propertyNumber">{{scene.ambient.r}}</div>
-                  </div>
-                  <div class="property propertyLevel02 greenBg">
-                    <div>Green</div>
-                    <div class="propertyNumber">{{scene.ambient.g}}</div>
-                  </div>
-                  <div class="property propertyLevel02 blueBg">
-                    <div>Blue</div>
-                    <div class="propertyNumber">{{scene.ambient.b}}</div>
-                  </div>
-                  <div class="property propertyLevel02">
-                    <div>Alpha</div>
-                    <div class="propertyNumber">{{scene.ambient.a}}</div>
-                  </div>
-                </div>
-                <!-- scene background -->
-                <div id="expand-background-SCENE" class="clickable expandableProperty expandableLevel01" ng-click="expandProperty('background', 'SCENE')">
-                  <div>
-                    <img src="style/images/play.png">
-                    Background
-                  </div>
-                  <div class="colorDisplay" style="background-color: rgb({{scene.background.r}},{{scene.background.g}},{{scene.background.b}})"></div>
-                </div>
-                <div id="expandable-background-SCENE" class="expandedContent">
-                  <div class="property propertyLevel02 redBg">
-                    <div>Red</div>
-                    <div class="propertyNumber">{{scene.background.r}}</div>
-                  </div>
-                  <div class="property propertyLevel02 greenBg">
-                    <div>Green</div>
-                    <div class="propertyNumber">{{scene.background.g}}</div>
-                  </div>
-                  <div class="property propertyLevel02 blueBg">
-                    <div>Blue</div>
-                    <div class="propertyNumber">{{scene.background.b}}</div>
-                  </div>
-                  <div class="property propertyLevel02">
-                    <div>Alpha</div>
-                    <div class="propertyNumber">{{scene.background.a}}</div>
-                  </div>
-                </div>
+              <!-- physics -->
+              <div id="expand-PHYSICS" class="clickable expandableTree notExpandableTree" ng-click="openTab('physicsProperties')">
+                Physics
               </div>
               <!-- models -->
               <div id="expand-MODELS" class="clickable expandableTree" ng-click="expandTree('MODELS')">
@@ -357,15 +270,11 @@
           </div>
           <!-- property panels -->
           <div ng-repeat="model in models" id="propertyPanel-{{model.name}}" class="leftPanels propertyPanels ui-overlay-shadow">
-            <div class="clickable panelTitle" ng-click="closePanels()">
-              <h3>Scene Tree</h3>
-              <img src="style/images/close.png">
-            </div>
-            <div class="clickable panelSubTitle" ng-click="backToTree()" title="{{model.name}}">
-              <h4>{{model.name}}</h4>
+            <div class="clickable panelTitle" ng-click="openTab('treeMenu')" title="{{model.name}}">
+              <h3>{{model.name}}</h3>
               <img src="style/images/back.png">
             </div>
-            <div class="panelSubContent">
+            <div class="panelContent">
               <div class="propertyPanelImg">
                 <img src="{{model.thumbnail}}">
               </div>
@@ -387,7 +296,9 @@
                   <div>Static</div>
                   <div class="propertyToggle">
                     <img src="style/images/{{model.is_static.icon}}.png">
-                    {{model.is_static.title}}
+                    <div>
+                      {{model.is_static.title}}
+                    </div>
                   </div>
                 </div>
                 <!-- model pose -->
@@ -454,28 +365,36 @@
                       <div>Self Collide</div>
                       <div class="propertyToggle">
                         <img src="style/images/{{link.self_collide.icon}}.png">
-                        {{link.self_collide.title}}
+                        <div>
+                          {{link.self_collide.title}}
+                        </div>
                       </div>
                     </div>
                     <div class="clickable property propertyLevel3" ng-click="toggleProperty('gravity', link.name)">
                       <div>Gravity</div>
                       <div class="propertyToggle">
                         <img src="style/images/{{link.gravity.icon}}.png">
-                        {{link.gravity.title}}
+                        <div>
+                          {{link.gravity.title}}
+                        </div>
                       </div>
                     </div>
                     <div class="clickable property propertyLevel3" ng-click="toggleProperty('kinematic', link.name)">
                       <div>Kinematic</div>
                       <div class="propertyToggle">
                         <img src="style/images/{{link.kinematic.icon}}.png">
-                        {{link.kinematic.title}}
+                        <div>
+                          {{link.kinematic.title}}
+                        </div>
                       </div>
                     </div>
                     <div class="property propertyLevel3">
                       <div>Canonical</div>
                       <div class="propertyToggle">
                         <img src="style/images/{{link.canonical.icon}}.png">
-                        {{link.canonical.title}}
+                        <div>
+                          {{link.canonical.title}}
+                        </div>
                       </div>
                     </div>
                     <!-- link pose -->
@@ -749,15 +668,11 @@
           </div>
           <!-- lights -->
           <div ng-repeat="light in lights" id="propertyPanel-{{light.name}}" class="leftPanels propertyPanels ui-overlay-shadow">
-            <div class="clickable panelTitle" ng-click="closePanels()">
-              <h3>Scene Tree</h3>
-              <img src="style/images/close.png">
-            </div>
-            <div class="clickable panelSubTitle" ng-click="backToTree()" title="{{light.name}}">
-              <h4>{{light.name}}</h4>
+            <div class="clickable panelTitle" ng-click="openTab('treeMenu')" title="{{light.name}}">
+              <h3>{{light.name}}</h3>
               <img src="style/images/back.png">
             </div>
-            <div class="panelSubContent">
+            <div class="panelContent">
               <div class="propertyPanelImg">
                 <img src="{{light.thumbnail}}">
               </div>
@@ -926,33 +841,188 @@
               </div>
             </div>
           </div>
+          <!-- scene -->
+          <div id="sceneProperties" class="leftPanels propertyPanels ui-overlay-shadow">
+            <div class="clickable panelTitle" ng-click="openTab('treeMenu')" title="Scene">
+              <h3>Scene</h3>
+              <img src="style/images/back.png">
+            </div>
+            <div class="panelContent">
+              <div class="propertyPanelHeader">
+                <h4>Property</h4>
+                <h4>Value</h4>
+              </div>
+              <!-- scene ambient -->
+              <div id="expand-ambient-SCENE" class="clickable expandableProperty expandableLevel1" ng-click="expandProperty('ambient', 'SCENE')">
+                <div>
+                  <img src="style/images/play.png">
+                  Ambient
+                </div>
+                <div class="colorDisplay" style="background-color: rgb({{scene.ambient.r}},{{scene.ambient.g}},{{scene.ambient.b}})"></div>
+              </div>
+              <div id="expandable-ambient-SCENE" class="expandedContent">
+                <div class="property propertyLevel2 redBg">
+                  <div>Red</div>
+                  <div class="propertyNumber">{{scene.ambient.r}}</div>
+                </div>
+                <div class="property propertyLevel2 greenBg">
+                  <div>Green</div>
+                  <div class="propertyNumber">{{scene.ambient.g}}</div>
+                </div>
+                <div class="property propertyLevel2 blueBg">
+                  <div>Blue</div>
+                  <div class="propertyNumber">{{scene.ambient.b}}</div>
+                </div>
+                <div class="property propertyLevel2">
+                  <div>Alpha</div>
+                  <div class="propertyNumber">{{scene.ambient.a}}</div>
+                </div>
+              </div>
+              <!-- scene background -->
+              <div id="expand-background-SCENE" class="clickable expandableProperty expandableLevel1" ng-click="expandProperty('background', 'SCENE')">
+                <div>
+                  <img src="style/images/play.png">
+                  Background
+                </div>
+                <div class="colorDisplay" style="background-color: rgb({{scene.background.r}},{{scene.background.g}},{{scene.background.b}})"></div>
+              </div>
+              <div id="expandable-background-SCENE" class="expandedContent">
+                <div class="property propertyLevel2 redBg">
+                  <div>Red</div>
+                  <div class="propertyNumber">{{scene.background.r}}</div>
+                </div>
+                <div class="property propertyLevel2 greenBg">
+                  <div>Green</div>
+                  <div class="propertyNumber">{{scene.background.g}}</div>
+                </div>
+                <div class="property propertyLevel2 blueBg">
+                  <div>Blue</div>
+                  <div class="propertyNumber">{{scene.background.b}}</div>
+                </div>
+                <div class="property propertyLevel2">
+                  <div>Alpha</div>
+                  <div class="propertyNumber">{{scene.background.a}}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- physics -->
+          <div id="physicsProperties" class="leftPanels propertyPanels ui-overlay-shadow">
+            <div class="clickable panelTitle" ng-click="openTab('treeMenu')" title="Physics">
+              <h3>Physics</h3>
+              <img src="style/images/back.png">
+            </div>
+            <div class="panelContent">
+              <div class="propertyPanelHeader">
+                <h4>Property</h4>
+                <h4>Value</h4>
+              </div>
+              <div class="property propertyLevel1">
+                <div>Enable Physics</div>
+                <div class="propertyToggle">
+                  <img src="style/images/{{physics.enable_physics.icon}}.png">
+                  <div>
+                    {{physics.enable_physics.title}}
+                  </div>
+                </div>
+              </div>
+              <div class="property propertyLevel1">
+                <div id="real-time-update-rate">Real Time Update Rate</div>
+                <div class="propertyNumber">{{physics.real_time_update_rate}}</div>
+              </div>
+              <div class="property propertyLevel1">
+                <div>Max Step Size</div>
+                <div class="propertyNumber">{{physics.max_step_size}}</div>
+              </div>
+              <div id="expand-gravity-PHYSICS" class="clickable expandableProperty expandableLevel1" ng-click="expandProperty('gravity', 'PHYSICS')">
+                <div>
+                  <img src="style/images/play.png">
+                  Gravity
+                </div>
+              </div>
+              <div id="expandable-gravity-PHYSICS" class="expandedContent">
+                <div class="property propertyLevel2 lightBg">
+                  <div>x</div>
+                  <div class="propertyNumber">{{physics.gravity.x}}</div>
+                </div>
+                <div class="property propertyLevel2">
+                  <div>y</div>
+                  <div class="propertyNumber">{{physics.gravity.y}}</div>
+                </div>
+                <div class="property propertyLevel2 lightBg">
+                  <div>z</div>
+                  <div class="propertyNumber">{{physics.gravity.z}}</div>
+                </div>
+              </div>
+              <div id="expand-solver-PHYSICS" class="clickable expandableProperty expandableLevel1" ng-click="expandProperty('solver', 'PHYSICS')">
+                <div>
+                  <img src="style/images/play.png">
+                  Solver
+                </div>
+              </div>
+              <div id="expandable-solver-PHYSICS" class="expandedContent">
+                <div class="property propertyLevel2">
+                  <div>Iterations</div>
+                  <div class="propertyNumber">{{physics.iters}}</div>
+                </div>
+                <div class="property propertyLevel2">
+                  <div>SOR</div>
+                  <div class="propertyNumber">{{physics.sor}}</div>
+                </div>
+              </div>
+              <div id="expand-constraints-PHYSICS" class="clickable expandableProperty expandableLevel1" ng-click="expandProperty('constraints', 'PHYSICS')">
+                <div>
+                  <img src="style/images/play.png">
+                  Constraints
+                </div>
+              </div>
+              <div id="expandable-constraints-PHYSICS" class="expandedContent">
+                <div class="property propertyLevel2 lightBg">
+                  <div>CFM</div>
+                  <div class="propertyNumber">{{physics.cfm}}</div>
+                </div>
+                <div class="property propertyLevel2">
+                  <div>ERP</div>
+                  <div class="propertyNumber">{{physics.erp}}</div>
+                </div>
+                <div class="property propertyLevel2 lightBg">
+                  <div>Max Velocity</div>
+                  <div class="propertyNumber">{{physics.contact_max_correcting_vel}}</div>
+                </div>
+                <div class="property propertyLevel2">
+                  <div>Surface Layer</div>
+                  <div class="propertyNumber">{{physics.contact_surface_layer}}</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <!-- left panel -->
 
       <!-- tabs -->
-      <a href="#" id="mainMenuTab" class="gzGUI tab"><img src="style/images/bars.png" title="Menu"></a>
-      <a href="#" id="insertMenuTab" class="gzGUI tab"><img src="style/images/insert.png" title="Insert"></a>
-      <a href="#" id="treeMenuTab" class="gzGUI tab"><img src="style/images/tree.png" title="Scene Tree"></a>
+      <a id="mainMenuTab" class="gzGUI tab clickable"><img src="style/images/bars.png" title="Menu"></a>
+      <a id="insertMenuTab" class="gzGUI tab clickable"><img src="style/images/insert.png" title="Insert"></a>
+      <a id="treeMenuTab" class="gzGUI tab clickable"><img src="style/images/tree.png" title="Scene Tree"></a>
       <!-- tabs -->
 
       <!-- header -->
       <fieldset class="gzGUI" id="play-header-fieldset">
-        <a href="#" data-role="button" class="header-button" id="play"><span id="playText"><img src="style/images/play.png" title="Play"></span></a>
+        <a data-role="button" class="header-button" id="play"><span id="playText"><img src="style/images/play.png" title="Play"></span></a>
       </fieldset>
 
       <fieldset id="clock-header-fieldset"  class="gzGUI touch-only">
-        <a href="#" data-role="button" id="clock" class="header-button" data-rel="popup"><span><img src="style/images/clock.png"></span></a>
+        <a data-role="button" id="clock" class="header-button" data-rel="popup"><span><img src="style/images/clock.png"></span></a>
       </fieldset>
 
       <fieldset id="clock-mouse" class="gzGUI mouse-only">
-        <p style='margin:0px;margin-left:0.2em'>Real Time: <span class='real-time-value'>00 00:00:00</span></p>
-        <p style='margin:0px;margin-left:0.45em'>Sim Time: <span class='sim-time-value'>00 00:00:00</span></p>
+        <p>Real Time: <span class='real-time-value'>00 00:00:00</span></p>
+        <p>Sim Time: <span class='sim-time-value'>00 00:00:00</span></p>
       </fieldset>
 
       <div class="gzGUI" id="clock-touch" data-role="popup" data-history="false">
-        <p style='margin:0px;margin-left:0.2em'>Real Time: <span class='real-time-value'>00 00:00:00</span></p>
-        <p style='margin:0px;margin-left:0.45em'>Sim Time: <span class='sim-time-value'>00 00:00:00</span></p>
+        <p>Real Time: <span class='real-time-value'>00 00:00:00</span></p>
+        <p>Sim Time: <span class='sim-time-value'>00 00:00:00</span></p>
       </div>
 
       <fieldset class="gzGUI" data-role="controlgroup" data-mini="true" data-type="horizontal" id="mode-header-fieldset">
@@ -967,23 +1037,23 @@
       </fieldset>
 
       <fieldset id="box-header-fieldset" class="gzGUI mouse-only">
-        <a href="#" data-role="button" id="header-insert-box" class="header-button"><span><img src="style/images/box.png" title="Insert box"></span></a>
+        <a data-role="button" id="header-insert-box" class="header-button"><span><img src="style/images/box.png" title="Insert box"></span></a>
       </fieldset>
       <fieldset id="sphere-header-fieldset" class="gzGUI mouse-only">
-        <a href="#" data-role="button" id="header-insert-sphere" class="header-button"><span><img src="style/images/sphere.png" title="Insert sphere"></span></a>
+        <a data-role="button" id="header-insert-sphere" class="header-button"><span><img src="style/images/sphere.png" title="Insert sphere"></span></a>
       </fieldset>
       <fieldset id="cylinder-header-fieldset" class="gzGUI mouse-only">
-        <a href="#" data-role="button" id="header-insert-cylinder" class="header-button"><span><img src="style/images/cylinder.png" title="Insert cylinder"></span></a>
+        <a data-role="button" id="header-insert-cylinder" class="header-button"><span><img src="style/images/cylinder.png" title="Insert cylinder"></span></a>
       </fieldset>
 
       <fieldset id="pointlight-header-fieldset" class="gzGUI mouse-only">
-        <a href="#" data-role="button" id="header-insert-pointlight" class="header-button"><span><img style="height:1.45em;" src="style/images/pointlight.png" title="Insert point light"></span></a>
+        <a data-role="button" id="header-insert-pointlight" class="header-button"><span><img style="height:1.45em;" src="style/images/pointlight.png" title="Insert point light"></span></a>
       </fieldset>
       <fieldset id="spotlight-header-fieldset" class="gzGUI mouse-only">
-        <a href="#" data-role="button" id="header-insert-spotlight" class="header-button"><span><img src="style/images/spotlight.png" title="Insert spot light"></span></a>
+        <a data-role="button" id="header-insert-spotlight" class="header-button"><span><img src="style/images/spotlight.png" title="Insert spot light"></span></a>
       </fieldset>
       <fieldset id="directionallight-header-fieldset" class="gzGUI mouse-only">
-        <a href="#" data-role="button" id="header-insert-directionallight" class="header-button"><span><img src="style/images/directionallight.png" title="Insert directional light"></span></a>
+        <a data-role="button" id="header-insert-directionallight" class="header-button"><span><img src="style/images/directionallight.png" title="Insert directional light"></span></a>
       </fieldset>
       <!-- header -->
 

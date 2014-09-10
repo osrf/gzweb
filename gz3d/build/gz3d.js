@@ -30,7 +30,8 @@ var tabColors = {selected: 'rgb(34, 170, 221)', unselected: 'rgb(42, 42, 42)'};
 
 var modelList =
   [
-    {path:'buildings', title:'Buildings', examplePath:'house_1', models:
+    {path:'buildings', title:'Buildings',
+    examplePath1:'fast_food', examplePath2:'kitchen_dining', examplePath3:'house_1', models:
     [
       {modelPath:'fast_food', modelTitle:'Fast Food'},
       {modelPath:'gas_station', modelTitle:'Gas Station'},
@@ -46,7 +47,8 @@ var modelList =
       {modelPath:'willowgarage', modelTitle:'Willow Garage'}
     ]},
 
-    {path:'furniture', title:'Furniture', examplePath:'table', models:
+    {path:'furniture', title:'Furniture',
+    examplePath1:'hinged_door', examplePath2:'bookshelf', examplePath3:'table', models:
     [
       {modelPath:'bookshelf', modelTitle:'Book Shelf'},
       {modelPath:'cabinet', modelTitle:'Cabinet'},
@@ -80,7 +82,8 @@ var modelList =
       {modelPath:'nist_stairs_120', modelTitle:'Stairs'}
     ]},
 
-    {path:'kitchen', title:'Kitchen', examplePath:'bowl', models:
+    {path:'kitchen', title:'Kitchen',
+    examplePath1:'saucepan',  examplePath2:'beer',  examplePath3:'bowl', models:
     [
       {modelPath:'beer', modelTitle:'Beer'},
       {modelPath:'bowl', modelTitle:'Bowl'},
@@ -88,7 +91,8 @@ var modelList =
       {modelPath:'saucepan', modelTitle:'Saucepan'}
     ]},
 
-    {path:'robocup', title:'Robocup', examplePath:'robocup09_spl_field', models:
+    {path:'robocup', title:'Robocup', examplePath1:'robocup_3Dsim_ball',
+    examplePath2:'robocup14_spl_goal', examplePath3:'robocup09_spl_field', models:
     [
       {modelPath:'robocup09_spl_field', modelTitle:'2009 SPL Field'},
       {modelPath:'robocup14_spl_field', modelTitle:'2014 SPL Field'},
@@ -99,7 +103,8 @@ var modelList =
       {modelPath:'robocup_3Dsim_ball', modelTitle:'3D Sim. Ball'}
     ]},
 
-    {path:'robots', title:'Robots', examplePath:'pr2', models:
+    {path:'robots', title:'Robots',
+    examplePath1:'pioneer3at', examplePath2:'turtlebot', examplePath3:'pr2', models:
     [
       {modelPath:'create', modelTitle:'Create'},
       {modelPath:'husky', modelTitle:'Husky'},
@@ -115,7 +120,8 @@ var modelList =
       {modelPath:'youbot', modelTitle:'YouBot'}
     ]},
 
-    {path:'sensors', title:'Sensors', examplePath:'kinect', models:
+    {path:'sensors', title:'Sensors',
+    examplePath1:'camera', examplePath2:'hokuyo', examplePath3:'kinect', models:
     [
       {modelPath:'camera', modelTitle:'Camera'},
       {modelPath:'stereo_camera', modelTitle:'Stereo Camera'},
@@ -123,7 +129,8 @@ var modelList =
       {modelPath:'kinect', modelTitle:'Kinect'}
     ]},
 
-    {path:'street', title:'Street', examplePath:'fire_hydrant', models:
+    {path:'street', title:'Street', examplePath1:'dumpster',
+    examplePath2:'drc_practice_angled_barrier_45', examplePath3:'fire_hydrant', models:
     [
       {modelPath:'cinder_block', modelTitle:'Cinder Block'},
       {modelPath:'cinder_block_2', modelTitle:'Cinder Block 2'},
@@ -149,7 +156,8 @@ var modelList =
 
     ]},
 
-    {path:'tools', title:'Tools', examplePath:'cordless_drill', models:
+    {path:'tools', title:'Tools', examplePath1:'hammer',
+    examplePath2:'polaris_ranger_ev', examplePath3:'cordless_drill', models:
     [
       {modelPath:'cordless_drill', modelTitle:'Cordless Drill'},
       {modelPath:'fire_hose_long', modelTitle:'Fire Hose'},
@@ -162,7 +170,8 @@ var modelList =
       {modelPath:'utility_cart', modelTitle:'Utility Cart'}
     ]},
 
-    {path:'misc', title:'Misc.', examplePath:'double_pendulum_with_base', models:
+    {path:'misc', title:'Misc.', examplePath1:'brick_box_3x1x3',
+    examplePath2:'drc_practice_4x4x20', examplePath3:'double_pendulum_with_base', models:
     [
       {modelPath:'double_pendulum_with_base', modelTitle:'Double Pendulum With Base'},
       {modelPath:'breakable_test', modelTitle:'Breakable_test'},
@@ -396,16 +405,9 @@ $(function()
         }
       });
 
-  $('.panelTitle').click(function()
+  $('.closePanels').click(function()
       {
         guiEvents.emit('closeTabs', true);
-      });
-
-  $('.panelSubTitle').click(function()
-      {
-        var id = $('.leftPanels:visible').attr('id');
-        id = id.substring(0,id.indexOf('-'));
-        guiEvents.emit('openTab', id, id);
       });
 
   $('#view-mode').click(function()
@@ -599,6 +601,7 @@ gzangular.controller('treeControl', ['$scope', function($scope)
     $scope.models = modelStats;
     $scope.lights = lightStats;
     $scope.scene = sceneStats;
+    $scope.physics = physicsStats;
     if (!$scope.$$phase)
     {
       $scope.$apply();
@@ -618,14 +621,9 @@ gzangular.controller('treeControl', ['$scope', function($scope)
     guiEvents.emit('openEntityPopup', event, name);
   };
 
-  $scope.closePanels = function ()
+  $scope.openTab = function (tab)
   {
-    guiEvents.emit('closeTabs', true);
-  };
-
-  $scope.backToTree = function ()
-  {
-    guiEvents.emit('openTab', 'treeMenu', 'treeMenu');
+    guiEvents.emit('openTab', tab, 'treeMenu');
   };
 
   $scope.expandTree = function (tree)
@@ -716,15 +714,14 @@ gzangular.controller('insertControl', ['$scope', function($scope)
 {
   $scope.categories = modelList;
 
-  $scope.openCategory = function(category)
-  {
-    var categoryID = 'insertMenu-'+category;
-    guiEvents.emit('openTab', categoryID, 'insertMenu');
-  };
-
   $scope.spawnEntity = function(path)
   {
     guiEvents.emit('spawn_entity_start', path);
+  };
+
+  $scope.openTab = function (tab)
+  {
+    guiEvents.emit('openTab', tab, 'insertMenu');
   };
 }]);
 
@@ -1272,7 +1269,7 @@ GZ3D.Gui.prototype.init = function()
         {
           if (isWideScreen())
           {
-            $('.tab').css('left', '15em');
+            $('.tab').css('left', '23em');
           }
           else
           {
@@ -1285,7 +1282,7 @@ GZ3D.Gui.prototype.init = function()
           var maxWidth = $(window).width();
           if (isWideScreen())
           {
-            maxWidth = emUnits(15);
+            maxWidth = emUnits(23);
           }
 
           $('.propertyPanels').css('width', maxWidth);
@@ -1431,12 +1428,36 @@ var sceneStats = {};
  */
 GZ3D.Gui.prototype.setSceneStats = function(stats)
 {
-  var formatted = this.formatStats({
-      ambient: stats.ambient,
-      background: stats.background});
+  sceneStats['ambient'] = this.round(stats.ambient, true);
+  sceneStats['background'] = this.round(stats.background, true);
+};
 
-  sceneStats['ambient'] = formatted.ambient;
-  sceneStats['background'] = formatted.background;
+var physicsStats = {};
+/**
+ * Update physics stats on scene tree
+ * @param {} stats
+ */
+GZ3D.Gui.prototype.setPhysicsStats = function(stats)
+{
+  physicsStats = stats;
+  physicsStats['enable_physics'] = this.trueOrFalse(
+      physicsStats['enable_physics']);
+  physicsStats['max_step_size'] = this.round(
+      physicsStats['max_step_size'], false, 3);
+  physicsStats['gravity'] = this.round(
+      physicsStats['gravity'], false, 3);
+  physicsStats['sor'] = this.round(
+      physicsStats['sor'], false, 3);
+  physicsStats['cfm'] = this.round(
+      physicsStats['cfm'], false, 3);
+  physicsStats['erp'] = this.round(
+      physicsStats['erp'], false, 3);
+  physicsStats['contact_max_correcting_vel'] = this.round(
+      physicsStats['contact_max_correcting_vel'], false, 3);
+  physicsStats['contact_surface_layer'] = this.round(
+      physicsStats['contact_surface_layer'], false, 3);
+
+  this.updateStats();
 };
 
 var modelStats = [];
@@ -1699,7 +1720,7 @@ GZ3D.Gui.prototype.setLightStats = function(stats, action)
             specular: formatted.specular,
             color: formatted.color,
             range: stats.range,
-            attenuation: formatted.attenuation,
+            attenuation: this.round(stats.attenuation, false, null),
             direction: direction
           });
     }
@@ -1851,7 +1872,7 @@ GZ3D.Gui.prototype.formatStats = function(stats)
   var quat, rpy;
   if (stats.pose)
   {
-    position = this.round(stats.pose.position);
+    position = this.round(stats.pose.position, false, null);
 
     quat = new THREE.Quaternion(stats.pose.orientation.x,
         stats.pose.orientation.y, stats.pose.orientation.z,
@@ -1861,12 +1882,12 @@ GZ3D.Gui.prototype.formatStats = function(stats)
     rpy.setFromQuaternion(quat);
 
     orientation = {roll: rpy._x, pitch: rpy._y, yaw: rpy._z};
-    orientation = this.round(orientation);
+    orientation = this.round(orientation, false, null);
   }
   var inertial;
   if (stats.inertial)
   {
-    inertial = this.round(stats.inertial);
+    inertial = this.round(stats.inertial, false, 3);
 
     var inertialPose = stats.inertial.pose;
     inertial.pose = {};
@@ -1875,7 +1896,7 @@ GZ3D.Gui.prototype.formatStats = function(stats)
                               y: inertialPose.position.y,
                               z: inertialPose.position.z};
 
-    inertial.pose.position = this.round(inertial.pose.position);
+    inertial.pose.position = this.round(inertial.pose.position, false, 3);
 
     quat = new THREE.Quaternion(inertialPose.orientation.x,
         inertialPose.orientation.y, inertialPose.orientation.z,
@@ -1885,13 +1906,13 @@ GZ3D.Gui.prototype.formatStats = function(stats)
     rpy.setFromQuaternion(quat);
 
     inertial.pose.orientation = {roll: rpy._x, pitch: rpy._y, yaw: rpy._z};
-    inertial.pose.orientation = this.round(inertial.pose.orientation);
+    inertial.pose.orientation = this.round(inertial.pose.orientation, false, 3);
   }
   var diffuse, colorHex, comp;
   var color = {};
   if (stats.diffuse)
   {
-    diffuse = this.round(stats.diffuse);
+    diffuse = this.round(stats.diffuse, true);
 
     colorHex = {};
     for (comp in diffuse)
@@ -1907,7 +1928,7 @@ GZ3D.Gui.prototype.formatStats = function(stats)
   var specular;
   if (stats.specular)
   {
-    specular = this.round(stats.specular);
+    specular = this.round(stats.specular, true);
 
     colorHex = {};
     for (comp in specular)
@@ -1920,35 +1941,19 @@ GZ3D.Gui.prototype.formatStats = function(stats)
     }
     color.specular = '#' + colorHex['r'] + colorHex['g'] + colorHex['b'];
   }
-
-  var attenuation;
-  if (stats.attenuation)
-  {
-    attenuation = this.round(stats.attenuation);
-  }
-  var ambient;
-  if (stats.ambient)
-  {
-    ambient = this.round(stats.ambient);
-  }
-  var background;
-  if (stats.background)
-  {
-    background = this.round(stats.background);
-  }
   var axis1;
   if (stats.axis1)
   {
     axis1 = {};
     axis1 = this.round(stats.axis1);
-    axis1.direction = this.round(stats.axis1.xyz);
+    axis1.direction = this.round(stats.axis1.xyz, false, 3);
   }
   var axis2;
   if (stats.axis2)
   {
     axis2 = {};
     axis2 = this.round(stats.axis2);
-    axis2.direction = this.round(stats.axis2.xyz);
+    axis2.direction = this.round(stats.axis2.xyz, false, 3);
   }
 
   return {pose: {position: position, orientation: orientation},
@@ -1956,33 +1961,68 @@ GZ3D.Gui.prototype.formatStats = function(stats)
           diffuse: diffuse,
           specular: specular,
           color: color,
-          attenuation: attenuation,
-          ambient: ambient,
-          background: background,
           axis1: axis1,
           axis2: axis2};
 };
 
 /**
- * Round all number children and format color
+ * Round numbers and format colors
  * @param {} stats
+ * @param {} decimals - number of decimals to display, null for input fields
  * @returns stats
  */
-GZ3D.Gui.prototype.round = function(stats)
+GZ3D.Gui.prototype.round = function(stats, isColor, decimals)
+{
+  if (typeof stats === 'number')
+  {
+    stats = this.roundNumber(stats, isColor, decimals);
+  }
+  else // array of numbers
+  {
+    stats = this.roundArray(stats, isColor, decimals);
+  }
+  return stats;
+};
+
+/**
+ * Round number and format color
+ * @param {} stats
+ * @param {} decimals - number of decimals to display, null for input fields
+ * @returns stats
+ */
+GZ3D.Gui.prototype.roundNumber = function(stats, isColor, decimals)
+{
+  if (isColor)
+  {
+    stats = Math.round(stats * 255);
+  }
+  else
+  {
+    if (decimals === null)
+    {
+      stats = Math.round(stats*1000)/1000;
+    }
+    else
+    {
+      stats = stats.toFixed(decimals);
+    }
+  }
+  return stats;
+};
+
+/**
+ * Round each number in an array
+ * @param {} stats
+ * @param {} decimals - number of decimals to display, null for input fields
+ * @returns stats
+ */
+GZ3D.Gui.prototype.roundArray = function(stats, isColor, decimals)
 {
   for (var key in stats)
   {
     if (typeof stats[key] === 'number')
     {
-      if (key === 'r' || key === 'g' || key === 'b' || key === 'a')
-      {
-        stats[key] = Math.round(stats[key] * 255);
-      }
-      else
-      {
-        stats[key] = Math.round(stats[key] * 1000) / 1000;
-        //stats[key] = parseFloat(Math.round(stats[key] * 1000) / 1000).toFixed(3);
-      }
+      stats[key] = this.roundNumber(stats[key], isColor, decimals);
     }
   }
   return stats;
@@ -2200,6 +2240,18 @@ GZ3D.GZIface.prototype.onConnected = function()
     this.sceneTopic.unsubscribe();
   };
   this.sceneTopic.subscribe(sceneUpdate.bind(this));
+
+  this.physicsTopic = new ROSLIB.Topic({
+    ros : this.webSocket,
+    name : '~/physics',
+    messageType : 'physics',
+  });
+
+  var physicsUpdate = function(message)
+  {
+    this.gui.setPhysicsStats(message);
+  };
+  this.physicsTopic.subscribe(physicsUpdate.bind(this));
 
 
   // Update model pose
