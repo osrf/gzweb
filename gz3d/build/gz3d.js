@@ -786,9 +786,6 @@ GZ3D.Gui.prototype.init = function()
         that.scene.spawnModel.start(entity,function(obj)
             {
               that.emitter.emit('entityCreated', obj, entity);
-
-              guiEvents.emit('notification_popup',
-                  name+' inserted');
             });
         guiEvents.emit('notification_popup',
             'Place '+name+' at the desired position');
@@ -991,7 +988,6 @@ GZ3D.Gui.prototype.init = function()
                   that.scene.setManipulationMode('view');
                   $( '#view-mode' ).prop('checked', true);
                   $('input[type="radio"]').checkboxradio('refresh');
-                  guiEvents.emit('notification_popup','Model deleted');
                 }
                 else if (type === 'translate')
                 {
@@ -1103,7 +1099,6 @@ GZ3D.Gui.prototype.init = function()
   guiEvents.on('delete_entity', function ()
       {
         that.emitter.emit('deleteEntity',that.scene.selectedEntity);
-        guiEvents.emit('notification_popup','Model deleted');
         $('#model-popup').popup('close');
         that.scene.selectEntity(null);
       }
@@ -2274,10 +2269,12 @@ GZ3D.GZIface.prototype.onConnected = function()
         if (entity.children[0] instanceof THREE.Light)
         {
           this.gui.setLightStats({name: message.data}, 'delete');
+          guiEvents.emit('notification_popup', message.data+' deleted');
         }
         else
         {
           this.gui.setModelStats({name: message.data}, 'delete');
+          guiEvents.emit('notification_popup', message.data+' deleted');
         }
         this.scene.remove(entity);
       }
@@ -2301,6 +2298,7 @@ GZ3D.GZIface.prototype.onConnected = function()
       if (modelObj)
       {
         this.scene.add(modelObj);
+        guiEvents.emit('notification_popup', message.name+' inserted');
       }
 
       // visuals may arrive out of order (before the model msg),
@@ -2391,6 +2389,7 @@ GZ3D.GZIface.prototype.onConnected = function()
     {
       var lightObj = this.createLightFromMsg(message);
       this.scene.add(lightObj);
+      guiEvents.emit('notification_popup', message.name+' inserted');
     }
     this.gui.setLightStats(message, 'update');
   };

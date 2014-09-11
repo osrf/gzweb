@@ -781,9 +781,6 @@ GZ3D.Gui.prototype.init = function()
         that.scene.spawnModel.start(entity,function(obj)
             {
               that.emitter.emit('entityCreated', obj, entity);
-
-              guiEvents.emit('notification_popup',
-                  name+' inserted');
             });
         guiEvents.emit('notification_popup',
             'Place '+name+' at the desired position');
@@ -986,7 +983,6 @@ GZ3D.Gui.prototype.init = function()
                   that.scene.setManipulationMode('view');
                   $( '#view-mode' ).prop('checked', true);
                   $('input[type="radio"]').checkboxradio('refresh');
-                  guiEvents.emit('notification_popup','Model deleted');
                 }
                 else if (type === 'translate')
                 {
@@ -1098,7 +1094,6 @@ GZ3D.Gui.prototype.init = function()
   guiEvents.on('delete_entity', function ()
       {
         that.emitter.emit('deleteEntity',that.scene.selectedEntity);
-        guiEvents.emit('notification_popup','Model deleted');
         $('#model-popup').popup('close');
         that.scene.selectEntity(null);
       }
