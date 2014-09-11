@@ -202,6 +202,7 @@ $(function()
   $('#view-transparent').buttonMarkup({icon: 'false'});
   $('#view-wireframe').buttonMarkup({icon: 'false'});
   guiEvents.emit('toggle_notifications');
+  guiEvents.emit('show_orbit_indicator');
 
   $( '#clock-touch' ).popup('option', 'arrow', 't');
   $('#notification-popup-screen').remove();
@@ -483,6 +484,11 @@ $(function()
   $('#view-collisions').click(function()
       {
         guiEvents.emit('show_collision');
+        guiEvents.emit('closeTabs', false);
+      });
+  $('#view-orbit-indicator').click(function()
+      {
+        guiEvents.emit('show_orbit_indicator');
         guiEvents.emit('closeTabs', false);
       });
   $( '#snap-to-grid' ).click(function() {
@@ -874,6 +880,23 @@ GZ3D.Gui.prototype.init = function()
         {
           $('#view-grid').buttonMarkup({icon: 'check'});
           guiEvents.emit('notification_popup','Viewing grid');
+        }
+      }
+  );
+
+   guiEvents.on('show_orbit_indicator', function()
+      {
+        that.scene.controls.showTargetIndicator =
+            !that.scene.controls.showTargetIndicator;
+        if(!that.scene.controls.showTargetIndicator)
+        {
+          $('#view-orbit-indicator').buttonMarkup({icon: 'false'});
+          guiEvents.emit('notification_popup','Hiding orbit indicator');
+        }
+        else
+        {
+          $('#view-orbit-indicator').buttonMarkup({icon: 'check'});
+          guiEvents.emit('notification_popup','Viewing orbit indicator');
         }
       }
   );
