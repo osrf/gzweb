@@ -30,10 +30,6 @@ input[type=number]::-webkit-inner-spin-button
   right: 0px;
   left: 0px;
 }
-.ui-popup-screen
-{
-  z-index: 999;
-}
 /* header */
 .header-button
 {

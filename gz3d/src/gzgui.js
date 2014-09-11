@@ -448,6 +448,7 @@ $(function()
         else
         {
           var position = $('#clock').offset();
+          $('#notification-popup').popup('close');
           $('#clock-touch').popup('open', {
               x:position.left+emUnits(1.6),
               y:emUnits(4)});
