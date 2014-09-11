@@ -113,6 +113,7 @@ input[type=number]::-webkit-inner-spin-button
   height: calc(100% - 2.5em);
   overflow-y: auto;
   overflow-x: hidden;
+  margin-top: 0.01em;
 }
 .panelTitle
 {
