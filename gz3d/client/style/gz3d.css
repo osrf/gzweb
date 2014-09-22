@@ -348,8 +348,14 @@ input[type=number]::-webkit-inner-spin-button
 .propertyNumber
 {
   text-align: right;
-  padding-right: 1em;
-  width: calc(40% - 1em) !important;
+  padding-right: 2em;
+  width: calc(40% - 2em) !important;
+}
+.propertyNumber div:first-child
+{
+  text-align: right;
+  float:right;
+  line-height: inherit;
 }
 .propertyNumberEdit div
 {
@@ -365,7 +371,22 @@ input[type=number]::-webkit-inner-spin-button
   color: #ffffff;
   text-align: right;
   float:right;
-  padding-right: 1em;
+  padding-right: 2em;
+}
+.propertyUnit
+{
+  position: absolute !important;
+  right: 1em;
+}
+.propertyUnit3
+{
+  font-size: 0.75em !important;
+  line-height: inherit !important;
+}
+.propertyUnit4
+{
+  font-size: 0.6em !important;
+  right: 0.3em;
 }
 .expandableProperty
 {
@@ -471,7 +492,8 @@ input[type=number]::-webkit-inner-spin-button
 {
   height: 0.8em;
 }
-.propertyLevel2 div, input
+.propertyLevel2 div,
+.propertyLevel2 input
 {
   font-size: 1.1em;
   line-height: 1.8em;
@@ -509,7 +531,8 @@ input[type=number]::-webkit-inner-spin-button
 {
   height: 0.7em;
 }
-.propertyLevel3 div, input
+.propertyLevel3 div,
+.propertyLevel3 input
 {
   font-size: 1.0em;
   line-height: 1.7em;
@@ -547,7 +570,8 @@ input[type=number]::-webkit-inner-spin-button
 {
   height: 0.65em;
 }
-.propertyLevel4 div, input
+.propertyLevel4 div,
+.propertyLevel4 input
 {
   font-size: 0.9em;
   line-height: 1.6em;
@@ -575,7 +599,8 @@ input[type=number]::-webkit-inner-spin-button
   padding-left: 7.9em;
   width: calc(60% - 7.9em);
 }
-.propertyLevel5 div, input
+.propertyLevel5 div,
+.propertyLevel5 input
 {
   font-size: 0.8em;
   line-height: 1.5em;
@@ -605,7 +630,8 @@ input[type=number]::-webkit-inner-spin-button
 {
   background-color: #2a2a77 !important;
 }
-.lightBg div, .lightBg input
+.lightBg div,
+.lightBg input
 {
   background-color: #414141 !important;
 }
