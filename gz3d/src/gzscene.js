@@ -528,6 +528,15 @@ GZ3D.Scene.prototype.onKeyDown = function(event)
     }
   }
 
+  // DEL to delete entities
+  if (event.keyCode === 46)
+  {
+    if (this.selectedEntity)
+    {
+      guiEvents.emit('delete_entity');
+    }
+  }
+
   // F2 for turning on effects
   if (event.keyCode === 113)
   {

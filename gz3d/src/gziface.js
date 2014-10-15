@@ -224,10 +224,12 @@ GZ3D.GZIface.prototype.onConnected = function()
         if (entity.children[0] instanceof THREE.Light)
         {
           this.gui.setLightStats({name: message.data}, 'delete');
+          guiEvents.emit('notification_popup', message.data+' deleted');
         }
         else
         {
           this.gui.setModelStats({name: message.data}, 'delete');
+          guiEvents.emit('notification_popup', message.data+' deleted');
         }
         this.scene.remove(entity);
       }
@@ -251,6 +253,7 @@ GZ3D.GZIface.prototype.onConnected = function()
       if (modelObj)
       {
         this.scene.add(modelObj);
+        guiEvents.emit('notification_popup', message.name+' inserted');
       }
 
       // visuals may arrive out of order (before the model msg),
@@ -341,6 +344,7 @@ GZ3D.GZIface.prototype.onConnected = function()
     {
       var lightObj = this.createLightFromMsg(message);
       this.scene.add(lightObj);
+      guiEvents.emit('notification_popup', message.name+' inserted');
     }
     this.gui.setLightStats(message, 'update');
   };

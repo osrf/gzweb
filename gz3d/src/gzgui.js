@@ -198,6 +198,7 @@ $(function()
   $('#view-wireframe').buttonMarkup({icon: 'false'});
   $('#view-joints').buttonMarkup({icon: 'false'});
   guiEvents.emit('toggle_notifications');
+  guiEvents.emit('show_orbit_indicator');
 
   $( '#clock-touch' ).popup('option', 'arrow', 't');
   $('#notification-popup-screen').remove();
@@ -449,6 +450,7 @@ $(function()
         else
         {
           var position = $('#clock').offset();
+          $('#notification-popup').popup('close');
           $('#clock-touch').popup('open', {
               x:position.left+emUnits(1.6),
               y:emUnits(4)});
@@ -478,6 +480,11 @@ $(function()
   $('#view-collisions').click(function()
       {
         guiEvents.emit('show_collision');
+        guiEvents.emit('closeTabs', false);
+      });
+  $('#view-orbit-indicator').click(function()
+      {
+        guiEvents.emit('show_orbit_indicator');
         guiEvents.emit('closeTabs', false);
       });
   $( '#snap-to-grid' ).click(function() {
@@ -783,9 +790,6 @@ GZ3D.Gui.prototype.init = function()
         that.scene.spawnModel.start(entity,function(obj)
             {
               that.emitter.emit('entityCreated', obj, entity);
-
-              guiEvents.emit('notification_popup',
-                  name+' inserted');
             });
         guiEvents.emit('notification_popup',
             'Place '+name+' at the desired position');
@@ -881,6 +885,23 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
+   guiEvents.on('show_orbit_indicator', function()
+      {
+        that.scene.controls.showTargetIndicator =
+            !that.scene.controls.showTargetIndicator;
+        if(!that.scene.controls.showTargetIndicator)
+        {
+          $('#view-orbit-indicator').buttonMarkup({icon: 'false'});
+          guiEvents.emit('notification_popup','Hiding orbit indicator');
+        }
+        else
+        {
+          $('#view-orbit-indicator').buttonMarkup({icon: 'check'});
+          guiEvents.emit('notification_popup','Viewing orbit indicator');
+        }
+      }
+  );
+
   guiEvents.on('snap_to_grid',
       function ()
       {
@@ -971,7 +992,6 @@ GZ3D.Gui.prototype.init = function()
                   that.scene.setManipulationMode('view');
                   $( '#view-mode' ).prop('checked', true);
                   $('input[type="radio"]').checkboxradio('refresh');
-                  guiEvents.emit('notification_popup','Model deleted');
                 }
                 else if (type === 'translate')
                 {
@@ -1094,7 +1114,6 @@ GZ3D.Gui.prototype.init = function()
   guiEvents.on('delete_entity', function ()
       {
         that.emitter.emit('deleteEntity',that.scene.selectedEntity);
-        guiEvents.emit('notification_popup','Model deleted');
         $('#model-popup').popup('close');
         that.scene.selectEntity(null);
       }
