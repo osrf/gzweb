@@ -731,6 +731,11 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
       }
     }
   }
+  if (model.joint)
+  {
+    modelObj.joint = model.joint;
+  }
+
   return modelObj;
 };
 

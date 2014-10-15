@@ -40,9 +40,10 @@ GZ3D.RadialMenu.prototype.init = function()
   this.showing = false;
 
   // Colors
-  this.selectedColor = new THREE.Color( 0x22aadd );
-  this.plainColor = new THREE.Color( 0x333333 );
-  this.highlightColor = new THREE.Color( 0x22aadd );
+  this.selectedColor = new THREE.Color(0x22aadd);
+  this.plainColor = new THREE.Color(0x333333);
+  this.highlightColor = new THREE.Color(0x22aadd);
+  this.disabledColor = new THREE.Color(0x888888);
 
   // Selected item
   this.selected = null;
@@ -59,6 +60,7 @@ GZ3D.RadialMenu.prototype.init = function()
   this.addItem('rotate','style/images/rotate.png');
   this.addItem('transparent','style/images/transparent.png');
   this.addItem('wireframe','style/images/wireframe.png');
+  this.addItem('joints','style/images/joints.png');
 
   this.setNumberOfItems(this.menu.children.length);
 
@@ -126,7 +128,7 @@ GZ3D.RadialMenu.prototype.show = function(event,model)
   }
   else
   {
-    this.setNumberOfItems(5);
+    this.setNumberOfItems(6);
   }
 
   var pointer = this.getPointer(event);
@@ -134,6 +136,8 @@ GZ3D.RadialMenu.prototype.show = function(event,model)
 
   this.menu.getObjectByName('transparent').isHighlighted = false;
   this.menu.getObjectByName('wireframe').isHighlighted = false;
+  this.menu.getObjectByName('joints').isHighlighted = false;
+  this.menu.getObjectByName('joints').isDisabled = false;
   if (this.model.viewAs === 'transparent')
   {
     this.menu.getObjectByName('transparent').isHighlighted = true;
@@ -141,6 +145,14 @@ GZ3D.RadialMenu.prototype.show = function(event,model)
   if (this.model.viewAs === 'wireframe')
   {
     this.menu.getObjectByName('wireframe').isHighlighted = true;
+  }
+  if (this.model.joint === undefined || this.model.joint.length === 0)
+  {
+    this.menu.getObjectByName('joints').isDisabled = true;
+  }
+  else if (this.model.getObjectByName('JOINT_VISUAL', true))
+  {
+    this.menu.getObjectByName('joints').isHighlighted = true;
   }
 
   for (var i = 0; i < this.numberOfItems; i++)
@@ -152,6 +164,10 @@ GZ3D.RadialMenu.prototype.show = function(event,model)
 
     item.children[this.layers.BACKGROUND].visible = true;
     item.children[this.layers.BACKGROUND].position.set(pointer.x,pointer.y,0);
+    if (item.isDisabled)
+    {
+      item.children[this.layers.BACKGROUND].material.color = this.disabledColor;
+    }
 
     item.children[this.layers.HIGHLIGHT].visible = item.isHighlighted;
     item.children[this.layers.HIGHLIGHT].position.set(pointer.x,pointer.y,0);
@@ -300,8 +316,11 @@ GZ3D.RadialMenu.prototype.onLongPressMove = function(event)
           this.bgSizeSelected*this.iconProportion, 1.0 );
       this.selected = item.children[this.layers.ICON].name;
 
-      item.children[this.layers.BACKGROUND].material.color =
-          this.selectedColor;
+      if (!item.isDisabled)
+      {
+        item.children[this.layers.BACKGROUND].material.color =
+            this.selectedColor;
+      }
       item.children[this.layers.BACKGROUND].scale.set(
           this.bgSizeSelected,
           this.bgSizeSelected, 1.0 );
@@ -312,9 +331,12 @@ GZ3D.RadialMenu.prototype.onLongPressMove = function(event)
           this.bgSize*this.iconProportion,
           this.bgSize*this.iconProportion, 1.0 );
 
-      item.children[this.layers.BACKGROUND].material.color = this.plainColor;
       item.children[this.layers.BACKGROUND].scale.set(
           this.bgSize, this.bgSize, 1.0 );
+      if (!item.isDisabled)
+      {
+        item.children[this.layers.BACKGROUND].material.color = this.plainColor;
+      }
     }
     counter++;
   }
@@ -323,7 +345,7 @@ GZ3D.RadialMenu.prototype.onLongPressMove = function(event)
 /**
  * Create an item and add it to the menu.
  * Create them in order
- * @param {string} type - delete/translate/rotate/transparent/wireframe
+ * @param {string} type - delete/translate/rotate/transparent/wireframe/joints
  * @param {string} iconTexture - icon's uri
  */
 GZ3D.RadialMenu.prototype.addItem = function(type, iconTexture)

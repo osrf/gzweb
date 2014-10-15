@@ -166,6 +166,181 @@ GZ3D.Scene.prototype.init = function()
       new THREE.LineBasicMaterial({color: 0xffffff}),
       THREE.LinePieces);
   this.boundingBox.visible = false;
+
+  // Joint visuals
+  this.jointTypes =
+      {
+        REVOLUTE: 1,
+        REVOLUTE2: 2,
+        PRISMATIC: 3,
+        UNIVERSAL: 4,
+        BALL: 5,
+        SCREW: 6,
+        GEARBOX: 7
+      };
+  this.jointAxis = new THREE.Object3D();
+  this.jointAxis.name = 'JOINT_VISUAL';
+  var geometry, material, mesh;
+
+  // XYZ
+  var XYZaxes = new THREE.Object3D();
+
+  geometry = new THREE.CylinderGeometry(0.01, 0.01, 0.3, 10, 1, false);
+
+  material = new THREE.MeshBasicMaterial({color: new THREE.Color(0xff0000)});
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.position.x = 0.15;
+  mesh.rotation.z = -Math.PI/2;
+  mesh.name = 'JOINT_VISUAL';
+  XYZaxes.add(mesh);
+
+  material = new THREE.MeshBasicMaterial({color: new THREE.Color(0x00ff00)});
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.position.y = 0.15;
+  mesh.name = 'JOINT_VISUAL';
+  XYZaxes.add(mesh);
+
+  material = new THREE.MeshBasicMaterial({color: new THREE.Color(0x0000ff)});
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.position.z = 0.15;
+  mesh.rotation.x = Math.PI/2;
+  mesh.name = 'JOINT_VISUAL';
+  XYZaxes.add(mesh);
+
+  geometry = new THREE.CylinderGeometry(0, 0.03, 0.1, 10, 1, true);
+
+  material = new THREE.MeshBasicMaterial({color: new THREE.Color(0xff0000)});
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.position.x = 0.3;
+  mesh.rotation.z = -Math.PI/2;
+  mesh.name = 'JOINT_VISUAL';
+  XYZaxes.add(mesh);
+
+  material = new THREE.MeshBasicMaterial({color: new THREE.Color(0x00ff00)});
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.position.y = 0.3;
+  mesh.name = 'JOINT_VISUAL';
+  XYZaxes.add(mesh);
+
+  material = new THREE.MeshBasicMaterial({color: new THREE.Color(0x0000ff)});
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.position.z = 0.3;
+  mesh.rotation.x = Math.PI/2;
+  mesh.name = 'JOINT_VISUAL';
+  XYZaxes.add(mesh);
+
+  this.jointAxis['XYZaxes'] = XYZaxes;
+
+  var mainAxis = new THREE.Object3D();
+
+  material = new THREE.MeshLambertMaterial();
+  material.color = new THREE.Color(0xffff00);
+  material.ambient = material.color;
+
+  geometry = new THREE.CylinderGeometry(0.02, 0.02, 0.25, 36, 1, false);
+
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.position.z = -0.175;
+  mesh.rotation.x = Math.PI/2;
+  mesh.name = 'JOINT_VISUAL';
+  mainAxis.add(mesh);
+
+  geometry = new THREE.CylinderGeometry(0, 0.035, 0.1, 36, 1, false);
+
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.rotation.x = Math.PI/2;
+  mesh.name = 'JOINT_VISUAL';
+  mainAxis.add(mesh);
+
+  this.jointAxis['mainAxis'] = mainAxis;
+
+  var rotAxis = new THREE.Object3D();
+
+  geometry = new THREE.TorusGeometry(0.04, 0.006, 10, 36, Math.PI * 3/2);
+
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.name = 'JOINT_VISUAL';
+  rotAxis.add(mesh);
+
+  geometry = new THREE.CylinderGeometry(0.015, 0, 0.025, 10, 1, false);
+
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.position.y = -0.04;
+  mesh.rotation.z = Math.PI/2;
+  mesh.name = 'JOINT_VISUAL';
+  rotAxis.add(mesh);
+
+  this.jointAxis['rotAxis'] = rotAxis;
+
+  var transAxis = new THREE.Object3D();
+
+  geometry = new THREE.CylinderGeometry(0.01, 0.01, 0.1, 10, 1, true);
+
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.position.x = 0.03;
+  mesh.position.y = 0.03;
+  mesh.position.z = -0.15;
+  mesh.rotation.x = Math.PI/2;
+  mesh.name = 'JOINT_VISUAL';
+  transAxis.add(mesh);
+
+  geometry = new THREE.CylinderGeometry(0.02, 0, 0.0375, 10, 1, false);
+
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.position.x = 0.03;
+  mesh.position.y = 0.03;
+  mesh.position.z = -0.15 + 0.05;
+  mesh.rotation.x = -Math.PI/2;
+  mesh.name = 'JOINT_VISUAL';
+  transAxis.add(mesh);
+
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.position.x = 0.03;
+  mesh.position.y = 0.03;
+  mesh.position.z = -0.15 - 0.05;
+  mesh.rotation.x = Math.PI/2;
+  mesh.name = 'JOINT_VISUAL';
+  transAxis.add(mesh);
+
+  this.jointAxis['transAxis'] = transAxis;
+
+  var screwAxis = new THREE.Object3D();
+
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.position.x = -0.04;
+  mesh.position.z = -0.11;
+  mesh.rotation.z = -Math.PI/4;
+  mesh.rotation.x = -Math.PI/10;
+  mesh.name = 'JOINT_VISUAL';
+  screwAxis.add(mesh);
+
+  var radius = 0.04;
+  var length = 0.02;
+  var curve = new THREE.SplineCurve3([new THREE.Vector3(radius, 0, 0*length),
+                                      new THREE.Vector3(0, radius, 1*length),
+                                      new THREE.Vector3(-radius, 0, 2*length),
+                                      new THREE.Vector3(0, -radius, 3*length),
+                                      new THREE.Vector3(radius, 0, 4*length),
+                                      new THREE.Vector3(0, radius, 5*length),
+                                      new THREE.Vector3(-radius, 0, 6*length)]);
+  geometry = new THREE.TubeGeometry(curve, 36, 0.01, 10, false, false);
+
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.position.z = -0.23;
+  mesh.name = 'JOINT_VISUAL';
+  screwAxis.add(mesh);
+
+  this.jointAxis['screwAxis'] = screwAxis;
+
+  var ballVisual = new THREE.Object3D();
+
+  geometry = new THREE.SphereGeometry(0.06);
+
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.name = 'JOINT_VISUAL';
+  ballVisual.add(mesh);
+
+  this.jointAxis['ballVisual'] = ballVisual;
 };
 
 GZ3D.Scene.prototype.initScene = function()
@@ -422,7 +597,8 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
         break;
       }
 
-      if (model.name === 'grid' || model.name === 'boundingBox')
+      if (model.name === 'grid' || model.name === 'boundingBox' ||
+          model.name === 'JOINT_VISUAL')
       {
         point = objects[i].point;
         model = null;
@@ -1859,7 +2035,8 @@ GZ3D.Scene.prototype.setViewAs = function(model, viewAs)
         descendants[i].name.indexOf('boundingBox') === -1 &&
         descendants[i].name.indexOf('COLLISION_VISUAL') === -1 &&
         !this.getParentByPartialName(descendants[i], 'COLLISION_VISUAL')&&
-        descendants[i].name.indexOf('wireframe') === -1)
+        descendants[i].name.indexOf('wireframe') === -1 &&
+        descendants[i].name.indexOf('JOINT_VISUAL') === -1)
     {
       if (descendants[i].material instanceof THREE.MeshFaceMaterial)
       {
@@ -1948,5 +2125,174 @@ GZ3D.Scene.prototype.selectEntity = function(object)
     this.hideBoundingBox();
     this.selectedEntity = null;
     guiEvents.emit('setTreeDeselected');
+  }
+};
+
+/**
+ * View joints
+ * Toggle: if there are joints, hide, otherwise, show.
+ * @param {} model
+ */
+GZ3D.Scene.prototype.viewJoints = function(model)
+{
+  if (model.joint === undefined || model.joint.length === 0)
+  {
+    return;
+  }
+
+  var child;
+
+  // Visuals already exist
+  if (model.jointVisuals)
+  {
+    // Hide = remove from parent
+    if (model.jointVisuals[0].parent !== undefined)
+    {
+      for (var v = 0; v < model.jointVisuals.length; ++v)
+      {
+        model.jointVisuals[v].parent.remove(model.jointVisuals[v]);
+      }
+    }
+    // Show: attach to parent
+    else
+    {
+      for (var s = 0; s < model.joint.length; ++s)
+      {
+        child = model.getObjectByName(model.joint[s].child);
+
+        if (!child)
+        {
+          continue;
+        }
+
+        child.add(model.jointVisuals[s]);
+      }
+    }
+  }
+  // Create visuals
+  else
+  {
+    model.jointVisuals = [];
+    for (var j = 0; j < model.joint.length; ++j)
+    {
+      child = model.getObjectByName(model.joint[j].child);
+
+      if (!child)
+      {
+        continue;
+      }
+
+      // XYZ expressed w.r.t. child
+      var jointVisual = this.jointAxis['XYZaxes'].clone();
+      child.add(jointVisual);
+      model.jointVisuals.push(jointVisual);
+      jointVisual.scale.set(0.7, 0.7, 0.7);
+
+      this.setPose(jointVisual, model.joint[j].pose.position,
+          model.joint[j].pose.orientation);
+
+      var mainAxis;
+      if (model.joint[j].type !== this.jointTypes.BALL)
+      {
+        mainAxis = this.jointAxis['mainAxis'].clone();
+        jointVisual.add(mainAxis);
+      }
+
+      var secondAxis;
+      if (model.joint[j].type === this.jointTypes.REVOLUTE2 ||
+          model.joint[j].type === this.jointTypes.UNIVERSAL)
+      {
+        secondAxis = this.jointAxis['mainAxis'].clone();
+        jointVisual.add(secondAxis);
+      }
+
+      if (model.joint[j].type === this.jointTypes.REVOLUTE ||
+          model.joint[j].type === this.jointTypes.GEARBOX)
+      {
+        mainAxis.add(this.jointAxis['rotAxis'].clone());
+      }
+      else if (model.joint[j].type === this.jointTypes.REVOLUTE2 ||
+               model.joint[j].type === this.jointTypes.UNIVERSAL)
+      {
+        mainAxis.add(this.jointAxis['rotAxis'].clone());
+        secondAxis.add(this.jointAxis['rotAxis'].clone());
+      }
+      else if (model.joint[j].type === this.jointTypes.BALL)
+      {
+        jointVisual.add(this.jointAxis['ballVisual'].clone());
+      }
+      else if (model.joint[j].type === this.jointTypes.PRISMATIC)
+      {
+        mainAxis.add(this.jointAxis['transAxis'].clone());
+      }
+      else if (model.joint[j].type === this.jointTypes.SCREW)
+      {
+        mainAxis.add(this.jointAxis['screwAxis'].clone());
+      }
+
+      var direction, tempMatrix, rotMatrix;
+      if (mainAxis)
+      {
+        // main axis expressed w.r.t. parent model or joint frame
+        // needs Gazebo issue #1268 fixed, receive use_parent_model_frame on msg
+        // for now, true by default because most old models have it true
+        if (model.joint[j].axis1.use_parent_model_frame === undefined)
+        {
+          model.joint[j].axis1.use_parent_model_frame = true;
+        }
+
+        direction = new THREE.Vector3(
+            model.joint[j].axis1.xyz.x,
+            model.joint[j].axis1.xyz.y,
+            model.joint[j].axis1.xyz.z);
+        direction.normalize();
+
+        tempMatrix = new THREE.Matrix4();
+        if (model.joint[j].axis1.use_parent_model_frame)
+        {
+          tempMatrix.extractRotation(jointVisual.matrix);
+          tempMatrix.getInverse(tempMatrix);
+          direction.applyMatrix4(tempMatrix);
+          tempMatrix.extractRotation(child.matrix);
+          tempMatrix.getInverse(tempMatrix);
+          direction.applyMatrix4(tempMatrix);
+        }
+
+        mainAxis.position =  direction.multiplyScalar(0.3);
+        rotMatrix = new THREE.Matrix4();
+        rotMatrix.lookAt(direction, new THREE.Vector3(0, 0, 0), mainAxis.up);
+        mainAxis.quaternion.setFromRotationMatrix(rotMatrix);
+      }
+
+      if (secondAxis)
+      {
+        if (model.joint[j].axis2.use_parent_model_frame === undefined)
+        {
+          model.joint[j].axis2.use_parent_model_frame = true;
+        }
+
+        direction = new THREE.Vector3(
+            model.joint[j].axis2.xyz.x,
+            model.joint[j].axis2.xyz.y,
+            model.joint[j].axis2.xyz.z);
+        direction.normalize();
+
+        tempMatrix = new THREE.Matrix4();
+        if (model.joint[j].axis2.use_parent_model_frame)
+        {
+          tempMatrix.extractRotation(jointVisual.matrix);
+          tempMatrix.getInverse(tempMatrix);
+          direction.applyMatrix4(tempMatrix);
+          tempMatrix.extractRotation(child.matrix);
+          tempMatrix.getInverse(tempMatrix);
+          direction.applyMatrix4(tempMatrix);
+        }
+
+        secondAxis.position =  direction.multiplyScalar(0.3);
+        rotMatrix = new THREE.Matrix4();
+        rotMatrix.lookAt(direction, new THREE.Vector3(0, 0, 0), secondAxis.up);
+        secondAxis.quaternion.setFromRotationMatrix(rotMatrix);
+      }
+    }
   }
 };
