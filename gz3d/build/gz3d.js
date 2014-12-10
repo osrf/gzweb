@@ -1351,9 +1351,10 @@ GZ3D.Gui.prototype.init = function()
         }
 
         var entity = that.scene.getByName(name);
+        var lightObj = entity.children[0];
         if (prop === 'diffuse')
         {
-          entity.children[0].color = new THREE.Color(value);
+          lightObj.color = new THREE.Color(value);
         }
         else if (prop === 'specular')
         {
@@ -1361,23 +1362,23 @@ GZ3D.Gui.prototype.init = function()
         }
         else if (prop === 'range')
         {
-          entity.children[0].distance = value;
+          lightObj.distance = value;
         }
         else if (prop === 'attenuation_constant')
         {
           // Adjust according to factor
           var factor = 1;
-          if (entity instanceof THREE.PointLight)
+          if (lightObj instanceof THREE.PointLight)
           {
             factor = 1.5;
           }
-          else if (entity instanceof THREE.SpotLight)
+          else if (lightObj instanceof THREE.SpotLight)
           {
             factor = 5;
           }
           value *= factor;
 
-          entity.children[0].intensity = value;
+          lightObj.intensity = value;
         }
         else if (prop === 'attenuation_linear')
         {
