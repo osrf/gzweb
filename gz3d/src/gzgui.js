@@ -1362,27 +1362,16 @@ GZ3D.Gui.prototype.init = function()
         else if (prop === 'attenuation_constant')
         {
           entity.serverProperties.attenuation_constant = value;
-          // Adjust according to factor
-          var factor = 1;
-          if (lightObj instanceof THREE.PointLight)
-          {
-            factor = 1.5;
-          }
-          else if (lightObj instanceof THREE.SpotLight)
-          {
-            factor = 5;
-          }
-          value *= factor;
-
-          lightObj.intensity = value;
         }
         else if (prop === 'attenuation_linear')
         {
           entity.serverProperties.attenuation_linear = value;
+          lightObj.intensity = lightObj.intensity/(1+value);
         }
         else if (prop === 'attenuation_quadratic')
         {
           entity.serverProperties.attenuation_quadratic = value;
+          lightObj.intensity = lightObj.intensity/(1+value);
         }
 
         // updating color too often, maybe only update when popup is closed

@@ -1367,27 +1367,16 @@ GZ3D.Gui.prototype.init = function()
         else if (prop === 'attenuation_constant')
         {
           entity.serverProperties.attenuation_constant = value;
-          // Adjust according to factor
-          var factor = 1;
-          if (lightObj instanceof THREE.PointLight)
-          {
-            factor = 1.5;
-          }
-          else if (lightObj instanceof THREE.SpotLight)
-          {
-            factor = 5;
-          }
-          value *= factor;
-
-          lightObj.intensity = value;
         }
         else if (prop === 'attenuation_linear')
         {
           entity.serverProperties.attenuation_linear = value;
+          lightObj.intensity = lightObj.intensity/(1+value);
         }
         else if (prop === 'attenuation_quadratic')
         {
           entity.serverProperties.attenuation_quadratic = value;
+          lightObj.intensity = lightObj.intensity/(1+value);
         }
 
         // updating color too often, maybe only update when popup is closed
@@ -2846,29 +2835,34 @@ GZ3D.GZIface.prototype.createVisualFromMsg = function(visual)
 
 GZ3D.GZIface.prototype.createLightFromMsg = function(light)
 {
-  var obj, factor, range, direction;
+  var obj, range, direction;
 
   if (light.type === 1)
   {
-    factor = 1.5;
     direction = null;
     range = light.range;
   }
   else if (light.type === 2)
   {
-    factor = 5;
     direction = light.direction;
     range = light.range;
   }
   else if (light.type === 3)
   {
-    factor = 1;
     direction = light.direction;
     range = null;
   }
 
-  obj = this.scene.createLight(light.type, light.diffuse,
-        light.attenuation_constant * factor,
+  // equation taken from
+  // http://wiki.blender.org/index.php/Doc:2.6/Manual/Lighting/Lights/Light_Attenuation
+  var E = 1;
+  var D = 1;
+  var r = 1;
+  var L = light.attenuation_linear;
+  var Q = light.attenuation_quadratic;
+  var intensity = E*(D/(D+L*r))*(Math.pow(D,2)/(Math.pow(D,2)+Q*Math.pow(r,2)));
+
+  obj = this.scene.createLight(light.type, light.diffuse, intensity,
         light.pose, range, light.cast_shadows, light.name,
         direction, light.specular, light.attenuation_constant,
         light.attenuation_linear, light.attenuation_quadratic);
