@@ -2307,3 +2307,119 @@ GZ3D.Scene.prototype.viewJoints = function(model)
     }
   }
 };
+
+/**
+ * Update a light entity from a message
+ * @param {} entity
+ * @param {} msg
+ */
+GZ3D.Scene.prototype.updateLight = function(entity, msg)
+{
+  // TODO: Generalize this and createLight
+  var lightObj = entity.children[0];
+  var dir;
+
+  var color = new THREE.Color();
+
+  if (msg.diffuse)
+  {
+    color.r = msg.diffuse.r;
+    color.g = msg.diffuse.g;
+    color.b = msg.diffuse.b;
+    lightObj.color = color.clone();
+  }
+  if (msg.specular)
+  {
+    color.r = msg.specular.r;
+    color.g = msg.specular.g;
+    color.b = msg.specular.b;
+    entity.serverProperties.specular = color.clone();
+  }
+
+  var matrixWorld;
+  if (msg.pose)
+  {
+    // needed to update light's direction
+    var quaternion = new THREE.Quaternion(
+        msg.pose.orientation.x,
+        msg.pose.orientation.y,
+        msg.pose.orientation.z,
+        msg.pose.orientation.w);
+
+    var translation = new THREE.Vector3(
+        msg.pose.position.x,
+        msg.pose.position.y,
+        msg.pose.position.z);
+
+    matrixWorld = new THREE.Matrix4();
+    matrixWorld.compose(translation, quaternion, new THREE.Vector3(1,1,1));
+
+    this.setPose(entity, msg.pose.position, msg.pose.orientation);
+    entity.matrixWorldNeedsUpdate = true;
+
+    if (entity.direction)
+    {
+      dir = new THREE.Vector3(entity.direction.x, entity.direction.y,
+          entity.direction.z);
+
+      entity.direction = new THREE.Vector3();
+      entity.direction.copy(dir);
+
+      dir.applyMatrix4(matrixWorld); // localToWorld
+      lightObj.target.position.copy(dir);
+    }
+  }
+
+  if (msg.range)
+  {
+    // THREE.js's light distance impacts the attenuation factor defined in the shader:
+    // attenuation factor = 1.0 - distance-to-enlighted-point / light.distance
+    // Gazebo's range (taken from OGRE 3D API) does not contribute to attenuation;
+    // it is a hard limit for light scope.
+    // Nevertheless, we identify them for sake of simplicity.
+    lightObj.distance = msg.range;
+  }
+
+  if (msg.cast_shadows)
+  {
+    lightObj.castShadow = msg.cast_shadows;
+  }
+
+  if (msg.attenuation_constant)
+  {
+    entity.serverProperties.attenuation_constant = msg.attenuation_constant;
+  }
+  if (msg.attenuation_linear)
+  {
+    entity.serverProperties.attenuation_linear = msg.attenuation_linear;
+    lightObj.intensity = lightObj.intensity/(1+msg.attenuation_linear);
+  }
+  if (msg.attenuation_quadratic)
+  {
+    entity.serverProperties.attenuation_quadratic = msg.attenuation_quadratic;
+    lightObj.intensity = lightObj.intensity/(1+msg.attenuation_quadratic);
+  }
+
+//  Not handling these on gzweb for now
+//
+//  if (lightObj instanceof THREE.SpotLight) {
+//    if (msg.spot_outer_angle) {
+//      lightObj.angle = msg.spot_outer_angle;
+//    }
+//    if (msg.spot_falloff) {
+//      lightObj.exponent = msg.spot_falloff;
+//    }
+//  }
+
+  if (msg.direction)
+  {
+    dir = new THREE.Vector3(msg.direction.x, msg.direction.y,
+        msg.direction.z);
+
+    entity.direction = new THREE.Vector3();
+    entity.direction.copy(dir);
+
+    dir.applyMatrix4(matrixWorld); // localToWorld
+    lightObj.target.position.copy(dir);
+  }
+};

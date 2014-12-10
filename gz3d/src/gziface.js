@@ -338,13 +338,20 @@ GZ3D.GZIface.prototype.onConnected = function()
     messageType : 'light',
   });
 
+  // equivalent to modelUpdate / poseUpdate
   var lightUpdate = function(message)
   {
-    if (!this.scene.getByName(message.name))
+    var entity = this.scene.getByName(message.name);
+    if (!entity)
     {
       var lightObj = this.createLightFromMsg(message);
       this.scene.add(lightObj);
       guiEvents.emit('notification_popup', message.name+' inserted');
+    }
+    else if (entity && entity !== this.scene.modelManipulator.object
+        && entity.parent !== this.scene.modelManipulator.object)
+    {
+      this.scene.updateLight(entity, message);
     }
     this.gui.setLightStats(message, 'update');
   };
