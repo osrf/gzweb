@@ -436,19 +436,7 @@ GZ3D.GZIface.prototype.onConnected = function()
       };
       entityMsg.direction = entity.direction;
       entityMsg.range = entity.children[0].distance;
-
-      var attenuation_constant = entity.children[0].intensity;
-      // Adjust according to factor
-      if (entity instanceof THREE.PointLight)
-      {
-        attenuation_constant *= 1.5;
-      }
-      else if (entity instanceof THREE.SpotLight)
-      {
-        attenuation_constant *= 5;
-      }
-
-      entityMsg.attenuation_constant = attenuation_constant;
+      entityMsg.attenuation_constant = entity.serverProperties.attenuation_constant;
       entityMsg.attenuation_linear = entity.serverProperties.attenuation_linear;
       entityMsg.attenuation_quadratic = entity.serverProperties.attenuation_quadratic;
 
@@ -791,8 +779,8 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
   obj = this.scene.createLight(light.type, light.diffuse,
         light.attenuation_constant * factor,
         light.pose, range, light.cast_shadows, light.name,
-        direction, light.specular, light.attenuation_linear,
-        light.attenuation_quadratic);
+        direction, light.specular, light.attenuation_constant,
+        light.attenuation_linear, light.attenuation_quadratic);
 
   return obj;
 };

@@ -1366,6 +1366,7 @@ GZ3D.Gui.prototype.init = function()
         }
         else if (prop === 'attenuation_constant')
         {
+          entity.serverProperties.attenuation_constant = value;
           // Adjust according to factor
           var factor = 1;
           if (lightObj instanceof THREE.PointLight)
@@ -2523,19 +2524,7 @@ GZ3D.GZIface.prototype.onConnected = function()
       };
       entityMsg.direction = entity.direction;
       entityMsg.range = entity.children[0].distance;
-
-      var attenuation_constant = entity.children[0].intensity;
-      // Adjust according to factor
-      if (entity instanceof THREE.PointLight)
-      {
-        attenuation_constant *= 1.5;
-      }
-      else if (entity instanceof THREE.SpotLight)
-      {
-        attenuation_constant *= 5;
-      }
-
-      entityMsg.attenuation_constant = attenuation_constant;
+      entityMsg.attenuation_constant = entity.serverProperties.attenuation_constant;
       entityMsg.attenuation_linear = entity.serverProperties.attenuation_linear;
       entityMsg.attenuation_quadratic = entity.serverProperties.attenuation_quadratic;
 
@@ -2878,8 +2867,8 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
   obj = this.scene.createLight(light.type, light.diffuse,
         light.attenuation_constant * factor,
         light.pose, range, light.cast_shadows, light.name,
-        direction, light.specular, light.attenuation_linear,
-        light.attenuation_quadratic);
+        direction, light.specular, light.attenuation_constant,
+        light.attenuation_linear, light.attenuation_quadratic);
 
   return obj;
 };
@@ -6001,13 +5990,14 @@ GZ3D.Scene.prototype.createBox = function(width, height, depth)
  * @param {} name
  * @param {} direction
  * @param {} specular
+ * @param {} attenuation_constant
  * @param {} attenuation_linear
  * @param {} attenuation_quadratic
  * @returns {THREE.Object3D}
  */
 GZ3D.Scene.prototype.createLight = function(type, diffuse, intensity, pose,
-    distance, cast_shadows, name, direction, specular, attenuation_linear,
-    attenuation_quadratic)
+    distance, cast_shadows, name, direction, specular, attenuation_constant,
+    attenuation_linear, attenuation_quadratic)
 {
   var obj = new THREE.Object3D();
   var color = new THREE.Color();
@@ -6095,6 +6085,7 @@ GZ3D.Scene.prototype.createLight = function(type, diffuse, intensity, pose,
   // Add properties which exist on the server but have no meaning on THREE.js
   obj.serverProperties = {};
   obj.serverProperties.specular = specular;
+  obj.serverProperties.attenuation_constant = attenuation_constant;
   obj.serverProperties.attenuation_linear = attenuation_linear;
   obj.serverProperties.attenuation_quadratic = attenuation_quadratic;
 

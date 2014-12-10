@@ -1361,6 +1361,7 @@ GZ3D.Gui.prototype.init = function()
         }
         else if (prop === 'attenuation_constant')
         {
+          entity.serverProperties.attenuation_constant = value;
           // Adjust according to factor
           var factor = 1;
           if (lightObj instanceof THREE.PointLight)
