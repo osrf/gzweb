@@ -1987,15 +1987,16 @@ GZ3D.Gui.prototype.formatStats = function(stats)
  */
 GZ3D.Gui.prototype.round = function(stats, isColor, decimals)
 {
+  var result;
   if (typeof stats === 'number')
   {
-    stats = this.roundNumber(stats, isColor, decimals);
+    result = this.roundNumber(stats, isColor, decimals);
   }
   else // array of numbers
   {
-    stats = this.roundArray(stats, isColor, decimals);
+    result = this.roundArray(stats, isColor, decimals);
   }
-  return stats;
+  return result;
 };
 
 /**
@@ -2006,22 +2007,23 @@ GZ3D.Gui.prototype.round = function(stats, isColor, decimals)
  */
 GZ3D.Gui.prototype.roundNumber = function(stats, isColor, decimals)
 {
+  var result = 0;
   if (isColor)
   {
-    stats = Math.round(stats * 255);
+    result = Math.round(stats * 255);
   }
   else
   {
     if (decimals === null)
     {
-      stats = Math.round(stats*1000)/1000;
+      result = Math.round(stats*1000)/1000;
     }
     else
     {
-      stats = stats.toFixed(decimals);
+      result = stats.toFixed(decimals);
     }
   }
-  return stats;
+  return result;
 };
 
 /**
@@ -2032,14 +2034,18 @@ GZ3D.Gui.prototype.roundNumber = function(stats, isColor, decimals)
  */
 GZ3D.Gui.prototype.roundArray = function(stats, isColor, decimals)
 {
+  var result = {};
   for (var key in stats)
   {
-    if (typeof stats[key] === 'number')
-    {
-      stats[key] = this.roundNumber(stats[key], isColor, decimals);
+    if (stats.hasOwnProperty(key)) {
+      if (typeof stats[key] === 'number')
+      {
+        result[key] = this.roundNumber(stats[key], isColor, decimals);
+      }
     }
   }
-  return stats;
+
+  return result;
 };
 
 /**
