@@ -1351,9 +1351,10 @@ GZ3D.Gui.prototype.init = function()
         }
 
         var entity = that.scene.getByName(name);
+        var lightObj = entity.children[0];
         if (prop === 'diffuse')
         {
-          entity.children[0].color = new THREE.Color(value);
+          lightObj.color = new THREE.Color(value);
         }
         else if (prop === 'specular')
         {
@@ -1361,31 +1362,21 @@ GZ3D.Gui.prototype.init = function()
         }
         else if (prop === 'range')
         {
-          entity.children[0].distance = value;
+          lightObj.distance = value;
         }
         else if (prop === 'attenuation_constant')
         {
-          // Adjust according to factor
-          var factor = 1;
-          if (entity instanceof THREE.PointLight)
-          {
-            factor = 1.5;
-          }
-          else if (entity instanceof THREE.SpotLight)
-          {
-            factor = 5;
-          }
-          value *= factor;
-
-          entity.children[0].intensity = value;
+          entity.serverProperties.attenuation_constant = value;
         }
         else if (prop === 'attenuation_linear')
         {
           entity.serverProperties.attenuation_linear = value;
+          lightObj.intensity = lightObj.intensity/(1+value);
         }
         else if (prop === 'attenuation_quadratic')
         {
           entity.serverProperties.attenuation_quadratic = value;
+          lightObj.intensity = lightObj.intensity/(1+value);
         }
 
         // updating color too often, maybe only update when popup is closed
@@ -1988,63 +1979,66 @@ GZ3D.Gui.prototype.formatStats = function(stats)
  * Round numbers and format colors
  * @param {} stats
  * @param {} decimals - number of decimals to display, null for input fields
- * @returns stats
+ * @returns result
  */
 GZ3D.Gui.prototype.round = function(stats, isColor, decimals)
 {
-  if (typeof stats === 'number')
+  var result = stats;
+  if (typeof result === 'number')
   {
-    stats = this.roundNumber(stats, isColor, decimals);
+    result = this.roundNumber(result, isColor, decimals);
   }
   else // array of numbers
   {
-    stats = this.roundArray(stats, isColor, decimals);
+    result = this.roundArray(result, isColor, decimals);
   }
-  return stats;
+  return result;
 };
 
 /**
  * Round number and format color
  * @param {} stats
  * @param {} decimals - number of decimals to display, null for input fields
- * @returns stats
+ * @returns result
  */
 GZ3D.Gui.prototype.roundNumber = function(stats, isColor, decimals)
 {
+  var result = stats;
   if (isColor)
   {
-    stats = Math.round(stats * 255);
+    result = Math.round(result * 255);
   }
   else
   {
     if (decimals === null)
     {
-      stats = Math.round(stats*1000)/1000;
+      result = Math.round(result*1000)/1000;
     }
     else
     {
-      stats = stats.toFixed(decimals);
+      result = result.toFixed(decimals);
     }
   }
-  return stats;
+  return result;
 };
 
 /**
  * Round each number in an array
  * @param {} stats
  * @param {} decimals - number of decimals to display, null for input fields
- * @returns stats
+ * @returns result
  */
 GZ3D.Gui.prototype.roundArray = function(stats, isColor, decimals)
 {
-  for (var key in stats)
+  var result = stats;
+  for (var key in result)
   {
-    if (typeof stats[key] === 'number')
+    if (typeof result[key] === 'number')
     {
-      stats[key] = this.roundNumber(stats[key], isColor, decimals);
+      result[key] = this.roundNumber(result[key], isColor, decimals);
     }
   }
-  return stats;
+  return result;
 };
 
 /**
@@ -2424,13 +2418,20 @@ GZ3D.GZIface.prototype.onConnected = function()
     messageType : 'light',
   });
 
+  // equivalent to modelUpdate / poseUpdate
   var lightUpdate = function(message)
   {
-    if (!this.scene.getByName(message.name))
+    var entity = this.scene.getByName(message.name);
+    if (!entity)
     {
       var lightObj = this.createLightFromMsg(message);
       this.scene.add(lightObj);
       guiEvents.emit('notification_popup', message.name+' inserted');
+    }
+    else if (entity && entity !== this.scene.modelManipulator.object
+        && entity.parent !== this.scene.modelManipulator.object)
+    {
+      this.scene.updateLight(entity, message);
     }
     this.gui.setLightStats(message, 'update');
   };
@@ -2522,19 +2523,7 @@ GZ3D.GZIface.prototype.onConnected = function()
       };
       entityMsg.direction = entity.direction;
       entityMsg.range = entity.children[0].distance;
-
-      var attenuation_constant = entity.children[0].intensity;
-      // Adjust according to factor
-      if (entity instanceof THREE.PointLight)
-      {
-        attenuation_constant *= 1.5;
-      }
-      else if (entity instanceof THREE.SpotLight)
-      {
-        attenuation_constant *= 5;
-      }
-
-      entityMsg.attenuation_constant = attenuation_constant;
+      entityMsg.attenuation_constant = entity.serverProperties.attenuation_constant;
       entityMsg.attenuation_linear = entity.serverProperties.attenuation_linear;
       entityMsg.attenuation_quadratic = entity.serverProperties.attenuation_quadratic;
 
@@ -2853,32 +2842,37 @@ GZ3D.GZIface.prototype.createVisualFromMsg = function(visual)
 
 GZ3D.GZIface.prototype.createLightFromMsg = function(light)
 {
-  var obj, factor, range, direction;
+  var obj, range, direction;
 
   if (light.type === 1)
   {
-    factor = 1.5;
     direction = null;
     range = light.range;
   }
   else if (light.type === 2)
   {
-    factor = 5;
     direction = light.direction;
     range = light.range;
   }
   else if (light.type === 3)
   {
-    factor = 1;
     direction = light.direction;
     range = null;
   }
 
-  obj = this.scene.createLight(light.type, light.diffuse,
-        light.attenuation_constant * factor,
+  // equation taken from
+  // http://wiki.blender.org/index.php/Doc:2.6/Manual/Lighting/Lights/Light_Attenuation
+  var E = 1;
+  var D = 1;
+  var r = 1;
+  var L = light.attenuation_linear;
+  var Q = light.attenuation_quadratic;
+  var intensity = E*(D/(D+L*r))*(Math.pow(D,2)/(Math.pow(D,2)+Q*Math.pow(r,2)));
+
+  obj = this.scene.createLight(light.type, light.diffuse, intensity,
         light.pose, range, light.cast_shadows, light.name,
-        direction, light.specular, light.attenuation_linear,
-        light.attenuation_quadratic);
+        direction, light.specular, light.attenuation_constant,
+        light.attenuation_linear, light.attenuation_quadratic);
 
   return obj;
 };
@@ -6000,13 +5994,14 @@ GZ3D.Scene.prototype.createBox = function(width, height, depth)
  * @param {} name
  * @param {} direction
  * @param {} specular
+ * @param {} attenuation_constant
  * @param {} attenuation_linear
  * @param {} attenuation_quadratic
  * @returns {THREE.Object3D}
  */
 GZ3D.Scene.prototype.createLight = function(type, diffuse, intensity, pose,
-    distance, cast_shadows, name, direction, specular, attenuation_linear,
-    attenuation_quadratic)
+    distance, cast_shadows, name, direction, specular, attenuation_constant,
+    attenuation_linear, attenuation_quadratic)
 {
   var obj = new THREE.Object3D();
   var color = new THREE.Color();
@@ -6094,6 +6089,7 @@ GZ3D.Scene.prototype.createLight = function(type, diffuse, intensity, pose,
   // Add properties which exist on the server but have no meaning on THREE.js
   obj.serverProperties = {};
   obj.serverProperties.specular = specular;
+  obj.serverProperties.attenuation_constant = attenuation_constant;
   obj.serverProperties.attenuation_linear = attenuation_linear;
   obj.serverProperties.attenuation_quadratic = attenuation_quadratic;
 
@@ -7396,6 +7392,122 @@ GZ3D.Scene.prototype.viewJoints = function(model)
         secondAxis.quaternion.setFromRotationMatrix(rotMatrix);
       }
     }
+  }
+};
+
+/**
+ * Update a light entity from a message
+ * @param {} entity
+ * @param {} msg
+ */
+GZ3D.Scene.prototype.updateLight = function(entity, msg)
+{
+  // TODO: Generalize this and createLight
+  var lightObj = entity.children[0];
+  var dir;
+
+  var color = new THREE.Color();
+
+  if (msg.diffuse)
+  {
+    color.r = msg.diffuse.r;
+    color.g = msg.diffuse.g;
+    color.b = msg.diffuse.b;
+    lightObj.color = color.clone();
+  }
+  if (msg.specular)
+  {
+    color.r = msg.specular.r;
+    color.g = msg.specular.g;
+    color.b = msg.specular.b;
+    entity.serverProperties.specular = color.clone();
+  }
+
+  var matrixWorld;
+  if (msg.pose)
+  {
+    // needed to update light's direction
+    var quaternion = new THREE.Quaternion(
+        msg.pose.orientation.x,
+        msg.pose.orientation.y,
+        msg.pose.orientation.z,
+        msg.pose.orientation.w);
+
+    var translation = new THREE.Vector3(
+        msg.pose.position.x,
+        msg.pose.position.y,
+        msg.pose.position.z);
+
+    matrixWorld = new THREE.Matrix4();
+    matrixWorld.compose(translation, quaternion, new THREE.Vector3(1,1,1));
+
+    this.setPose(entity, msg.pose.position, msg.pose.orientation);
+    entity.matrixWorldNeedsUpdate = true;
+
+    if (entity.direction)
+    {
+      dir = new THREE.Vector3(entity.direction.x, entity.direction.y,
+          entity.direction.z);
+
+      entity.direction = new THREE.Vector3();
+      entity.direction.copy(dir);
+
+      dir.applyMatrix4(matrixWorld); // localToWorld
+      lightObj.target.position.copy(dir);
+    }
+  }
+
+  if (msg.range)
+  {
+    // THREE.js's light distance impacts the attenuation factor defined in the shader:
+    // attenuation factor = 1.0 - distance-to-enlighted-point / light.distance
+    // Gazebo's range (taken from OGRE 3D API) does not contribute to attenuation;
+    // it is a hard limit for light scope.
+    // Nevertheless, we identify them for sake of simplicity.
+    lightObj.distance = msg.range;
+  }
+
+  if (msg.cast_shadows)
+  {
+    lightObj.castShadow = msg.cast_shadows;
+  }
+
+  if (msg.attenuation_constant)
+  {
+    entity.serverProperties.attenuation_constant = msg.attenuation_constant;
+  }
+  if (msg.attenuation_linear)
+  {
+    entity.serverProperties.attenuation_linear = msg.attenuation_linear;
+    lightObj.intensity = lightObj.intensity/(1+msg.attenuation_linear);
+  }
+  if (msg.attenuation_quadratic)
+  {
+    entity.serverProperties.attenuation_quadratic = msg.attenuation_quadratic;
+    lightObj.intensity = lightObj.intensity/(1+msg.attenuation_quadratic);
+  }
+
+//  Not handling these on gzweb for now
+//
+//  if (lightObj instanceof THREE.SpotLight) {
+//    if (msg.spot_outer_angle) {
+//      lightObj.angle = msg.spot_outer_angle;
+//    }
+//    if (msg.spot_falloff) {
+//      lightObj.exponent = msg.spot_falloff;
+//    }
+//  }
+
+  if (msg.direction)
+  {
+    dir = new THREE.Vector3(msg.direction.x, msg.direction.y,
+        msg.direction.z);
+
+    entity.direction = new THREE.Vector3();
+    entity.direction.copy(dir);
+
+    dir.applyMatrix4(matrixWorld); // localToWorld
+    lightObj.target.position.copy(dir);
   }
 };
 

@@ -1346,9 +1346,10 @@ GZ3D.Gui.prototype.init = function()
         }
 
         var entity = that.scene.getByName(name);
+        var lightObj = entity.children[0];
         if (prop === 'diffuse')
         {
-          entity.children[0].color = new THREE.Color(value);
+          lightObj.color = new THREE.Color(value);
         }
         else if (prop === 'specular')
         {
@@ -1356,31 +1357,21 @@ GZ3D.Gui.prototype.init = function()
         }
         else if (prop === 'range')
         {
-          entity.children[0].distance = value;
+          lightObj.distance = value;
         }
         else if (prop === 'attenuation_constant')
         {
-          // Adjust according to factor
-          var factor = 1;
-          if (entity instanceof THREE.PointLight)
-          {
-            factor = 1.5;
-          }
-          else if (entity instanceof THREE.SpotLight)
-          {
-            factor = 5;
-          }
-          value *= factor;
-
-          entity.children[0].intensity = value;
+          entity.serverProperties.attenuation_constant = value;
         }
         else if (prop === 'attenuation_linear')
         {
           entity.serverProperties.attenuation_linear = value;
+          lightObj.intensity = lightObj.intensity/(1+value);
         }
         else if (prop === 'attenuation_quadratic')
         {
           entity.serverProperties.attenuation_quadratic = value;
+          lightObj.intensity = lightObj.intensity/(1+value);
         }
 
         // updating color too often, maybe only update when popup is closed
@@ -1983,63 +1974,66 @@ GZ3D.Gui.prototype.formatStats = function(stats)
  * Round numbers and format colors
  * @param {} stats
  * @param {} decimals - number of decimals to display, null for input fields
- * @returns stats
+ * @returns result
  */
 GZ3D.Gui.prototype.round = function(stats, isColor, decimals)
 {
-  if (typeof stats === 'number')
+  var result = stats;
+  if (typeof result === 'number')
   {
-    stats = this.roundNumber(stats, isColor, decimals);
+    result = this.roundNumber(result, isColor, decimals);
   }
   else // array of numbers
   {
-    stats = this.roundArray(stats, isColor, decimals);
+    result = this.roundArray(result, isColor, decimals);
   }
-  return stats;
+  return result;
 };
 
 /**
  * Round number and format color
  * @param {} stats
  * @param {} decimals - number of decimals to display, null for input fields
- * @returns stats
+ * @returns result
  */
 GZ3D.Gui.prototype.roundNumber = function(stats, isColor, decimals)
 {
+  var result = stats;
   if (isColor)
   {
-    stats = Math.round(stats * 255);
+    result = Math.round(result * 255);
   }
   else
   {
     if (decimals === null)
     {
-      stats = Math.round(stats*1000)/1000;
+      result = Math.round(result*1000)/1000;
     }
     else
     {
-      stats = stats.toFixed(decimals);
+      result = result.toFixed(decimals);
     }
   }
-  return stats;
+  return result;
 };
 
 /**
  * Round each number in an array
  * @param {} stats
  * @param {} decimals - number of decimals to display, null for input fields
- * @returns stats
+ * @returns result
  */
 GZ3D.Gui.prototype.roundArray = function(stats, isColor, decimals)
 {
-  for (var key in stats)
+  var result = stats;
+  for (var key in result)
   {
-    if (typeof stats[key] === 'number')
+    if (typeof result[key] === 'number')
     {
-      stats[key] = this.roundNumber(stats[key], isColor, decimals);
+      result[key] = this.roundNumber(result[key], isColor, decimals);
     }
   }
-  return stats;
+  return result;
 };
 
 /**

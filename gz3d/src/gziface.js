@@ -338,13 +338,20 @@ GZ3D.GZIface.prototype.onConnected = function()
     messageType : 'light',
   });
 
+  // equivalent to modelUpdate / poseUpdate
   var lightUpdate = function(message)
   {
-    if (!this.scene.getByName(message.name))
+    var entity = this.scene.getByName(message.name);
+    if (!entity)
     {
       var lightObj = this.createLightFromMsg(message);
       this.scene.add(lightObj);
       guiEvents.emit('notification_popup', message.name+' inserted');
+    }
+    else if (entity && entity !== this.scene.modelManipulator.object
+        && entity.parent !== this.scene.modelManipulator.object)
+    {
+      this.scene.updateLight(entity, message);
     }
     this.gui.setLightStats(message, 'update');
   };
@@ -436,19 +443,7 @@ GZ3D.GZIface.prototype.onConnected = function()
       };
       entityMsg.direction = entity.direction;
       entityMsg.range = entity.children[0].distance;
-
-      var attenuation_constant = entity.children[0].intensity;
-      // Adjust according to factor
-      if (entity instanceof THREE.PointLight)
-      {
-        attenuation_constant *= 1.5;
-      }
-      else if (entity instanceof THREE.SpotLight)
-      {
-        attenuation_constant *= 5;
-      }
-
-      entityMsg.attenuation_constant = attenuation_constant;
+      entityMsg.attenuation_constant = entity.serverProperties.attenuation_constant;
       entityMsg.attenuation_linear = entity.serverProperties.attenuation_linear;
       entityMsg.attenuation_quadratic = entity.serverProperties.attenuation_quadratic;
 
@@ -767,32 +762,37 @@ GZ3D.GZIface.prototype.createVisualFromMsg = function(visual)
 
 GZ3D.GZIface.prototype.createLightFromMsg = function(light)
 {
-  var obj, factor, range, direction;
+  var obj, range, direction;
 
   if (light.type === 1)
   {
-    factor = 1.5;
     direction = null;
     range = light.range;
   }
   else if (light.type === 2)
   {
-    factor = 5;
     direction = light.direction;
     range = light.range;
   }
   else if (light.type === 3)
   {
-    factor = 1;
     direction = light.direction;
     range = null;
   }
 
-  obj = this.scene.createLight(light.type, light.diffuse,
-        light.attenuation_constant * factor,
+  // equation taken from
+  // http://wiki.blender.org/index.php/Doc:2.6/Manual/Lighting/Lights/Light_Attenuation
+  var E = 1;
+  var D = 1;
+  var r = 1;
+  var L = light.attenuation_linear;
+  var Q = light.attenuation_quadratic;
+  var intensity = E*(D/(D+L*r))*(Math.pow(D,2)/(Math.pow(D,2)+Q*Math.pow(r,2)));
+
+  obj = this.scene.createLight(light.type, light.diffuse, intensity,
         light.pose, range, light.cast_shadows, light.name,
-        direction, light.specular, light.attenuation_linear,
-        light.attenuation_quadratic);
+        direction, light.specular, light.attenuation_constant,
+        light.attenuation_linear, light.attenuation_quadratic);
 
   return obj;
 };
