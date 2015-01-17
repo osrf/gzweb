@@ -6086,6 +6086,7 @@ GZ3D.Scene.prototype.createLight = function(type, diffuse, intensity, pose,
 
     if (type === 3)
     {
+      // position of directional lights in threejs determines its direction
       lightObj.position.copy(dir);
     }
     else
