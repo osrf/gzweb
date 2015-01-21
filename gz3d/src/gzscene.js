@@ -996,16 +996,7 @@ GZ3D.Scene.prototype.createLight = function(type, diffuse, intensity, pose,
     obj.direction.copy(dir);
 
     dir.applyMatrix4(matrixWorld); // localToWorld
-
-    if (type === 3)
-    {
-      // position of directional lights in threejs determines its direction
-      lightObj.position.copy(dir);
-    }
-    else
-    {
-      lightObj.target.position.copy(dir);
-    }
+    lightObj.target.position.copy(dir);
   }
 
   // Add properties which exist on the server but have no meaning on THREE.js
@@ -1416,7 +1407,7 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
     {
       if (allObjects[l] instanceof THREE.DirectionalLight)
       {
-        lightDir = allObjects[l].position;
+        lightDir = allObjects[l].target.position;
         lightDiffuse = allObjects[l].color;
         break;
       }
