@@ -1386,10 +1386,12 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
     {
       textureLoaded[tt] = textureLoaded[tt-1];
     }
-    for (var b = blends.length; tt < 2; ++b)
+
+    for (var b = blends.length; b < 2; ++b)
     {
       blends[b] = blends[b-1];
     }
+
     for (var rr = repeats.length; rr < 3; ++rr)
     {
       repeats[rr] = repeats[rr-1];
@@ -1405,7 +1407,7 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
     {
       if (allObjects[l] instanceof THREE.DirectionalLight)
       {
-        lightDir = allObjects[l].position;
+        lightDir = allObjects[l].target.position;
         lightDiffuse = allObjects[l].color;
         break;
       }

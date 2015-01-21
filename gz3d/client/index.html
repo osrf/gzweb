@@ -86,18 +86,23 @@
       vec3 fragcolor = diffuse0;
 
       // texture level 1
-      fragcolor = mix(
-        fragcolor,
-        diffuse1,
-        blend(vPosition.z - minHeight1, fadeDist1)
-      );
-
-      // texture level 2
-      fragcolor = mix(
-        fragcolor,
-        diffuse2,
-        blend(vPosition.z - (minHeight1 + minHeight2), fadeDist2)
-      );
+      if (fadeDist1 > 0.0)
+      {
+        fragcolor = mix(
+          fragcolor,
+          diffuse1,
+          blend(vPosition.z - minHeight1, fadeDist1)
+        );
+      }
+      if (fadeDist2 > 0.0)
+      {
+        // texture level 2
+        fragcolor = mix(
+          fragcolor,
+          diffuse2,
+          blend(vPosition.z - (minHeight1 + minHeight2), fadeDist2)
+        );
+      }
 
       vec3 lightDirNorm = normalize(lightDir);
       float intensity = max(dot(vNormal, lightDirNorm), 0.0);
