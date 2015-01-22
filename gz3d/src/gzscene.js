@@ -1018,7 +1018,7 @@ GZ3D.Scene.prototype.createLight = function(type, diffuse, intensity, pose,
  * @param {} intensity
  * @param {} distance
  * @param {} cast_shadows
- * @returns {[THREE.Light, THREE.Mesh]}
+ * @returns {Object.<THREE.Light, THREE.Mesh>}
  */
 GZ3D.Scene.prototype.createPointLight = function(obj, color, intensity,
     distance, cast_shadows)
@@ -1056,7 +1056,7 @@ GZ3D.Scene.prototype.createPointLight = function(obj, color, intensity,
  * @param {} intensity
  * @param {} distance
  * @param {} cast_shadows
- * @returns {[THREE.Light, THREE.Mesh]}
+ * @returns {Object.<THREE.Light, THREE.Mesh>}
  */
 GZ3D.Scene.prototype.createSpotLight = function(obj, color, intensity,
     distance, cast_shadows)
@@ -1097,7 +1097,7 @@ GZ3D.Scene.prototype.createSpotLight = function(obj, color, intensity,
  * @param {} color
  * @param {} intensity
  * @param {} cast_shadows
- * @returns {[THREE.Light, THREE.Mesh]}
+ * @returns {Object.<THREE.Light, THREE.Mesh>}
  */
 GZ3D.Scene.prototype.createDirectionalLight = function(obj, color, intensity,
     cast_shadows)
