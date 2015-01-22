@@ -94,11 +94,11 @@ Install grunt packages. From the `gzweb/gz3d/utils` directory, run:
 
 1. From the `gzweb` directory, run the following script, which will code check and minify javascript source files, and copy generated files to `gzweb/http`.
 
-      ./updateGZ3D.sh
+        ./updateGZ3D.sh
 
 1. Verify your changes by starting gzweb server from the `gzweb` directory:
 
-      ./start_gzweb.sh
+        ./start_gzweb.sh
 
 1. Open browser to localhost:8080 or just refresh page.
 
