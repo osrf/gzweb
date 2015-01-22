@@ -79,3 +79,27 @@ http://localhost:8080
 # Stopping gzweb server
 
     ./stop_gzweb.sh
+
+# Build environment setup for javascript source
+
+## Dependencies
+
+Install grunt packages. From the `gzweb/gz3d/utils` directory, run:
+
+      npm install
+
+## Work Flow
+
+1. Make changes to javascript source code in `gzweb/gz3d`
+
+1. From the `gzweb` directory, run the following script, which will code check and minify javascript source files, and copy generated files to `gzweb/http`.
+
+      ./updateGZ3D.sh
+
+1. Verify your changes by starting gzweb server from the `gzweb` directory:
+
+      ./start_gzweb.sh
+
+1. Open browser to localhost:8080 or just refresh page.
+
+
