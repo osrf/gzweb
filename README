@@ -26,7 +26,7 @@ Make sure your system supports a more recent version of nodejs (>=0.10) then ins
 
     sudo apt-get install libjansson-dev nodejs npm libboost-dev imagemagick libtinyxml-dev mercurial
 
-**Note** For Ubuntu Precise or lower, the nodejs version that comes with it may not work with gzweb. In that case, set up your system to grab and install the latest nodejs debs:
+**Note** For Ubuntu Precise or older distributions, the nodejs version that comes with it may not work with gzweb. In that case, set up your system to grab and install the latest nodejs debs:
 
     curl -sL https://deb.nodesource.com/setup | sudo bash -
     sudo apt-get install nodejs
