@@ -1869,7 +1869,7 @@ GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
 /**
  * Format stats message for proper display
  * @param {} stats
- * @returns {position, orientation, inertial, diffuse, specular, attenuation}
+ * @returns {Object.<position, orientation, inertial, diffuse, specular, attenuation>}
  */
 GZ3D.Gui.prototype.formatStats = function(stats)
 {
@@ -2039,7 +2039,7 @@ GZ3D.Gui.prototype.roundArray = function(stats, isColor, decimals)
 /**
  * Format toggle items
  * @param {} stats: true / false
- * @returns {icon, title}
+ * @returns {Object.<icon, title>}
  */
 GZ3D.Gui.prototype.trueOrFalse = function(stats)
 {
