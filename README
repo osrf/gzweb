@@ -1,3 +1,9 @@
+# Gzweb - A web client for Gazebo
+
+Gzweb is a WebGL client for Gazebo. Like gzclient, it's a front-end graphical interface to gzserver and provides visualization of the simulation.
+
+http://gazebosim.org/gzweb
+
 # Installation
 
 ## Gazebo
