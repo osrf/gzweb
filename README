@@ -118,3 +118,6 @@ Install grunt packages. From the `gzweb/gz3d/utils` directory, run:
         ./start_gzweb.sh
 
 1. Open browser to localhost:8080 or just refresh page.
+
+
+Open ports 8080 and 7681 on your server
