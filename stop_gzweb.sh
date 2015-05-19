@@ -1,3 +1,6 @@
 #!/bin/bash
 
-killall node
+if [ "$(pidof node)" ] 
+then
+  killall node
+fi
