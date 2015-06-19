@@ -3,6 +3,20 @@ body
 {
   font-size-adjust: 0.5;
 }
+input:invalid
+{
+  box-shadow: none;
+}
+input[type=number]
+{
+  -moz-appearance:textfield;
+}
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button
+{
+  -webkit-appearance: none;
+  margin: 0;
+}
 .ui-content
 {
   overflow: hidden;
@@ -15,10 +29,6 @@ body
   bottom: 0px;
   right: 0px;
   left: 0px;
-}
-.ui-popup-screen
-{
-  z-index: 999;
 }
 /* header */
 .header-button
@@ -35,6 +45,16 @@ body
 #clock-touch
 {
   z-index: 100;
+}
+#clock-touch > p
+{
+  text-align: right;
+}
+#clock-mouse > p
+{
+  margin: 0;
+  margin-right: 0.25em;
+  text-align: right;
 }
 /* tabs */
 .tab
@@ -86,62 +106,47 @@ body
   display: none;
   background-color: #2a2a2a;
   height: 100%;
-  width: 15em;
+  width: 23em;
 }
 .panelContent
 {
-  height: calc(100% - 1.8em);
+  height: calc(100% - 2.51em);
   overflow-y: auto;
   overflow-x: hidden;
-}
-.panelSubContent
-{
-  height: calc(100% - 1.8em - 1.5em);
-  overflow-y: auto;
-  overflow-x: hidden;
+  margin-top: 0.01em;
 }
 .panelTitle
 {
   width: 100%;
-  height: 1.8em;
+  height: 2.5em;
+  line-height: 1.8em;
   background-color: #1d1d1d;
+}
+.panelTitle:hover
+{
+  background-color: #212121;
 }
 .panelTitle h3
 {
-  margin: 0.1em;
+  margin: 0.3em;
   float: left;
-}
-.panelTitle img
-{
-  height: 1.2em;
-  margin: 0.1em;
-  float: right;
-}
-.panelSubTitle
-{
-  width: 100%;
-  height: 1.5em;
-  background-color: #333333;
-}
-.panelSubTitle h4
-{
-  margin: 0.1em;
-  float: left;
-  width: 13em;
+  width: calc(100% - 1.5em);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.panelSubTitle img
+.panelTitle img
 {
   height: 1.2em;
-  margin: 0.1em;
-  float: right;
+  margin: 0.3em;
+  position: absolute;
+  right: 0;
+  top: 0.3em;
 }
 .leftPanels ul
 {
   list-style: none;
-  width: 13em;
+  width: 21em;
   padding: 0em;
   padding-left: 1em;
   margin: 0em;
@@ -156,7 +161,7 @@ body
   left: -1em;
   padding: 0;
   margin: 0;
-  width: 15em;
+  width: 23em;
 }
 .collapsible_header
 {
@@ -167,20 +172,13 @@ body
   font-size: 0.9em;
   color: #bdbdbd;
 }
-#open-tree-when-selected a
-{
-  font-size: 0.9em;
-}
 /* insert menu */
-.insertMenus li
-{
-  width: 0em;
-}
 .insertMenuItem
 {
   width: 7em;
   height: 6.5em;
-  margin-left: 1.5em;
+  margin-left: 1.3em;
+  float: left;
 }
 .insertMenuItem img
 {
@@ -198,13 +196,54 @@ body
   height: 4em;
   margin-top: 0.6em;
 }
+.insertMenuCategoryItem
+{
+  width: calc(100% - 5em);
+}
+.insertMenuCategoryItem img
+{
+  vertical-align: middle;
+  margin-left: 1em;
+  height: 4em;
+  max-width: 4em;
+  padding-top: 1em;
+}
+.insertMenuCategoryItemLight > img:nth-child(5)
+{
+  display: none;
+}
 /* world tree */
+.expandableTree
+{
+  font-weight: bolder;
+  padding-left: 0.5em;
+  width: calc(100% - 0.5em);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: none;
+  font-size: 1.2em;
+  background-color: #333333;
+  border-top: 1px solid #222222;
+  border-bottom: 1px solid #222222;
+  line-height: 2em;
+}
+.expandableTree:hover,
+.expandableTree:active
+{
+  background-color: #373737;
+}
+.notExpandableTree
+{
+  padding-left: 1.6em;
+  width: calc(100% - 1.6em);
+}
 .treeItem
 {
   font-size: 1em;
   line-height: 2em;
   padding: 0;
-  width: 15em;
+  width: 23em;
   clear: both;
   margin-left: -1em;
 }
@@ -238,17 +277,12 @@ body
   background-color: #aaaaaa;
 }
 /* property panel */
-.propertyPanels
-{
-  background-color: #eeeeee;
-}
 .propertyPanelImg
 {
   text-align: center;
   clear: both;
-  background-color: #2a2a2a;
 }
-.propertyPanelImg img
+.propertyPanelImg > img
 {
   height: 5em;
 }
@@ -257,20 +291,21 @@ body
   text-align: center;
   clear: both;
 }
-.propertyPanelHeader h4
+.propertyPanelHeader > h4
 {
   background-color: #aaaaaa;
   float: left;
   margin: 0;
 }
-.propertyPanelHeader h4:first-child
+.propertyPanelHeader > h4:first-child
 {
   width: 60%;
 }
-.propertyPanelHeader h4:nth-child(2)
+.propertyPanelHeader > h4:nth-child(2)
 {
   width: 40%;
 }
+/* Property general */
 .property div
 {
   float: left;
@@ -278,49 +313,32 @@ body
   text-overflow: ellipsis;
   white-space: nowrap;
   position: relative;
-  color: #000000;
   text-shadow: none;
   font-size: 0.9em;
 }
-.property div:first-child
+.property > div:first-child
 {
   font-weight:bolder;
-}
-.property div:nth-child(2)
-{
-  width: 40%;
-}
-.propertyLevel2 div
-{
-  font-size: 0.8em;
-}
-.propertyLevel3 div
-{
-  font-size: 0.7em;
-}
-.propertyLevel4 div
-{
-  font-size: 0.65em;
-}
-.propertyLevel1 div:first-child
-{
   padding-left: 1.7em;
   width: calc(60% - 1.7em);
 }
-.propertyLevel2 div:first-child
+.property > div:nth-child(2)
 {
-  padding-left: 2.8em;
-  width: calc(60% - 2.8em);
+  width: 40%;
 }
-.propertyLevel3 div:first-child
+.propertyToggle
 {
-  padding-left: calc(2.8em + 1.7em);
-  width: calc(60% - 2.8em - 1.7em);
+  text-align: right;
+  padding-right: 0.3em;
+  width: calc(40% - 0.3em) !important;
 }
-.propertyLevel4 div:first-child
+.propertyToggle > div:nth-child(2)
 {
-  padding-left: calc(2.8em + 3.4em);
-  width: calc(60% - 2.8em - 3.4em);
+  float: right;
+  width: 3em;
+  text-align: left;
+  padding-left: 0.2em;
+  font-size: 1em;
 }
 .propertyToggle img
 {
@@ -330,60 +348,84 @@ body
 .propertyNumber
 {
   text-align: right;
-  padding-right: 3em;
-  width: calc(40% - 3em) !important;
+  padding-right: 2em;
+  width: calc(40% - 2em) !important;
+}
+.propertyNumber div:first-child
+{
+  text-align: right;
+  float:right;
+  line-height: inherit;
+}
+.propertyNumberEdit div
+{
+  margin: 0;
+}
+.propertyNumberEdit input
+{
+  margin: 0;
+  padding: 0;
+  border: 0;
+  width: 80%;
+  background-color: #2a2a2a;
+  color: #ffffff;
+  text-align: right;
+  float:right;
+  padding-right: 2em;
+}
+.propertyUnit
+{
+  position: absolute !important;
+  right: 1em;
+}
+.propertyUnit3
+{
+  font-size: 0.75em !important;
+  line-height: inherit !important;
+}
+.propertyUnit4
+{
+  font-size: 0.6em !important;
+  right: 0.3em;
 }
 .expandableProperty
 {
   font-weight: bolder;
   padding-left: 0.2em;
+  width: calc(100% - 0.2em);
   float: left;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  width: 100%;
-  color: #000000;
   text-shadow: none;
   font-size: 0.9em;
+}
+.expandableProperty
+{
+  font-size: 1.2em;
+  line-height: 1.9em;
 }
 .expandableProperty:hover,
 .expandableProperty:active
 {
-  background-color: #e8e8e8;
-}
-.expandableLevel2
-{
-  padding-left: 1.7em;
-  width: calc(100% - 1.7em);
-  font-size: 0.8em;
-}
-.expandableLevel3
-{
-  padding-left: 3.5em;
-  width: calc(100% - 3.5em);
-  font-size: 0.7em;
-}
-.expandableProperty img
-{
-  vertical-align: middle;
-}
-.expandableLevel1 img
-{
-  height: 1em;
-}
-.expandableLevel2 img
-{
-  height: 0.8em;
-}
-.expandableLevel3 img
-{
-  height: 0.7em;
+  background-color: #2e2e2e;
 }
 .expandableProperty div
 {
   position: relative;
   float: left;
   width: calc(60% - 0.2em);
+}
+.expandableProperty > div:nth-child(2)
+{
+  position: relative;
+  float: left;
+  width: 40%;
+}
+.expandableProperty img
+{
+  vertical-align: middle;
+  height: 1em;
 }
 .expandedContent
 {
@@ -396,21 +438,202 @@ body
   width: calc(40% - 2em) !important;
   border: 1px solid white;
 }
+.propertyColorEdit
+{
+  height: 100%;
+}
+.propertyColorEdit div
+{
+  background-color: #aaaaaa !important;
+  padding: 0;
+  margin: 0;
+  height: 100%;
+  border: none;
+}
+.propertyColorEdit input
+{
+  padding: 0;
+  margin: 0;
+  min-height: 1em;
+  height: 1.2em;
+}
+.colorDisplay
+{
+  margin-top: 0.3em;
+}
+/* Level 1 */
+.propertyLevel1 div
+{
+  font-size: 1.2em;
+  line-height: 1.9em;
+}
+.propertyLevel1 > div:first-child
+{
+  padding-left: 1.3em;
+  width: calc(60% - 1.3em);
+}
+/* Level 2 */
+.propertyLevel2 div
+{
+  font-size: 0.8em;
+}
+.propertyLevel2 > div:first-child
+{
+  padding-left: 2.8em;
+  width: calc(60% - 2.8em);
+}
+.expandableLevel2
+{
+  padding-left: 1.7em;
+  width: calc(100% - 1.7em);
+  font-size: 0.8em;
+}
+.expandableLevel2 img
+{
+  height: 0.8em;
+}
+.propertyLevel2 div,
+.propertyLevel2 input
+{
+  font-size: 1.1em;
+  line-height: 1.8em;
+  height: 1.8em;
+}
+.propertyLevel2 > div:first-child
+{
+  padding-left: 2.3em;
+  width: calc(60% - 2.3em);
+}
+.expandableLevel2
+{
+  font-size: 1.1em;
+  line-height: 1.8em;
+  padding-left: 1.2em;
+  width: calc(100% - 1.2em);
+}
+/* Level 3 */
+.propertyLevel3 div
+{
+  font-size: 0.7em;
+}
+.propertyLevel3 > div:first-child
+{
+  padding-left: 4.5em;
+  width: calc(60% - 4.5em);
+}
+.expandableLevel3
+{
+  padding-left: 3.5em;
+  width: calc(100% - 3.5em);
+  font-size: 0.7em;
+}
+.expandableLevel3 img
+{
+  height: 0.7em;
+}
+.propertyLevel3 div,
+.propertyLevel3 input
+{
+  font-size: 1.0em;
+  line-height: 1.7em;
+  height: 1.7em;
+}
+.propertyLevel3 > div:first-child
+{
+  padding-left: 3.3em;
+  width: calc(60% - 3.3em);
+}
+.expandableLevel3
+{
+  font-size: 1.0em;
+  line-height: 1.7em;
+  padding-left: 2.4em;
+  width: calc(100% - 2.4em);
+}
+/* Level 4 */
+.propertyLevel4 div
+{
+  font-size: 0.65em;
+}
+.propertyLevel4 > div:first-child
+{
+  padding-left: 6.2em;
+  width: calc(60% - 6.2em);
+}
+.expandableLevel4
+{
+  padding-left: 5.2em;
+  width: calc(100% - 5.2em);
+  font-size: 0.65em;
+}
+.expandableLevel4 img
+{
+  height: 0.65em;
+}
+.propertyLevel4 div,
+.propertyLevel4 input
+{
+  font-size: 0.9em;
+  line-height: 1.6em;
+  height: 1.6em;
+}
+.propertyLevel4 > div:first-child
+{
+  padding-left: 4.3em;
+  width: calc(60% - 4.3em);
+}
+.expandableLevel4
+{
+  font-size: 1.0em;
+  line-height: 1.7em;
+  padding-left: 3.0em;
+  width: calc(100% - 3.0em);
+}
+/* Level 5 */
+.propertyLevel5 div
+{
+  font-size: 0.6em;
+}
+.propertyLevel5 > div:first-child
+{
+  padding-left: 7.9em;
+  width: calc(60% - 7.9em);
+}
+.propertyLevel5 div,
+.propertyLevel5 input
+{
+  font-size: 0.8em;
+  line-height: 1.5em;
+  height: 1.5em;
+}
+.propertyLevel5 > div:first-child
+{
+  padding-left: 5.6em;
+  width: calc(60% - 5.6em);
+}
+#real-time-update-rate
+{
+  font-size: 1.1em;
+  padding-left: 1.4em;
+  width: calc(60% - 1.4em);
+}
+/* Background colors */
 .redBg div
 {
-  background-color: #ffdddd !important;
+  background-color: #772a2a !important;
 }
 .greenBg div
 {
-  background-color: #ddffdd !important;
+  background-color: #2a772a !important;
 }
 .blueBg div
 {
-  background-color: #ddddff !important;
+  background-color: #2a2a77 !important;
 }
-.darkBg div
+.lightBg div,
+.lightBg input
 {
-  background-color: #dddddd;
+  background-color: #414141 !important;
 }
 /* model popup */
 #model-popup
@@ -431,10 +654,6 @@ body
   {
     width: 8.5em;
   }
-  .panelSubTitle h4
-  {
-    width: 8.5em;
-  }
   /* main menu */
   #mainMenu li
   {
@@ -443,7 +662,7 @@ body
   /* insert menu */
   .insertMenuItem
   {
-    width: 4.6em;
+    width: calc(100% - 3.2em);
     height: 4.3em;
     margin-left: 0.5em;
   }
@@ -460,6 +679,21 @@ body
   {
     height: 2.7em;
     margin-top: 0.4em;
+  }
+  .insertMenuCategoryItem img
+  {
+    margin-left: 0;
+    padding-top: 0;
+  }
+  .insertMenuCategoryItem > img:nth-child(2),
+  .insertMenuCategoryItem > img:nth-child(3),
+  .insertMenuCategoryItemLight > img:nth-child(4)
+  {
+    display: none;
+  }
+  .insertMenuCategoryItemLight > img:nth-child(5)
+  {
+    display: initial;
   }
   /* world tree */
   .treeItem
@@ -498,3 +732,4 @@ body
     top: 9.8em;
   }
 }
+

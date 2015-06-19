@@ -51,7 +51,9 @@ GazeboInterface::GazeboInterface()
   this->poseTopic = "~/pose/info";
   this->requestTopic = "~/request";
   this->lightTopic = "~/light";
+  this->linkTopic = "~/link";
   this->sceneTopic = "~/scene";
+  this->physicsTopic = "~/physics";
   this->modelModifyTopic = "~/model/modify";
   this->factoryTopic = "~/factory";
   this->worldControlTopic = "~/world_control";
@@ -90,6 +92,9 @@ GazeboInterface::GazeboInterface()
 
   this->sceneSub = this->node->Subscribe(this->sceneTopic,
       &GazeboInterface::OnScene, this);
+
+  this->physicsSub = this->node->Subscribe(this->physicsTopic,
+      &GazeboInterface::OnPhysicsMsg, this);
 
   this->statsSub = this->node->Subscribe(this->statsTopic,
       &GazeboInterface::OnStats, this);
@@ -155,6 +160,7 @@ GazeboInterface::~GazeboInterface()
   this->lightMsgs.clear();
   this->visualMsgs.clear();
   this->sceneMsgs.clear();
+  this->physicsMsgs.clear();
   this->jointMsgs.clear();
   this->sensorMsgs.clear();
 
@@ -233,6 +239,7 @@ void GazeboInterface::ProcessMessages()
 {
   static RequestMsgs_L::iterator rIter;
   static SceneMsgs_L::iterator sIter;
+  static PhysicsMsgs_L::iterator physicsIter;
   static WorldStatsMsgs_L::iterator wIter;
   static ModelMsgs_L::iterator modelIter;
   static VisualMsgs_L::iterator visualIter;
@@ -272,6 +279,15 @@ void GazeboInterface::ProcessMessages()
           this->requests[requestMsg->id()] = requestMsg;
           this->requestPub->Publish(*requestMsg);
         }
+        else if (topic == this->physicsTopic)
+        {
+          gazebo::msgs::Request *requestPhysicsMsg;
+          requestPhysicsMsg = gazebo::msgs::CreateRequest("physics_info", "");
+          if (this->requests.find(requestPhysicsMsg->id()) != this->requests.end())
+            requests.erase(requestPhysicsMsg->id());
+          this->requests[requestPhysicsMsg->id()] = requestPhysicsMsg;
+          this->requestPub->Publish(*requestPhysicsMsg);
+        }
         else if (topic == this->poseTopic)
         {
           // TODO we currently subscribe on init,
@@ -280,7 +296,6 @@ void GazeboInterface::ProcessMessages()
         }
         else if (topic == this->modelModifyTopic)
         {
-          std::string type = get_value(msg, "messageType");
           std::string name = get_value(msg, "msg:name");
           int id = atoi(get_value(msg, "msg:id").c_str());
 
@@ -316,22 +331,50 @@ void GazeboInterface::ProcessMessages()
           if (name == "")
             continue;
 
-          gazebo::math::Vector3 pos(
-            atof(get_value(msg, "msg:position:x").c_str()),
-            atof(get_value(msg, "msg:position:y").c_str()),
-            atof(get_value(msg, "msg:position:z").c_str()));
-          gazebo::math::Quaternion quat(
-            atof(get_value(msg, "msg:orientation:w").c_str()),
-            atof(get_value(msg, "msg:orientation:x").c_str()),
-            atof(get_value(msg, "msg:orientation:y").c_str()),
-            atof(get_value(msg, "msg:orientation:z").c_str()));
-          gazebo::math::Pose pose(pos, quat);
-
           gazebo::msgs::Light lightMsg;
           lightMsg.set_name(name);
+
+          gazebo::math::Vector3 pos(
+              atof(get_value(msg, "msg:position:x").c_str()),
+              atof(get_value(msg, "msg:position:y").c_str()),
+              atof(get_value(msg, "msg:position:z").c_str()));
+          gazebo::math::Quaternion quat(
+              atof(get_value(msg, "msg:orientation:w").c_str()),
+              atof(get_value(msg, "msg:orientation:x").c_str()),
+              atof(get_value(msg, "msg:orientation:y").c_str()),
+              atof(get_value(msg, "msg:orientation:z").c_str()));
+          gazebo::math::Pose pose(pos, quat);
           gazebo::msgs::Set(lightMsg.mutable_pose(), pose);
 
-          if (createEntity.compare("1") == 0)
+          if (createEntity.compare("0") == 0)
+          {
+            gazebo::math::Vector3 direction(
+              atof(get_value(msg, "msg:direction:x").c_str()),
+              atof(get_value(msg, "msg:direction:y").c_str()),
+              atof(get_value(msg, "msg:direction:z").c_str()));
+            gazebo::msgs::Set(lightMsg.mutable_direction(), direction);
+
+            gazebo::common::Color diffuse(
+                atof(get_value(msg, "msg:diffuse:r").c_str()),
+                atof(get_value(msg, "msg:diffuse:g").c_str()),
+                atof(get_value(msg, "msg:diffuse:b").c_str()), 1);
+            gazebo::msgs::Set(lightMsg.mutable_diffuse(), diffuse);
+
+            gazebo::common::Color specular(
+                atof(get_value(msg, "msg:specular:r").c_str()),
+                atof(get_value(msg, "msg:specular:g").c_str()),
+                atof(get_value(msg, "msg:specular:b").c_str()), 1);
+            gazebo::msgs::Set(lightMsg.mutable_specular(), specular);
+
+            lightMsg.set_range(atof(get_value(msg, "msg:range").c_str()));
+            lightMsg.set_attenuation_constant(atof(
+                get_value(msg, "msg:attenuation_constant").c_str()));
+            lightMsg.set_attenuation_linear(atof(
+                get_value(msg, "msg:attenuation_linear").c_str()));
+            lightMsg.set_attenuation_quadratic(atof(
+                get_value(msg, "msg:attenuation_quadratic").c_str()));
+          }
+          else
           {
             if (type.compare("pointlight") == 0)
             {
@@ -361,6 +404,55 @@ void GazeboInterface::ProcessMessages()
           }
 
           this->lightPub->Publish(lightMsg);
+        }
+        else if (topic == this->linkTopic)
+        {
+          std::string modelName = get_value(msg, "msg:name");
+          int modelId = atoi(get_value(msg, "msg:id").c_str());
+
+          std::string linkName = get_value(msg, "msg:link:name");
+          int linkId = atoi(get_value(msg, "msg:link:id").c_str());
+
+          if (modelName == "" || linkName == "")
+            continue;
+
+          gazebo::msgs::Model modelMsg;
+          modelMsg.set_id(modelId);
+          modelMsg.set_name(modelName);
+
+          gazebo::msgs::Link *linkMsg = modelMsg.add_link();
+          linkMsg->set_id(linkId);
+
+          size_t index = linkName.find_last_of("::");
+          if (index != std::string::npos)
+              linkName = linkName.substr(index+1);
+          linkMsg->set_name(linkName);
+
+          std::string self_collideStr = get_value(msg, "msg:link:self_collide").c_str();
+          bool self_collide = false;
+          if (self_collideStr == "1")
+          {
+            self_collide = true;
+          }
+          linkMsg->set_self_collide(self_collide);
+
+          std::string gravityStr = get_value(msg, "msg:link:gravity").c_str();
+          bool gravity = false;
+          if (gravityStr == "1")
+          {
+            gravity = true;
+          }
+          linkMsg->set_gravity(gravity);
+
+          std::string kinematicStr = get_value(msg, "msg:link:kinematic").c_str();
+          bool kinematic = false;
+          if (kinematicStr == "1")
+          {
+            kinematic = true;
+          }
+          linkMsg->set_kinematic(kinematic);
+
+          this->modelPub->Publish(modelMsg);
         }
         else if (topic == this->factoryTopic)
         {
@@ -516,6 +608,16 @@ void GazeboInterface::ProcessMessages()
       this->Send(msg);
     }
     this->sceneMsgs.clear();
+
+    // Forward the physics messages.
+    for (physicsIter = this->physicsMsgs.begin();
+        physicsIter != this->physicsMsgs.end(); ++physicsIter)
+    {
+      msg = this->PackOutgoingTopicMsg(this->physicsTopic,
+          pb2json(*(*physicsIter).get()));
+      this->Send(msg);
+    }
+    this->physicsMsgs.clear();
 
     // Forward the model messages.
     for (modelIter = this->modelMsgs.begin();
@@ -789,11 +891,22 @@ void GazeboInterface::OnResponse(ConstResponsePtr &_msg)
   if (this->requests.find(_msg->id()) == this->requests.end())
     return;
 
-  gazebo::msgs::Scene sceneMsg;
-  sceneMsg.ParseFromString(_msg->serialized_data());
-  boost::shared_ptr<gazebo::msgs::Scene> sm(new gazebo::msgs::Scene(sceneMsg));
-  this->sceneMsgs.push_back(sm);
-  this->requests.erase(_msg->id());
+  if (_msg->has_type() && _msg->type() == "gazebo.msgs.Scene")
+  {
+    gazebo::msgs::Scene sceneMsg;
+    sceneMsg.ParseFromString(_msg->serialized_data());
+    boost::shared_ptr<gazebo::msgs::Scene> sm(new gazebo::msgs::Scene(sceneMsg));
+    this->sceneMsgs.push_back(sm);
+    this->requests.erase(_msg->id());
+  }
+  else if (_msg->has_type() && _msg->type() == "gazebo.msgs.Physics")
+  {
+    gazebo::msgs::Physics physicsMsg;
+    physicsMsg.ParseFromString(_msg->serialized_data());
+    boost::shared_ptr<gazebo::msgs::Physics> pm(new gazebo::msgs::Physics(physicsMsg));
+    this->physicsMsgs.push_back(pm);
+    this->requests.erase(_msg->id());
+  }
 }
 
 /////////////////////////////////////////////////
@@ -814,6 +927,16 @@ void GazeboInterface::OnScene(ConstScenePtr &_msg)
 
   boost::recursive_mutex::scoped_lock lock(*this->receiveMutex);
   this->sceneMsgs.push_back(_msg);
+}
+
+/////////////////////////////////////////////////
+void GazeboInterface::OnPhysicsMsg(ConstPhysicsPtr &_msg)
+{
+  if (!this->IsConnected())
+    return;
+
+  boost::recursive_mutex::scoped_lock lock(*this->receiveMutex);
+  this->physicsMsgs.push_back(_msg);
 }
 
 /////////////////////////////////////////////////

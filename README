@@ -1,14 +1,22 @@
+# Gzweb - A web client for Gazebo
+
+Gzweb is a WebGL client for Gazebo. Like gzclient, it's a front-end graphical interface to gzserver and provides visualization of the simulation.
+
+http://gazebosim.org/gzweb
+
 # Installation
+
+## Gazebo
 
 Install gazebo or drcsim if you haven't done so already.
 
-http://gazebosim.org/tutorials?tut=install&cat=get_started
+http://gazebosim.org/install
 
-Dependencies: sudo apt-get install the following:
+## Dependencies
 
 * libjansson-dev
 
-* nodejs
+* nodejs (>= 0.10)
 
 * npm
 
@@ -20,9 +28,18 @@ Dependencies: sudo apt-get install the following:
 
 * mercurial
 
-In the terminal:
+Make sure your system supports a more recent version of nodejs (>=0.10) then install the dependencies from the terminal:
 
     sudo apt-get install libjansson-dev nodejs npm libboost-dev imagemagick libtinyxml-dev mercurial
+
+**Note** For Ubuntu Precise or older distributions, the nodejs version that comes with it may not work with gzweb. In that case, set up your system to grab and install the latest nodejs debs:
+
+    curl -sL https://deb.nodesource.com/setup | sudo bash -
+    sudo apt-get install nodejs
+
+If nodejs installs without errors then install the rest of the dependencies (leaving out npm as that should be installed with nodejs):
+
+    sudo apt-get install libjansson-dev libboost-dev imagemagick libtinyxml-dev mercurial
 
 # Build
 
@@ -79,3 +96,28 @@ http://localhost:8080
 # Stopping gzweb server
 
     ./stop_gzweb.sh
+
+# Build environment setup for javascript source
+
+## Dependencies
+
+Install grunt packages. From the `gzweb/gz3d/utils` directory, run:
+
+      npm install
+
+## Work Flow
+
+1. Make changes to javascript source code in `gzweb/gz3d`
+
+1. From the `gzweb` directory, run the following script, which will code check and minify javascript source files, and copy generated files to `gzweb/http`.
+
+        ./updateGZ3D.sh
+
+1. Verify your changes by starting gzweb server from the `gzweb` directory:
+
+        ./start_gzweb.sh
+
+1. Open browser to localhost:8080 or just refresh page.
+
+
+Open ports 8080 and 7681 on your server

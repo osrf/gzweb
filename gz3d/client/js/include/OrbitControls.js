@@ -44,6 +44,7 @@ THREE.OrbitControls = function (object, domElement)
       ambient: 0xffff00,
       shading: THREE.SmoothShading}));
   this.targetIndicator.visible = false;
+  this.showTargetIndicator = false;
   // center is old, deprecated; use "target" instead
   this.center = this.target;
   this.object.lookAt(this.target);
@@ -351,13 +352,13 @@ THREE.OrbitControls = function (object, domElement)
 
     if (scope.enabled === false)
     {
-      scope.targetIndicator.visible = false;
+      setTargetIndicatorVisible(false)
     }
 
     var millisecs = new Date().getTime();
     if (scrollTime && millisecs - scrollTime > 400)
     {
-      scope.targetIndicator.visible = false;
+      setTargetIndicatorVisible(false)
       scrollTime = null;
     }
 
@@ -371,6 +372,15 @@ THREE.OrbitControls = function (object, domElement)
     }
 
   };
+
+  function setTargetIndicatorVisible(visible)
+  {
+    scope.targetIndicator.visible = visible;
+    if (!scope.showTargetIndicator)
+    {
+      scope.targetIndicator.visible = false;
+    }
+  }
 
   function getAutoRotationAngle()
   {
@@ -434,7 +444,7 @@ THREE.OrbitControls = function (object, domElement)
     }
     scope.targetIndicator.position.set(scope.target.x,scope.target.y,
         scope.target.z);
-    scope.targetIndicator.visible = true;
+    setTargetIndicatorVisible(true)
 
     scope.domElement.addEventListener('mousemove', onMouseMove, false);
     scope.domElement.addEventListener('mouseup', onMouseUp, false);
@@ -524,7 +534,7 @@ THREE.OrbitControls = function (object, domElement)
     scope.domElement.removeEventListener('mouseup', onMouseUp, false);
 
     state = STATE.NONE;
-    scope.targetIndicator.visible = false;
+    setTargetIndicatorVisible(false)
   }
 
   function onMouseWheel(event)
@@ -536,7 +546,7 @@ THREE.OrbitControls = function (object, domElement)
 
     scope.targetIndicator.position.set(scope.target.x,scope.target.y,
         scope.target.z);
-    scope.targetIndicator.visible = true;
+    setTargetIndicatorVisible(true)
     scrollTime = new Date().getTime();
 
     var delta = 0;
@@ -612,7 +622,7 @@ THREE.OrbitControls = function (object, domElement)
 
     scope.targetIndicator.position.set(scope.target.x,scope.target.y,
         scope.target.z);
-    scope.targetIndicator.visible = true;
+    setTargetIndicatorVisible(true)
 
     switch (event.touches.length)
     {
@@ -777,7 +787,7 @@ THREE.OrbitControls = function (object, domElement)
     scope.noPan = false;
     scope.noZoom = false;
 
-    scope.targetIndicator.visible = false;
+    setTargetIndicatorVisible(false)
   }
 
   this.domElement.addEventListener('contextmenu', function (event)

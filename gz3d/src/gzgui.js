@@ -9,6 +9,7 @@ var emUnits = function(value)
     };
 
 var isTouchDevice = 'ontouchstart' in window || 'onmsgesturechange' in window;
+
 var isWideScreen = function()
     {
       return $(window).width() / emUnits(1) > 35;
@@ -24,7 +25,8 @@ var tabColors = {selected: 'rgb(34, 170, 221)', unselected: 'rgb(42, 42, 42)'};
 
 var modelList =
   [
-    {path:'buildings', title:'Buildings', examplePath:'house_1', models:
+    {path:'buildings', title:'Buildings',
+    examplePath1:'fast_food', examplePath2:'kitchen_dining', examplePath3:'house_1', models:
     [
       {modelPath:'fast_food', modelTitle:'Fast Food'},
       {modelPath:'gas_station', modelTitle:'Gas Station'},
@@ -40,7 +42,8 @@ var modelList =
       {modelPath:'willowgarage', modelTitle:'Willow Garage'}
     ]},
 
-    {path:'furniture', title:'Furniture', examplePath:'table', models:
+    {path:'furniture', title:'Furniture',
+    examplePath1:'hinged_door', examplePath2:'bookshelf', examplePath3:'table', models:
     [
       {modelPath:'bookshelf', modelTitle:'Book Shelf'},
       {modelPath:'cabinet', modelTitle:'Cabinet'},
@@ -74,7 +77,8 @@ var modelList =
       {modelPath:'nist_stairs_120', modelTitle:'Stairs'}
     ]},
 
-    {path:'kitchen', title:'Kitchen', examplePath:'bowl', models:
+    {path:'kitchen', title:'Kitchen',
+    examplePath1:'saucepan',  examplePath2:'beer',  examplePath3:'bowl', models:
     [
       {modelPath:'beer', modelTitle:'Beer'},
       {modelPath:'bowl', modelTitle:'Bowl'},
@@ -82,7 +86,8 @@ var modelList =
       {modelPath:'saucepan', modelTitle:'Saucepan'}
     ]},
 
-    {path:'robocup', title:'Robocup', examplePath:'robocup09_spl_field', models:
+    {path:'robocup', title:'Robocup', examplePath1:'robocup_3Dsim_ball',
+    examplePath2:'robocup14_spl_goal', examplePath3:'robocup09_spl_field', models:
     [
       {modelPath:'robocup09_spl_field', modelTitle:'2009 SPL Field'},
       {modelPath:'robocup14_spl_field', modelTitle:'2014 SPL Field'},
@@ -93,7 +98,8 @@ var modelList =
       {modelPath:'robocup_3Dsim_ball', modelTitle:'3D Sim. Ball'}
     ]},
 
-    {path:'robots', title:'Robots', examplePath:'pr2', models:
+    {path:'robots', title:'Robots',
+    examplePath1:'pioneer3at', examplePath2:'turtlebot', examplePath3:'pr2', models:
     [
       {modelPath:'create', modelTitle:'Create'},
       {modelPath:'husky', modelTitle:'Husky'},
@@ -109,7 +115,8 @@ var modelList =
       {modelPath:'youbot', modelTitle:'YouBot'}
     ]},
 
-    {path:'sensors', title:'Sensors', examplePath:'kinect', models:
+    {path:'sensors', title:'Sensors',
+    examplePath1:'camera', examplePath2:'hokuyo', examplePath3:'kinect', models:
     [
       {modelPath:'camera', modelTitle:'Camera'},
       {modelPath:'stereo_camera', modelTitle:'Stereo Camera'},
@@ -117,7 +124,8 @@ var modelList =
       {modelPath:'kinect', modelTitle:'Kinect'}
     ]},
 
-    {path:'street', title:'Street', examplePath:'fire_hydrant', models:
+    {path:'street', title:'Street', examplePath1:'dumpster',
+    examplePath2:'drc_practice_angled_barrier_45', examplePath3:'fire_hydrant', models:
     [
       {modelPath:'cinder_block', modelTitle:'Cinder Block'},
       {modelPath:'cinder_block_2', modelTitle:'Cinder Block 2'},
@@ -143,7 +151,8 @@ var modelList =
 
     ]},
 
-    {path:'tools', title:'Tools', examplePath:'cordless_drill', models:
+    {path:'tools', title:'Tools', examplePath1:'hammer',
+    examplePath2:'polaris_ranger_ev', examplePath3:'cordless_drill', models:
     [
       {modelPath:'cordless_drill', modelTitle:'Cordless Drill'},
       {modelPath:'fire_hose_long', modelTitle:'Fire Hose'},
@@ -156,7 +165,8 @@ var modelList =
       {modelPath:'utility_cart', modelTitle:'Utility Cart'}
     ]},
 
-    {path:'misc', title:'Misc.', examplePath:'double_pendulum_with_base', models:
+    {path:'misc', title:'Misc.', examplePath1:'brick_box_3x1x3',
+    examplePath2:'drc_practice_4x4x20', examplePath3:'double_pendulum_with_base', models:
     [
       {modelPath:'double_pendulum_with_base', modelTitle:'Double Pendulum With Base'},
       {modelPath:'breakable_test', modelTitle:'Breakable_test'},
@@ -175,13 +185,20 @@ var modelList =
 $(function()
 {
   //Initialize
+  if ('ontouchstart' in window || 'onmsgesturechange' in window)
+  {
+    $('body').addClass('isTouchDevice');
+  }
+
   // Toggle items
   $('#view-collisions').buttonMarkup({icon: 'false'});
   $('#snap-to-grid').buttonMarkup({icon: 'false'});
   $('#open-tree-when-selected').buttonMarkup({icon: 'false'});
   $('#view-transparent').buttonMarkup({icon: 'false'});
   $('#view-wireframe').buttonMarkup({icon: 'false'});
+  $('#view-joints').buttonMarkup({icon: 'false'});
   guiEvents.emit('toggle_notifications');
+  guiEvents.emit('show_orbit_indicator');
 
   $( '#clock-touch' ).popup('option', 'arrow', 't');
   $('#notification-popup-screen').remove();
@@ -195,6 +212,8 @@ $(function()
   if (isTallScreen())
   {
     $('.collapsible_header').click();
+    $('#expand-MODELS').click();
+    $('#expand-LIGHTS').click();
   }
 
   // Touch devices
@@ -382,16 +401,9 @@ $(function()
         }
       });
 
-  $('.panelTitle').click(function()
+  $('.closePanels').click(function()
       {
         guiEvents.emit('closeTabs', true);
-      });
-
-  $('.panelSubTitle').click(function()
-      {
-        var id = $('.leftPanels:visible').attr('id');
-        id = id.substring(0,id.indexOf('-'));
-        guiEvents.emit('openTab', id, id);
       });
 
   $('#view-mode').click(function()
@@ -438,6 +450,7 @@ $(function()
         else
         {
           var position = $('#clock').offset();
+          $('#notification-popup').popup('close');
           $('#clock-touch').popup('open', {
               x:position.left+emUnits(1.6),
               y:emUnits(4)});
@@ -467,6 +480,11 @@ $(function()
   $('#view-collisions').click(function()
       {
         guiEvents.emit('show_collision');
+        guiEvents.emit('closeTabs', false);
+      });
+  $('#view-orbit-indicator').click(function()
+      {
+        guiEvents.emit('show_orbit_indicator');
         guiEvents.emit('closeTabs', false);
       });
   $( '#snap-to-grid' ).click(function() {
@@ -500,6 +518,14 @@ $(function()
   $( '#view-wireframe' ).click(function() {
     $('#model-popup').popup('close');
     guiEvents.emit('set_view_as','wireframe');
+  });
+
+  $( '#view-joints' ).click(function() {
+    if ($('#view-joints a').css('color') === 'rgb(255, 255, 255)')
+    {
+      $('#model-popup').popup('close');
+      guiEvents.emit('view_joints');
+    }
   });
 
   $( '#delete-entity' ).click(function() {
@@ -576,6 +602,8 @@ gzangular.controller('treeControl', ['$scope', function($scope)
   {
     $scope.models = modelStats;
     $scope.lights = lightStats;
+    $scope.scene = sceneStats;
+    $scope.physics = physicsStats;
     if (!$scope.$$phase)
     {
       $scope.$apply();
@@ -595,29 +623,45 @@ gzangular.controller('treeControl', ['$scope', function($scope)
     guiEvents.emit('openEntityPopup', event, name);
   };
 
-  $scope.closePanels = function ()
+  $scope.openTab = function (tab)
   {
-    guiEvents.emit('closeTabs', true);
+    guiEvents.emit('openTab', tab, 'treeMenu');
   };
 
-  $scope.backToTree = function ()
+  $scope.expandTree = function (tree)
   {
-    guiEvents.emit('openTab', 'treeMenu', 'treeMenu');
+    var idContent = 'expandable-' + tree;
+    var idHeader = 'expand-' + tree;
+
+    if ($('#' + idContent).is(':visible'))
+    {
+      $('#' + idContent).hide();
+      $('#' + idHeader+' img').css('transform','rotate(0deg)')
+                              .css('-webkit-transform','rotate(0deg)')
+                              .css('-ms-transform','rotate(0deg)');
+    }
+    else
+    {
+      $('#' + idContent).show();
+      $('#' + idHeader+' img').css('transform','rotate(90deg)')
+                              .css('-webkit-transform','rotate(90deg)')
+                              .css('-ms-transform','rotate(90deg)');
+    }
   };
 
-  $scope.expandProperty = function (prop, modelName, linkShortName, linkName)
+  $scope.expandProperty = function (prop, modelName, subPropShortName, subPropName, parentProp)
   {
     var idContent = 'expandable-' + prop + '-' + modelName;
     var idHeader = 'expand-' + prop + '-' + modelName;
 
     var idContentOthers, idHeaderOthers;
 
-    if (linkShortName)
+    if (subPropShortName)
     {
       idContentOthers = idContent;
       idHeaderOthers = idHeader;
-      idContent = idContent + '-' + linkShortName;
-      idHeader = idHeader + '-' + linkShortName;
+      idContent = idContent + '-' + subPropShortName;
+      idHeader = idHeader + '-' + subPropShortName;
     }
 
     if ($('#' + idContent).is(':visible'))
@@ -629,7 +673,7 @@ gzangular.controller('treeControl', ['$scope', function($scope)
     }
     else
     {
-      if (linkShortName && prop === 'link')
+      if (subPropShortName && (prop === 'link' || prop === 'joint'))
       {
         $('[id^="' + idContentOthers + '-"]').hide();
         $('[id^="' + idHeaderOthers + '-"] img')
@@ -643,11 +687,27 @@ gzangular.controller('treeControl', ['$scope', function($scope)
                               .css('-webkit-transform','rotate(90deg)')
                               .css('-ms-transform','rotate(90deg)');
 
-      if (prop === 'pose')
+      if (prop === 'pose' && parentProp === 'link')
       {
-        guiEvents.emit('setPoseStats', modelName, linkName);
+        guiEvents.emit('setPoseStats', modelName, subPropName);
       }
     }
+  };
+
+  $scope.changePose = function(prop1, prop2, name, value)
+  {
+    guiEvents.emit('setPose', prop1, prop2, name, value);
+  };
+
+  $scope.changeLight = function(prop, name, value)
+  {
+    guiEvents.emit('setLight', prop, name, value);
+  };
+
+  $scope.toggleProperty = function(prop, entity, subEntity)
+  {
+    // only for links so far
+    guiEvents.emit('toggleProperty', prop, entity, subEntity);
   };
 }]);
 
@@ -656,15 +716,14 @@ gzangular.controller('insertControl', ['$scope', function($scope)
 {
   $scope.categories = modelList;
 
-  $scope.openCategory = function(category)
-  {
-    var categoryID = 'insertMenu-'+category;
-    guiEvents.emit('openTab', categoryID, 'insertMenu');
-  };
-
   $scope.spawnEntity = function(path)
   {
     guiEvents.emit('spawn_entity_start', path);
+  };
+
+  $scope.openTab = function (tab)
+  {
+    guiEvents.emit('openTab', tab, 'insertMenu');
   };
 }]);
 
@@ -700,9 +759,20 @@ GZ3D.Gui.prototype.init = function()
       function(mode)
       {
         that.scene.setManipulationMode(mode);
-        guiEvents.emit('notification_popup',
-            mode.charAt(0).toUpperCase()+
-            mode.substring(1)+' mode');
+        var space = that.scene.modelManipulator.space;
+
+        if (mode === 'view')
+        {
+          guiEvents.emit('notification_popup', 'View mode');
+        }
+        else
+        {
+          guiEvents.emit('notification_popup',
+              mode.charAt(0).toUpperCase()+
+              mode.substring(1)+' mode in '+
+              space.charAt(0).toUpperCase()+
+              space.substring(1)+' space');
+        }
       }
   );
 
@@ -720,9 +790,6 @@ GZ3D.Gui.prototype.init = function()
         that.scene.spawnModel.start(entity,function(obj)
             {
               that.emitter.emit('entityCreated', obj, entity);
-
-              guiEvents.emit('notification_popup',
-                  name+' inserted');
             });
         guiEvents.emit('notification_popup',
             'Place '+name+' at the desired position');
@@ -818,6 +885,23 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
+   guiEvents.on('show_orbit_indicator', function()
+      {
+        that.scene.controls.showTargetIndicator =
+            !that.scene.controls.showTargetIndicator;
+        if(!that.scene.controls.showTargetIndicator)
+        {
+          $('#view-orbit-indicator').buttonMarkup({icon: 'false'});
+          guiEvents.emit('notification_popup','Hiding orbit indicator');
+        }
+        else
+        {
+          $('#view-orbit-indicator').buttonMarkup({icon: 'check'});
+          guiEvents.emit('notification_popup','Viewing orbit indicator');
+        }
+      }
+  );
+
   guiEvents.on('snap_to_grid',
       function ()
       {
@@ -908,7 +992,6 @@ GZ3D.Gui.prototype.init = function()
                   that.scene.setManipulationMode('view');
                   $( '#view-mode' ).prop('checked', true);
                   $('input[type="radio"]').checkboxradio('refresh');
-                  guiEvents.emit('notification_popup','Model deleted');
                 }
                 else if (type === 'translate')
                 {
@@ -929,6 +1012,11 @@ GZ3D.Gui.prototype.init = function()
                 else if (type === 'wireframe')
                 {
                   guiEvents.emit('set_view_as','wireframe');
+                }
+                else if (type === 'joints')
+                {
+                  that.scene.selectEntity(entity);
+                  guiEvents.emit('view_joints');
                 }
 
               });
@@ -980,7 +1068,7 @@ GZ3D.Gui.prototype.init = function()
 
   var notificationTimeout;
   guiEvents.on('notification_popup',
-      function (notification)
+      function (notification, duration)
       {
         if (this.showNotifications)
         {
@@ -989,10 +1077,15 @@ GZ3D.Gui.prototype.init = function()
           $( '#notification-popup' ).html('&nbsp;'+notification+'&nbsp;');
           $( '#notification-popup' ).popup('open', {
               y:window.innerHeight-50});
+          
+          if (duration === undefined)
+          {
+            duration = 2000;
+          }
           notificationTimeout = setTimeout(function()
           {
             $( '#notification-popup' ).popup('close');
-          }, 2000);
+          }, duration);
         }
       }
   );
@@ -1012,10 +1105,15 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
+  guiEvents.on('view_joints', function ()
+      {
+        that.scene.viewJoints(that.scene.selectedEntity);
+      }
+  );
+
   guiEvents.on('delete_entity', function ()
       {
         that.emitter.emit('deleteEntity',that.scene.selectedEntity);
-        guiEvents.emit('notification_popup','Model deleted');
         $('#model-popup').popup('close');
         that.scene.selectEntity(null);
       }
@@ -1084,7 +1182,6 @@ GZ3D.Gui.prototype.init = function()
         {
           if (modelStats[i].name === object)
           {
-            $('#modelsTree').collapsible({collapsed: false});
             modelStats[i].selected = 'selectedTreeItem';
             if (this.openTreeWhenSelected)
             {
@@ -1100,7 +1197,6 @@ GZ3D.Gui.prototype.init = function()
         {
           if (lightStats[i].name === object)
           {
-            $('#lightsTree').collapsible({collapsed: false});
             lightStats[i].selected = 'selectedTreeItem';
             if (this.openTreeWhenSelected)
             {
@@ -1187,7 +1283,7 @@ GZ3D.Gui.prototype.init = function()
         {
           if (isWideScreen())
           {
-            $('.tab').css('left', '15em');
+            $('.tab').css('left', '23em');
           }
           else
           {
@@ -1200,7 +1296,7 @@ GZ3D.Gui.prototype.init = function()
           var maxWidth = $(window).width();
           if (isWideScreen())
           {
-            maxWidth = emUnits(15);
+            maxWidth = emUnits(23);
           }
 
           $('.propertyPanels').css('width', maxWidth);
@@ -1208,6 +1304,89 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
+  guiEvents.on('setPose', function (prop1, prop2, name, value)
+      {
+        if (value === undefined)
+        {
+          return;
+        }
+
+        var entity = that.scene.getByName(name);
+        if (prop1 === 'orientation')
+        {
+          entity['rotation']['_'+prop2] = value;
+          entity['quaternion'].setFromEuler(entity['rotation']);
+        }
+        else
+        {
+          entity[prop1][prop2] = value;
+        }
+        entity.updateMatrixWorld();
+
+        if (entity.children[0] &&
+           (entity.children[0] instanceof THREE.SpotLight ||
+            entity.children[0] instanceof THREE.DirectionalLight))
+        {
+          var lightObj = entity.children[0];
+          var dir = new THREE.Vector3(0,0,0);
+          dir.copy(entity.direction);
+          entity.localToWorld(dir);
+          lightObj.target.position.copy(dir);
+        }
+
+        that.scene.emitter.emit('entityChanged', entity);
+      }
+  );
+
+  guiEvents.on('setLight', function (prop, name, value)
+      {
+        if (value === undefined)
+        {
+          return;
+        }
+
+        var entity = that.scene.getByName(name);
+        var lightObj = entity.children[0];
+        if (prop === 'diffuse')
+        {
+          lightObj.color = new THREE.Color(value);
+        }
+        else if (prop === 'specular')
+        {
+          entity.serverProperties.specular = new THREE.Color(value);
+        }
+        else if (prop === 'range')
+        {
+          lightObj.distance = value;
+        }
+        else if (prop === 'attenuation_constant')
+        {
+          entity.serverProperties.attenuation_constant = value;
+        }
+        else if (prop === 'attenuation_linear')
+        {
+          entity.serverProperties.attenuation_linear = value;
+          lightObj.intensity = lightObj.intensity/(1+value);
+        }
+        else if (prop === 'attenuation_quadratic')
+        {
+          entity.serverProperties.attenuation_quadratic = value;
+          lightObj.intensity = lightObj.intensity/(1+value);
+        }
+
+        // updating color too often, maybe only update when popup is closed
+        that.scene.emitter.emit('entityChanged', entity);
+      }
+  );
+
+  guiEvents.on('toggleProperty', function (prop, subEntityName)
+      {
+        var entity = that.scene.getByName(subEntityName);
+        entity.serverProperties[prop] = !entity.serverProperties[prop];
+
+        that.scene.emitter.emit('linkChanged', entity);
+      }
+  );
 };
 
 /**
@@ -1247,6 +1426,45 @@ GZ3D.Gui.prototype.setSimTime = function(simTime)
   $('.sim-time-value').text(simTime);
 };
 
+var sceneStats = {};
+/**
+ * Update scene stats on scene tree
+ * @param {} stats
+ */
+GZ3D.Gui.prototype.setSceneStats = function(stats)
+{
+  sceneStats['ambient'] = this.round(stats.ambient, true);
+  sceneStats['background'] = this.round(stats.background, true);
+};
+
+var physicsStats = {};
+/**
+ * Update physics stats on scene tree
+ * @param {} stats
+ */
+GZ3D.Gui.prototype.setPhysicsStats = function(stats)
+{
+  physicsStats = stats;
+  physicsStats['enable_physics'] = this.trueOrFalse(
+      physicsStats['enable_physics']);
+  physicsStats['max_step_size'] = this.round(
+      physicsStats['max_step_size'], false, 3);
+  physicsStats['gravity'] = this.round(
+      physicsStats['gravity'], false, 3);
+  physicsStats['sor'] = this.round(
+      physicsStats['sor'], false, 3);
+  physicsStats['cfm'] = this.round(
+      physicsStats['cfm'], false, 3);
+  physicsStats['erp'] = this.round(
+      physicsStats['erp'], false, 3);
+  physicsStats['contact_max_correcting_vel'] = this.round(
+      physicsStats['contact_max_correcting_vel'], false, 3);
+  physicsStats['contact_surface_layer'] = this.round(
+      physicsStats['contact_surface_layer'], false, 3);
+
+  this.updateStats();
+};
+
 var modelStats = [];
 /**
  * Update model stats on property panel
@@ -1258,6 +1476,7 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
   var modelName = stats.name;
   var linkShortName;
 
+  // if it's a link
   if (stats.name.indexOf('::') >= 0)
   {
     modelName = stats.name.substring(0, stats.name.indexOf('::'));
@@ -1288,12 +1507,13 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
             is_static: this.trueOrFalse(stats.is_static),
             position: formatted.pose.position,
             orientation: formatted.pose.orientation,
-            links: []
+            links: [],
+            joints: []
           });
 
-      // links
       var newModel = modelStats[modelStats.length-1];
 
+      // links
       for (var l = 0; l < stats.link.length; ++l)
       {
         var shortName = stats.link[l].name.substring(
@@ -1314,42 +1534,125 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
               inertial: formatted.inertial
             });
       }
+
+      // joints
+      for (var j = 0; j < stats.joint.length; ++j)
+      {
+        var jointShortName = stats.joint[j].name.substring(
+            stats.joint[j].name.lastIndexOf('::')+2);
+        var parentShortName = stats.joint[j].parent.substring(
+            stats.joint[j].parent.lastIndexOf('::')+2);
+        var childShortName = stats.joint[j].child.substring(
+            stats.joint[j].child.lastIndexOf('::')+2);
+
+        var type;
+        switch (stats.joint[j].type)
+        {
+          case 1:
+              type = 'Revolute';
+              break;
+          case 2:
+              type = 'Revolute2';
+              break;
+          case 3:
+              type = 'Prismatic';
+              break;
+          case 4:
+              type = 'Universal';
+              break;
+          case 5:
+              type = 'Ball';
+              break;
+          case 6:
+              type = 'Screw';
+              break;
+          case 7:
+              type = 'Gearbox';
+              break;
+          default:
+              type = 'Unknown';
+        }
+
+        formatted = this.formatStats(stats.joint[j]);
+
+        newModel.joints.push(
+            {
+              name: stats.joint[j].name,
+              shortName: jointShortName,
+              type: type,
+              parent: stats.joint[j].parent,
+              parentShortName: parentShortName,
+              child: stats.joint[j].child,
+              childShortName: childShortName,
+              position: formatted.pose.position,
+              orientation: formatted.pose.orientation,
+              axis1: formatted.axis1,
+              axis2: formatted.axis2
+            });
+      }
     }
-    // Update existing model's pose
+    // Update existing model
     else
     {
-      if ((linkShortName &&
+      var link;
+
+      if (stats.link && stats.link[0])
+      {
+        var LinkShortName = stats.link[0].name;
+
+        link = $.grep(model[0].links, function(e)
+            {
+              return e.shortName === LinkShortName;
+            });
+
+        if (link[0].self_collide)
+        {
+          link[0].self_collide = this.trueOrFalse(stats.link[0].self_collide);
+        }
+        if (link[0].gravity)
+        {
+          link[0].gravity = this.trueOrFalse(stats.link[0].gravity);
+        }
+        if (link[0].kinematic)
+        {
+          link[0].kinematic = this.trueOrFalse(stats.link[0].kinematic);
+        }
+      }
+
+      // Update pose stats only if they're being displayed and are not focused
+      if (!((linkShortName &&
           !$('#expandable-pose-'+modelName+'-'+linkShortName).is(':visible'))||
           (!linkShortName &&
-          !$('#expandable-pose-'+modelName).is(':visible')))
+          !$('#expandable-pose-'+modelName).is(':visible'))||
+          $('#expandable-pose-'+modelName+' input').is(':focus')))
       {
-        return;
-      }
 
-      if (stats.position)
-      {
-        stats.pose = {};
-        stats.pose.position = stats.position;
-        stats.pose.orientation = stats.orientation;
-      }
-
-      if (stats.pose)
-      {
-        formatted = this.formatStats(stats);
-
-        if (linkShortName === undefined)
+        if (stats.position)
         {
-          model[0].position = formatted.pose.position;
-          model[0].orientation = formatted.pose.orientation;
+          stats.pose = {};
+          stats.pose.position = stats.position;
+          stats.pose.orientation = stats.orientation;
         }
-        else
+
+        if (stats.pose)
         {
-          var link = $.grep(model[0].links, function(e)
+          formatted = this.formatStats(stats);
+
+          if (linkShortName === undefined)
+          {
+            model[0].position = formatted.pose.position;
+            model[0].orientation = formatted.pose.orientation;
+          }
+          else
+          {
+            link = $.grep(model[0].links, function(e)
               {
                 return e.shortName === linkShortName;
               });
-          link[0].position = formatted.pose.position;
-          link[0].orientation = formatted.pose.orientation;
+
+            link[0].position = formatted.pose.position;
+            link[0].orientation = formatted.pose.orientation;
+          }
         }
       }
     }
@@ -1405,6 +1708,12 @@ GZ3D.Gui.prototype.setLightStats = function(stats, action)
 
       formatted = this.formatStats(stats);
 
+      var direction;
+      if (stats.direction)
+      {
+        direction = stats.direction;
+      }
+
       lightStats.push(
           {
             name: name,
@@ -1414,18 +1723,30 @@ GZ3D.Gui.prototype.setLightStats = function(stats, action)
             orientation: formatted.pose.orientation,
             diffuse: formatted.diffuse,
             specular: formatted.specular,
+            color: formatted.color,
             range: stats.range,
-            attenuation: formatted.attenuation
+            attenuation: this.round(stats.attenuation, false, null),
+            direction: direction
           });
     }
     else
     {
+      formatted = this.formatStats(stats);
+
       if (stats.pose)
       {
-        formatted = this.formatStats(stats);
-
         light[0].position = formatted.pose.position;
         light[0].orientation = formatted.pose.orientation;
+      }
+
+      if (stats.diffuse)
+      {
+        light[0].diffuse = formatted.diffuse;
+      }
+
+      if (stats.specular)
+      {
+        light[0].specular = formatted.specular;
       }
     }
   }
@@ -1493,9 +1814,10 @@ GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
   {
     $('#view-transparent').css('visibility','collapse');
     $('#view-wireframe').css('visibility','collapse');
+    $('#view-joints').css('visibility','collapse');
     $('#model-popup').popup('open',
       {x: event.clientX + emUnits(6),
-       y: event.clientY + emUnits(-5)});
+       y: event.clientY + emUnits(-8)});
   }
   else
   {
@@ -1516,8 +1838,28 @@ GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
     {
       $('#view-wireframe').buttonMarkup({icon: 'false'});
     }
+
+    if (entity.joint === undefined || entity.joint.length === 0)
+    {
+      $('#view-joints a').css('color', '#888888');
+      $('#view-joints').buttonMarkup({icon: 'false'});
+    }
+    else
+    {
+      $('#view-joints a').css('color', '#ffffff');
+      if (entity.getObjectByName('JOINT_VISUAL', true))
+      {
+        $('#view-joints').buttonMarkup({icon: 'check'});
+      }
+      else
+      {
+        $('#view-joints').buttonMarkup({icon: 'false'});
+      }
+    }
+
     $('#view-transparent').css('visibility','visible');
     $('#view-wireframe').css('visibility','visible');
+    $('#view-joints').css('visibility','visible');
     $('#model-popup').popup('open',
       {x: event.clientX + emUnits(6),
        y: event.clientY + emUnits(0)});
@@ -1527,75 +1869,177 @@ GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
 /**
  * Format stats message for proper display
  * @param {} stats
- * @returns {position, orientation, inertial, diffuse, specular, attenuation}
+ * @returns {Object.<position, orientation, inertial, diffuse, specular, attenuation>}
  */
 GZ3D.Gui.prototype.formatStats = function(stats)
 {
-  var position = this.round(stats.pose.position);
+  var position, orientation;
+  var quat, rpy;
+  if (stats.pose)
+  {
+    position = this.round(stats.pose.position, false, null);
 
-  var Quat = new THREE.Quaternion(stats.pose.orientation.x,
-      stats.pose.orientation.y, stats.pose.orientation.z,
-      stats.pose.orientation.w);
+    quat = new THREE.Quaternion(stats.pose.orientation.x,
+        stats.pose.orientation.y, stats.pose.orientation.z,
+        stats.pose.orientation.w);
 
-  var RPY = new THREE.Euler();
-  RPY.setFromQuaternion(Quat);
+    rpy = new THREE.Euler();
+    rpy.setFromQuaternion(quat);
 
-  var orientation = {roll: RPY._x, pitch: RPY._y, yaw: RPY._z};
-  orientation = this.round(orientation);
-
+    orientation = {roll: rpy._x, pitch: rpy._y, yaw: rpy._z};
+    orientation = this.round(orientation, false, null);
+  }
   var inertial;
   if (stats.inertial)
   {
-    inertial = this.round(stats.inertial);
+    inertial = this.round(stats.inertial, false, 3);
+
+    var inertialPose = stats.inertial.pose;
+    inertial.pose = {};
+
+    inertial.pose.position = {x: inertialPose.position.x,
+                              y: inertialPose.position.y,
+                              z: inertialPose.position.z};
+
+    inertial.pose.position = this.round(inertial.pose.position, false, 3);
+
+    quat = new THREE.Quaternion(inertialPose.orientation.x,
+        inertialPose.orientation.y, inertialPose.orientation.z,
+        inertialPose.orientation.w);
+
+    rpy = new THREE.Euler();
+    rpy.setFromQuaternion(quat);
+
+    inertial.pose.orientation = {roll: rpy._x, pitch: rpy._y, yaw: rpy._z};
+    inertial.pose.orientation = this.round(inertial.pose.orientation, false, 3);
   }
-  var diffuse;
+  var diffuse, colorHex, comp;
+  var color = {};
   if (stats.diffuse)
   {
-    diffuse = this.round(stats.diffuse);
+    diffuse = this.round(stats.diffuse, true);
+
+    colorHex = {};
+    for (comp in diffuse)
+    {
+      colorHex[comp] = diffuse[comp].toString(16);
+      if (colorHex[comp].length === 1)
+      {
+        colorHex[comp] = '0' + colorHex[comp];
+      }
+    }
+    color.diffuse = '#' + colorHex['r'] + colorHex['g'] + colorHex['b'];
   }
   var specular;
   if (stats.specular)
   {
-    specular = this.round(stats.specular);
+    specular = this.round(stats.specular, true);
+
+    colorHex = {};
+    for (comp in specular)
+    {
+      colorHex[comp] = specular[comp].toString(16);
+      if (colorHex[comp].length === 1)
+      {
+        colorHex[comp] = '0' + colorHex[comp];
+      }
+    }
+    color.specular = '#' + colorHex['r'] + colorHex['g'] + colorHex['b'];
   }
-  var attenuation;
-  if (stats.attenuation)
+  var axis1;
+  if (stats.axis1)
   {
-    attenuation = this.round(stats.attenuation);
+    axis1 = {};
+    axis1 = this.round(stats.axis1);
+    axis1.direction = this.round(stats.axis1.xyz, false, 3);
+  }
+  var axis2;
+  if (stats.axis2)
+  {
+    axis2 = {};
+    axis2 = this.round(stats.axis2);
+    axis2.direction = this.round(stats.axis2.xyz, false, 3);
   }
 
   return {pose: {position: position, orientation: orientation},
           inertial: inertial,
           diffuse: diffuse,
           specular: specular,
-          attenuation: attenuation};
+          color: color,
+          axis1: axis1,
+          axis2: axis2};
 };
 
 /**
- * Round all number children and format color
+ * Round numbers and format colors
  * @param {} stats
- * @returns stats
+ * @param {} decimals - number of decimals to display, null for input fields
+ * @returns result
  */
-GZ3D.Gui.prototype.round = function(stats)
+GZ3D.Gui.prototype.round = function(stats, isColor, decimals)
 {
-  for (var key in stats)
+  var result = stats;
+  if (typeof result === 'number')
   {
-    if (key === 'r' || key === 'g' || key === 'b' || key === 'a')
+    result = this.roundNumber(result, isColor, decimals);
+  }
+  else // array of numbers
+  {
+    result = this.roundArray(result, isColor, decimals);
+  }
+  return result;
+};
+
+/**
+ * Round number and format color
+ * @param {} stats
+ * @param {} decimals - number of decimals to display, null for input fields
+ * @returns result
+ */
+GZ3D.Gui.prototype.roundNumber = function(stats, isColor, decimals)
+{
+  var result = stats;
+  if (isColor)
+  {
+    result = Math.round(result * 255);
+  }
+  else
+  {
+    if (decimals === null)
     {
-      stats[key] = Math.round(stats[key] * 255);
+      result = Math.round(result*1000)/1000;
     }
     else
     {
-      stats[key] = parseFloat(Math.round(stats[key] * 1000) / 1000).toFixed(3);
+      result = result.toFixed(decimals);
     }
   }
-  return stats;
+  return result;
+};
+
+/**
+ * Round each number in an array
+ * @param {} stats
+ * @param {} decimals - number of decimals to display, null for input fields
+ * @returns result
+ */
+GZ3D.Gui.prototype.roundArray = function(stats, isColor, decimals)
+{
+  var result = stats;
+  for (var key in result)
+  {
+    if (typeof result[key] === 'number')
+    {
+      result[key] = this.roundNumber(result[key], isColor, decimals);
+    }
+  }
+  return result;
 };
 
 /**
  * Format toggle items
  * @param {} stats: true / false
- * @returns {icon, title}
+ * @returns {Object.<icon, title>}
  */
 GZ3D.Gui.prototype.trueOrFalse = function(stats)
 {

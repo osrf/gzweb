@@ -7,8 +7,14 @@ GZ3D.GZIface = function(scene, gui)
 
   this.isConnected = false;
 
+  this.emitter = new EventEmitter2({ verbose: true });
+
   this.init();
   this.visualsToAdd = [];
+
+  this.numConnectionTrials = 0;
+  this.maxConnectionTrials = 30; // try to connect 30 times
+  this.timeToSleepBtwTrials = 1000; // wait 1 second between connection trials
 };
 
 GZ3D.GZIface.prototype.init = function()
@@ -25,7 +31,7 @@ GZ3D.GZIface.prototype.connect = function()
   this.webSocket = new ROSLIB.Ros({
     url : 'ws://' + location.hostname + ':7681'
   });
-  
+
   var that = this;
   this.webSocket.on('connection', function() {
     that.onConnected();
@@ -33,19 +39,32 @@ GZ3D.GZIface.prototype.connect = function()
   this.webSocket.on('error', function() {
     that.onError();
   });
+
+  this.numConnectionTrials++;
 };
 
 GZ3D.GZIface.prototype.onError = function()
 {
-//  this.emitter.emit('error');
-  this.scene.initScene();
-  this.gui.guiEvents.emit('notification_popup', 'GzWeb is currently running without a server');
+  // init scene and show popup only for the first connection error
+  if (this.numConnectionTrials === 1)
+  {
+    this.emitter.emit('error');
+  }
+
+  var that = this;
+  // retry to connect after certain time
+  if (this.numConnectionTrials < this.maxConnectionTrials)
+  {
+    setTimeout(function() {
+      that.connect();
+    }, this.timeToSleepBtwTrials);
+  }
 };
 
 GZ3D.GZIface.prototype.onConnected = function()
 {
   this.isConnected = true;
-//this.emitter.emit('connection');
+  this.emitter.emit('connection');
 
   this.heartbeatTopic = new ROSLIB.Topic({
     ros : this.webSocket,
@@ -65,6 +84,22 @@ GZ3D.GZIface.prototype.onConnected = function()
 
   setInterval(publishHeartbeat, 5000);
 
+  var statusTopic = new ROSLIB.Topic({
+    ros: this.webSocket,
+    name: '~/status',
+    messageType : 'status',
+  });
+
+  var statusUpdate = function(message)
+  {
+    if (message.status === 'error')
+    {
+      that.isConnected = false;
+      this.emitter.emit('gzstatus', 'error');
+    }
+  };
+  statusTopic.subscribe(statusUpdate.bind(this));
+
   var materialTopic = new ROSLIB.Topic({
     ros : this.webSocket,
     name : '~/material',
@@ -74,6 +109,8 @@ GZ3D.GZIface.prototype.onConnected = function()
   var materialUpdate = function(message)
   {
     this.material = message;
+    this.emitter.emit('material', this.material);
+
   };
   materialTopic.subscribe(materialUpdate.bind(this));
 
@@ -95,6 +132,27 @@ GZ3D.GZIface.prototype.onConnected = function()
       this.gui.guiEvents.emit('show_grid', 'show');
     }
 
+    if (message.ambient)
+    {
+      var ambient = new THREE.Color();
+      ambient.r = message.ambient.r;
+      ambient.g = message.ambient.g;
+      ambient.b = message.ambient.b;
+
+      this.scene.ambient.color = ambient;
+    }
+
+    if (message.background)
+    {
+      var background = new THREE.Color();
+      background.r = message.background.r;
+      background.g = message.background.g;
+      background.b = message.background.b;
+
+      this.scene.renderer.clear();
+      this.scene.renderer.setClearColor(background, 1);
+    }
+
     for (var i = 0; i < message.light.length; ++i)
     {
       var light = message.light[i];
@@ -111,9 +169,22 @@ GZ3D.GZIface.prototype.onConnected = function()
       this.gui.setModelStats(model, 'update');
     }
 
+    this.gui.setSceneStats(message);
     this.sceneTopic.unsubscribe();
   };
   this.sceneTopic.subscribe(sceneUpdate.bind(this));
+
+  this.physicsTopic = new ROSLIB.Topic({
+    ros : this.webSocket,
+    name : '~/physics',
+    messageType : 'physics',
+  });
+
+  var physicsUpdate = function(message)
+  {
+    this.gui.setPhysicsStats(message);
+  };
+  this.physicsTopic.subscribe(physicsUpdate.bind(this));
 
 
   // Update model pose
@@ -153,10 +224,12 @@ GZ3D.GZIface.prototype.onConnected = function()
         if (entity.children[0] instanceof THREE.Light)
         {
           this.gui.setLightStats({name: message.data}, 'delete');
+          guiEvents.emit('notification_popup', message.data+' deleted');
         }
         else
         {
           this.gui.setModelStats({name: message.data}, 'delete');
+          guiEvents.emit('notification_popup', message.data+' deleted');
         }
         this.scene.remove(entity);
       }
@@ -180,6 +253,7 @@ GZ3D.GZIface.prototype.onConnected = function()
       if (modelObj)
       {
         this.scene.add(modelObj);
+        guiEvents.emit('notification_popup', message.name+' inserted');
       }
 
       // visuals may arrive out of order (before the model msg),
@@ -264,12 +338,20 @@ GZ3D.GZIface.prototype.onConnected = function()
     messageType : 'light',
   });
 
+  // equivalent to modelUpdate / poseUpdate
   var lightUpdate = function(message)
   {
-    if (!this.scene.getByName(message.name))
+    var entity = this.scene.getByName(message.name);
+    if (!entity)
     {
       var lightObj = this.createLightFromMsg(message);
       this.scene.add(lightObj);
+      guiEvents.emit('notification_popup', message.name+' inserted');
+    }
+    else if (entity && entity !== this.scene.modelManipulator.object
+        && entity.parent !== this.scene.modelManipulator.object)
+    {
+      this.scene.updateLight(entity, message);
     }
     this.gui.setLightStats(message, 'update');
   };
@@ -303,32 +385,32 @@ GZ3D.GZIface.prototype.onConnected = function()
     this.scene.add(roadsObj);
   });
 
-  // Model modify messages - for modifying model pose
+  // Model modify messages - for modifying models
   this.modelModifyTopic = new ROSLIB.Topic({
     ros : this.webSocket,
     name : '~/model/modify',
     messageType : 'model',
   });
 
-  // Light messages - for modifying light pose
+  // Light messages - for modifying lights
   this.lightModifyTopic = new ROSLIB.Topic({
     ros : this.webSocket,
     name : '~/light',
     messageType : 'light',
   });
 
-  var publishModelModify = function(model)
+  var publishEntityModify = function(entity)
   {
-    var matrix = model.matrixWorld;
+    var matrix = entity.matrixWorld;
     var translation = new THREE.Vector3();
     var quaternion = new THREE.Quaternion();
     var scale = new THREE.Vector3();
     matrix.decompose(translation, quaternion, scale);
 
-    var modelMsg =
+    var entityMsg =
     {
-      name : model.name,
-      id : model.userData,
+      name : entity.name,
+      id : entity.userData,
       createEntity : 0,
       position :
       {
@@ -344,18 +426,64 @@ GZ3D.GZIface.prototype.onConnected = function()
         z: quaternion.z
       }
     };
-    if (model.children[0] &&
-        model.children[0] instanceof THREE.Light)
+    if (entity.children[0] &&
+        entity.children[0] instanceof THREE.Light)
     {
-      that.lightModifyTopic.publish(modelMsg);
+      entityMsg.diffuse =
+      {
+        r: entity.children[0].color.r,
+        g: entity.children[0].color.g,
+        b: entity.children[0].color.b
+      };
+      entityMsg.specular =
+      {
+        r: entity.serverProperties.specular.r,
+        g: entity.serverProperties.specular.g,
+        b: entity.serverProperties.specular.b
+      };
+      entityMsg.direction = entity.direction;
+      entityMsg.range = entity.children[0].distance;
+      entityMsg.attenuation_constant = entity.serverProperties.attenuation_constant;
+      entityMsg.attenuation_linear = entity.serverProperties.attenuation_linear;
+      entityMsg.attenuation_quadratic = entity.serverProperties.attenuation_quadratic;
+
+      that.lightModifyTopic.publish(entityMsg);
     }
     else
     {
-      that.modelModifyTopic.publish(modelMsg);
+      that.modelModifyTopic.publish(entityMsg);
     }
   };
 
-  this.scene.emitter.on('poseChanged', publishModelModify);
+  this.scene.emitter.on('entityChanged', publishEntityModify);
+
+  // Link messages - for modifying links
+  this.linkModifyTopic = new ROSLIB.Topic({
+    ros : this.webSocket,
+    name : '~/link',
+    messageType : 'link',
+  });
+
+  var publishLinkModify = function(entity, type)
+  {
+    var modelMsg =
+    {
+      name : entity.parent.name,
+      id : entity.parent.userData,
+      link:
+      {
+        name: entity.name,
+        id: entity.userData,
+        self_collide: entity.serverProperties.self_collide,
+        gravity: entity.serverProperties.gravity,
+        kinematic: entity.serverProperties.kinematic
+      }
+    };
+
+    that.linkModifyTopic.publish(modelMsg);
+  };
+
+  this.scene.emitter.on('linkChanged', publishLinkModify);
 
   // Factory messages - for spawning new models
   this.factoryTopic = new ROSLIB.Topic({
@@ -451,8 +579,6 @@ GZ3D.GZIface.prototype.onConnected = function()
     }
     that.worldControlTopic.publish(worldControlMsg);
   };
-
-  this.scene.emitter.on('poseChanged', publishModelModify);
 
   this.gui.emitter.on('entityCreated', publishFactory);
 
@@ -567,6 +693,12 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
     var linkObj = new THREE.Object3D();
     linkObj.name = link.name;
     linkObj.userData = link.id;
+    linkObj.serverProperties =
+        {
+          self_collide: link.self_collide,
+          gravity: link.gravity,
+          kinematic: link.kinematic
+        };
 
     if (link.pose)
     {
@@ -598,6 +730,11 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
       }
     }
   }
+  if (model.joint)
+  {
+    modelObj.joint = model.joint;
+  }
+
   return modelObj;
 };
 
@@ -625,31 +762,37 @@ GZ3D.GZIface.prototype.createVisualFromMsg = function(visual)
 
 GZ3D.GZIface.prototype.createLightFromMsg = function(light)
 {
-  var obj, factor, range, direction;
+  var obj, range, direction;
 
   if (light.type === 1)
   {
-    factor = 1.5;
     direction = null;
     range = light.range;
   }
   else if (light.type === 2)
   {
-    factor = 5;
     direction = light.direction;
     range = light.range;
   }
   else if (light.type === 3)
   {
-    factor = 1;
     direction = light.direction;
     range = null;
   }
 
-  obj = this.scene.createLight(light.type, light.diffuse,
-        light.attenuation_constant * factor,
+  // equation taken from
+  // http://wiki.blender.org/index.php/Doc:2.6/Manual/Lighting/Lights/Light_Attenuation
+  var E = 1;
+  var D = 1;
+  var r = 1;
+  var L = light.attenuation_linear;
+  var Q = light.attenuation_quadratic;
+  var intensity = E*(D/(D+L*r))*(Math.pow(D,2)/(Math.pow(D,2)+Q*Math.pow(r,2)));
+
+  obj = this.scene.createLight(light.type, light.diffuse, intensity,
         light.pose, range, light.cast_shadows, light.name,
-        direction);
+        direction, light.specular, light.attenuation_constant,
+        light.attenuation_linear, light.attenuation_quadratic);
 
   return obj;
 };
