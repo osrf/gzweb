@@ -1320,6 +1320,8 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
   var thatSubmesh = submesh;
   var thatCenterSubmesh = centerSubmesh;
 
+  console.log("\n\nLOAD collada:" + uri + "\n\n");
+
   loader.load(uri, function(collada)
   {
     // check for a scale factor
@@ -1328,7 +1330,6 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
       var scale = collada.dae.asset.unit;
       collada.scene.scale = new THREE.Vector3(scale, scale, scale);
     }*/
-
     dae = collada.scene;
     dae.updateMatrix();
     this.scene.prepareColladaMesh(dae);
