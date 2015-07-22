@@ -33,9 +33,13 @@ if (NOT CMAKE_BUILD_TYPE)
 endif (NOT CMAKE_BUILD_TYPE)
 
 # find gazebo
+find_package(GAZEBO)
+
 include (FindPkgConfig)
 if (PKG_CONFIG_FOUND)
-  pkg_check_modules(GAZEBO gazebo>=1.9.0 REQUIRED)
+  if (NOT GAZEBO_FOUND)
+    pkg_check_modules(GAZEBO gazebo>=1.9.0 REQUIRED)
+  endif ()
   pkg_check_modules(JANSSON jansson REQUIRED)
 
   # Find GNU Triangulation Surface Library
@@ -71,6 +75,8 @@ find_program(ImageMagick convert)
 if ("${ImageMagick}" STREQUAL "ImageMagick-NOTFOUND")
   message(FATAL_ERROR "imagemagick not found")
 endif()
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
 
 add_subdirectory(gz3d)
 add_subdirectory(tools)

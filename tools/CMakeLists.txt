@@ -18,4 +18,3 @@ add_executable(gzcoarse ${sources})
 
 target_link_libraries(gzcoarse ${GAZEBO_LIBRARIES}
     ${Boost_LIBRARIES} ${GTS_LIBRARIES} ${tinyxml_libraries})
-
