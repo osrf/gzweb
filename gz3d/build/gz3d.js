@@ -3117,7 +3117,7 @@ GZ3D.GZIface.prototype.applyMaterial = function(obj, mat)
       var ambient = mat.ambient;
       if (ambient)
       {
-        obj.material.ambient.setRGB(ambient[0], ambient[1], ambient[2]);
+        obj.material.emissive.setRGB(ambient[0], ambient[1], ambient[2]);
       }
       var diffuse = mat.diffuse;
       if (diffuse)
@@ -3452,7 +3452,7 @@ GZ3D.GZIface.prototype.parseMaterial = function(material)
       var ambient = mat['ambient'];
       if (ambient)
       {
-        obj.material.ambient.setRGB(ambient[0], ambient[1], ambient[2]);
+        obj.material.emissive.setRGB(ambient[0], ambient[1], ambient[2]);
       }
       var diffuse = mat['diffuse'];
       if (diffuse)
@@ -3539,7 +3539,6 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
   var changeEvent = {type: 'change'};
 
   var ray = new THREE.Raycaster();
-  var projector = new THREE.Projector();
   var pointerVector = new THREE.Vector3();
 
   var point = new THREE.Vector3();
@@ -4635,7 +4634,7 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
     var y = (pointer.clientY - rect.top) / rect.height;
     pointerVector.set((x) * 2 - 1, - (y) * 2 + 1, 0.5);
 
-    projector.unprojectVector(pointerVector, scope.camera);
+    pointerVector.unproject(scope.camera);
     ray.set(camPosition, pointerVector.sub(camPosition).normalize());
 
     // checks all intersections between the ray and the objects,
@@ -4668,7 +4667,8 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
   function bakeTransformations(object)
   {
     var tempGeometry = new THREE.Geometry();
-    THREE.GeometryUtils.merge(tempGeometry, object);
+    object.updateMatrix();
+    tempGeometry.merge(object.geometry, object.matrix);
     object.geometry = tempGeometry;
     object.position.set(0, 0, 0);
     object.rotation.set(0, 0, 0);
@@ -5034,9 +5034,9 @@ GZ3D.RadialMenu.prototype.addItem = function(type, iconTexture)
   // Icon
   iconTexture = THREE.ImageUtils.loadTexture( iconTexture );
 
-  var iconMaterial = new THREE.SpriteMaterial( { useScreenCoordinates: true,
-      alignment: THREE.SpriteAlignment.center } );
-  iconMaterial.map = iconTexture;
+  var iconMaterial = new THREE.SpriteMaterial( {
+    map: iconTexture
+  } );
 
   var icon = new THREE.Sprite( iconMaterial );
   icon.scale.set( this.bgSize*this.iconProportion,
@@ -5046,8 +5046,6 @@ GZ3D.RadialMenu.prototype.addItem = function(type, iconTexture)
   // Background
   var bgMaterial = new THREE.SpriteMaterial( {
       map: this.bgShape,
-      useScreenCoordinates: true,
-      alignment: THREE.SpriteAlignment.center,
       color: this.plainColor } );
 
   var bg = new THREE.Sprite( bgMaterial );
@@ -5056,8 +5054,6 @@ GZ3D.RadialMenu.prototype.addItem = function(type, iconTexture)
   // Highlight
   var highlightMaterial = new THREE.SpriteMaterial({
       map: this.bgShape,
-      useScreenCoordinates: true,
-      alignment: THREE.SpriteAlignment.center,
       color: this.highlightColor});
 
   var highlight = new THREE.Sprite(highlightMaterial);
@@ -5184,7 +5180,9 @@ GZ3D.Scene.prototype.init = function()
   this.timeDown = null;
 
   this.controls = new THREE.OrbitControls(this.camera);
-  this.scene.add(this.controls.targetIndicator);
+  if (this.controls.targetIndicator !== undefined) {
+    this.scene.add(this.controls.targetIndicator);
+  }
 
   this.emitter = new EventEmitter2({ verbose: true });
 
@@ -5322,7 +5320,7 @@ GZ3D.Scene.prototype.init = function()
 
   material = new THREE.MeshLambertMaterial();
   material.color = new THREE.Color(0xffff00);
-  material.ambient = material.color;
+  material.emissive = material.color;
 
   geometry = new THREE.CylinderGeometry(0.02, 0.02, 0.25, 36, 1, false);
 
@@ -5657,13 +5655,12 @@ GZ3D.Scene.prototype.onKeyDown = function(event)
  */
 GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
 {
-  var projector = new THREE.Projector();
   var vector = new THREE.Vector3(
       ((pos.x - this.renderer.domElement.offsetLeft)
       / window.innerWidth) * 2 - 1,
       -((pos.y - this.renderer.domElement.offsetTop)
       / window.innerHeight) * 2 + 1, 1);
-  projector.unprojectVector(vector, this.camera);
+  vector.unproject(this.camera);
   var ray = new THREE.Raycaster( this.camera.position,
       vector.sub(this.camera.position).normalize() );
 
@@ -5943,7 +5940,7 @@ GZ3D.Scene.prototype.createCylinder = function(radius, length)
  */
 GZ3D.Scene.prototype.createBox = function(width, height, depth)
 {
-  var geometry = new THREE.CubeGeometry(width, height, depth, 1, 1, 1);
+  var geometry = new THREE.BoxGeometry(width, height, depth, 1, 1, 1);
 
   // Fix UVs so textures are mapped in a way that is consistent to gazebo
   // Some face uvs need to be rotated clockwise, while others anticlockwise
@@ -6369,7 +6366,7 @@ GZ3D.Scene.prototype.createRoads = function(points, width, texture)
  /* var ambient = mat['ambient'];
   if (ambient)
   {
-    material.ambient.setRGB(ambient[0], ambient[1], ambient[2]);
+    material.emissive.setRGB(ambient[0], ambient[1], ambient[2]);
   }
   var diffuse = mat['diffuse'];
   if (diffuse)
@@ -6793,7 +6790,7 @@ GZ3D.Scene.prototype.setMaterial = function(obj, material)
       var ambient = material.ambient;
       if (ambient)
       {
-        obj.material.ambient.setRGB(ambient[0], ambient[1], ambient[2]);
+        obj.material.emissive.setRGB(ambient[0], ambient[1], ambient[2]);
       }
       var diffuse = material.diffuse;
       if (diffuse)
@@ -8440,7 +8437,6 @@ GZ3D.SpawnModel = function(scene, domElement)
 GZ3D.SpawnModel.prototype.init = function()
 {
   this.plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
-  this.projector = new THREE.Projector();
   this.ray = new THREE.Ray();
   this.obj = null;
   this.active = false;
@@ -8665,7 +8661,7 @@ GZ3D.SpawnModel.prototype.moveSpawnedModel = function(positionX, positionY)
 {
   var vector = new THREE.Vector3( (positionX / window.innerWidth) * 2 - 1,
         -(positionY / window.innerHeight) * 2 + 1, 0.5);
-  this.projector.unprojectVector(vector, this.scene.camera);
+  vector.unproject(this.scene.camera);
   this.ray.set(this.scene.camera.position,
       vector.sub(this.scene.camera.position).normalize());
   var point = this.ray.intersectPlane(this.plane);

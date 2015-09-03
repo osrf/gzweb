@@ -97,7 +97,9 @@ GZ3D.Scene.prototype.init = function()
   this.timeDown = null;
 
   this.controls = new THREE.OrbitControls(this.camera);
-  this.scene.add(this.controls.targetIndicator);
+  if (this.controls.targetIndicator !== undefined) {
+    this.scene.add(this.controls.targetIndicator);
+  }
 
   this.emitter = new EventEmitter2({ verbose: true });
 
@@ -235,7 +237,7 @@ GZ3D.Scene.prototype.init = function()
 
   material = new THREE.MeshLambertMaterial();
   material.color = new THREE.Color(0xffff00);
-  material.ambient = material.color;
+  material.emissive = material.color;
 
   geometry = new THREE.CylinderGeometry(0.02, 0.02, 0.25, 36, 1, false);
 
@@ -570,13 +572,12 @@ GZ3D.Scene.prototype.onKeyDown = function(event)
  */
 GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
 {
-  var projector = new THREE.Projector();
   var vector = new THREE.Vector3(
       ((pos.x - this.renderer.domElement.offsetLeft)
       / window.innerWidth) * 2 - 1,
       -((pos.y - this.renderer.domElement.offsetTop)
       / window.innerHeight) * 2 + 1, 1);
-  projector.unprojectVector(vector, this.camera);
+  vector.unproject(this.camera);
   var ray = new THREE.Raycaster( this.camera.position,
       vector.sub(this.camera.position).normalize() );
 
@@ -856,7 +857,7 @@ GZ3D.Scene.prototype.createCylinder = function(radius, length)
  */
 GZ3D.Scene.prototype.createBox = function(width, height, depth)
 {
-  var geometry = new THREE.CubeGeometry(width, height, depth, 1, 1, 1);
+  var geometry = new THREE.BoxGeometry(width, height, depth, 1, 1, 1);
 
   // Fix UVs so textures are mapped in a way that is consistent to gazebo
   // Some face uvs need to be rotated clockwise, while others anticlockwise
@@ -1282,7 +1283,7 @@ GZ3D.Scene.prototype.createRoads = function(points, width, texture)
  /* var ambient = mat['ambient'];
   if (ambient)
   {
-    material.ambient.setRGB(ambient[0], ambient[1], ambient[2]);
+    material.emissive.setRGB(ambient[0], ambient[1], ambient[2]);
   }
   var diffuse = mat['diffuse'];
   if (diffuse)
@@ -1706,7 +1707,7 @@ GZ3D.Scene.prototype.setMaterial = function(obj, material)
       var ambient = material.ambient;
       if (ambient)
       {
-        obj.material.ambient.setRGB(ambient[0], ambient[1], ambient[2]);
+        obj.material.emissive.setRGB(ambient[0], ambient[1], ambient[2]);
       }
       var diffuse = material.diffuse;
       if (diffuse)

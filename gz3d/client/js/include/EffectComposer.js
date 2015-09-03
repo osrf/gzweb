@@ -8,8 +8,10 @@ THREE.EffectComposer = function ( renderer, renderTarget ) {
 
 	if ( renderTarget === undefined ) {
 
-		var width = window.innerWidth || 1;
-		var height = window.innerHeight || 1;
+		var pixelRatio = renderer.getPixelRatio();
+
+		var width  = Math.floor( renderer.context.canvas.width  / pixelRatio ) || 1;
+		var height = Math.floor( renderer.context.canvas.height / pixelRatio ) || 1;
 		var parameters = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBFormat, stencilBuffer: false };
 
 		renderTarget = new THREE.WebGLRenderTarget( width, height, parameters );
@@ -108,8 +110,10 @@ THREE.EffectComposer.prototype = {
 
 			renderTarget = this.renderTarget1.clone();
 
-			renderTarget.width = window.innerWidth;
-			renderTarget.height = window.innerHeight;
+			var pixelRatio = this.renderer.getPixelRatio();
+
+			renderTarget.width  = Math.floor( this.renderer.context.canvas.width  / pixelRatio );
+			renderTarget.height = Math.floor( this.renderer.context.canvas.height / pixelRatio );
 
 		}
 
@@ -133,12 +137,3 @@ THREE.EffectComposer.prototype = {
 	}
 
 };
-
-// shared ortho camera
-
-THREE.EffectComposer.camera = new THREE.OrthographicCamera( -1, 1, 1, -1, 0, 1 );
-
-THREE.EffectComposer.quad = new THREE.Mesh( new THREE.PlaneGeometry( 2, 2 ), null );
-
-THREE.EffectComposer.scene = new THREE.Scene();
-THREE.EffectComposer.scene.add( THREE.EffectComposer.quad );

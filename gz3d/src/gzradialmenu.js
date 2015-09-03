@@ -353,9 +353,9 @@ GZ3D.RadialMenu.prototype.addItem = function(type, iconTexture)
   // Icon
   iconTexture = THREE.ImageUtils.loadTexture( iconTexture );
 
-  var iconMaterial = new THREE.SpriteMaterial( { useScreenCoordinates: true,
-      alignment: THREE.SpriteAlignment.center } );
-  iconMaterial.map = iconTexture;
+  var iconMaterial = new THREE.SpriteMaterial( {
+    map: iconTexture
+  } );
 
   var icon = new THREE.Sprite( iconMaterial );
   icon.scale.set( this.bgSize*this.iconProportion,
@@ -365,8 +365,6 @@ GZ3D.RadialMenu.prototype.addItem = function(type, iconTexture)
   // Background
   var bgMaterial = new THREE.SpriteMaterial( {
       map: this.bgShape,
-      useScreenCoordinates: true,
-      alignment: THREE.SpriteAlignment.center,
       color: this.plainColor } );
 
   var bg = new THREE.Sprite( bgMaterial );
@@ -375,8 +373,6 @@ GZ3D.RadialMenu.prototype.addItem = function(type, iconTexture)
   // Highlight
   var highlightMaterial = new THREE.SpriteMaterial({
       map: this.bgShape,
-      useScreenCoordinates: true,
-      alignment: THREE.SpriteAlignment.center,
       color: this.highlightColor});
 
   var highlight = new THREE.Sprite(highlightMaterial);

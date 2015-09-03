@@ -1037,7 +1037,7 @@ GZ3D.GZIface.prototype.applyMaterial = function(obj, mat)
       var ambient = mat.ambient;
       if (ambient)
       {
-        obj.material.ambient.setRGB(ambient[0], ambient[1], ambient[2]);
+        obj.material.emissive.setRGB(ambient[0], ambient[1], ambient[2]);
       }
       var diffuse = mat.diffuse;
       if (diffuse)
@@ -1372,7 +1372,7 @@ GZ3D.GZIface.prototype.parseMaterial = function(material)
       var ambient = mat['ambient'];
       if (ambient)
       {
-        obj.material.ambient.setRGB(ambient[0], ambient[1], ambient[2]);
+        obj.material.emissive.setRGB(ambient[0], ambient[1], ambient[2]);
       }
       var diffuse = mat['diffuse'];
       if (diffuse)

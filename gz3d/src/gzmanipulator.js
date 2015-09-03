@@ -46,7 +46,6 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
   var changeEvent = {type: 'change'};
 
   var ray = new THREE.Raycaster();
-  var projector = new THREE.Projector();
   var pointerVector = new THREE.Vector3();
 
   var point = new THREE.Vector3();
@@ -1142,7 +1141,7 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
     var y = (pointer.clientY - rect.top) / rect.height;
     pointerVector.set((x) * 2 - 1, - (y) * 2 + 1, 0.5);
 
-    projector.unprojectVector(pointerVector, scope.camera);
+    pointerVector.unproject(scope.camera);
     ray.set(camPosition, pointerVector.sub(camPosition).normalize());
 
     // checks all intersections between the ray and the objects,
@@ -1175,7 +1174,8 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
   function bakeTransformations(object)
   {
     var tempGeometry = new THREE.Geometry();
-    THREE.GeometryUtils.merge(tempGeometry, object);
+    object.updateMatrix();
+    tempGeometry.merge(object.geometry, object.matrix);
     object.geometry = tempGeometry;
     object.position.set(0, 0, 0);
     object.rotation.set(0, 0, 0);
