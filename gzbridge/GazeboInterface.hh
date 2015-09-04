@@ -163,7 +163,7 @@ namespace gzweb
     private: void WaitForConnection() const;
 
     /// \brief a pose at a specific time
-    typedef std::pair<gazebo::common::Time, gazebo::math::Pose > TimedPose;
+    typedef std::pair<gazebo::common::Time, ignition::math::Pose3d> TimedPose;
 
     /// \brief True if the message is to be ignored because it is either
     /// too old, or too similar

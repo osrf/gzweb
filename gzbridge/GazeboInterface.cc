@@ -302,16 +302,16 @@ void GazeboInterface::ProcessMessages()
           if (name == "")
             continue;
 
-          gazebo::math::Vector3 pos(
+          ignition::math::Vector3d pos(
             atof(get_value(msg, "msg:position:x").c_str()),
             atof(get_value(msg, "msg:position:y").c_str()),
             atof(get_value(msg, "msg:position:z").c_str()));
-          gazebo::math::Quaternion quat(
+          ignition::math::Quaterniond quat(
             atof(get_value(msg, "msg:orientation:w").c_str()),
             atof(get_value(msg, "msg:orientation:x").c_str()),
             atof(get_value(msg, "msg:orientation:y").c_str()),
             atof(get_value(msg, "msg:orientation:z").c_str()));
-          gazebo::math::Pose pose(pos, quat);
+          ignition::math::Pose3d pose(pos, quat);
 
           gazebo::msgs::Model modelMsg;
           modelMsg.set_id(id);
@@ -334,21 +334,21 @@ void GazeboInterface::ProcessMessages()
           gazebo::msgs::Light lightMsg;
           lightMsg.set_name(name);
 
-          gazebo::math::Vector3 pos(
+          ignition::math::Vector3d pos(
               atof(get_value(msg, "msg:position:x").c_str()),
               atof(get_value(msg, "msg:position:y").c_str()),
               atof(get_value(msg, "msg:position:z").c_str()));
-          gazebo::math::Quaternion quat(
+          ignition::math::Quaterniond quat(
               atof(get_value(msg, "msg:orientation:w").c_str()),
               atof(get_value(msg, "msg:orientation:x").c_str()),
               atof(get_value(msg, "msg:orientation:y").c_str()),
               atof(get_value(msg, "msg:orientation:z").c_str()));
-          gazebo::math::Pose pose(pos, quat);
+          ignition::math::Pose3d pose(pos, quat);
           gazebo::msgs::Set(lightMsg.mutable_pose(), pose);
 
           if (createEntity.compare("0") == 0)
           {
-            gazebo::math::Vector3 direction(
+            ignition::math::Vector3d direction(
               atof(get_value(msg, "msg:direction:x").c_str()),
               atof(get_value(msg, "msg:direction:y").c_str()),
               atof(get_value(msg, "msg:direction:z").c_str()));
@@ -384,13 +384,13 @@ void GazeboInterface::ProcessMessages()
             {
               lightMsg.set_type(gazebo::msgs::Light::SPOT);
               gazebo::msgs::Set(lightMsg.mutable_direction(),
-                  gazebo::math::Vector3(0,0,-1));
+                  ignition::math::Vector3d(0,0,-1));
             }
             else if (type.compare("directionallight") == 0)
             {
               lightMsg.set_type(gazebo::msgs::Light::DIRECTIONAL);
               gazebo::msgs::Set(lightMsg.mutable_direction(),
-                  gazebo::math::Vector3(0,0,-1));
+                  ignition::math::Vector3d(0,0,-1));
             }
 
             gazebo::msgs::Set(lightMsg.mutable_diffuse(),
@@ -462,16 +462,16 @@ void GazeboInterface::ProcessMessages()
           std::string name = get_value(msg, "msg:name");
           std::string type = get_value(msg, "msg:type");
 
-          gazebo::math::Vector3 pos(
+          ignition::math::Vector3d pos(
               atof(get_value(msg, "msg:position:x").c_str()),
               atof(get_value(msg, "msg:position:y").c_str()),
               atof(get_value(msg, "msg:position:z").c_str()));
-          gazebo::math::Quaternion quat(
+          ignition::math::Quaterniond quat(
               atof(get_value(msg, "msg:orientation:w").c_str()),
               atof(get_value(msg, "msg:orientation:x").c_str()),
               atof(get_value(msg, "msg:orientation:y").c_str()),
               atof(get_value(msg, "msg:orientation:z").c_str()));
-          gazebo::math::Vector3 rpy = quat.GetAsEuler();
+          ignition::math::Vector3d rpy = quat.Euler();
 
           if(type == "box" || type == "sphere" || type == "cylinder")
           {
@@ -498,8 +498,8 @@ void GazeboInterface::ProcessMessages()
 
             newModelStr << "<sdf version ='" << SDF_VERSION << "'>"
                 << "<model name='" << name << "'>"
-                << "<pose>" << pos.x << " " << pos.y << " " << pos.z << " "
-                            << rpy.x << " " << rpy.y << " " << rpy.z << "</pose>"
+                << "<pose>" << pos.X() << " " << pos.Y() << " " << pos.Z() << " "
+                            << rpy.X() << " " << rpy.Y() << " " << rpy.Z() << "</pose>"
                 << "<link name ='link'>"
                 <<   "<inertial><mass>1.0</mass></inertial>"
                 <<   "<collision name ='collision'>"
@@ -527,9 +527,9 @@ void GazeboInterface::ProcessMessages()
           {
             newModelStr << "<sdf version ='" << SDF_VERSION << "'>"
                   << "<model name='" << name << "'>"
-                  << "  <pose>" << pos.x << " " << pos.y << " "
-                                << pos.z << " " << rpy.x << " "
-                                << rpy.y << " " << rpy.z << "</pose>"
+                  << "  <pose>" << pos.X() << " " << pos.Y() << " "
+                                << pos.Z() << " " << rpy.X() << " "
+                                << rpy.Y() << " " << rpy.Z() << "</pose>"
                   << "  <include>"
                   << "    <uri>model://" << type << "</uri>"
                   << "  </include>"
@@ -786,18 +786,18 @@ bool GazeboInterface::FilterPoses(const TimedPose &_old,
     isTooEarly = true;
   }
 
-  gazebo::math::Vector3 posDiff = _current.second.pos - _old.second.pos;
-  double translationSquared = posDiff.GetSquaredLength();
+  ignition::math::Vector3d posDiff = _current.second.Pos() - _old.second.Pos();
+  double translationSquared = posDiff.SquaredLength();
   if (translationSquared > minimumDistanceSquared)
   {
     hasMoved = true;
   }
 
-  gazebo::math::Quaternion i = _current.second.rot.GetInverse();
-  gazebo::math::Quaternion qDiff =  i * _old.second.rot;
+  ignition::math::Quaterniond i = _current.second.Rot().Inverse();
+  ignition::math::Quaterniond qDiff =  i * _old.second.Rot();
 
-  gazebo::math::Vector3 d(qDiff.x, qDiff.y, qDiff.z);
-  double rotation = d.GetSquaredLength();
+  ignition::math::Vector3d d(qDiff.X(), qDiff.Y(), qDiff.Z());
+  double rotation = d.SquaredLength();
   if (rotation > minimumQuaternionSquared)
   {
     hasRotated = true;
@@ -842,7 +842,7 @@ void GazeboInterface::OnPoseMsg(ConstPosesStampedPtr &_msg)
 
     std::string name = _msg->pose(i).name();
 
-    gazebo::math::Pose pose = gazebo::msgs::Convert(_msg->pose(i));
+    ignition::math::Pose3d pose = gazebo::msgs::ConvertIgn(_msg->pose(i));
     gazebo::common::Time time = gazebo::msgs::Convert(_msg->time());
 
     PoseMsgsFilter_M::iterator it = this->poseMsgsFilterMap.find(name);
