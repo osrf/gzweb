@@ -107,13 +107,13 @@ void ExportTextureSource(const gazebo::common::SubMesh *_outSubMesh,
   // Fill the point cloud with vertices from the original mesh
   PointCloud<double> cloud;
   cloud.pts.resize(inCount);
-  gazebo::math::Vector3 inVertex;
+  ignition::math::Vector3d inVertex;
   for (size_t i = 0; i < inCount; ++i)
   {
-    inVertex = _inSubMesh->GetVertex(i);
-    cloud.pts[i].x = inVertex.x;
-    cloud.pts[i].y = inVertex.y;
-    cloud.pts[i].z = inVertex.z;
+    inVertex = _inSubMesh->Vertex(i);
+    cloud.pts[i].x = inVertex.X();
+    cloud.pts[i].y = inVertex.Y();
+    cloud.pts[i].z = inVertex.Z();
   }
 
   // construct a kd-tree index:
@@ -136,9 +136,9 @@ void ExportTextureSource(const gazebo::common::SubMesh *_outSubMesh,
   for (int i = 0; i < outTriIndexCount; ++i)
   {
     unsigned int outIndex = _outSubMesh->GetIndex(i);
-    gazebo::math::Vector3 outVertex = _outSubMesh->GetVertex(outIndex);
+    ignition::math::Vector3d outVertex = _outSubMesh->Vertex(outIndex);
 
-    const double query_pt[3] = { outVertex.x, outVertex.y, outVertex.z};
+    const double query_pt[3] = { outVertex.X(), outVertex.Y(), outVertex.Z()};
     // Get nearest num_results
     cloudIndex.knnSearch(&query_pt[0], num_results, &result_index[0],
         &out_dist_sqr[0]);
@@ -147,7 +147,7 @@ void ExportTextureSource(const gazebo::common::SubMesh *_outSubMesh,
     double closestDistance = 1000;
     for (int j = 0; j < num_results; ++j)
     {
-      inVertex = _inSubMesh->GetVertex(result_index[j]);
+      inVertex = _inSubMesh->Vertex(result_index[j]);
 
       double distance = inVertex.Distance(outVertex);
       // closer vertex
@@ -168,34 +168,34 @@ void ExportTextureSource(const gazebo::common::SubMesh *_outSubMesh,
 
     // index%3 == 0: beginning of a triangle
     // triangle 1: i == 0,1,2; triangle 2: i == 3,4,5 and so on
-    gazebo::math::Vector2d outOffset(i+offset[(i % 3)*2],
-                                     i+offset[(i % 3)*2+1]);
+    ignition::math::Vector2d outOffset(i+offset[(i % 3)*2],
+                                       i+offset[(i % 3)*2+1]);
     // Get other vertices in the same triangle
-    unsigned int outIndex_1 = _outSubMesh->GetIndex(outOffset.x);
-    unsigned int outIndex_2 = _outSubMesh->GetIndex(outOffset.y);
-    gazebo::math::Vector3 outVertex_1 = _outSubMesh->GetVertex(outIndex_1);
-    gazebo::math::Vector3 outVertex_2 = _outSubMesh->GetVertex(outIndex_2);
+    unsigned int outIndex_1 = _outSubMesh->GetIndex(outOffset.X());
+    unsigned int outIndex_2 = _outSubMesh->GetIndex(outOffset.Y());
+    ignition::math::Vector3d outVertex_1 = _outSubMesh->Vertex(outIndex_1);
+    ignition::math::Vector3d outVertex_2 = _outSubMesh->Vertex(outIndex_2);
 
     // Get directions
-    gazebo::math::Vector3 outDir_1 = (outVertex_1-outVertex).Normalize();
-    gazebo::math::Vector3 outDir_2 = (outVertex_2-outVertex).Normalize();
+    ignition::math::Vector3d outDir_1 = (outVertex_1-outVertex).Normalize();
+    ignition::math::Vector3d outDir_2 = (outVertex_2-outVertex).Normalize();
 
     // Initialize closestVertex
     size_t closestIndex = closestIndices[0];
-    gazebo::math::Vector2d
+    ignition::math::Vector2d
         closestOffset(closestIndex+offset[(closestIndex % 3)*2],
                       closestIndex+offset[(closestIndex % 3)*2+1]);
 
-    gazebo::math::Vector3 closestVertex =
-        _inSubMesh->GetVertex(closestIndex);
-    gazebo::math::Vector3 closestVertex_1 =
-        _inSubMesh->GetVertex(closestOffset.x);
-    gazebo::math::Vector3 closestVertex_2 =
-        _inSubMesh->GetVertex(closestOffset.y);
+    ignition::math::Vector3d closestVertex =
+        _inSubMesh->Vertex(closestIndex);
+    ignition::math::Vector3d closestVertex_1 =
+        _inSubMesh->Vertex(closestOffset.X());
+    ignition::math::Vector3d closestVertex_2 =
+        _inSubMesh->Vertex(closestOffset.Y());
 
-    gazebo::math::Vector3 closestDir_1 =
+    ignition::math::Vector3d closestDir_1 =
         (closestVertex_1-closestVertex).Normalize();
-    gazebo::math::Vector3 closestDir_2 =
+    ignition::math::Vector3d closestDir_2 =
         (closestVertex_2-closestVertex).Normalize();
 
     // Initialize sum of closest directions
@@ -217,20 +217,20 @@ void ExportTextureSource(const gazebo::common::SubMesh *_outSubMesh,
     {
       // Current vertex
       size_t currentIndex = closestIndices[k];
-      gazebo::math::Vector2d
+      ignition::math::Vector2d
           currentOffset(currentIndex+offset[(currentIndex % 3)*2],
                         currentIndex+offset[(currentIndex % 3)*2+1]);
 
-      gazebo::math::Vector3 currentVertex =
-          _inSubMesh->GetVertex(currentIndex);
-      gazebo::math::Vector3 currentVertex_1 =
-          _inSubMesh->GetVertex(currentOffset.x);
-      gazebo::math::Vector3 currentVertex_2 =
-          _inSubMesh->GetVertex(currentOffset.y);
+      ignition::math::Vector3d currentVertex =
+          _inSubMesh->Vertex(currentIndex);
+      ignition::math::Vector3d currentVertex_1 =
+          _inSubMesh->Vertex(currentOffset.X());
+      ignition::math::Vector3d currentVertex_2 =
+          _inSubMesh->Vertex(currentOffset.Y());
 
-      gazebo::math::Vector3 currentDir_1 =
+      ignition::math::Vector3d currentDir_1 =
           (currentVertex_1-currentVertex).Normalize();
-      gazebo::math::Vector3 currentDir_2 =
+      ignition::math::Vector3d currentDir_2 =
           (currentVertex_2-currentVertex).Normalize();
 
       double currentSum;
@@ -256,8 +256,8 @@ void ExportTextureSource(const gazebo::common::SubMesh *_outSubMesh,
     }
 
     // Get UV coordinates
-    double U = _inSubMesh->GetTexCoord(closestIndex).x;
-    double V = _inSubMesh->GetTexCoord(closestIndex).y;
+    double U = _inSubMesh->TexCoord(closestIndex).X();
+    double V = _inSubMesh->TexCoord(closestIndex).Y();
 
     fillData << U << " " << 1.0-V << " ";
   }
@@ -323,11 +323,11 @@ void ExportGeometrySource(const gazebo::common::SubMesh *_subMesh,
     snprintf(sourceId, sizeof(sourceId), "%s-Positions", _meshID);
     count = _subMesh->GetVertexCount();
     stride = 3;
-    gazebo::math::Vector3 vertex;
+    ignition::math::Vector3d vertex;
     for (unsigned int i = 0; i < count; ++i)
     {
-      vertex = _subMesh->GetVertex(i);
-      fillData << vertex.x << " " << vertex.y << " " << vertex.z << " ";
+      vertex = _subMesh->Vertex(i);
+      fillData << vertex.X() << " " << vertex.Y() << " " << vertex.Z() << " ";
     }
   }
   if (_type == NORMAL)
@@ -335,11 +335,11 @@ void ExportGeometrySource(const gazebo::common::SubMesh *_subMesh,
     snprintf(sourceId, sizeof(sourceId), "%s-Normals", _meshID);
     count = _subMesh->GetNormalCount();
     stride = 3;
-    gazebo::math::Vector3 normal;
+    ignition::math::Vector3d normal;
     for (unsigned int i = 0; i < count; ++i)
     {
-      normal = _subMesh->GetNormal(i);
-      fillData << normal.x << " " << normal.y << " " << normal.z << " ";
+      normal = _subMesh->Normal(i);
+      fillData << normal.X() << " " << normal.Y() << " " << normal.Z() << " ";
     }
   }
 
@@ -1096,9 +1096,9 @@ void ConvertGzToGts(const gazebo::common::SubMesh *_subMesh,
   GPtrArray *vertices = g_ptr_array_new();
   for (unsigned int j = 0; j < _subMesh->GetVertexCount(); ++j)
   {
-    gazebo::math::Vector3 vertex = _subMesh->GetVertex(j);
-    g_ptr_array_add(vertices, gts_vertex_new(gts_vertex_class(), vertex.x,
-        vertex.y, vertex.z));
+    ignition::math::Vector3d vertex = _subMesh->Vertex(j);
+    g_ptr_array_add(vertices, gts_vertex_new(gts_vertex_class(), vertex.X(),
+        vertex.Y(), vertex.Z()));
   }
 
   MergeVertices(vertices, 1e-7);
