@@ -2411,23 +2411,37 @@ GZ3D.GZIface.prototype.onConnected = function()
 
   worldStatsTopic.subscribe(worldStatsUpdate.bind(this));
 
-  // Lights
+  // Spawn new lights
+  var lightFactoryTopic = new ROSLIB.Topic({
+    ros : this.webSocket,
+    name : '~/factory/light',
+    messageType : 'light',
+  });
+
+  var lightCreate = function(message)
+  {
+    var entity = this.scene.getByName(message.name);
+    if (!entity)
+    {
+      var lightObj = this.createLightFromMsg(message);
+      this.scene.add(lightObj);
+      guiEvents.emit('notification_popup', message.name+' inserted');
+    }
+    this.gui.setLightStats(message, 'update');
+  };
+
+  lightFactoryTopic.subscribe(lightCreate.bind(this));
+
+  // Update existing lights
   var lightModifyTopic = new ROSLIB.Topic({
     ros : this.webSocket,
     name : '~/light/modify',
     messageType : 'light',
   });
 
-  // equivalent to modelUpdate / poseUpdate
   var lightUpdate = function(message)
   {
     var entity = this.scene.getByName(message.name);
-//    if (!entity)
-//    {
-//      var lightObj = this.createLightFromMsg(message);
-//      this.scene.add(lightObj);
-//      guiEvents.emit('notification_popup', message.name+' inserted');
-//    }
     if (entity && entity !== this.scene.modelManipulator.object
         && entity.parent !== this.scene.modelManipulator.object)
     {
@@ -2437,7 +2451,6 @@ GZ3D.GZIface.prototype.onConnected = function()
   };
 
   lightModifyTopic.subscribe(lightUpdate.bind(this));
-
 
   // heightmap
   this.heightmapDataService = new ROSLIB.Service({

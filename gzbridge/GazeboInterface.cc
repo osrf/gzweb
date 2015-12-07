@@ -89,8 +89,8 @@ GazeboInterface::GazeboInterface()
       &GazeboInterface::OnRequest, this);
 
   // For lights
-  this->lightSub = this->node->Subscribe(this->lightTopic,
-      &GazeboInterface::OnLightMsg, this);
+  this->lightFactorySub = this->node->Subscribe(this->lightFactoryTopic,
+      &GazeboInterface::OnLightFactoryMsg, this);
   this->lightModifySub = this->node->Subscribe(this->lightModifyTopic,
       &GazeboInterface::OnLightModifyMsg, this);
 
@@ -165,7 +165,7 @@ GazeboInterface::~GazeboInterface()
   this->modelMsgs.clear();
   this->poseMsgs.clear();
   this->requestMsgs.clear();
-  this->lightMsgs.clear();
+  this->lightFactoryMsgs.clear();
   this->lightModifyMsgs.clear();
   this->visualMsgs.clear();
   this->sceneMsgs.clear();
@@ -175,7 +175,7 @@ GazeboInterface::~GazeboInterface()
 
   this->sensorSub.reset();
   this->visSub.reset();
-  this->lightSub.reset();
+  this->lightFactorySub.reset();
   this->lightModifySub.reset();
   this->sceneSub.reset();
   this->jointSub.reset();
@@ -653,15 +653,15 @@ void GazeboInterface::ProcessMessages()
     }
     this->sensorMsgs.clear();
 
-    // Forward the light messages.
-    for (lightIter = this->lightMsgs.begin();
-        lightIter != this->lightMsgs.end(); ++lightIter)
+    // Forward the light factory messages.
+    for (lightIter = this->lightFactoryMsgs.begin();
+        lightIter != this->lightFactoryMsgs.end(); ++lightIter)
     {
-      msg = this->PackOutgoingTopicMsg(this->lightTopic,
+      msg = this->PackOutgoingTopicMsg(this->lightFactoryTopic,
           pb2json(*(*lightIter).get()));
       this->Send(msg);
     }
-    this->lightMsgs.clear();
+    this->lightFactoryMsgs.clear();
 
     // Forward the light modify messages.
     for (lightIter = this->lightModifyMsgs.begin();
@@ -934,13 +934,13 @@ void GazeboInterface::OnResponse(ConstResponsePtr &_msg)
 }
 
 /////////////////////////////////////////////////
-void GazeboInterface::OnLightMsg(ConstLightPtr &_msg)
+void GazeboInterface::OnLightFactoryMsg(ConstLightPtr &_msg)
 {
   if (!this->IsConnected())
     return;
 
   boost::recursive_mutex::scoped_lock lock(*this->receiveMutex);
-  this->lightMsgs.push_back(_msg);
+  this->lightFactoryMsgs.push_back(_msg);
 }
 
 /////////////////////////////////////////////////

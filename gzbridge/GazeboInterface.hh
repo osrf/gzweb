@@ -122,9 +122,9 @@ namespace gzweb
     /// \param[in] _msg The message data.
     private: void OnRequest(ConstRequestPtr &_msg);
 
-    /// \brief Light message callback.
+    /// \brief Light factory message callback.
     /// \param[in] _msg The message data.
-    private: void OnLightMsg(ConstLightPtr &_msg);
+    private: void OnLightFactoryMsg(ConstLightPtr &_msg);
 
     /// \brief Light modify message callback.
     /// \param[in] _msg The message data.
@@ -200,8 +200,8 @@ namespace gzweb
     /// \brief Subscribe to the request topic
     private: gazebo::transport::SubscriberPtr requestSub;
 
-    /// \brief Subscribe to light topics
-    private: gazebo::transport::SubscriberPtr lightSub;
+    /// \brief Subscribe to light factory topic.
+    private: gazebo::transport::SubscriberPtr lightFactorySub;
 
     /// \brief Subscribe to light modify topic.
     private: gazebo::transport::SubscriberPtr lightModifySub;
@@ -290,8 +290,8 @@ namespace gzweb
     typedef std::list<boost::shared_ptr<gazebo::msgs::Light const> >
         LightMsgs_L;
 
-    /// \brief List of light message to process.
-    private: LightMsgs_L lightMsgs;
+    /// \brief List of light factory message to process.
+    private: LightMsgs_L lightFactoryMsgs;
 
     /// \brief List of light modify message to process.
     private: LightMsgs_L lightModifyMsgs;
