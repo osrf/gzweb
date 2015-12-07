@@ -2475,7 +2475,7 @@ GZ3D.GZIface.prototype.onConnected = function()
   // Light messages - for modifying lights
   this.lightModifyTopic = new ROSLIB.Topic({
     ros : this.webSocket,
-    name : '~/light',
+    name : '~/light/modify',
     messageType : 'light',
   });
 
