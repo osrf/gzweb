@@ -126,6 +126,10 @@ namespace gzweb
     /// \param[in] _msg The message data.
     private: void OnLightMsg(ConstLightPtr &_msg);
 
+    /// \brief Light modify message callback.
+    /// \param[in] _msg The message data.
+    private: void OnLightModifyMsg(ConstLightPtr &_msg);
+
     /// \brief Joint message callback.
     /// \param[in] _msg The message data.
     private: void OnJointMsg(ConstJointPtr &_msg);
@@ -198,6 +202,9 @@ namespace gzweb
 
     /// \brief Subscribe to light topics
     private: gazebo::transport::SubscriberPtr lightSub;
+
+    /// \brief Subscribe to light modify topic.
+    private: gazebo::transport::SubscriberPtr lightModifySub;
 
     /// \brief Subscribe to sensor topic
     private: gazebo::transport::SubscriberPtr sensorSub;
@@ -285,6 +292,9 @@ namespace gzweb
 
     /// \brief List of light message to process.
     private: LightMsgs_L lightMsgs;
+
+    /// \brief List of light modify message to process.
+    private: LightMsgs_L lightModifyMsgs;
 
     /// \def SensorMsgs_L
     /// \brief List of sensor messages.

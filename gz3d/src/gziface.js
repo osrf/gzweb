@@ -332,9 +332,9 @@ GZ3D.GZIface.prototype.onConnected = function()
   worldStatsTopic.subscribe(worldStatsUpdate.bind(this));
 
   // Lights
-  var lightTopic = new ROSLIB.Topic({
+  var lightModifyTopic = new ROSLIB.Topic({
     ros : this.webSocket,
-    name : '~/light',
+    name : '~/light/modify',
     messageType : 'light',
   });
 
@@ -342,13 +342,13 @@ GZ3D.GZIface.prototype.onConnected = function()
   var lightUpdate = function(message)
   {
     var entity = this.scene.getByName(message.name);
-    if (!entity)
-    {
-      var lightObj = this.createLightFromMsg(message);
-      this.scene.add(lightObj);
-      guiEvents.emit('notification_popup', message.name+' inserted');
-    }
-    else if (entity && entity !== this.scene.modelManipulator.object
+//    if (!entity)
+//    {
+//      var lightObj = this.createLightFromMsg(message);
+//      this.scene.add(lightObj);
+//      guiEvents.emit('notification_popup', message.name+' inserted');
+//    }
+    if (entity && entity !== this.scene.modelManipulator.object
         && entity.parent !== this.scene.modelManipulator.object)
     {
       this.scene.updateLight(entity, message);
@@ -356,7 +356,7 @@ GZ3D.GZIface.prototype.onConnected = function()
     this.gui.setLightStats(message, 'update');
   };
 
-  lightTopic.subscribe(lightUpdate.bind(this));
+  lightModifyTopic.subscribe(lightUpdate.bind(this));
 
 
   // heightmap

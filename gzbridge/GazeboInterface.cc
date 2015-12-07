@@ -91,6 +91,8 @@ GazeboInterface::GazeboInterface()
   // For lights
   this->lightSub = this->node->Subscribe(this->lightTopic,
       &GazeboInterface::OnLightMsg, this);
+  this->lightModifySub = this->node->Subscribe(this->lightModifyTopic,
+      &GazeboInterface::OnLightModifyMsg, this);
 
   this->sceneSub = this->node->Subscribe(this->sceneTopic,
       &GazeboInterface::OnScene, this);
@@ -164,6 +166,7 @@ GazeboInterface::~GazeboInterface()
   this->poseMsgs.clear();
   this->requestMsgs.clear();
   this->lightMsgs.clear();
+  this->lightModifyMsgs.clear();
   this->visualMsgs.clear();
   this->sceneMsgs.clear();
   this->physicsMsgs.clear();
@@ -173,6 +176,7 @@ GazeboInterface::~GazeboInterface()
   this->sensorSub.reset();
   this->visSub.reset();
   this->lightSub.reset();
+  this->lightModifySub.reset();
   this->sceneSub.reset();
   this->jointSub.reset();
   this->modelInfoSub.reset();
@@ -659,6 +663,16 @@ void GazeboInterface::ProcessMessages()
     }
     this->lightMsgs.clear();
 
+    // Forward the light modify messages.
+    for (lightIter = this->lightModifyMsgs.begin();
+        lightIter != this->lightModifyMsgs.end(); ++lightIter)
+    {
+      msg = this->PackOutgoingTopicMsg(this->lightModifyTopic,
+          pb2json(*(*lightIter).get()));
+      this->Send(msg);
+    }
+    this->lightModifyMsgs.clear();
+
     // Forward the visual messages.
     for (visualIter = this->visualMsgs.begin();
         visualIter != this->visualMsgs.end(); ++visualIter)
@@ -927,6 +941,16 @@ void GazeboInterface::OnLightMsg(ConstLightPtr &_msg)
 
   boost::recursive_mutex::scoped_lock lock(*this->receiveMutex);
   this->lightMsgs.push_back(_msg);
+}
+
+/////////////////////////////////////////////////
+void GazeboInterface::OnLightModifyMsg(ConstLightPtr &_msg)
+{
+  if (!this->IsConnected())
+    return;
+
+  boost::recursive_mutex::scoped_lock lock(*this->receiveMutex);
+  this->lightModifyMsgs.push_back(_msg);
 }
 
 /////////////////////////////////////////////////
