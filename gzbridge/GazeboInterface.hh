@@ -382,9 +382,6 @@ namespace gzweb
     /// \brief Name of request topic.
     private: std::string requestTopic;
 
-    /// \brief Name of light topic.
-    private: std::string lightTopic;
-
     /// \brief Name of light factory topic.
     private: std::string lightFactoryTopic;
 

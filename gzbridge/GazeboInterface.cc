@@ -50,7 +50,6 @@ GazeboInterface::GazeboInterface()
   this->modelTopic = "~/model/info";
   this->poseTopic = "~/pose/info";
   this->requestTopic = "~/request";
-  this->lightTopic = "~/light";
   this->lightFactoryTopic = "~/factory/light";
   this->lightModifyTopic = "~/light/modify";
   this->linkTopic = "~/link";
