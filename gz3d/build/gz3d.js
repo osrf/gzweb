@@ -2425,6 +2425,18 @@ GZ3D.GZIface.prototype.onConnected = function()
     {
       var lightObj = this.createLightFromMsg(message);
       this.scene.add(lightObj);
+
+      // For the inserted light to have effect
+      var allObjects = [];
+      this.scene.scene.getDescendants(allObjects);
+      for (var l = 0; l < allObjects.length; ++l)
+      {
+        if (allObjects[l].material)
+        {
+          allObjects[l].material.needsUpdate = true;
+        }
+      }
+
       guiEvents.emit('notification_popup', message.name+' inserted');
     }
     this.gui.setLightStats(message, 'update');
