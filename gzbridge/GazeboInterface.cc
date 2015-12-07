@@ -51,6 +51,7 @@ GazeboInterface::GazeboInterface()
   this->poseTopic = "~/pose/info";
   this->requestTopic = "~/request";
   this->lightTopic = "~/light";
+  this->lightFactoryTopic = "~/factory/light";
   this->lightModifyTopic = "~/light/modify";
   this->linkTopic = "~/link";
   this->sceneTopic = "~/scene";
@@ -112,14 +113,16 @@ GazeboInterface::GazeboInterface()
       this->node->Advertise<gazebo::msgs::Model>(this->modelModifyTopic);
 
   // For modifying lights
-  this->lightPub =
-      this->node->Advertise<gazebo::msgs::Light>(this->lightTopic);
   this->lightModifyPub =
       this->node->Advertise<gazebo::msgs::Light>(this->lightModifyTopic);
 
   // For spawning models
   this->factoryPub =
       this->node->Advertise<gazebo::msgs::Factory>(this->factoryTopic);
+
+  // For spawning lights
+  this->lightFactoryPub =
+      this->node->Advertise<gazebo::msgs::Light>(this->lightFactoryTopic);
 
   // For controling world
   this->worldControlPub =
@@ -175,7 +178,7 @@ GazeboInterface::~GazeboInterface()
   this->modelInfoSub.reset();
   this->requestPub.reset();
   this->modelPub.reset();
-  this->lightPub.reset();
+  this->lightFactoryPub.reset();
   this->lightModifyPub.reset();
   this->responseSub.reset();
   this->node.reset();
@@ -324,7 +327,7 @@ void GazeboInterface::ProcessMessages()
 
           this->modelPub->Publish(modelMsg);
         }
-        else if (topic == this->lightTopic || topic == this->lightModifyTopic)
+        else if (topic == this->lightFactoryTopic || topic == this->lightModifyTopic)
         {
           std::string name = get_value(msg, "msg:name");
           std::string type = get_value(msg, "msg:type");
@@ -408,7 +411,7 @@ void GazeboInterface::ProcessMessages()
             lightMsg.set_attenuation_quadratic(0.001);
             lightMsg.set_range(20);
 
-            this->lightPub->Publish(lightMsg);
+            this->lightFactoryPub->Publish(lightMsg);
           }
 
         }

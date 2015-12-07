@@ -226,8 +226,8 @@ namespace gzweb
     /// \brief Publish model modify messages
     private: gazebo::transport::PublisherPtr modelPub;
 
-    /// \brief Publish light modify messages
-    private: gazebo::transport::PublisherPtr lightPub;
+    /// \brief Publish light factory messages
+    private: gazebo::transport::PublisherPtr lightFactoryPub;
 
     /// \brief Publish light modify messages
     private: gazebo::transport::PublisherPtr lightModifyPub;
@@ -374,6 +374,9 @@ namespace gzweb
 
     /// \brief Name of light topic.
     private: std::string lightTopic;
+
+    /// \brief Name of light factory topic.
+    private: std::string lightFactoryTopic;
 
     /// \brief Name of light modify topic.
     private: std::string lightModifyTopic;
