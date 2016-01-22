@@ -331,24 +331,50 @@ GZ3D.GZIface.prototype.onConnected = function()
 
   worldStatsTopic.subscribe(worldStatsUpdate.bind(this));
 
-  // Lights
-  var lightTopic = new ROSLIB.Topic({
+  // Spawn new lights
+  var lightFactoryTopic = new ROSLIB.Topic({
     ros : this.webSocket,
-    name : '~/light',
+    name : '~/factory/light',
     messageType : 'light',
   });
 
-  // equivalent to modelUpdate / poseUpdate
-  var lightUpdate = function(message)
+  var lightCreate = function(message)
   {
     var entity = this.scene.getByName(message.name);
     if (!entity)
     {
       var lightObj = this.createLightFromMsg(message);
       this.scene.add(lightObj);
+
+      // For the inserted light to have effect
+      var allObjects = [];
+      this.scene.scene.getDescendants(allObjects);
+      for (var l = 0; l < allObjects.length; ++l)
+      {
+        if (allObjects[l].material)
+        {
+          allObjects[l].material.needsUpdate = true;
+        }
+      }
+
       guiEvents.emit('notification_popup', message.name+' inserted');
     }
-    else if (entity && entity !== this.scene.modelManipulator.object
+    this.gui.setLightStats(message, 'update');
+  };
+
+  lightFactoryTopic.subscribe(lightCreate.bind(this));
+
+  // Update existing lights
+  var lightModifyTopic = new ROSLIB.Topic({
+    ros : this.webSocket,
+    name : '~/light/modify',
+    messageType : 'light',
+  });
+
+  var lightUpdate = function(message)
+  {
+    var entity = this.scene.getByName(message.name);
+    if (entity && entity !== this.scene.modelManipulator.object
         && entity.parent !== this.scene.modelManipulator.object)
     {
       this.scene.updateLight(entity, message);
@@ -356,8 +382,7 @@ GZ3D.GZIface.prototype.onConnected = function()
     this.gui.setLightStats(message, 'update');
   };
 
-  lightTopic.subscribe(lightUpdate.bind(this));
-
+  lightModifyTopic.subscribe(lightUpdate.bind(this));
 
   // heightmap
   this.heightmapDataService = new ROSLIB.Service({
@@ -395,7 +420,7 @@ GZ3D.GZIface.prototype.onConnected = function()
   // Light messages - for modifying lights
   this.lightModifyTopic = new ROSLIB.Topic({
     ros : this.webSocket,
-    name : '~/light',
+    name : '~/light/modify',
     messageType : 'light',
   });
 
@@ -495,7 +520,7 @@ GZ3D.GZIface.prototype.onConnected = function()
   // Factory messages - for spawning new lights
   this.lightFactoryTopic = new ROSLIB.Topic({
     ros : this.webSocket,
-    name : '~/light',
+    name : '~/factory/light',
     messageType : 'light',
   });
 

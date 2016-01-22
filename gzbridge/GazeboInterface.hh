@@ -122,9 +122,13 @@ namespace gzweb
     /// \param[in] _msg The message data.
     private: void OnRequest(ConstRequestPtr &_msg);
 
-    /// \brief Light message callback.
+    /// \brief Light factory message callback.
     /// \param[in] _msg The message data.
-    private: void OnLightMsg(ConstLightPtr &_msg);
+    private: void OnLightFactoryMsg(ConstLightPtr &_msg);
+
+    /// \brief Light modify message callback.
+    /// \param[in] _msg The message data.
+    private: void OnLightModifyMsg(ConstLightPtr &_msg);
 
     /// \brief Joint message callback.
     /// \param[in] _msg The message data.
@@ -196,8 +200,11 @@ namespace gzweb
     /// \brief Subscribe to the request topic
     private: gazebo::transport::SubscriberPtr requestSub;
 
-    /// \brief Subscribe to light topics
-    private: gazebo::transport::SubscriberPtr lightSub;
+    /// \brief Subscribe to light factory topic.
+    private: gazebo::transport::SubscriberPtr lightFactorySub;
+
+    /// \brief Subscribe to light modify topic.
+    private: gazebo::transport::SubscriberPtr lightModifySub;
 
     /// \brief Subscribe to sensor topic
     private: gazebo::transport::SubscriberPtr sensorSub;
@@ -226,8 +233,11 @@ namespace gzweb
     /// \brief Publish model modify messages
     private: gazebo::transport::PublisherPtr modelPub;
 
+    /// \brief Publish light factory messages
+    private: gazebo::transport::PublisherPtr lightFactoryPub;
+
     /// \brief Publish light modify messages
-    private: gazebo::transport::PublisherPtr lightPub;
+    private: gazebo::transport::PublisherPtr lightModifyPub;
 
     /// \brief Publish factory messages
     private: gazebo::transport::PublisherPtr factoryPub;
@@ -280,8 +290,11 @@ namespace gzweb
     typedef std::list<boost::shared_ptr<gazebo::msgs::Light const> >
         LightMsgs_L;
 
-    /// \brief List of light message to process.
-    private: LightMsgs_L lightMsgs;
+    /// \brief List of light factory message to process.
+    private: LightMsgs_L lightFactoryMsgs;
+
+    /// \brief List of light modify message to process.
+    private: LightMsgs_L lightModifyMsgs;
 
     /// \def SensorMsgs_L
     /// \brief List of sensor messages.
@@ -369,8 +382,11 @@ namespace gzweb
     /// \brief Name of request topic.
     private: std::string requestTopic;
 
-    /// \brief Name of light topic.
-    private: std::string lightTopic;
+    /// \brief Name of light factory topic.
+    private: std::string lightFactoryTopic;
+
+    /// \brief Name of light modify topic.
+    private: std::string lightModifyTopic;
 
     /// \brief Name of link topic.
     private: std::string linkTopic;

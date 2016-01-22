@@ -50,7 +50,8 @@ GazeboInterface::GazeboInterface()
   this->modelTopic = "~/model/info";
   this->poseTopic = "~/pose/info";
   this->requestTopic = "~/request";
-  this->lightTopic = "~/light";
+  this->lightFactoryTopic = "~/factory/light";
+  this->lightModifyTopic = "~/light/modify";
   this->linkTopic = "~/link";
   this->sceneTopic = "~/scene";
   this->physicsTopic = "~/physics";
@@ -87,8 +88,10 @@ GazeboInterface::GazeboInterface()
       &GazeboInterface::OnRequest, this);
 
   // For lights
-  this->lightSub = this->node->Subscribe(this->lightTopic,
-      &GazeboInterface::OnLightMsg, this);
+  this->lightFactorySub = this->node->Subscribe(this->lightFactoryTopic,
+      &GazeboInterface::OnLightFactoryMsg, this);
+  this->lightModifySub = this->node->Subscribe(this->lightModifyTopic,
+      &GazeboInterface::OnLightModifyMsg, this);
 
   this->sceneSub = this->node->Subscribe(this->sceneTopic,
       &GazeboInterface::OnScene, this);
@@ -111,12 +114,16 @@ GazeboInterface::GazeboInterface()
       this->node->Advertise<gazebo::msgs::Model>(this->modelModifyTopic);
 
   // For modifying lights
-  this->lightPub =
-      this->node->Advertise<gazebo::msgs::Light>(this->lightTopic);
+  this->lightModifyPub =
+      this->node->Advertise<gazebo::msgs::Light>(this->lightModifyTopic);
 
   // For spawning models
   this->factoryPub =
       this->node->Advertise<gazebo::msgs::Factory>(this->factoryTopic);
+
+  // For spawning lights
+  this->lightFactoryPub =
+      this->node->Advertise<gazebo::msgs::Light>(this->lightFactoryTopic);
 
   // For controling world
   this->worldControlPub =
@@ -157,7 +164,8 @@ GazeboInterface::~GazeboInterface()
   this->modelMsgs.clear();
   this->poseMsgs.clear();
   this->requestMsgs.clear();
-  this->lightMsgs.clear();
+  this->lightFactoryMsgs.clear();
+  this->lightModifyMsgs.clear();
   this->visualMsgs.clear();
   this->sceneMsgs.clear();
   this->physicsMsgs.clear();
@@ -166,13 +174,15 @@ GazeboInterface::~GazeboInterface()
 
   this->sensorSub.reset();
   this->visSub.reset();
-  this->lightSub.reset();
+  this->lightFactorySub.reset();
+  this->lightModifySub.reset();
   this->sceneSub.reset();
   this->jointSub.reset();
   this->modelInfoSub.reset();
   this->requestPub.reset();
   this->modelPub.reset();
-  this->lightPub.reset();
+  this->lightFactoryPub.reset();
+  this->lightModifyPub.reset();
   this->responseSub.reset();
   this->node.reset();
 
@@ -320,7 +330,7 @@ void GazeboInterface::ProcessMessages()
 
           this->modelPub->Publish(modelMsg);
         }
-        else if (topic == this->lightTopic)
+        else if (topic == this->lightFactoryTopic || topic == this->lightModifyTopic)
         {
           std::string name = get_value(msg, "msg:name");
           std::string type = get_value(msg, "msg:type");
@@ -373,6 +383,8 @@ void GazeboInterface::ProcessMessages()
                 get_value(msg, "msg:attenuation_linear").c_str()));
             lightMsg.set_attenuation_quadratic(atof(
                 get_value(msg, "msg:attenuation_quadratic").c_str()));
+
+            this->lightModifyPub->Publish(lightMsg);
           }
           else
           {
@@ -401,9 +413,10 @@ void GazeboInterface::ProcessMessages()
             lightMsg.set_attenuation_linear(0.01);
             lightMsg.set_attenuation_quadratic(0.001);
             lightMsg.set_range(20);
+
+            this->lightFactoryPub->Publish(lightMsg);
           }
 
-          this->lightPub->Publish(lightMsg);
         }
         else if (topic == this->linkTopic)
         {
@@ -639,15 +652,25 @@ void GazeboInterface::ProcessMessages()
     }
     this->sensorMsgs.clear();
 
-    // Forward the light messages.
-    for (lightIter = this->lightMsgs.begin();
-        lightIter != this->lightMsgs.end(); ++lightIter)
+    // Forward the light factory messages.
+    for (lightIter = this->lightFactoryMsgs.begin();
+        lightIter != this->lightFactoryMsgs.end(); ++lightIter)
     {
-      msg = this->PackOutgoingTopicMsg(this->lightTopic,
+      msg = this->PackOutgoingTopicMsg(this->lightFactoryTopic,
           pb2json(*(*lightIter).get()));
       this->Send(msg);
     }
-    this->lightMsgs.clear();
+    this->lightFactoryMsgs.clear();
+
+    // Forward the light modify messages.
+    for (lightIter = this->lightModifyMsgs.begin();
+        lightIter != this->lightModifyMsgs.end(); ++lightIter)
+    {
+      msg = this->PackOutgoingTopicMsg(this->lightModifyTopic,
+          pb2json(*(*lightIter).get()));
+      this->Send(msg);
+    }
+    this->lightModifyMsgs.clear();
 
     // Forward the visual messages.
     for (visualIter = this->visualMsgs.begin();
@@ -910,13 +933,23 @@ void GazeboInterface::OnResponse(ConstResponsePtr &_msg)
 }
 
 /////////////////////////////////////////////////
-void GazeboInterface::OnLightMsg(ConstLightPtr &_msg)
+void GazeboInterface::OnLightFactoryMsg(ConstLightPtr &_msg)
 {
   if (!this->IsConnected())
     return;
 
   boost::recursive_mutex::scoped_lock lock(*this->receiveMutex);
-  this->lightMsgs.push_back(_msg);
+  this->lightFactoryMsgs.push_back(_msg);
+}
+
+/////////////////////////////////////////////////
+void GazeboInterface::OnLightModifyMsg(ConstLightPtr &_msg)
+{
+  if (!this->IsConnected())
+    return;
+
+  boost::recursive_mutex::scoped_lock lock(*this->receiveMutex);
+  this->lightModifyMsgs.push_back(_msg);
 }
 
 /////////////////////////////////////////////////
