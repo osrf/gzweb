@@ -2022,9 +2022,7 @@ GZ3D.Scene.prototype.setViewAs = function(model, viewAs)
       }
       else
       {
-        material.opacity =
-            material.originalOpacity ?
-                material.originalOpacity : 1.0;
+        material.opacity = material.originalOpacity ? material.originalOpacity : 1.0;
       }
     }
   }
