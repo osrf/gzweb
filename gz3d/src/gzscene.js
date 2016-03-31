@@ -2022,18 +2022,7 @@ GZ3D.Scene.prototype.setViewAs = function(model, viewAs)
       }
       else
       {
-        material.opacity =
-            material.originalOpacity ?
-            material.originalOpacity : 1.0;
-      }
-
-      if (viewAs === 'wireframe')
-      {
-        material.visible = false;
-      }
-      else
-      {
-        material.visible = true;
+        material.opacity = material.originalOpacity ? material.originalOpacity : 1.0;
       }
     }
   }
@@ -2063,29 +2052,18 @@ GZ3D.Scene.prototype.setViewAs = function(model, viewAs)
         materialViewAs(descendants[i].material);
       }
 
-      if (viewAs === 'wireframe')
+      // wireframe handling
+      var showWireframe = (viewAs === 'wireframe');
+      if (descendants[i].material instanceof THREE.MeshFaceMaterial)
       {
-        wireframe = descendants[i].getObjectByName('wireframe');
-        if (wireframe)
+        for (var m = 0; m < descendants[i].material.materials.length; m=m+1)
         {
-          wireframe.visible = true;
-        }
-        else
-        {
-          var mesh = new THREE.Mesh( descendants[i].geometry,
-              new THREE.MeshBasicMaterial({color: 0xffffff}));
-          wireframe = new THREE.WireframeHelper( mesh );
-          wireframe.name = 'wireframe';
-          descendants[i].add( wireframe );
+          descendants[i].material.materials[m].wireframe = showWireframe;
         }
       }
       else
       {
-        wireframe = descendants[i].getObjectByName('wireframe');
-        if (wireframe)
-        {
-          wireframe.visible = false;
-        }
+        descendants[i].material.wireframe = showWireframe;
       }
     }
   }
