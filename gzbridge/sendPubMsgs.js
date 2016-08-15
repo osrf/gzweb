@@ -3,9 +3,9 @@ var out = {};
 var strMsg;
 
 // The nanoSec is not currently used in calculations.
-var lastStatsTime =  { sec: 0, nsec: 0 };
+const lastStatsTime =  { sec: 0, nsec: 0 };
 const lastPausedState = true;
-var wallTime = { sec: 0, nsec: 0 };
+const wallTime = { sec: 0, nsec: 0 };
 const paused = false;
 const ProtoBuf = require("protobufjs");
 const random = require("random-js")(); // uses the nativeMath engine
@@ -192,44 +192,23 @@ function pubToServer (gazebo, msg, send) {
                   material += "}";
                   send(material);
             }
-            // Light msgs processing.
-            if(msg.topic === '~/factory/light' || msg.topic === '~/light/modify' ){
-                if(msg.msg){
-                    if(msg.msg.name){
-                        const lightType = msg.msg.type;
-                        const createEntity = msg.msg.createEntity;
-                        // To make sure of this check
-                        if(createEntity === 0){
-                            var lightMsg = {name: msg.msg.name, pose: msg.msg.pose, direction:msg.msg.direction, 
-                            diffuse:msg.msg.diffuse, specular:msg.msg.specular,attenuation_constant:msg.msg.attenuation_constant, 
-                            attenuation_linear:msg.msg.attenuation_linear, 
-                            attenuation_quadratic:msg.msg.attenuation_quadratic};
-                            //time to publish.
-                            gazebo.publish('gazebo.msgs.Light', '~/light/modify', lightMsg);
-                        }else{
-                            if(lightType === 'pointlight'){
-                                var lightMsg = {name: msg.msg.name, pose:{position:msg.msg.position, orientation:msg.msg.orientation}, type:1, 
-                                diffuse:{r:0.5,g:0.5,b:0.5, a:1}, specular:{r:0.1,g:0.1,b:0.1, a:1},
-                                attenuation_constant: 0.5, attenuation_linear: 0.01, 
-                                attenuation_quadratic:0.001, range: 20};
-                            }
-                            else if(lightType === 'spotlight'){
-                                var lightMsg = {name: msg.msg.name, pose:{position:msg.msg.position, orientation:msg.msg.orientation}, type:2, 
-                                direction:{x:0,y:0,z:-1}, diffuse:{r:0.5,g:0.5,b:0.5, a:1}, 
-                                specular:{r:0.1,g:0.1,b:0.1, a:1},attenuation_constant: 0.5, 
-                                attenuation_linear: 0.01, attenuation_quadratic:0.001, range: 20};   
-                            }
-                            else if(lightType === 'directionallight'){
-                                var lightMsg = {name: msg.msg.name, pose:{position:msg.msg.position, orientation:msg.msg.orientation}, type:3, 
-                                direction:{x:0,y:0,z:-1}, diffuse:{r:0.5,g:0.5,b:0.5, a:1}, 
-                                specular:{r:0.1,g:0.1,b:0.1, a:1},attenuation_constant: 0.5, 
-                                attenuation_linear: 0.01, attenuation_quadratic:0.001, range: 20};
-                            }
-                            gazebo.publish('gazebo.msgs.Light', '~/factory/light', lightMsg);
-                        }
-                    }
-                }
-            }
+            // TODO: light msgs processing.
+            // if(msg.topic === '~/factory/light' || msg.topic === '~/light/modify' ){
+            //     console.log('LIght MESSAGE !!!!!!!!!!~~~~~~~~~~ LIght ~~~~~~~~~~~~~~~~~~~~~~');
+            //     console.log(msg);
+            //         var modelName = msg.name;
+            //         // var linkName = msg.msg.link.name;
+            //         if(!(modelName === '' || linkName === '')){
+            //         }
+            //      if(msg.op === 'publish'){
+            //         if(msg.msg){
+            //           for (var i = 0; i < connections.length; ++i)
+            //           {
+            //             connections[i].sendUTF(materialScriptsMessage);
+            //           }
+            //         }
+            //     }
+            // }
             if(msg.topic === '~/link' ){
                   if(msg.msg){
                   const modelName = msg.name;
