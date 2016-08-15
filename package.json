@@ -2,19 +2,22 @@
   "name": "gzweb",
   "version": "1.0.0",
   "description": "WebGL client for Gazebo",
-  "repository" :
-  {
-    "type" : "mercurial",
-    "url" : "https://bitbucket.org/osrf/gzweb"
+  "repository": {
+    "type": "mercurial",
+    "url": "https://bitbucket.org/osrf/gzweb"
   },
-  "scripts":
-  {
-  },
-  "dependencies":
-  {
-    "websocket": "",
+  "scripts": {},
+  "dependencies": {
+    "bytebuffer": "^5.0.1",
+    "gazebojs": "^7.0.1",
+    "heapdump": "^0.3.7",
     "http-server": "",
-    "node-gyp":""
+    "node-gyp": "",
+    "path": "^0.12.7",
+    "protobufjs": "5.0.1",
+    "random-js": "^1.0.8",
+    "stream-to-buffer": "^0.1.0",
+    "websocket": "",
+    "yargs": "^4.7.1"
   }
 }
-

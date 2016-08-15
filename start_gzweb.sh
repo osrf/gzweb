@@ -17,4 +17,4 @@ fi
 ./node_modules/.bin/http-server http/client &
 
 cd gzbridge
-./ws_server.js &
+./gzbridge/gzbridge.js &

@@ -62,9 +62,6 @@ GetOpts $*
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $DIR
 
-# Install node modules
-npm install
-
 #
 # build the c++ server component
 #
@@ -85,9 +82,6 @@ fi
 # continue building if cmake is happy
 make -j 8
 
-cd ../gzbridge
-$DIR/node_modules/.bin/node-gyp configure
-$DIR/node_modules/.bin/node-gyp build -d
 
 RETVAL=$?
 if [ $RETVAL -ne 0 ]; then
@@ -148,5 +142,7 @@ then
   ./coarse_meshes.sh 50 http/client/assets/
 fi
 
-echo "Done"
+# Install node modules
+npm install
 
+echo "Done"
