@@ -4,9 +4,9 @@ var strMsg;
 
 // The nanoSec is not currently used in calculations.
 var lastStatsTime =  { sec: 0, nsec: 0 };
-const lastPausedState = true;
+var lastPausedState = true;
 var wallTime = { sec: 0, nsec: 0 };
-const paused = false;
+var paused = false;
 const ProtoBuf = require("protobufjs");
 const random = require("random-js")(); // uses the nativeMath engine
 var value = random.integer(1, 1000);
