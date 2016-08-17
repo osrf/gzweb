@@ -21,14 +21,17 @@ var sendPubMsgs = require("./sendPubMsgs.js")
 isGzConnected = true;
 
 const filter = new gazebojs.PosesFilter({timeElapsed : 0.02,
-                    distance: 0.00001,
-                    quaternion: 0.00001})
+    distance: 0.00001,
+    quaternion: 0.00001})
 
-if (!isGzConnected)
+
+if (isGzConnected)
 {
+  // TODO: Add a function to gazebojs that only loads the material scrpits.
+  materialScriptsMessage = gazebo.sim.materials();
+}else{
   materialScriptsMessage =  gazebo.sim.materials();
 }
-
 var server = http.createServer(function(request, response) {
   console.log((new Date()) + ' Received request for ' + request.url);
   response.writeHead(404);
