@@ -73,8 +73,12 @@ wsServer.on('request', function(request) {
       // create error status and send it
       var statusMessage = '{"op":"publish","topic":"~/status","msg":{"status":"error"}}';
       connection.sendUTF(statusMessage);
+      var materials = "{\"op\":\"publish\",\"topic\":\"" + "~/material" + "\", \"msg\":";
+      materials += JSON.stringify(materialScriptsMessage);
+      materials += "}";
       // send material scripts message
-      connection.sendUTF(materialScriptsMessage);
+
+      connection.sendUTF(materials);
       return;
     }
 
