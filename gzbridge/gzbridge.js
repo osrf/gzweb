@@ -74,7 +74,7 @@ wsServer.on('request', function(request) {
       var statusMessage = '{"op":"publish","topic":"~/status","msg":{"status":"error"}}';
       connection.sendUTF(statusMessage);
       var materials = "{\"op\":\"publish\",\"topic\":\"" + "~/material" + "\", \"msg\":";
-      materials += JSON.stringify(materialScriptsMessage);
+      materials += JSON.stringify(JSON.stringify(materialScriptsMessage));
       materials += "}";
       // send material scripts message
 
