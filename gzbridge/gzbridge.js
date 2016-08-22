@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// var heapdump = require('heapdump')
+var heapdump = require('heapdump')
 var WebSocketServer = require('websocket').server;
 var http = require('http');
 
