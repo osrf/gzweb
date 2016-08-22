@@ -92,7 +92,7 @@ wsServer.on('request', function(request) {
       gazebo.sim.advertise('gazebo.msgs.Factory', '~/factory');
       gazebo.sim.advertise('gazebo.msgs.Model', '~/model/modify');
       gazebo.sim.advertise('gazebo.msgs.Light', '~/light/modify');
-      gazebo.sim.advertise('gazebo.msgs.Light', '~/light/factory');
+      gazebo.sim.advertise('gazebo.msgs.Light', '~/factory/light');
       gazebo.sim.advertise('gazebo.msgs.WorldControl', '~/world_control');
     }
 
