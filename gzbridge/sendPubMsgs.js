@@ -92,7 +92,7 @@ function sendToInterface (gazebo, send, filter) {
                 send(out);
             }
         }
-    });
+    },{'latch':true});
     gazebo.subscribe('gazebo.msgs.WorldStatistics', "~/world_stats", function(e,d){
         wallTime = d.real_time;
         paused = d.paused;
