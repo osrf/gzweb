@@ -8,10 +8,10 @@
         "ConfigLoader.cc", "ConfigLoader.hh",
         "OgreMaterialParser.cc", "OgreMaterialParser.hh"],
       'cflags_cc!': [ '-fno-rtti', '-fno-exceptions' ],
-      'cflags!': [ '-fno-exceptions' ],
+      'cflags!': [ '-fno-exceptions'],
       "conditions": [
         ['OS=="linux"', {
-          'cflags': [
+          'cflags': [ '-std=c++11',
             '<!@(pkg-config --cflags gazebo jansson protobuf)'
           ],
           'ldflags': [

@@ -8,7 +8,7 @@ http://gazebosim.org/gzweb
 
 ## Gazebo
 
-Install gazebo or drcsim if you haven't done so already.
+Install gazebo and the gazebo development libraries if you haven't done so already.
 
 http://gazebosim.org/install
 
@@ -16,7 +16,7 @@ http://gazebosim.org/install
 
 * libjansson-dev
 
-* nodejs (>= 0.10)
+* nodejs (>= 4.x)
 
 * npm
 
