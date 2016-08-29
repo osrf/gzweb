@@ -21,25 +21,25 @@ var sendPubMsgs = require("./sendPubMsgs.js")
 isGzConnected = true;
 
 const filter = new gazebojs.PosesFilter({timeElapsed : 0.1,
-                    distance: 0.01,
-                    quaternion: 0.01})
+      distance: 0.01,
+      quaternion: 0.01})
 
 if (!isGzConnected)
 {
-  materialScriptsMessage =  gazebo.sim.materials();
+    materialScriptsMessage =  gazebo.sim.materials();
 }
 
 var server = http.createServer(function(request, response) {
-  console.log((new Date()) + ' Received request for ' + request.url);
-  response.writeHead(404);
-  response.end();
+    console.log((new Date()) + ' Received request for ' + request.url);
+    response.writeHead(404);
+    response.end();
 });
 server.listen(7681, function() {
-  console.log((new Date()) + ' Server is listening on port 7681');
+    console.log((new Date()) + ' Server is listening on port 7681');
 });
 
 wsServer = new WebSocketServer({
-  httpServer: server,
+    httpServer: server,
     // You should not use autoAcceptConnections for production
     // applications, as it defeats all standard cross-origin protection
     // facilities built into the protocol and the browser.  You should
@@ -49,17 +49,17 @@ wsServer = new WebSocketServer({
   });
 
 function originIsAllowed(origin) {
-  // put logic here to detect whether the specified origin is allowed.
-  return true;
+    // put logic here to detect whether the specified origin is allowed.
+    return true;
 }
 
 wsServer.on('request', function(request) {
   if (!originIsAllowed(request.origin)) {
-      // Make sure we only accept requests from an allowed origin
-      request.reject();
-      console.log((new Date()) + ' Connection from origin ' +
-        request.origin + ' rejected.');
-      return;
+        // Make sure we only accept requests from an allowed origin
+        request.reject();
+        console.log((new Date()) + ' Connection from origin ' +
+          request.origin + ' rejected.');
+        return;
     }
 
     var connection = request.accept(null, request.origin);
@@ -67,12 +67,12 @@ wsServer.on('request', function(request) {
     // if gzserver is not connected just send material scripts and status
     if (!isGzConnected)
     {
-      // create error status and send it
-      var statusMessage = '{"op":"publish","topic":"~/status","msg":{"status":"error"}}';
-      connection.sendUTF(statusMessage);
-      // send material scripts message
-      connection.sendUTF(materialScriptsMessage);
-      return;
+        // create error status and send it
+        var statusMessage = '{"op":"publish","topic":"~/status","msg":{"status":"error"}}';
+        connection.sendUTF(statusMessage);
+        // send material scripts message
+        connection.sendUTF(materialScriptsMessage);
+        return;
     }
 
     connections.push(connection);
@@ -117,7 +117,7 @@ wsServer.on('request', function(request) {
 
           // if there is no connection notify server that there is no connected client
           if (connections.length == 0) {
-            isConnected = false;
+              isConnected = false;
           }
     });
 });
@@ -133,11 +133,11 @@ setInterval(connect, 2000);
 var connected = false;
 
 function connect() {
-  if (isGzConnected && !connected)
-  {
-      sendPubMsgs.sendToInterface(gazebo, send, filter);
-      connected = true;
-  }
+    if (isGzConnected && !connected)
+    {
+        sendPubMsgs.sendToInterface(gazebo, send, filter);
+        connected = true;
+    }
 }
 
 // setInterval(heapdumpCalc, 60000);
