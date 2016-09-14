@@ -964,9 +964,6 @@ void GazeboInterface::OnStats(ConstWorldStatisticsPtr &_msg)
 /////////////////////////////////////////////////
 void GazeboInterface::OnRoad(ConstRoadPtr &_msg)
 {
-  if (!this->IsConnected())
-    return;
-
   boost::recursive_mutex::scoped_lock lock(*this->receiveMutex);
   this->roadMsgs.push_back(_msg);
 }
