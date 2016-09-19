@@ -79,7 +79,7 @@ function sendToInterface (gazebo, send, filter) {
         out = "{\"op\":\"publish\",\"topic\":\"" + "~/Road" + "\", \"msg\":";
         out += d;
         out += "}";
-        send(out);                    
+        send(out);
     },{'toJson':false});
     gazebo.subscribe('gazebo.msgs.PosesStamped', "~/pose/info", function(e,d){
         const filtered =  filter.addPosesStamped(d)
@@ -118,15 +118,15 @@ function sendToInterface (gazebo, send, filter) {
        else if(jsonmsg.request === 'scene_info' && jsonmsg.response !== 'error'){
            const sceneBuilder = ProtoBuf.loadProtoFile(msgLocator.getProtoPath('scene'));
            strMsg = JSON.stringify(sceneBuilder.build('gazebo.msgs.Scene').decode64(serialized));
-           out = "{\"op\":\"publish\",\"topic\":\"" + "~/scene" + "\", \"msg\":";                        
+           out = "{\"op\":\"publish\",\"topic\":\"" + "~/scene" + "\", \"msg\":";
            out += strMsg;
            out += "}";
         }
-       else if(jsonmsg.request === 'heightmap_data' && jsonmsg.response !== 'error' 
+       else if(jsonmsg.request === 'heightmap_data' && jsonmsg.response !== 'error'
         && jsonmsg.response.type === 'gazebo.msgs.Geometry'){
            const heightmapBuilder = ProtoBuf.loadProtoFile(msgLocator.getProtoPath('heightmapgeom'));
            strMsg = JSON.stringify(heightmapBuilder.build('gazebo.msgs.HeightmapGeom').decode64(serialized));
-           out = "{\"op\":\"publish\",\"topic\":\"" + "~/scene" + "\", \"msg\":";                        
+           out = "{\"op\":\"publish\",\"topic\":\"" + "~/scene" + "\", \"msg\":";
            out += strMsg;
            out += "}";
         }
@@ -187,10 +187,19 @@ function pubToServer (gazebo, msg, send) {
                  }
             }
             if(msg.topic === '~/material' ){
-                  var material = "{\"op\":\"publish\",\"topic\":\"" + "~/material" + "\", \"msg\":";
-                  material += JSON.stringify(gazebo.sim.materials());
-                  material += "}";
-                  send(material);
+              var material = "{\"op\":\"publish\",\"topic\":\"" + "~/material" + "\", \"msg\":";
+              var matArray = gazebo.sim.materials();
+              if (matArray.length > 0)
+              {
+                var matStr = JSON.stringify(matArray[0]);
+                matStr = matStr.replace(new RegExp('\\\\"', 'g'), '\"');
+                matStr = matStr.substring(1, matStr.length-1)
+                material += matStr;
+              }
+              else
+                material += "{}"
+              material += "}";
+              send(material);
             }
             // Light msgs processing.
             if(msg.topic === '~/factory/light' || msg.topic === '~/light/modify' ){
@@ -200,29 +209,29 @@ function pubToServer (gazebo, msg, send) {
                         const createEntity = msg.msg.createEntity;
                         // To make sure of this check
                         if(createEntity === 0){
-                            var lightMsg = {name: msg.msg.name, pose: msg.msg.pose, direction:msg.msg.direction, 
-                            diffuse:msg.msg.diffuse, specular:msg.msg.specular,attenuation_constant:msg.msg.attenuation_constant, 
-                            attenuation_linear:msg.msg.attenuation_linear, 
+                            var lightMsg = {name: msg.msg.name, pose: msg.msg.pose, direction:msg.msg.direction,
+                            diffuse:msg.msg.diffuse, specular:msg.msg.specular,attenuation_constant:msg.msg.attenuation_constant,
+                            attenuation_linear:msg.msg.attenuation_linear,
                             attenuation_quadratic:msg.msg.attenuation_quadratic};
                             //time to publish.
                             gazebo.publish('gazebo.msgs.Light', '~/light/modify', lightMsg);
                         }else{
                             if(lightType === 'pointlight'){
-                                var lightMsg = {name: msg.msg.name, pose:{position:msg.msg.position, orientation:msg.msg.orientation}, type:1, 
+                                var lightMsg = {name: msg.msg.name, pose:{position:msg.msg.position, orientation:msg.msg.orientation}, type:1,
                                 diffuse:{r:0.5,g:0.5,b:0.5, a:1}, specular:{r:0.1,g:0.1,b:0.1, a:1},
-                                attenuation_constant: 0.5, attenuation_linear: 0.01, 
+                                attenuation_constant: 0.5, attenuation_linear: 0.01,
                                 attenuation_quadratic:0.001, range: 20};
                             }
                             else if(lightType === 'spotlight'){
-                                var lightMsg = {name: msg.msg.name, pose:{position:msg.msg.position, orientation:msg.msg.orientation}, type:2, 
-                                direction:{x:0,y:0,z:-1}, diffuse:{r:0.5,g:0.5,b:0.5, a:1}, 
-                                specular:{r:0.1,g:0.1,b:0.1, a:1},attenuation_constant: 0.5, 
-                                attenuation_linear: 0.01, attenuation_quadratic:0.001, range: 20};   
+                                var lightMsg = {name: msg.msg.name, pose:{position:msg.msg.position, orientation:msg.msg.orientation}, type:2,
+                                direction:{x:0,y:0,z:-1}, diffuse:{r:0.5,g:0.5,b:0.5, a:1},
+                                specular:{r:0.1,g:0.1,b:0.1, a:1},attenuation_constant: 0.5,
+                                attenuation_linear: 0.01, attenuation_quadratic:0.001, range: 20};
                             }
                             else if(lightType === 'directionallight'){
-                                var lightMsg = {name: msg.msg.name, pose:{position:msg.msg.position, orientation:msg.msg.orientation}, type:3, 
-                                direction:{x:0,y:0,z:-1}, diffuse:{r:0.5,g:0.5,b:0.5, a:1}, 
-                                specular:{r:0.1,g:0.1,b:0.1, a:1},attenuation_constant: 0.5, 
+                                var lightMsg = {name: msg.msg.name, pose:{position:msg.msg.position, orientation:msg.msg.orientation}, type:3,
+                                direction:{x:0,y:0,z:-1}, diffuse:{r:0.5,g:0.5,b:0.5, a:1},
+                                specular:{r:0.1,g:0.1,b:0.1, a:1},attenuation_constant: 0.5,
                                 attenuation_linear: 0.01, attenuation_quadratic:0.001, range: 20};
                             }
                             gazebo.publish('gazebo.msgs.Light', '~/factory/light', lightMsg);
