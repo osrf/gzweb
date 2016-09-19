@@ -2,7 +2,8 @@
 
 const path = require('path')
 const child_process = require('child_process')
-const gazeboInfo = child_process.execSync('ls -l `which gazebo`').toString().trim()
+const gazeboInfo =
+    child_process.execSync('ls -l `which gazebo`').toString().trim()
 
 let protoDir = null
 

@@ -1540,62 +1540,60 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
             });
       }
 
-      if(stats,joint){
-        // joints
-        for (var j = 0; j < stats.joint.length; ++j)
+      // joints
+      for (var j = 0; j < stats.joint.length; ++j)
+      {
+        var jointShortName = stats.joint[j].name.substring(
+            stats.joint[j].name.lastIndexOf('::')+2);
+        var parentShortName = stats.joint[j].parent.substring(
+            stats.joint[j].parent.lastIndexOf('::')+2);
+        var childShortName = stats.joint[j].child.substring(
+            stats.joint[j].child.lastIndexOf('::')+2);
+
+        var type;
+        switch (stats.joint[j].type)
         {
-          var jointShortName = stats.joint[j].name.substring(
-              stats.joint[j].name.lastIndexOf('::')+2);
-          var parentShortName = stats.joint[j].parent.substring(
-              stats.joint[j].parent.lastIndexOf('::')+2);
-          var childShortName = stats.joint[j].child.substring(
-              stats.joint[j].child.lastIndexOf('::')+2);
-
-          var type;
-          switch (stats.joint[j].type)
-          {
-            case 1:
-                type = 'Revolute';
-                break;
-            case 2:
-                type = 'Revolute2';
-                break;
-            case 3:
-                type = 'Prismatic';
-                break;
-            case 4:
-                type = 'Universal';
-                break;
-            case 5:
-                type = 'Ball';
-                break;
-            case 6:
-                type = 'Screw';
-                break;
-            case 7:
-                type = 'Gearbox';
-                break;
-            default:
-                type = 'Unknown';
-          }
-
-          formatted = this.formatStats(stats.joint[j]);
-
-          newModel.joints.push(
-              {
-                name: stats.joint[j].name,
-                shortName: jointShortName,
-                type: type,
-                parent: stats.joint[j].parent,
-                parentShortName: parentShortName,
-                child: stats.joint[j].child,
-                childShortName: childShortName,
-                position: formatted.pose.position,
-                orientation: formatted.pose.orientation,
-                axis1: formatted.axis1,
-                axis2: formatted.axis2
-              });
+          case 1:
+              type = 'Revolute';
+              break;
+          case 2:
+              type = 'Revolute2';
+              break;
+          case 3:
+              type = 'Prismatic';
+              break;
+          case 4:
+              type = 'Universal';
+              break;
+          case 5:
+              type = 'Ball';
+              break;
+          case 6:
+              type = 'Screw';
+              break;
+          case 7:
+              type = 'Gearbox';
+              break;
+          default:
+              type = 'Unknown';
         }
+
+        formatted = this.formatStats(stats.joint[j]);
+
+        newModel.joints.push(
+            {
+              name: stats.joint[j].name,
+              shortName: jointShortName,
+              type: type,
+              parent: stats.joint[j].parent,
+              parentShortName: parentShortName,
+              child: stats.joint[j].child,
+              childShortName: childShortName,
+              position: formatted.pose.position,
+              orientation: formatted.pose.orientation,
+              axis1: formatted.axis1,
+              axis2: formatted.axis2
+            });
       }
     }
     // Update existing model
@@ -2783,6 +2781,8 @@ GZ3D.GZIface.prototype.updateStatsGuiFromMsg = function(stats)
 
   this.gui.setRealTime(realTimeValue);
   this.gui.setSimTime(simTimeValue);
+
+  console.log('updateStatsGuiFromMsg ' + realTimeValue)
 };
 
 GZ3D.GZIface.prototype.createModelFromMsg = function(model)
@@ -7136,9 +7136,7 @@ GZ3D.Scene.prototype.setViewAs = function(model, viewAs)
       }
       else
       {
-        material.opacity =
-            material.originalOpacity ?
-                material.originalOpacity : 1.0;
+        material.opacity = material.originalOpacity ? material.originalOpacity : 1.0;
       }
     }
   }
