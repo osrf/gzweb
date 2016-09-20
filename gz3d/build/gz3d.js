@@ -701,7 +701,8 @@ gzangular.controller('treeControl', ['$scope', function($scope)
   $scope.selectEntity = function (name)
   {
     $('#model-popup').popup('close');
-    guiEvents.emit('openTab', 'propertyPanel-'+name, 'treeMenu');
+    guiEvents.emit('openTab', 'propertyPanel-' + convertNameId(name),
+        'treeMenu');
     guiEvents.emit('selectEntity', name);
   };
 
@@ -739,8 +740,9 @@ gzangular.controller('treeControl', ['$scope', function($scope)
 
   $scope.expandProperty = function (prop, modelName, subPropShortName, subPropName, parentProp)
   {
-    var idContent = 'expandable-' + prop + '-' + modelName;
-    var idHeader = 'expand-' + prop + '-' + modelName;
+    var modelId = convertNameId(modelName);
+    var idContent = 'expandable-' + prop + '-' + modelId;
+    var idHeader = 'expand-' + prop + '-' + modelId;
 
     var idContentOthers, idHeaderOthers;
 
@@ -784,12 +786,12 @@ gzangular.controller('treeControl', ['$scope', function($scope)
 
   $scope.changePose = function(prop1, prop2, name, value)
   {
-    guiEvents.emit('setPose', prop1, prop2, name, value);
+    guiEvents.emit('setPose', prop1, prop2, convertNameId(name), value);
   };
 
   $scope.changeLight = function(prop, name, value)
   {
-    guiEvents.emit('setLight', prop, name, value);
+    guiEvents.emit('setLight', prop, convertNameId(name), value);
   };
 
   $scope.toggleProperty = function(prop, entity, subEntity)
@@ -1232,7 +1234,8 @@ GZ3D.Gui.prototype.init = function()
         if (id.indexOf('propertyPanel-') >= 0)
         {
           var entityName = id.substring(id.indexOf('-')+1);
-          var object = that.scene.getByName(entityName);
+          var object = that.scene.getByName(
+              convertNameId(entityName, true));
 
           var stats = {};
           stats.name = entityName;
@@ -1273,7 +1276,8 @@ GZ3D.Gui.prototype.init = function()
             modelStats[i].selected = 'selectedTreeItem';
             if (this.openTreeWhenSelected)
             {
-              guiEvents.emit('openTab', 'propertyPanel-'+object, 'treeMenu');
+              guiEvents.emit('openTab', 'propertyPanel-'+
+                  convertNameId(object), 'treeMenu');
             }
           }
           else
@@ -1288,7 +1292,8 @@ GZ3D.Gui.prototype.init = function()
             lightStats[i].selected = 'selectedTreeItem';
             if (this.openTreeWhenSelected)
             {
-              guiEvents.emit('openTab', 'propertyPanel-'+object, 'treeMenu');
+              guiEvents.emit('openTab', 'propertyPanel-' +
+                  convertNameId(object), 'treeMenu');
             }
           }
           else
@@ -1590,6 +1595,7 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
       modelStats.push(
           {
             name: modelName,
+            id: convertNameId(modelName),
             thumbnail: thumbnail,
             selected: 'unselectedTreeItem',
             is_static: this.trueOrFalse(stats.is_static),
@@ -1708,11 +1714,12 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
       }
 
       // Update pose stats only if they're being displayed and are not focused
+      var modelId = convertNameId(modelName);
       if (!((linkShortName &&
-          !$('#expandable-pose-'+modelName+'-'+linkShortName).is(':visible'))||
+          !$('#expandable-pose-'+modelId+'-'+linkShortName).is(':visible'))||
           (!linkShortName &&
-          !$('#expandable-pose-'+modelName).is(':visible'))||
-          $('#expandable-pose-'+modelName+' input').is(':focus')))
+          !$('#expandable-pose-'+modelId).is(':visible'))||
+          $('#expandable-pose-'+modelId+' input').is(':focus')))
       {
 
         if (stats.position)
@@ -1805,6 +1812,7 @@ GZ3D.Gui.prototype.setLightStats = function(stats, action)
       lightStats.push(
           {
             name: name,
+            id: convertNameId(name),
             thumbnail: thumbnail,
             selected: 'unselectedTreeItem',
             position: formatted.pose.position,
@@ -2149,7 +2157,7 @@ GZ3D.Gui.prototype.deleteFromStats = function(type, name)
   {
     if (list[i].name === name)
     {
-      if ($('#propertyPanel-'+name).is(':visible'))
+      if ($('#propertyPanel-'+ convertNameId(name)).is(':visible'))
       {
         guiEvents.emit('openTab', 'treeMenu', 'treeMenu');
       }
@@ -2160,6 +2168,22 @@ GZ3D.Gui.prototype.deleteFromStats = function(type, name)
   }
 };
 
+/**
+ * Convert name to id and vice versa
+ * @param {} name Entity Name
+ * @param {} reverse convert id to name
+ */
+var convertNameId = function(name, reverse)
+{
+  if (reverse)
+  {
+    return name.replace(new RegExp('uuu', 'g'), ' ');
+  }
+  else
+  {
+    return name.replace(new RegExp(' ', 'g'), 'uuu');
+  }
+};
 
 //var GAZEBO_MODEL_DATABASE_URI='http://gazebosim.org/models';
 

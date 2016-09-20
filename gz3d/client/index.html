@@ -275,7 +275,7 @@
             </div>
           </div>
           <!-- property panels -->
-          <div ng-repeat="model in models" id="propertyPanel-{{model.name}}" class="leftPanels propertyPanels ui-overlay-shadow">
+          <div ng-repeat="model in models" id="propertyPanel-{{model.id}}" class="leftPanels propertyPanels ui-overlay-shadow">
             <div class="clickable panelTitle" ng-click="openTab('treeMenu')" title="{{model.name}}">
               <h3>{{model.name}}</h3>
               <img src="style/images/back.png">
@@ -289,11 +289,11 @@
                 <h4>Value</h4>
               </div>
               <!-- general -->
-              <div id="expand-general-{{model.name}}" class="clickable expandableProperty expandableLevel1" ng-click="expandProperty('general', model.name)">
+              <div id="expand-general-{{model.id}}" class="clickable expandableProperty expandableLevel1" ng-click="expandProperty('general', model.name)">
                 <img src="style/images/play.png">
                 General
               </div>
-              <div id="expandable-general-{{model.name}}" class="expandedContent">
+              <div id="expandable-general-{{model.id}}" class="expandedContent">
                 <div class="property propertyLevel2" title="{{model.name}}">
                   <div>Name</div>
                   <div>{{model.name}}</div>
@@ -308,11 +308,11 @@
                   </div>
                 </div>
                 <!-- model pose -->
-                <div id="expand-pose-{{model.name}}" class="clickable expandableProperty expandableLevel2" ng-click="expandProperty('pose', model.name)">
+                <div id="expand-pose-{{model.id}}" class="clickable expandableProperty expandableLevel2" ng-click="expandProperty('pose', model.name)">
                   <img src="style/images/play.png">
                   Pose
                 </div>
-                <div id="expandable-pose-{{model.name}}" class="expandedContent">
+                <div id="expandable-pose-{{model.id}}" class="expandedContent">
                   <div class="property propertyLevel3 lightBg">
                     <div>x</div>
                     <div class="propertyNumberEdit">
@@ -358,17 +358,17 @@
                 </div>
               </div>
               <!-- links -->
-              <div ng-if="model.links" id="expand-links-{{model.name}}" class="clickable expandableProperty expandableLevel1" ng-click="expandProperty('links', model.name)">
+              <div ng-if="model.links" id="expand-links-{{model.id}}" class="clickable expandableProperty expandableLevel1" ng-click="expandProperty('links', model.name)">
                 <img src="style/images/play.png">
                 Links
               </div>
-              <div id="expandable-links-{{model.name}}" class="expandedContent">
+              <div id="expandable-links-{{model.id}}" class="expandedContent">
                 <div ng-repeat="link in model.links">
-                  <div id="expand-link-{{model.name}}-{{link.shortName}}" class="clickable expandableProperty expandableLevel2" ng-click="expandProperty('link', model.name, link.shortName)" title="{{link.name}}">
+                  <div id="expand-link-{{model.id}}-{{link.shortName}}" class="clickable expandableProperty expandableLevel2" ng-click="expandProperty('link', model.name, link.shortName)" title="{{link.name}}">
                     <img src="style/images/play.png">
                     {{link.shortName}}
                   </div>
-                  <div id="expandable-link-{{model.name}}-{{link.shortName}}" class="expandedContent">
+                  <div id="expandable-link-{{model.id}}-{{link.shortName}}" class="expandedContent">
                     <div class="property propertyLevel3" title="{{link.name}}">
                       <div>Name</div>
                       <div>{{link.name}}</div>
@@ -410,11 +410,11 @@
                       </div>
                     </div>
                     <!-- link pose -->
-                    <div id="expand-pose-{{model.name}}-{{link.shortName}}" class="clickable expandableProperty expandableLevel3" ng-click="expandProperty('pose', model.name, link.shortName, link.name, 'link')">
+                    <div id="expand-pose-{{model.id}}-{{link.shortName}}" class="clickable expandableProperty expandableLevel3" ng-click="expandProperty('pose', model.name, link.shortName, link.name, 'link')">
                       <img src="style/images/play.png">
                       Pose
                     </div>
-                    <div id="expandable-pose-{{model.name}}-{{link.shortName}}" class="expandedContent">
+                    <div id="expandable-pose-{{model.id}}-{{link.shortName}}" class="expandedContent">
                       <div class="property propertyLevel4 lightBg">
                         <div>x</div>
                         <div class="propertyNumber">
@@ -459,11 +459,11 @@
                       </div>
                     </div>
                     <!-- link inertial -->
-                    <div id="expand-inertial-{{model.name}}-{{link.shortName}}" class="clickable expandableProperty expandableLevel3" ng-click="expandProperty('inertial', model.name, link.shortName)">
+                    <div id="expand-inertial-{{model.id}}-{{link.shortName}}" class="clickable expandableProperty expandableLevel3" ng-click="expandProperty('inertial', model.name, link.shortName)">
                       <img src="style/images/play.png">
                       Inertial
                     </div>
-                    <div id="expandable-inertial-{{model.name}}-{{link.shortName}}" class="expandedContent">
+                    <div id="expandable-inertial-{{model.id}}-{{link.shortName}}" class="expandedContent">
                       <div class="property propertyLevel4">
                         <div>Mass</div>
                         <div class="propertyNumber">
@@ -472,11 +472,11 @@
                         </div>
                       </div>
                       <!-- link inertial pose -->
-                      <div id="expand-inertial-pose-{{model.name}}-{{link.shortName}}" class="clickable expandableProperty expandableLevel4" ng-click="expandProperty('inertial-pose', model.name, link.shortName)">
+                      <div id="expand-inertial-pose-{{model.id}}-{{link.shortName}}" class="clickable expandableProperty expandableLevel4" ng-click="expandProperty('inertial-pose', model.name, link.shortName)">
                         <img src="style/images/play.png">
                         Pose
                       </div>
-                      <div id="expandable-inertial-pose-{{model.name}}-{{link.shortName}}" class="expandedContent">
+                      <div id="expandable-inertial-pose-{{model.id}}-{{link.shortName}}" class="expandedContent">
                         <div class="property propertyLevel5 lightBg">
                           <div>x</div>
                           <div class="propertyNumber">
@@ -521,11 +521,11 @@
                         </div>
                       </div>
                       <!-- link inertial moments -->
-                      <div id="expand-inertial-moments-{{model.name}}-{{link.shortName}}" class="clickable expandableProperty expandableLevel4" ng-click="expandProperty('inertial-moments', model.name, link.shortName)">
+                      <div id="expand-inertial-moments-{{model.id}}-{{link.shortName}}" class="clickable expandableProperty expandableLevel4" ng-click="expandProperty('inertial-moments', model.name, link.shortName)">
                         <img src="style/images/play.png">
                         Moments
                       </div>
-                      <div id="expandable-inertial-moments-{{model.name}}-{{link.shortName}}" class="expandedContent">
+                      <div id="expandable-inertial-moments-{{model.id}}-{{link.shortName}}" class="expandedContent">
                         <div class="property propertyLevel5 lightBg">
                           <div>ixx</div>
                           <div class="propertyNumber">
@@ -574,17 +574,17 @@
                 </div>
               </div>
               <!-- joints -->
-              <div ng-if="model.joints" id="expand-joints-{{model.name}}" class="clickable expandableProperty expandableLevel1" ng-click="expandProperty('joints', model.name)">
+              <div ng-if="model.joints" id="expand-joints-{{model.id}}" class="clickable expandableProperty expandableLevel1" ng-click="expandProperty('joints', model.name)">
                 <img src="style/images/play.png">
                 Joints
               </div>
-              <div id="expandable-joints-{{model.name}}" class="expandedContent">
+              <div id="expandable-joints-{{model.id}}" class="expandedContent">
                 <div ng-repeat="joint in model.joints">
-                  <div id="expand-joint-{{model.name}}-{{joint.shortName}}" class="clickable expandableProperty expandableLevel2" ng-click="expandProperty('joint', model.name, joint.shortName)" title="{{joint.name}}">
+                  <div id="expand-joint-{{model.id}}-{{joint.shortName}}" class="clickable expandableProperty expandableLevel2" ng-click="expandProperty('joint', model.name, joint.shortName)" title="{{joint.name}}">
                     <img src="style/images/play.png">
                     {{joint.shortName}}
                   </div>
-                  <div id="expandable-joint-{{model.name}}-{{joint.shortName}}" class="expandedContent">
+                  <div id="expandable-joint-{{model.id}}-{{joint.shortName}}" class="expandedContent">
                     <div class="property propertyLevel3" title="{{joint.name}}">
                       <div>Name</div>
                       <div>{{joint.name}}</div>
@@ -602,11 +602,11 @@
                       <div>{{joint.childShortName}}</div>
                     </div>
                     <!-- joint pose -->
-                    <div id="expand-pose-{{model.name}}-{{joint.shortName}}" class="clickable expandableProperty expandableLevel3" ng-click="expandProperty('pose', model.name, joint.shortName, joint.name, 'joint')">
+                    <div id="expand-pose-{{model.id}}-{{joint.shortName}}" class="clickable expandableProperty expandableLevel3" ng-click="expandProperty('pose', model.name, joint.shortName, joint.name, 'joint')">
                       <img src="style/images/play.png">
                       Pose
                     </div>
-                    <div id="expandable-pose-{{model.name}}-{{joint.shortName}}" class="expandedContent">
+                    <div id="expandable-pose-{{model.id}}-{{joint.shortName}}" class="expandedContent">
                       <div class="property propertyLevel4 lightBg">
                         <div>x</div>
                         <div class="propertyNumber">{{joint.position.x}}</div>
@@ -633,16 +633,16 @@
                       </div>
                     </div>
                     <!-- joint axis 1 -->
-                    <div ng-if="joint.axis1" id="expand-axis1-{{model.name}}-{{joint.shortName}}" class="clickable expandableProperty expandableLevel3" ng-click="expandProperty('axis1', model.name, joint.shortName, joint.name, 'joint')">
+                    <div ng-if="joint.axis1" id="expand-axis1-{{model.id}}-{{joint.shortName}}" class="clickable expandableProperty expandableLevel3" ng-click="expandProperty('axis1', model.name, joint.shortName, joint.name, 'joint')">
                       <img src="style/images/play.png">
                       Axis 1
                     </div>
-                    <div id="expandable-axis1-{{model.name}}-{{joint.shortName}}" class="expandedContent">
-                      <div id="expand-axis1-direction-{{model.name}}-{{joint.shortName}}" class="clickable expandableProperty expandableLevel4" ng-click="expandProperty('axis1-direction', model.name, joint.shortName, joint.name, 'joint')">
+                    <div id="expandable-axis1-{{model.id}}-{{joint.shortName}}" class="expandedContent">
+                      <div id="expand-axis1-direction-{{model.id}}-{{joint.shortName}}" class="clickable expandableProperty expandableLevel4" ng-click="expandProperty('axis1-direction', model.name, joint.shortName, joint.name, 'joint')">
                         <img src="style/images/play.png">
                         Direction
                       </div>
-                      <div id="expandable-axis1-direction-{{model.name}}-{{joint.shortName}}" class="expandedContent">
+                      <div id="expandable-axis1-direction-{{model.id}}-{{joint.shortName}}" class="expandedContent">
                         <div class="property propertyLevel5 lightBg">
                           <div>x</div>
                           <div class="propertyNumber">{{joint.axis1.direction.x}}</div>
@@ -682,16 +682,16 @@
                       </div>
                     </div>
                     <!-- joint axis 2 -->
-                    <div ng-if="joint.axis2" id="expand-axis2-{{model.name}}-{{joint.shortName}}" class="clickable expandableProperty expandableLevel3" ng-click="expandProperty('axis2', model.name, joint.shortName, joint.name, 'joint')">
+                    <div ng-if="joint.axis2" id="expand-axis2-{{model.id}}-{{joint.shortName}}" class="clickable expandableProperty expandableLevel3" ng-click="expandProperty('axis2', model.name, joint.shortName, joint.name, 'joint')">
                       <img src="style/images/play.png">
                       Axis 2
                     </div>
-                    <div id="expandable-axis2-{{model.name}}-{{joint.shortName}}" class="expandedContent">
-                      <div id="expand-axis2-direction-{{model.name}}-{{joint.shortName}}" class="clickable expandableProperty expandableLevel4" ng-click="expandProperty('axis2-direction', model.name, joint.shortName, joint.name, 'joint')">
+                    <div id="expandable-axis2-{{model.id}}-{{joint.shortName}}" class="expandedContent">
+                      <div id="expand-axis2-direction-{{model.id}}-{{joint.shortName}}" class="clickable expandableProperty expandableLevel4" ng-click="expandProperty('axis2-direction', model.name, joint.shortName, joint.name, 'joint')">
                         <img src="style/images/play.png">
                         Direction
                       </div>
-                      <div id="expandable-axis2-direction-{{model.name}}-{{joint.shortName}}" class="expandedContent">
+                      <div id="expandable-axis2-direction-{{model.id}}-{{joint.shortName}}" class="expandedContent">
                         <div class="property propertyLevel5 lightBg">
                           <div>x</div>
                           <div class="propertyNumber">{{joint.axis2.direction.x}}</div>
@@ -736,7 +736,7 @@
             </div>
           </div>
           <!-- lights -->
-          <div ng-repeat="light in lights" id="propertyPanel-{{light.name}}" class="leftPanels propertyPanels ui-overlay-shadow">
+          <div ng-repeat="light in lights" id="propertyPanel-{{light.id}}" class="leftPanels propertyPanels ui-overlay-shadow">
             <div class="clickable panelTitle" ng-click="openTab('treeMenu')" title="{{light.name}}">
               <h3>{{light.name}}</h3>
               <img src="style/images/back.png">
@@ -754,11 +754,11 @@
                 <div>{{light.name}}</div>
               </div>
               <!-- light pose -->
-              <div id="expand-pose-{{light.name}}" class="clickable expandableProperty" ng-click="expandProperty('pose', light.name)">
+              <div id="expand-pose-{{light.id}}" class="clickable expandableProperty" ng-click="expandProperty('pose', light.name)">
                 <img src="style/images/play.png">
                 Pose
               </div>
-              <div id="expandable-pose-{{light.name}}" class="expandedContent">
+              <div id="expandable-pose-{{light.id}}" class="expandedContent">
                 <div class="property propertyLevel2 lightBg">
                   <div>x</div>
                   <div class="propertyNumberEdit">
@@ -803,11 +803,11 @@
                 </div>
               </div>
               <!-- light direction -->
-              <div ng-if="light.direction" id="expand-direction-{{light.name}}" class="clickable expandableProperty" ng-click="expandProperty('direction', light.name)">
+              <div ng-if="light.direction" id="expand-direction-{{light.id}}" class="clickable expandableProperty" ng-click="expandProperty('direction', light.name)">
                 <img src="style/images/play.png">
                 Direction
               </div>
-              <div id="expandable-direction-{{light.name}}" class="expandedContent">
+              <div id="expandable-direction-{{light.id}}" class="expandedContent">
                 <div class="property propertyLevel2 lightBg">
                   <div>x</div>
                   <div class="propertyNumberEdit">
@@ -828,7 +828,7 @@
                 </div>
               </div>
               <!-- light diffuse -->
-              <div id="expand-diffuse-{{light.name}}" class="clickable expandableProperty" ng-click="expandProperty('diffuse', light.name)">
+              <div id="expand-diffuse-{{light.id}}" class="clickable expandableProperty" ng-click="expandProperty('diffuse', light.name)">
                 <div>
                   <img src="style/images/play.png">
                   Diffuse
@@ -837,7 +837,7 @@
                   <input class="clickable" type="color" ng-model="light.color.diffuse" ng-change="changeLight('diffuse', light.name, light.color.diffuse)"/>
                 </div>
               </div>
-              <div id="expandable-diffuse-{{light.name}}" class="expandedContent">
+              <div id="expandable-diffuse-{{light.id}}" class="expandedContent">
                 <div class="property propertyLevel2 redBg">
                   <div>Red</div>
                   <div class="propertyNumber">{{light.diffuse.r}}</div>
@@ -856,7 +856,7 @@
                 </div>
               </div>
               <!-- light specular -->
-              <div id="expand-specular-{{light.name}}" class="clickable expandableProperty" ng-click="expandProperty('specular', light.name)">
+              <div id="expand-specular-{{light.id}}" class="clickable expandableProperty" ng-click="expandProperty('specular', light.name)">
                 <div>
                   <img src="style/images/play.png">
                   Specular
@@ -865,7 +865,7 @@
                   <input class="clickable" type="color" ng-model="light.color.specular" ng-change="changeLight('specular', light.name, light.color.specular)"/>
                 </div>
               </div>
-              <div id="expandable-specular-{{light.name}}" class="expandedContent">
+              <div id="expandable-specular-{{light.id}}" class="expandedContent">
                 <div class="property propertyLevel2 redBg">
                   <div>Red</div>
                   <div class="propertyNumber">{{light.specular.r}}</div>
@@ -890,11 +890,11 @@
                 </div>
               </div>
               <!-- light attenuation -->
-              <div id="expand-attenuation-{{light.name}}" class="clickable expandableProperty" ng-click="expandProperty('attenuation', light.name)">
+              <div id="expand-attenuation-{{light.id}}" class="clickable expandableProperty" ng-click="expandProperty('attenuation', light.name)">
                 <img src="style/images/play.png">
                 Attenuation
               </div>
-              <div id="expandable-attenuation-{{light.name}}" class="expandedContent">
+              <div id="expandable-attenuation-{{light.id}}" class="expandedContent">
                 <div class="property propertyLevel2">
                   <div>Constant</div>
                   <div class="propertyNumberEdit">
