@@ -378,8 +378,8 @@ GZ3D.GZIface.prototype.onConnected = function()
         && entity.parent !== this.scene.modelManipulator.object)
     {
       this.scene.updateLight(entity, message);
+      this.gui.setLightStats(message, 'update');
     }
-    this.gui.setLightStats(message, 'update');
   };
 
   lightModifyTopic.subscribe(lightUpdate.bind(this));
