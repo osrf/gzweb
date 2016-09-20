@@ -2177,11 +2177,11 @@ var convertNameId = function(name, reverse)
 {
   if (reverse)
   {
-    return name.replace(new RegExp('uuu', 'g'), ' ');
+    return name.replace(new RegExp('_gzspace_', 'g'), ' ');
   }
   else
   {
-    return name.replace(new RegExp(' ', 'g'), 'uuu');
+    return name.replace(new RegExp(' ', 'g'), '_gzspace_');
   }
 };
 
