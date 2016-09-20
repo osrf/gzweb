@@ -1077,7 +1077,7 @@ GZ3D.Gui.prototype.init = function()
           $( '#notification-popup' ).html('&nbsp;'+notification+'&nbsp;');
           $( '#notification-popup' ).popup('open', {
               y:window.innerHeight-50});
-          
+
           if (duration === undefined)
           {
             duration = 2000;
@@ -1513,82 +1513,88 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
 
       var newModel = modelStats[modelStats.length-1];
 
-      // links
-      for (var l = 0; l < stats.link.length; ++l)
+      if (stats.link)
       {
-        var shortName = stats.link[l].name.substring(
-            stats.link[l].name.lastIndexOf('::')+2);
+        // links
+        for (var l = 0; l < stats.link.length; ++l)
+        {
+          var shortName = stats.link[l].name.substring(
+              stats.link[l].name.lastIndexOf('::')+2);
 
-        formatted = this.formatStats(stats.link[l]);
+          formatted = this.formatStats(stats.link[l]);
 
-        newModel.links.push(
-            {
-              name: stats.link[l].name,
-              shortName: shortName,
-              self_collide: this.trueOrFalse(stats.link[l].self_collide),
-              gravity: this.trueOrFalse(stats.link[l].gravity),
-              kinematic: this.trueOrFalse(stats.link[l].kinematic),
-              canonical: this.trueOrFalse(stats.link[l].canonical),
-              position: formatted.pose.position,
-              orientation: formatted.pose.orientation,
-              inertial: formatted.inertial
-            });
+          newModel.links.push(
+              {
+                name: stats.link[l].name,
+                shortName: shortName,
+                self_collide: this.trueOrFalse(stats.link[l].self_collide),
+                gravity: this.trueOrFalse(stats.link[l].gravity),
+                kinematic: this.trueOrFalse(stats.link[l].kinematic),
+                canonical: this.trueOrFalse(stats.link[l].canonical),
+                position: formatted.pose.position,
+                orientation: formatted.pose.orientation,
+                inertial: formatted.inertial
+              });
+        }
       }
 
       // joints
-      for (var j = 0; j < stats.joint.length; ++j)
+      if (stats.joint)
       {
-        var jointShortName = stats.joint[j].name.substring(
-            stats.joint[j].name.lastIndexOf('::')+2);
-        var parentShortName = stats.joint[j].parent.substring(
-            stats.joint[j].parent.lastIndexOf('::')+2);
-        var childShortName = stats.joint[j].child.substring(
-            stats.joint[j].child.lastIndexOf('::')+2);
-
-        var type;
-        switch (stats.joint[j].type)
+        for (var j = 0; j < stats.joint.length; ++j)
         {
-          case 1:
-              type = 'Revolute';
-              break;
-          case 2:
-              type = 'Revolute2';
-              break;
-          case 3:
-              type = 'Prismatic';
-              break;
-          case 4:
-              type = 'Universal';
-              break;
-          case 5:
-              type = 'Ball';
-              break;
-          case 6:
-              type = 'Screw';
-              break;
-          case 7:
-              type = 'Gearbox';
-              break;
-          default:
-              type = 'Unknown';
+          var jointShortName = stats.joint[j].name.substring(
+              stats.joint[j].name.lastIndexOf('::')+2);
+          var parentShortName = stats.joint[j].parent.substring(
+              stats.joint[j].parent.lastIndexOf('::')+2);
+          var childShortName = stats.joint[j].child.substring(
+              stats.joint[j].child.lastIndexOf('::')+2);
+
+          var type;
+          switch (stats.joint[j].type)
+          {
+            case 1:
+                type = 'Revolute';
+                break;
+            case 2:
+                type = 'Revolute2';
+                break;
+            case 3:
+                type = 'Prismatic';
+                break;
+            case 4:
+                type = 'Universal';
+                break;
+            case 5:
+                type = 'Ball';
+                break;
+            case 6:
+                type = 'Screw';
+                break;
+            case 7:
+                type = 'Gearbox';
+                break;
+            default:
+                type = 'Unknown';
+          }
+
+          formatted = this.formatStats(stats.joint[j]);
+
+          newModel.joints.push(
+              {
+                name: stats.joint[j].name,
+                shortName: jointShortName,
+                type: type,
+                parent: stats.joint[j].parent,
+                parentShortName: parentShortName,
+                child: stats.joint[j].child,
+                childShortName: childShortName,
+                position: formatted.pose.position,
+                orientation: formatted.pose.orientation,
+                axis1: formatted.axis1,
+                axis2: formatted.axis2
+              });
         }
-
-        formatted = this.formatStats(stats.joint[j]);
-
-        newModel.joints.push(
-            {
-              name: stats.joint[j].name,
-              shortName: jointShortName,
-              type: type,
-              parent: stats.joint[j].parent,
-              parentShortName: parentShortName,
-              child: stats.joint[j].child,
-              childShortName: childShortName,
-              position: formatted.pose.position,
-              orientation: formatted.pose.orientation,
-              axis1: formatted.axis1,
-              axis2: formatted.axis2
-            });
       }
     }
     // Update existing model
@@ -1605,17 +1611,20 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
               return e.shortName === LinkShortName;
             });
 
-        if (link[0].self_collide)
+        if (link[0])
         {
-          link[0].self_collide = this.trueOrFalse(stats.link[0].self_collide);
-        }
-        if (link[0].gravity)
-        {
-          link[0].gravity = this.trueOrFalse(stats.link[0].gravity);
-        }
-        if (link[0].kinematic)
-        {
-          link[0].kinematic = this.trueOrFalse(stats.link[0].kinematic);
+          if (link[0].self_collide)
+          {
+            link[0].self_collide = this.trueOrFalse(stats.link[0].self_collide);
+          }
+          if (link[0].gravity)
+          {
+            link[0].gravity = this.trueOrFalse(stats.link[0].gravity);
+          }
+          if (link[0].kinematic)
+          {
+            link[0].kinematic = this.trueOrFalse(stats.link[0].kinematic);
+          }
         }
       }
 
@@ -2071,4 +2080,3 @@ GZ3D.Gui.prototype.deleteFromStats = function(type, name)
     }
   }
 };
-
