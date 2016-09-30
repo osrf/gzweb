@@ -12,7 +12,7 @@ let protoDir = null
 function getProtoPath(proto) {
 
   if (!protoDir) {
-    const toks = gazeboInfo.split(' ')
+    const toks = gazeboInfo.split(/\s+/)
     // console.log('tokens',toks)
     const gazeboDir = path.dirname(toks[8])
     // console.log(gazeboDir)
