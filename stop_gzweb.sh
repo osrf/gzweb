@@ -2,5 +2,6 @@
 
 if [ "$(pidof node)" ] 
 then
-  killall node
+  kill -9 `pgrep -f gzbridge`
+  kill -9 `pgrep -f http-server`
 fi
