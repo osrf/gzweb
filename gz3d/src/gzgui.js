@@ -1605,17 +1605,20 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
               return e.shortName === LinkShortName;
             });
 
-        if (link[0].self_collide)
+        if (link[0])
         {
-          link[0].self_collide = this.trueOrFalse(stats.link[0].self_collide);
-        }
-        if (link[0].gravity)
-        {
-          link[0].gravity = this.trueOrFalse(stats.link[0].gravity);
-        }
-        if (link[0].kinematic)
-        {
-          link[0].kinematic = this.trueOrFalse(stats.link[0].kinematic);
+            if (link[0].self_collide)
+            {
+                link[0].self_collide = this.trueOrFalse(stats.link[0].self_collide);
+            }
+            if (link[0].gravity)
+            {
+                link[0].gravity = this.trueOrFalse(stats.link[0].gravity);
+            }
+            if (link[0].kinematic)
+            {
+                link[0].kinematic = this.trueOrFalse(stats.link[0].kinematic);
+            }
         }
       }
 
