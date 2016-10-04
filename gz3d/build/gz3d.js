@@ -2480,7 +2480,7 @@ GZ3D.GZIface.prototype.onConnected = function()
   });
 
   // road
-  this.roadService = new ROSLIB.Service({
+/*  this.roadService = new ROSLIB.Service({
     ros : this.webSocket,
     name : '~/roads',
     serviceType : 'roads'
@@ -2489,7 +2489,6 @@ GZ3D.GZIface.prototype.onConnected = function()
   var request = new ROSLIB.ServiceRequest({
       name : 'roads'
   });
-
   // send service request and load road on response
   this.roadService.callService(request,
   function(result)
@@ -2497,6 +2496,20 @@ GZ3D.GZIface.prototype.onConnected = function()
     var roadsObj = that.createRoadsFromMsg(result);
     this.scene.add(roadsObj);
   });
+  */
+  this.roadTopic = new ROSLIB.Topic({
+    ros : this.webSocket,
+    name : '~/roads',
+    messageType : 'road'
+  });
+
+  var roadUpdate = function(message)
+  {
+    var roadsObj = that.createRoadsFromMsg(message);
+    this.scene.add(roadsObj);
+  };
+  this.roadTopic.subscribe(roadUpdate.bind(this));
+
 
   // Model modify messages - for modifying models
   this.modelModifyTopic = new ROSLIB.Topic({

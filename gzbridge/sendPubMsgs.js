@@ -11,6 +11,9 @@ const ProtoBuf = require("protobufjs");
 const random = require("random-js")(); // uses the nativeMath engine
 var value = random.integer(1, 1000);
 
+var requestIds = {};
+var roadMsgs = [];
+
 const msgLocator = require('./msgLocator.js')
 
 function sendToInterface (gazebo, send, filter) {
@@ -77,11 +80,12 @@ function sendToInterface (gazebo, send, filter) {
       send(out);
   },{'toJson':false});
   gazebo.subscribe('gazebo.msgs.Road', "~/roads", function(e,d) {
-    out = "{\"op\":\"publish\",\"topic\":\"" + "~/Road" + "\", \"msg\":";
+    out = "{\"op\":\"publish\",\"topic\":\"" + "~/roads" + "\", \"msg\":";
     out += d;
     out += "}";
     send(out);
-  },{'toJson':false});
+    roadMsgs.push(d);
+  },{'latch': true});
   gazebo.subscribe('gazebo.msgs.PosesStamped', "~/pose/info", function(e,d) {
     const filtered =  filter.addPosesStamped(d)
     if (filtered.length!==0){
@@ -133,29 +137,30 @@ function sendToInterface (gazebo, send, filter) {
     }
     else if (jsonmsg.request === 'heightmap_data' &&
         jsonmsg.response !== 'error' &&
-        jsonmsg.response.type === 'gazebo.msgs.Geometry') {
+        jsonmsg.type === 'gazebo.msgs.Geometry') {
       const heightmapBuilder =
-          ProtoBuf.loadProtoFile(msgLocator.getProtoPath('heightmapgeom'));
+          ProtoBuf.loadProtoFile(msgLocator.getProtoPath('geometry'));
       strMsg = JSON.stringify(
-          heightmapBuilder.build('gazebo.msgs.HeightmapGeom').
+          heightmapBuilder.build('gazebo.msgs.Geometry').
           decode64(serialized));
-      out = "{\"op\":\"publish\",\"topic\":\"" + "~/scene" + "\", \"msg\":";
+      var id = requestIds[jsonmsg.id];
+      out = "{\"op\":\"service_response\",\"id\":\"" + id + "\", \"values\":";
       out += strMsg;
       out += "}";
+      delete requestIds[jsonmsg.id];
     }
     send(out);
   });
 }
 
 function pubToServer (gazebo, msg, send) {
-  if (msg.op === 'advertise' || !msg.topic)
+  if (msg.op === 'advertise' || (!msg.topic && !msg.service))
     return;
 
   // Start Processing the messages.
   // The traffic on the world_control  topic is too little
   if (msg.topic === '~/world_control' ) {
     if (msg.msg.pause != undefined) {
-      console.log('pause ' + msg.msg.pause )
       if (msg.msg.pause === true) {
         gazebo.publish("gazebo.msgs.WorldControl",  "~/world_control",
           {pause:true});
@@ -294,16 +299,25 @@ function pubToServer (gazebo, msg, send) {
   }
   else {
     if (msg.service) {
-      if (msg.service.name === '~/heightmap_data') {
+      if (msg.service === '~/heightmap_data') {
+        const requestId = random.integer(1, 1000);
         gazebo.publish('gazebo.msgs.Request', '~/request',
-            {id:value, request:'heightmap_data'});
+            {id:requestId, request:'heightmap_data'});
+        requestIds[requestId] = msg.id;
       }
-      else if(msg.service.name === '~/roads') {
-        var serviceMsg = "{\"op\":\"publish\",\"topic\":\"" + "~/material" +
-            "\", \"msg\":";
-        serviceMsg += msg;
-        serviceMsg += "}";
-        send(serviceMsg);
+      else if(msg.service === '~/roads') {
+        if (roadMsgs.length > 0) {
+          const roadBuilder =
+              ProtoBuf.loadProtoFile(msgLocator.getProtoPath('road'));
+          strMsg = JSON.stringify(
+              roadBuilder.build('gazebo.msgs.Road').
+              decode64(roadMsgs[0]));
+          out = "{\"op\":\"service_response\",\"id\":\"";
+          out += msg.id + "\", \"values\":";
+          out += strMsg;
+          out += "}";
+          send(out);
+        }
       }
     }
   }
