@@ -2346,7 +2346,10 @@ GZ3D.Scene.prototype.updateLight = function(entity, msg)
       entity.direction.copy(dir);
 
       dir.applyMatrix4(matrixWorld); // localToWorld
-      lightObj.target.position.copy(dir);
+      if (lightObj.target)
+      {
+        lightObj.target.position.copy(dir);
+      }
     }
   }
 
@@ -2400,6 +2403,9 @@ GZ3D.Scene.prototype.updateLight = function(entity, msg)
     entity.direction.copy(dir);
 
     dir.applyMatrix4(matrixWorld); // localToWorld
-    lightObj.target.position.copy(dir);
+    if (lightObj.target)
+    {
+      lightObj.target.position.copy(dir);
+    }
   }
 };

@@ -129,6 +129,7 @@ then
 
   echo "Gather all models on the local machine"
 
+  mkdir -p $DIR/http/client/assets
   ./get_local_models.py $DIR/http/client/assets
   ./webify_models_v2.py $DIR/http/client/assets
 

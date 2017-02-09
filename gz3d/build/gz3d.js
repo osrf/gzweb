@@ -44,7 +44,12 @@ var modelList =
       {modelPath:'office_building', modelTitle:'Office Building'},
       {modelPath:'powerplant', modelTitle:'Power Plant'},
       {modelPath:'starting_pen', modelTitle:'Starting Pen'},
-      {modelPath:'willowgarage', modelTitle:'Willow Garage'}
+      {modelPath:'willowgarage', modelTitle:'Willow Garage'},
+      {modelPath:'cafe', modelTitle:'Cafe'},
+      {modelPath:'box_target_green', modelTitle:'Box target (green)'},
+      {modelPath:'box_target_red', modelTitle:'Box target (red)'},
+      {modelPath:'hoop_red', modelTitle:'Hoop (red)'},
+      {modelPath:'control_console', modelTitle:'Control Console'}
     ]},
 
     {path:'furniture', title:'Furniture',
@@ -57,6 +62,7 @@ var modelList =
       {modelPath:'hinged_door', modelTitle:'Hinged Door'},
       {modelPath:'table', modelTitle:'Table'},
       {modelPath:'table_marble', modelTitle:'Table Marble'},
+      {modelPath:'cafe_table', modelTitle:'Cafe table'},
 
       {modelPath:'drc_practice_ball_valve', modelTitle:'Ball Valve'},
       {modelPath:'drc_practice_handle_wheel_valve', modelTitle:'Handle Wheel Valve'},
@@ -88,7 +94,8 @@ var modelList =
       {modelPath:'beer', modelTitle:'Beer'},
       {modelPath:'bowl', modelTitle:'Bowl'},
       {modelPath:'coke_can', modelTitle:'Coke Can'},
-      {modelPath:'saucepan', modelTitle:'Saucepan'}
+      {modelPath:'saucepan', modelTitle:'Saucepan'},
+      {modelPath:'plastic_cup', modelTitle:'Plastic Cup'}
     ]},
 
     {path:'robocup', title:'Robocup', examplePath1:'robocup_3Dsim_ball',
@@ -101,6 +108,22 @@ var modelList =
       {modelPath:'robocup_3Dsim_goal', modelTitle:'3D Sim. Goal'},
       {modelPath:'robocup_spl_ball', modelTitle:'SPL Ball'},
       {modelPath:'robocup_3Dsim_ball', modelTitle:'3D Sim. Ball'}
+    ]},
+
+    {path:'first', title:'FIRST', examplePath1:'frc2016_field',
+    examplePath2:'frc2016_chevaldefrise', examplePath3:'frc_field_2015', models:
+    [
+      {modelPath:'frc2016_chevaldefrise', modelTitle:'Cheval de Frise'},
+      {modelPath:'frc2016_drawbridge', modelTitle:'Draw Bridge'},
+      {modelPath:'frc2016_field', modelTitle:'2016 Field'},
+      {modelPath:'frc2016_lowbar', modelTitle:'Low Bar'},
+      {modelPath:'frc2016_moat', modelTitle:'Moat'},
+      {modelPath:'frc2016_portcullis', modelTitle:'Portcullis'},
+      {modelPath:'frc2016_ramparts', modelTitle:'Ramparts'},
+      {modelPath:'frc2016_rockwall', modelTitle:'Rockwall'},
+      {modelPath:'frc2016_roughterrain', modelTitle:'Rough Terrain'},
+      {modelPath:'frc2016_sallyport', modelTitle:'Sallyport'},
+      {modelPath:'frc_field_2015', modelTitle:'2015 Field'}
     ]},
 
     {path:'robots', title:'Robots',
@@ -117,7 +140,22 @@ var modelList =
       {modelPath:'simple_arm_gripper', modelTitle:'Simple Arm and Gripper'},
       {modelPath:'simple_gripper', modelTitle:'Simple Gripper'},
       {modelPath:'turtlebot', modelTitle:'TurtleBot'},
-      {modelPath:'youbot', modelTitle:'YouBot'}
+      {modelPath:'youbot', modelTitle:'YouBot'},
+      {modelPath:'cart_rigid_suspension', modelTitle:'Cart: rigid suspension'},
+      {modelPath:'cart_soft_suspension', modelTitle:'Cart: soft suspension'},
+      {modelPath:'cessna', modelTitle:'Cessna'},
+      {modelPath:'follower_vehicle', modelTitle:'Follower Vehicle'},
+      {modelPath:'iris_with_standoffs', modelTitle:'Iris with Standoffs'},
+      {modelPath:'iris_with_standoffs_demo', modelTitle:'Iris with Standoffs (demo)'},
+      {modelPath:'mpl_right_arm', modelTitle:'MPL right arm'},
+      {modelPath:'mpl_right_forearm', modelTitle:'MPL right forearm'},
+      {modelPath:'parrot_bebop_2', modelTitle:'Parrot Bebop 2'},
+      {modelPath:'quadrotor', modelTitle:'Quadrotor'},
+      {modelPath:'submarine', modelTitle:'Submarine'},
+      {modelPath:'submarine_buoyant', modelTitle:'Submarine (buoyant)'},
+      {modelPath:'submarine_sinking', modelTitle:'Submarine (sinking)'},
+      {modelPath:'warehouse_robot', modelTitle:'Warehouse Robot'},
+      {modelPath:'zephyr_delta_wing', modelTitle:'Zephyr Delta Wing'}
     ]},
 
     {path:'sensors', title:'Sensors',
@@ -126,7 +164,10 @@ var modelList =
       {modelPath:'camera', modelTitle:'Camera'},
       {modelPath:'stereo_camera', modelTitle:'Stereo Camera'},
       {modelPath:'hokuyo', modelTitle:'Hokuyo'},
-      {modelPath:'kinect', modelTitle:'Kinect'}
+      {modelPath:'kinect', modelTitle:'Kinect'},
+      {modelPath:'depth_camera', modelTitle:'Depth Camera'},
+      {modelPath:'gimbal_small_2d', modelTitle:'Gimbal Small 2D'},
+      {modelPath:'velodyne_hdl32', modelTitle:'Velodyne HDL-32'}
     ]},
 
     {path:'street', title:'Street', examplePath1:'dumpster',
@@ -152,8 +193,10 @@ var modelList =
       {modelPath:'mud_box', modelTitle:'Mud Box'},
       {modelPath:'nist_fiducial_barrel', modelTitle:'Fiducial Barrel'},
       {modelPath:'speed_limit_sign', modelTitle:'Speed Limit Sign'},
-      {modelPath:'stop_sign', modelTitle:'Stop Sign'}
-
+      {modelPath:'stop_sign', modelTitle:'Stop Sign'},
+      {modelPath:'first_2015_trash_can', modelTitle:'Trash Can'},
+      {modelPath:'person_standing', modelTitle:'Person Standning'},
+      {modelPath:'person_walking', modelTitle:'Person Walking'}
     ]},
 
     {path:'tools', title:'Tools', examplePath1:'hammer',
@@ -167,7 +210,16 @@ var modelList =
       {modelPath:'polaris_ranger_ev', modelTitle:'Polaris Ranger EV'},
       {modelPath:'polaris_ranger_xp900', modelTitle:'Polaris Ranger XP900'},
       {modelPath:'polaris_ranger_xp900_no_roll_cage', modelTitle:'Polaris Ranger without roll cage'},
-      {modelPath:'utility_cart', modelTitle:'Utility Cart'}
+      {modelPath:'utility_cart', modelTitle:'Utility Cart'},
+      {modelPath:'car_wheel', modelTitle:'Car Wheel'},
+      {modelPath:'arm_part', modelTitle:'Arm Part'},
+      {modelPath:'gear_part', modelTitle:'Gear Part'},
+      {modelPath:'gasket_part', modelTitle:'Gasket Part'},
+      {modelPath:'disk_part', modelTitle:'Disk Part'},
+      {modelPath:'pulley_part', modelTitle:'Pulley Part'},
+      {modelPath:'piston_rod_part', modelTitle:'Piston Rod Part'},
+      {modelPath:'t_brace_part', modelTitle:'T Brace Part'},
+      {modelPath:'u_joint_part', modelTitle:'U Joint Part'}
     ]},
 
     {path:'misc', title:'Misc.', examplePath1:'brick_box_3x1x3',
@@ -176,14 +228,45 @@ var modelList =
       {modelPath:'double_pendulum_with_base', modelTitle:'Double Pendulum With Base'},
       {modelPath:'breakable_test', modelTitle:'Breakable_test'},
       {modelPath:'brick_box_3x1x3', modelTitle:'Brick Box 3x1x3'},
+      {modelPath:'cardboard_box', modelTitle:'Cardboard Box'},
       {modelPath:'cube_20k', modelTitle:'Cube 20k'},
+      {modelPath:'cricket_ball', modelTitle:'Cricket Ball'},
+      {modelPath:'marble_1_5cm', modelTitle:'Marble 1.5 cm'},
+      {modelPath:'metal_peg', modelTitle:'Metal Peg'},
+      {modelPath:'metal_peg_board', modelTitle:'Metal Peg Board'},
+      {modelPath:'mars_rover', modelTitle:'Mars Rover'},
+      {modelPath:'stone_10_2_5_1cm', modelTitle:'Stone 10 x 2.5 x 1 cm'},
+      {modelPath:'tube_2_25cm', modelTitle:'Tube 2.25 cm'},
+      {modelPath:'tube_9_5mm', modelTitle:'Tube 9.5 mm'},
+      {modelPath:'wood_block_10_2_1cm', modelTitle:'Wood Block 10 x 2 x 1 cm'},
+      {modelPath:'wood_cube_10cm', modelTitle:'Wood Cube 10 cm'},
+      {modelPath:'wood_cube_2_5cm', modelTitle:'Wood Cube 2.5 cm'},
+      {modelPath:'wood_cube_5cm', modelTitle:'Wood Cube 5 cm'},
+      {modelPath:'wood_cube_7_5cm', modelTitle:'Wood Cube 7.5 cm'},
+      {modelPath:'wooden_board', modelTitle:'Wooden Board'},
+      {modelPath:'wooden_case', modelTitle:'Wooden Case'},
+      {modelPath:'wooden_case_metal_peg', modelTitle:'Wooden Case Metal Peg '},
+      {modelPath:'wooden_case_wooden_peg', modelTitle:'Wooden Case Wooden Peg'},
+      {modelPath:'wooden_peg', modelTitle:'Wooden Peg'},
+      {modelPath:'wooden_peg_board', modelTitle:'Wooden Peg Board'},
       {modelPath:'drc_practice_2x4', modelTitle:'2x4 Lumber'},
       {modelPath:'drc_practice_2x6', modelTitle:'2x6 Lumber'},
       {modelPath:'drc_practice_4x4x20', modelTitle:'4x4x20 Lumber'},
       {modelPath:'drc_practice_4x4x40', modelTitle:'4x4x40 Lumber'},
       {modelPath:'drc_practice_blue_cylinder', modelTitle:'Blue Cylinder'},
       {modelPath:'drc_practice_wood_slats', modelTitle:'Wood Slats'},
-      {modelPath:'nist_elevated_floor_120', modelTitle:'Elevated Floor 120'}
+      {modelPath:'nist_elevated_floor_120', modelTitle:'Elevated Floor 120'},
+      {modelPath:'number1', modelTitle:'Number 1'},
+      {modelPath:'number2', modelTitle:'Number 2'},
+      {modelPath:'number3', modelTitle:'Number 3'},
+      {modelPath:'number4', modelTitle:'Number 4'},
+      {modelPath:'number5', modelTitle:'Number 5'},
+      {modelPath:'number6', modelTitle:'Number 6'},
+      {modelPath:'number7', modelTitle:'Number 7'},
+      {modelPath:'number8', modelTitle:'Number 8'},
+      {modelPath:'number9', modelTitle:'Number 9'},
+      {modelPath:'ragdoll', modelTitle:'Ragdoll'},
+      {modelPath:'textured_shapes', modelTitle:'Textured shapes'}
     ]}
   ];
 
@@ -618,7 +701,8 @@ gzangular.controller('treeControl', ['$scope', function($scope)
   $scope.selectEntity = function (name)
   {
     $('#model-popup').popup('close');
-    guiEvents.emit('openTab', 'propertyPanel-'+name, 'treeMenu');
+    guiEvents.emit('openTab', 'propertyPanel-' + convertNameId(name),
+        'treeMenu');
     guiEvents.emit('selectEntity', name);
   };
 
@@ -656,8 +740,9 @@ gzangular.controller('treeControl', ['$scope', function($scope)
 
   $scope.expandProperty = function (prop, modelName, subPropShortName, subPropName, parentProp)
   {
-    var idContent = 'expandable-' + prop + '-' + modelName;
-    var idHeader = 'expand-' + prop + '-' + modelName;
+    var modelId = convertNameId(modelName);
+    var idContent = 'expandable-' + prop + '-' + modelId;
+    var idHeader = 'expand-' + prop + '-' + modelId;
 
     var idContentOthers, idHeaderOthers;
 
@@ -701,12 +786,12 @@ gzangular.controller('treeControl', ['$scope', function($scope)
 
   $scope.changePose = function(prop1, prop2, name, value)
   {
-    guiEvents.emit('setPose', prop1, prop2, name, value);
+    guiEvents.emit('setPose', prop1, prop2, convertNameId(name), value);
   };
 
   $scope.changeLight = function(prop, name, value)
   {
-    guiEvents.emit('setLight', prop, name, value);
+    guiEvents.emit('setLight', prop, convertNameId(name), value);
   };
 
   $scope.toggleProperty = function(prop, entity, subEntity)
@@ -1082,7 +1167,7 @@ GZ3D.Gui.prototype.init = function()
           $( '#notification-popup' ).html('&nbsp;'+notification+'&nbsp;');
           $( '#notification-popup' ).popup('open', {
               y:window.innerHeight-50});
-          
+
           if (duration === undefined)
           {
             duration = 2000;
@@ -1149,7 +1234,8 @@ GZ3D.Gui.prototype.init = function()
         if (id.indexOf('propertyPanel-') >= 0)
         {
           var entityName = id.substring(id.indexOf('-')+1);
-          var object = that.scene.getByName(entityName);
+          var object = that.scene.getByName(
+              convertNameId(entityName, true));
 
           var stats = {};
           stats.name = entityName;
@@ -1190,7 +1276,8 @@ GZ3D.Gui.prototype.init = function()
             modelStats[i].selected = 'selectedTreeItem';
             if (this.openTreeWhenSelected)
             {
-              guiEvents.emit('openTab', 'propertyPanel-'+object, 'treeMenu');
+              guiEvents.emit('openTab', 'propertyPanel-'+
+                  convertNameId(object), 'treeMenu');
             }
           }
           else
@@ -1205,7 +1292,8 @@ GZ3D.Gui.prototype.init = function()
             lightStats[i].selected = 'selectedTreeItem';
             if (this.openTreeWhenSelected)
             {
-              guiEvents.emit('openTab', 'propertyPanel-'+object, 'treeMenu');
+              guiEvents.emit('openTab', 'propertyPanel-' +
+                  convertNameId(object), 'treeMenu');
             }
           }
           else
@@ -1507,6 +1595,7 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
       modelStats.push(
           {
             name: modelName,
+            id: convertNameId(modelName),
             thumbnail: thumbnail,
             selected: 'unselectedTreeItem',
             is_static: this.trueOrFalse(stats.is_static),
@@ -1628,11 +1717,12 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
       }
 
       // Update pose stats only if they're being displayed and are not focused
+      var modelId = convertNameId(modelName);
       if (!((linkShortName &&
-          !$('#expandable-pose-'+modelName+'-'+linkShortName).is(':visible'))||
+          !$('#expandable-pose-'+modelId+'-'+linkShortName).is(':visible'))||
           (!linkShortName &&
-          !$('#expandable-pose-'+modelName).is(':visible'))||
-          $('#expandable-pose-'+modelName+' input').is(':focus')))
+          !$('#expandable-pose-'+modelId).is(':visible'))||
+          $('#expandable-pose-'+modelId+' input').is(':focus')))
       {
 
         if (stats.position)
@@ -1725,6 +1815,7 @@ GZ3D.Gui.prototype.setLightStats = function(stats, action)
       lightStats.push(
           {
             name: name,
+            id: convertNameId(name),
             thumbnail: thumbnail,
             selected: 'unselectedTreeItem',
             position: formatted.pose.position,
@@ -2069,7 +2160,7 @@ GZ3D.Gui.prototype.deleteFromStats = function(type, name)
   {
     if (list[i].name === name)
     {
-      if ($('#propertyPanel-'+name).is(':visible'))
+      if ($('#propertyPanel-'+ convertNameId(name)).is(':visible'))
       {
         guiEvents.emit('openTab', 'treeMenu', 'treeMenu');
       }
@@ -2080,6 +2171,22 @@ GZ3D.Gui.prototype.deleteFromStats = function(type, name)
   }
 };
 
+/**
+ * Convert name to id and vice versa
+ * @param {} name Entity Name
+ * @param {} reverse convert id to name
+ */
+var convertNameId = function(name, reverse)
+{
+  if (reverse)
+  {
+    return name.replace(new RegExp('_gzspace_', 'g'), ' ');
+  }
+  else
+  {
+    return name.replace(new RegExp(' ', 'g'), '_gzspace_');
+  }
+};
 
 //var GAZEBO_MODEL_DATABASE_URI='http://gazebosim.org/models';
 
@@ -2461,8 +2568,8 @@ GZ3D.GZIface.prototype.onConnected = function()
         && entity.parent !== this.scene.modelManipulator.object)
     {
       this.scene.updateLight(entity, message);
+      this.gui.setLightStats(message, 'update');
     }
-    this.gui.setLightStats(message, 'update');
   };
 
   lightModifyTopic.subscribe(lightUpdate.bind(this));
@@ -7137,9 +7244,7 @@ GZ3D.Scene.prototype.setViewAs = function(model, viewAs)
       }
       else
       {
-        material.opacity =
-            material.originalOpacity ?
-                material.originalOpacity : 1.0;
+        material.opacity = material.originalOpacity ? material.originalOpacity : 1.0;
       }
     }
   }
@@ -7463,7 +7568,10 @@ GZ3D.Scene.prototype.updateLight = function(entity, msg)
       entity.direction.copy(dir);
 
       dir.applyMatrix4(matrixWorld); // localToWorld
-      lightObj.target.position.copy(dir);
+      if (lightObj.target)
+      {
+        lightObj.target.position.copy(dir);
+      }
     }
   }
 
@@ -7517,7 +7625,10 @@ GZ3D.Scene.prototype.updateLight = function(entity, msg)
     entity.direction.copy(dir);
 
     dir.applyMatrix4(matrixWorld); // localToWorld
-    lightObj.target.position.copy(dir);
+    if (lightObj.target)
+    {
+      lightObj.target.position.copy(dir);
+    }
   }
 };
 
