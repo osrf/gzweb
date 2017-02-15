@@ -94,6 +94,11 @@ where the http server is started, by default it's on port 8080, e.g.
 
 http://localhost:8080
 
+If port 8080 is not usable, you can pass an arbitrary port number to the startup script like so:
+
+    ./start_gzweb.sh 1234
+
+...and the gzweb interface will be found there instead.
 
 # Stopping gzweb server
 
