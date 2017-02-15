@@ -2,6 +2,8 @@
 
 ulimit -c unlimited
 
+PORT=${1:-8080}
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $DIR
 
@@ -14,7 +16,7 @@ then
 fi
 
 
-./node_modules/.bin/http-server http/client &
+./node_modules/.bin/http-server -p $PORT http/client &
 
 cd gzbridge
 ./ws_server.js &
