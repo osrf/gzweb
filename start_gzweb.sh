@@ -2,7 +2,14 @@
 
 ulimit -c unlimited
 
-PORT=${1:-8080}
+PORT=8080
+while getopts "p:" opt; do
+  case "$opt" in
+  p)
+    PORT=$OPTARG
+    ;;
+  esac
+done
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $DIR
