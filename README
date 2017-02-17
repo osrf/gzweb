@@ -96,7 +96,7 @@ http://localhost:8080
 
 If port 8080 is not usable, you can pass an arbitrary port number to the startup script like so:
 
-    ./start_gzweb.sh 1234
+    ./start_gzweb.sh -p 1234
 
 ...and the gzweb interface will be found there instead.
 
