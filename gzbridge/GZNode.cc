@@ -83,8 +83,6 @@ void GZNode::Init(Handle<Object> exports)
 
 /////////////////////////////////////////////////
 void GZNode::New(const FunctionCallbackInfo<Value>& args) {
-  Isolate* isolate = args.GetIsolate();
-
   if (args.IsConstructCall()) {
     // Invoked as constructor: `new MyObject(...)`
     GZNode* obj = new GZNode();
@@ -123,8 +121,6 @@ void GZNode::LoadMaterialScripts(const FunctionCallbackInfo<Value>& args)
 /////////////////////////////////////////////////
 void GZNode::SetConnected(const FunctionCallbackInfo<Value>& args)
 {
-  Isolate* isolate = args.GetIsolate();
-
   GZNode *obj = ObjectWrap::Unwrap<GZNode>(args.This());
   bool value = args[0]->BooleanValue();
   obj->gzIface->SetConnected(value);
@@ -135,8 +131,6 @@ void GZNode::SetConnected(const FunctionCallbackInfo<Value>& args)
 /////////////////////////////////////////////////
 void GZNode::GetIsGzServerConnected(const FunctionCallbackInfo<Value>& args)
 {
-  Isolate* isolate = args.GetIsolate();
-
   GZNode *obj = ObjectWrap::Unwrap<GZNode>(args.This());
   bool value = obj->isGzServerConnected;
 
@@ -179,8 +173,6 @@ void GZNode::GetMaterialScriptsMessage(const FunctionCallbackInfo<Value>& args)
 /////////////////////////////////////////////////
 void GZNode::SetPoseMsgFilterMinimumDistanceSquared(const FunctionCallbackInfo<Value>& args)
 {
-  Isolate* isolate = args.GetIsolate();
-
   GZNode *obj = ObjectWrap::Unwrap<GZNode>(args.This());
 
   Local<Number> v = Local<Number>::Cast(args[0]);
@@ -201,9 +193,7 @@ void GZNode::GetPoseMsgFilterMinimumDistanceSquared(const FunctionCallbackInfo<V
 
 /////////////////////////////////////////////////////
 void GZNode::SetPoseMsgFilterMinimumQuaternionSquared(const FunctionCallbackInfo<Value>& args)
-{
-  Isolate* isolate = args.GetIsolate();
-  
+{  
   GZNode *obj = ObjectWrap::Unwrap<GZNode>(args.This());
   Local<Number> v = Local<Number>::Cast(args[0]);
   double value = v->Value();
@@ -269,8 +259,6 @@ void GZNode::Request(const FunctionCallbackInfo<Value>& args)
 /////////////////////////////////////////////////
 void GZNode::SetPoseMsgFilterMinimumAge(const FunctionCallbackInfo<Value>& args)
 {
-  Isolate* isolate = args.GetIsolate();
-
   GZNode* obj = ObjectWrap::Unwrap<GZNode>(args.This());
   Local<Number> v = Local<Number>::Cast(args[0]);
   double value = v->Value();
@@ -282,7 +270,6 @@ void GZNode::SetPoseMsgFilterMinimumAge(const FunctionCallbackInfo<Value>& args)
 /////////////////////////////////////////////////
 void GZNode::GetPoseMsgFilterMinimumAge(const FunctionCallbackInfo<Value>& args)
 {
-  Isolate* isolate = args.GetIsolate();
   GZNode* obj = ObjectWrap::Unwrap<GZNode>(args.This());
   double value  = obj->gzIface->GetPoseFilterMinimumMsgAge();
   args.GetReturnValue().Set(value);
