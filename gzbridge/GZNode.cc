@@ -82,7 +82,8 @@ void GZNode::Init(Handle<Object> exports)
 }
 
 /////////////////////////////////////////////////
-void GZNode::New(const FunctionCallbackInfo<Value>& args) {
+void GZNode::New(const FunctionCallbackInfo<Value>& args)
+{
   if (args.IsConstructCall()) {
     // Invoked as constructor: `new MyObject(...)`
     GZNode* obj = new GZNode();
@@ -106,7 +107,7 @@ void GZNode::LoadMaterialScripts(const FunctionCallbackInfo<Value>& args)
   if (!args[0]->IsString())
   {
     isolate->ThrowException(Exception::TypeError(
-        String::NewFromUtf8(isolate, "Wrong number of arguments")));
+        String::NewFromUtf8(isolate, "Wrong argument type. String expected.")));
     return;
   }
 
@@ -152,7 +153,7 @@ void GZNode::GetMaterialScriptsMessage(const FunctionCallbackInfo<Value>& args)
   if (!args[0]->IsString())
   {
     isolate->ThrowException(Exception::TypeError(
-        String::NewFromUtf8(isolate, "Wrong number of arguments")));
+        String::NewFromUtf8(isolate, "Wrong argument type. String expected.")));
     return;
   }
 
@@ -171,7 +172,8 @@ void GZNode::GetMaterialScriptsMessage(const FunctionCallbackInfo<Value>& args)
 }
 
 /////////////////////////////////////////////////
-void GZNode::SetPoseMsgFilterMinimumDistanceSquared(const FunctionCallbackInfo<Value>& args)
+void GZNode::SetPoseMsgFilterMinimumDistanceSquared(const
+    FunctionCallbackInfo<Value>& args)
 {
   GZNode *obj = ObjectWrap::Unwrap<GZNode>(args.This());
 
@@ -183,7 +185,8 @@ void GZNode::SetPoseMsgFilterMinimumDistanceSquared(const FunctionCallbackInfo<V
 }
 
 /////////////////////////////////////////////////
-void GZNode::GetPoseMsgFilterMinimumDistanceSquared(const FunctionCallbackInfo<Value>& args)
+void GZNode::GetPoseMsgFilterMinimumDistanceSquared(const 
+    FunctionCallbackInfo<Value>& args)
 {
   Isolate* isolate = args.GetIsolate();
   GZNode *obj = ObjectWrap::Unwrap<GZNode>(args.This());
@@ -192,7 +195,8 @@ void GZNode::GetPoseMsgFilterMinimumDistanceSquared(const FunctionCallbackInfo<V
 }
 
 /////////////////////////////////////////////////////
-void GZNode::SetPoseMsgFilterMinimumQuaternionSquared(const FunctionCallbackInfo<Value>& args)
+void GZNode::SetPoseMsgFilterMinimumQuaternionSquared(const 
+    FunctionCallbackInfo<Value>& args)
 {  
   GZNode *obj = ObjectWrap::Unwrap<GZNode>(args.This());
   Local<Number> v = Local<Number>::Cast(args[0]);
@@ -203,7 +207,8 @@ void GZNode::SetPoseMsgFilterMinimumQuaternionSquared(const FunctionCallbackInfo
 }
 
 /////////////////////////////////////////////////
-void GZNode::GetPoseMsgFilterMinimumQuaternionSquared(const FunctionCallbackInfo<Value>& args)
+void GZNode::GetPoseMsgFilterMinimumQuaternionSquared(const 
+    FunctionCallbackInfo<Value>& args)
 {
   Isolate* isolate = args.GetIsolate();
   GZNode *obj = ObjectWrap::Unwrap<GZNode>(args.This());
@@ -244,7 +249,7 @@ void GZNode::Request(const FunctionCallbackInfo<Value>& args)
   if (!args[0]->IsString())
   {
     isolate->ThrowException(Exception::TypeError(
-        String::NewFromUtf8(isolate, "Wrong number of arguments")));
+        String::NewFromUtf8(isolate, "Wrong argument type. String expected.")));
     return;
   }
 
@@ -257,8 +262,9 @@ void GZNode::Request(const FunctionCallbackInfo<Value>& args)
 }
 
 /////////////////////////////////////////////////
-void GZNode::SetPoseMsgFilterMinimumAge(const FunctionCallbackInfo<Value>& args)
-{
+void GZNode::SetPoseMsgFilterMinimumAge(const 
+    FunctionCallbackInfo<Value>& args)
+{FunctionCallbackInfo
   GZNode* obj = ObjectWrap::Unwrap<GZNode>(args.This());
   Local<Number> v = Local<Number>::Cast(args[0]);
   double value = v->Value();
@@ -268,7 +274,8 @@ void GZNode::SetPoseMsgFilterMinimumAge(const FunctionCallbackInfo<Value>& args)
 }
 
 /////////////////////////////////////////////////
-void GZNode::GetPoseMsgFilterMinimumAge(const FunctionCallbackInfo<Value>& args)
+void GZNode::GetPoseMsgFilterMinimumAge(const 
+    FunctionCallbackInfo<Value>& args)
 {
   GZNode* obj = ObjectWrap::Unwrap<GZNode>(args.This());
   double value  = obj->gzIface->GetPoseFilterMinimumMsgAge();
