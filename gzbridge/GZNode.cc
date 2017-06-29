@@ -264,7 +264,7 @@ void GZNode::Request(const FunctionCallbackInfo<Value>& args)
 /////////////////////////////////////////////////
 void GZNode::SetPoseMsgFilterMinimumAge(const 
     FunctionCallbackInfo<Value>& args)
-{FunctionCallbackInfo
+{
   GZNode* obj = ObjectWrap::Unwrap<GZNode>(args.This());
   Local<Number> v = Local<Number>::Cast(args[0]);
   double value = v->Value();
