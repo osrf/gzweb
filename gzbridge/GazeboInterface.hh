@@ -15,20 +15,20 @@
  *
 */
 
-#ifndef _GAZEBO_INTERFACE_HH_
-#define _GAZEBO_INTERFACE_HH_
+#ifndef GZBRIDGE_GAZEBOINTERFACE_HH_
+#define GZBRIDGE_GAZEBOINTERFACE_HH_
 
 #include <string>
 #include <list>
 #include <map>
+#include <memory>
+#include <mutex>
+#include <thread>
+#include <condition_variable>
 
 #include <gazebo/msgs/msgs.hh>
 #include <gazebo/transport/TransportIface.hh>
 
-namespace boost
-{
-  class thread;
-}
 
 namespace gzweb
 {
@@ -84,7 +84,7 @@ namespace gzweb
 
     /// \brief Get the connected state
     /// \return True if there are client connections.
-    public: bool IsConnected() const;
+    public: bool IsConnected();
 
     /// \brief Pack topic publish message.
     private: std::string PackOutgoingTopicMsg(const std::string &_topic,
@@ -164,7 +164,7 @@ namespace gzweb
     private: void OnResponse(ConstResponsePtr &_msg);
 
     /// \brief Block if there are no connections.
-    private: void WaitForConnection() const;
+    private: void WaitForConnection();
 
     /// \brief a pose at a specific time
     typedef std::pair<gazebo::common::Time, ignition::math::Pose3d> TimedPose;
@@ -177,16 +177,16 @@ namespace gzweb
         const TimedPose &_current);
 
     /// \brief Incoming messages.
-    public: static std::vector<std::string> incoming;
+    public: std::vector<std::string> incoming;
 
     /// \brief Outgoing messages.
-    public: static std::vector<std::string> outgoing;
+    public: std::vector<std::string> outgoing;
 
     /// \brief Thread to run the main loop.
-    private: boost::thread *runThread;
+    private: std::unique_ptr<std::thread> runThread;
 
     /// \brief Thread for processing services requests.
-    private: boost::thread *serviceThread;
+    private: std::unique_ptr<std::thread> serviceThread;
 
     /// \brief Gazebo transport node.
     private: gazebo::transport::NodePtr node;
@@ -252,16 +252,22 @@ namespace gzweb
     private: std::map<int, gazebo::msgs::Request *> requests;
 
     /// \brief Mutex to lock the various message buffers.
-    private: boost::recursive_mutex *receiveMutex;
+    private: std::recursive_mutex receiveMutex;
 
     /// \brief Mutex to lock the service request buffer.
-    private: boost::recursive_mutex *serviceMutex;
+    private: std::recursive_mutex serviceMutex;
+
+    /// \brief Mutex to lock the incoming message request buffer.
+    private: std::recursive_mutex incomingMutex;
+
+    /// \brief Mutex to lock the outgoing message request buffer.
+    private: std::recursive_mutex outgoingMutex;
 
     /// \brief Mutex to protect the isConnected variable.
-    private: boost::mutex *connectionMutex;
+    private: std::mutex connectionMutex;
 
     /// \brief The condition to notify when connection state changes.
-    public: boost::condition_variable *connectionCondition;
+    public: std::condition_variable connectionCondition;
 
     /// \def ModelMsgs_L
     /// \brief List of model messages.
@@ -362,7 +368,7 @@ namespace gzweb
     private: std::vector<std::string> serviceRequests;
 
     /// \brief True to stop the interface.
-    private: bool stop;
+    private: bool stop = false;
 
     /// \brief Name of sensor topic.
     private: std::string sensorTopic;
@@ -423,7 +429,7 @@ namespace gzweb
     private: std::string deleteTopic;
 
     /// \brief Ogre material parser.
-    private: OgreMaterialParser *materialParser;
+    private: OgreMaterialParser *materialParser = nullptr;
 
     /// \brief Last world stats time received
     private: gazebo::common::Time lastStatsTime;
@@ -432,49 +438,27 @@ namespace gzweb
     private: bool lastPausedState;
 
     /// \brief filter pose message based on minimum distance criteria
-    private: double minimumDistanceSquared;
+    private: double minimumDistanceSquared = 0;
 
     /// \brief filter pose message based on minimum rotation criteria
-    private: double minimumQuaternionSquared;
+    private: double minimumQuaternionSquared = 0;
 
     /// \brief filter pose message based on minimum elapsed time (seconds)
-    private: double minimumMsgAge;
+    private: double minimumMsgAge = 0;
 
-    private: int skippedMsgCount;
-    private: int messageWindowSize;
-    private: int messageCount;
+    private: int skippedMsgCount = 0;
+    private: int messageWindowSize = 0;
+    private: int messageCount = 0;
 
     /// \brief True if there is a client connection.
-    private: bool isConnected;
+    private: bool isConnected = false;
 
-    public: inline void SetPoseFilterMinimumDistanceSquared(double m)
-    {
-      this->minimumDistanceSquared = m;
-    }
-    public: inline double GetPoseFilterMinimumDistanceSquared()
-    {
-      return this->minimumDistanceSquared;
-    }
-
-    public: inline void SetPoseFilterMinimumQuaternionSquared(double m)
-    {
-      this->minimumQuaternionSquared = m;
-    }
-
-    public: inline double GetPoseFilterMinimumQuaternionSquared()
-    {
-      return this->minimumQuaternionSquared;
-    }
-
-    public: inline void SetPoseFilterMinimumMsgAge(double m)
-    {
-      this->minimumMsgAge = m;
-    }
-
-    public: inline double GetPoseFilterMinimumMsgAge()
-    {
-      return this->minimumMsgAge;
-    }
+    public: void SetPoseFilterMinimumDistanceSquared(double _m);
+    public: double GetPoseFilterMinimumDistanceSquared();
+    public: void SetPoseFilterMinimumQuaternionSquared(double _m);
+    public: double GetPoseFilterMinimumQuaternionSquared();
+    public: void SetPoseFilterMinimumMsgAge(double _m);
+    public: double GetPoseFilterMinimumMsgAge();
   };
 }
 

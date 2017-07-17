@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef _PB2JSON_H_
-#define _PB2JSON_H_
+#ifndef GZBRIDGE_PB2JSON_HH_
+#define GZBRIDGE_PB2JSON_HH_
 
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/message.h>
@@ -24,9 +24,9 @@
 
 namespace gzweb
 {
-  char *pb2json(const google::protobuf::Message &msg);
+  std::string pb2json(const google::protobuf::Message &msg);
 
-  char *pb2json(google::protobuf::Message *msg,const char *buf,int len);
+  std::string pb2json(google::protobuf::Message *msg,const char *buf,int len);
 
   std::string get_value(const std::string &msg, const std::string &key);
 

@@ -15,13 +15,11 @@
  *
 */
 
-#ifndef _GZNODE_HH_
-#define _GZNODE_HH_
+#ifndef GZBRIDGE_GZNODE_HH_
+#define GZBRIDGE_GZNODE_HH_
 
 #include <node.h>
 #include <node_object_wrap.h>
-#include <string>
-#include <vector>
 
 namespace gzweb
 {
@@ -43,32 +41,43 @@ namespace gzweb
 
     private: static void New(const FunctionCallbackInfo<Value>& args);
 
-    private: static void LoadMaterialScripts(const FunctionCallbackInfo<Value>& args);
+    private: static void LoadMaterialScripts(
+        const FunctionCallbackInfo<Value>& args);
 
-    private: static void SetConnected(const FunctionCallbackInfo<Value>& args);
+    private: static void SetConnected(
+        const FunctionCallbackInfo<Value>& args);
 
-    private: static void GetIsGzServerConnected(const FunctionCallbackInfo<Value>& args);
+    private: static void GetIsGzServerConnected(
+        const FunctionCallbackInfo<Value>& args);
 
-    private: static void GetMaterialScriptsMessage(const FunctionCallbackInfo<Value>& args);
+    private: static void GetMaterialScriptsMessage(
+        const FunctionCallbackInfo<Value>& args);
 
-    private: static void SetPoseMsgFilterMinimumDistanceSquared(const FunctionCallbackInfo<Value>& args);
+    private: static void SetPoseMsgFilterMinimumDistanceSquared(
+        const FunctionCallbackInfo<Value>& args);
 
-    private: static void GetPoseMsgFilterMinimumDistanceSquared(const FunctionCallbackInfo<Value>& args);
+    private: static void GetPoseMsgFilterMinimumDistanceSquared(
+        const FunctionCallbackInfo<Value>& args);
 
-    private: static void SetPoseMsgFilterMinimumQuaternionSquared(const FunctionCallbackInfo<Value>& args);
+    private: static void SetPoseMsgFilterMinimumQuaternionSquared(
+        const FunctionCallbackInfo<Value>& args);
 
-    private: static void GetPoseMsgFilterMinimumQuaternionSquared(const FunctionCallbackInfo<Value>& args);
+    private: static void GetPoseMsgFilterMinimumQuaternionSquared(
+        const FunctionCallbackInfo<Value>& args);
 
     private: static void GetMessages(const FunctionCallbackInfo<Value>& args);
 
     private: static void Request(const FunctionCallbackInfo<Value>& args);
 
-    private: static void SetPoseMsgFilterMinimumAge(const FunctionCallbackInfo<Value>& args);
+    private: static void SetPoseMsgFilterMinimumAge(
+        const FunctionCallbackInfo<Value>& args);
 
-    private: static void GetPoseMsgFilterMinimumAge(const FunctionCallbackInfo<Value>& args);
+    private: static void GetPoseMsgFilterMinimumAge(
+        const FunctionCallbackInfo<Value>& args);
 
-    private: GazeboInterface* gzIface;
-    private: bool isGzServerConnected;
+    private: GazeboInterface* gzIface = nullptr;
+
+    private: bool isGzServerConnected = false;
 
   };
 }
