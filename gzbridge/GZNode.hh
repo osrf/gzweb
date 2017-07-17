@@ -19,11 +19,18 @@
 #define _GZNODE_HH_
 
 #include <node.h>
+#include <node_object_wrap.h>
 #include <string>
 #include <vector>
 
 namespace gzweb
 {
+  using v8::FunctionCallbackInfo;
+  using v8::Value;
+  using v8::FunctionTemplate;
+  using v8::Object;
+  using v8::Persistent;
+
   class GazeboInterface;
 
   class GZNode : public node::ObjectWrap
@@ -34,44 +41,31 @@ namespace gzweb
 
     private: ~GZNode();
 
-    private: static v8::Handle<v8::Value> New(const v8::Arguments& args);
+    private: static void New(const FunctionCallbackInfo<Value>& args);
 
-    private: static v8::Handle<v8::Value> Callback(const v8::Arguments& args);
+    private: static void LoadMaterialScripts(const FunctionCallbackInfo<Value>& args);
 
-    private: static v8::Handle<v8::Value> Request(const v8::Arguments& args);
+    private: static void SetConnected(const FunctionCallbackInfo<Value>& args);
 
-    private: static v8::Handle<v8::Value> SetPoseMsgFilterMinimumAge(const
-      v8::Arguments& args);
+    private: static void GetIsGzServerConnected(const FunctionCallbackInfo<Value>& args);
 
-    private: static v8::Handle<v8::Value> GetPoseMsgFilterMinimumAge(const
-      v8::Arguments& args);
+    private: static void GetMaterialScriptsMessage(const FunctionCallbackInfo<Value>& args);
 
-    private: static v8::Handle<v8::Value>
-        SetPoseMsgFilterMinimumDistanceSquared(const v8::Arguments& args);
+    private: static void SetPoseMsgFilterMinimumDistanceSquared(const FunctionCallbackInfo<Value>& args);
 
-    private: static v8::Handle<v8::Value>
-        GetPoseMsgFilterMinimumDistanceSquared(const v8::Arguments& args);
+    private: static void GetPoseMsgFilterMinimumDistanceSquared(const FunctionCallbackInfo<Value>& args);
 
-    private: static v8::Handle<v8::Value>
-        SetPoseMsgFilterMinimumQuaternionSquared(const v8::Arguments& args);
+    private: static void SetPoseMsgFilterMinimumQuaternionSquared(const FunctionCallbackInfo<Value>& args);
 
-    private: static v8::Handle<v8::Value>
-        SetConnected(const v8::Arguments& args);
+    private: static void GetPoseMsgFilterMinimumQuaternionSquared(const FunctionCallbackInfo<Value>& args);
 
-    private: static v8::Handle<v8::Value>
-        GetPoseMsgFilterMinimumQuaternionSquared(const v8::Arguments& args);
+    private: static void GetMessages(const FunctionCallbackInfo<Value>& args);
 
-    private: static v8::Handle<v8::Value>
-        GetMessages(const v8::Arguments& args);
+    private: static void Request(const FunctionCallbackInfo<Value>& args);
 
-    private: static v8::Handle<v8::Value>
-        LoadMaterialScripts(const v8::Arguments& args);
+    private: static void SetPoseMsgFilterMinimumAge(const FunctionCallbackInfo<Value>& args);
 
-    private: static v8::Handle<v8::Value>
-        GetIsGzServerConnected(const v8::Arguments& args);
-
-    private: static v8::Handle<v8::Value>
-        GetMaterialScriptsMessage(const v8::Arguments& args);
+    private: static void GetPoseMsgFilterMinimumAge(const FunctionCallbackInfo<Value>& args);
 
     private: GazeboInterface* gzIface;
     private: bool isGzServerConnected;

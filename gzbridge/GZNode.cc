@@ -50,95 +50,65 @@ GZNode::~GZNode()
 /////////////////////////////////////////////////
 void GZNode::Init(Handle<Object> exports)
 {
+  Isolate* isolate = exports->GetIsolate();
   // Prepare constructor template
-  Local<FunctionTemplate> tpl = FunctionTemplate::New(New);
-  tpl->SetClassName(String::NewSymbol("GZNode"));
+  Local<FunctionTemplate> tpl = FunctionTemplate::New(isolate, New);
+  tpl->SetClassName(String::NewFromUtf8(isolate, "GZNode"));
   tpl->InstanceTemplate()->SetInternalFieldCount(1);
   // Prototype
-  tpl->PrototypeTemplate()->Set(String::NewSymbol("loadMaterialScripts"),
-      FunctionTemplate::New(LoadMaterialScripts)->GetFunction());
+  NODE_SET_PROTOTYPE_METHOD(tpl, "loadMaterialScripts", LoadMaterialScripts);
 
-  tpl->PrototypeTemplate()->Set(String::NewSymbol("setCallback"),
-      FunctionTemplate::New(Callback)->GetFunction());
+  NODE_SET_PROTOTYPE_METHOD(tpl, "setConnected", SetConnected);
 
-  tpl->PrototypeTemplate()->Set(String::NewSymbol("request"),
-      FunctionTemplate::New(Request)->GetFunction());
+  NODE_SET_PROTOTYPE_METHOD(tpl, "setPoseMsgFilterMinimumDistanceSquared", SetPoseMsgFilterMinimumDistanceSquared);
+  NODE_SET_PROTOTYPE_METHOD(tpl, "getPoseMsgFilterMinimumDistanceSquared", GetPoseMsgFilterMinimumDistanceSquared);
+  NODE_SET_PROTOTYPE_METHOD(tpl, "setPoseMsgFilterMinimumQuaternionSquared", SetPoseMsgFilterMinimumQuaternionSquared);
+  NODE_SET_PROTOTYPE_METHOD(tpl, "getPoseMsgFilterMinimumQuaternionSquared", GetPoseMsgFilterMinimumQuaternionSquared);
 
-  tpl->PrototypeTemplate()->Set(String::NewSymbol("getMessages"),
-      FunctionTemplate::New(GetMessages)->GetFunction());
+  NODE_SET_PROTOTYPE_METHOD(tpl, "getPoseMsgFilterMinimumAge", GetPoseMsgFilterMinimumAge);
 
-  tpl->PrototypeTemplate()->Set(String::NewSymbol("getPoseMsgFilterMinimumAge"),
-      FunctionTemplate::New(GetPoseMsgFilterMinimumAge)->GetFunction());
+  NODE_SET_PROTOTYPE_METHOD(tpl, "setPoseMsgFilterMinimumAge", SetPoseMsgFilterMinimumAge);
 
-  tpl->PrototypeTemplate()->Set(String::NewSymbol("setPoseMsgFilterMinimumAge"),
-      FunctionTemplate::New(SetPoseMsgFilterMinimumAge)->GetFunction());
+  NODE_SET_PROTOTYPE_METHOD(tpl, "getMessages", GetMessages);
 
-  tpl->PrototypeTemplate()->Set(
-		  String::NewSymbol("getPoseMsgFilterMinimumDistanceSquared"),
-      FunctionTemplate::New(
-    		  GetPoseMsgFilterMinimumDistanceSquared)->GetFunction());
+  NODE_SET_PROTOTYPE_METHOD(tpl, "request", Request);
 
-  tpl->PrototypeTemplate()->Set(
-      String::NewSymbol("setPoseMsgFilterMinimumDistanceSquared"),
-      FunctionTemplate::New(
-          SetPoseMsgFilterMinimumDistanceSquared)->GetFunction());
+  NODE_SET_PROTOTYPE_METHOD(tpl, "getIsGzServerConnected", GetIsGzServerConnected);
 
-  tpl->PrototypeTemplate()->Set(
-      String::NewSymbol("getPoseMsgFilterMinimumQuaternionSquared"),
-      FunctionTemplate::New(
-          GetPoseMsgFilterMinimumQuaternionSquared)->GetFunction());
+  NODE_SET_PROTOTYPE_METHOD(tpl, "getMaterialScriptsMessage", GetMaterialScriptsMessage);
 
-  tpl->PrototypeTemplate()->Set(
-      String::NewSymbol("setPoseMsgFilterMinimumQuaternionSquared"),
-      FunctionTemplate::New(
-          SetPoseMsgFilterMinimumQuaternionSquared)->GetFunction());
-
-  tpl->PrototypeTemplate()->Set(String::NewSymbol("setConnected"),
-      FunctionTemplate::New(
-          SetConnected)->GetFunction());
-
-  tpl->PrototypeTemplate()->Set(
-       String::NewSymbol("getIsGzServerConnected"),
-       FunctionTemplate::New(
-           GetIsGzServerConnected)->GetFunction());
-
-  tpl->PrototypeTemplate()->Set(String::NewSymbol("getMaterialScriptsMessage"),
-       FunctionTemplate::New(GetMaterialScriptsMessage)->GetFunction());
-
-  Persistent<Function> constructor =
-      Persistent<Function>::New(tpl->GetFunction());
-
-  exports->Set(String::NewSymbol("GZNode"), constructor);
+  exports->Set(String::NewFromUtf8(isolate, "GZNode"),
+               tpl->GetFunction());
 }
 
 /////////////////////////////////////////////////
-Handle<Value> GZNode::New(const Arguments& args)
+void GZNode::New(const FunctionCallbackInfo<Value>& args)
 {
-  HandleScope scope;
-
-  GZNode* obj = new GZNode();
-  obj->Wrap(args.This());
-
-  return args.This();
+  if (args.IsConstructCall()) {
+    // Invoked as constructor: `new MyObject(...)`
+    GZNode* obj = new GZNode();
+    obj->Wrap(args.This());
+    args.GetReturnValue().Set(args.This());
+  }
 }
 
 /////////////////////////////////////////////////
-Handle<Value> GZNode::LoadMaterialScripts(const Arguments& args)
+void GZNode::LoadMaterialScripts(const FunctionCallbackInfo<Value>& args)
 {
-  HandleScope scope;
+  Isolate* isolate = args.GetIsolate();
 
   if (args.Length() < 1)
   {
-    ThrowException(Exception::TypeError(
-        String::New("Wrong number of arguments")));
-    return scope.Close(Undefined());
+    isolate->ThrowException(Exception::TypeError(
+        String::NewFromUtf8(isolate, "Wrong number of arguments")));
+    return;
   }
 
   if (!args[0]->IsString())
   {
-    ThrowException(Exception::TypeError(
-        String::New("Wrong argument type. String expected.")));
-    return scope.Close(Undefined());
+    isolate->ThrowException(Exception::TypeError(
+        String::NewFromUtf8(isolate, "Wrong argument type. String expected.")));
+    return;
   }
 
   GZNode* obj = ObjectWrap::Unwrap<GZNode>(args.This());
@@ -146,28 +116,48 @@ Handle<Value> GZNode::LoadMaterialScripts(const Arguments& args)
   String::Utf8Value path(args[0]->ToString());
   obj->gzIface->LoadMaterialScripts(std::string(*path));
 
-  return scope.Close(Undefined());
+  return;
 }
 
-Handle<Value> GZNode::GetMaterialScriptsMessage(const Arguments& args)
+/////////////////////////////////////////////////
+void GZNode::SetConnected(const FunctionCallbackInfo<Value>& args)
 {
-  HandleScope scope;
+  GZNode *obj = ObjectWrap::Unwrap<GZNode>(args.This());
+  bool value = args[0]->BooleanValue();
+  obj->gzIface->SetConnected(value);
+
+  return;
+}
+
+/////////////////////////////////////////////////
+void GZNode::GetIsGzServerConnected(const FunctionCallbackInfo<Value>& args)
+{
+  GZNode *obj = ObjectWrap::Unwrap<GZNode>(args.This());
+  bool value = obj->isGzServerConnected;
+
+  args.GetReturnValue().Set(value);
+}
+
+/////////////////////////////////////////////////
+void GZNode::GetMaterialScriptsMessage(const FunctionCallbackInfo<Value>& args)
+{
+  Isolate* isolate = args.GetIsolate();
 
   if (args.Length() < 1)
-   {
-     ThrowException(Exception::TypeError(
-         String::New("Wrong number of arguments")));
-     return scope.Close(Undefined());
-   }
+  {
+    isolate->ThrowException(Exception::TypeError(
+        String::NewFromUtf8(isolate, "Wrong number of arguments")));
+    return;
+  }
 
-   if (!args[0]->IsString())
-   {
-     ThrowException(Exception::TypeError(
-         String::New("Wrong argument type. String expected.")));
-     return scope.Close(Undefined());
-   }
+  if (!args[0]->IsString())
+  {
+    isolate->ThrowException(Exception::TypeError(
+        String::NewFromUtf8(isolate, "Wrong argument type. String expected.")));
+    return;
+  }
 
-   String::Utf8Value path(args[0]->ToString());
+  String::Utf8Value path(args[0]->ToString());
 
   OgreMaterialParser materialParser;
   materialParser.Load(std::string(*path));
@@ -178,26 +168,89 @@ Handle<Value> GZNode::GetMaterialScriptsMessage(const Arguments& args)
   msg += materialJson;
   msg += "}";
 
-  return scope.Close(String::New(msg.c_str()));
+  args.GetReturnValue().Set(String::NewFromUtf8(isolate ,msg.c_str()));
 }
 
 /////////////////////////////////////////////////
-Handle<Value> GZNode::Request(const Arguments& args)
+void GZNode::SetPoseMsgFilterMinimumDistanceSquared(const
+    FunctionCallbackInfo<Value>& args)
 {
-  HandleScope scope;
+  GZNode *obj = ObjectWrap::Unwrap<GZNode>(args.This());
+
+  Local<Number> v = Local<Number>::Cast(args[0]);
+  double value = v->Value();
+  obj->gzIface->SetPoseFilterMinimumDistanceSquared(value);
+
+  return;
+}
+
+/////////////////////////////////////////////////
+void GZNode::GetPoseMsgFilterMinimumDistanceSquared(const 
+    FunctionCallbackInfo<Value>& args)
+{
+  Isolate* isolate = args.GetIsolate();
+  GZNode *obj = ObjectWrap::Unwrap<GZNode>(args.This());
+  double value  = obj->gzIface->GetPoseFilterMinimumDistanceSquared();
+  args.GetReturnValue().Set(Number::New(isolate ,value));
+}
+
+/////////////////////////////////////////////////////
+void GZNode::SetPoseMsgFilterMinimumQuaternionSquared(const 
+    FunctionCallbackInfo<Value>& args)
+{  
+  GZNode *obj = ObjectWrap::Unwrap<GZNode>(args.This());
+  Local<Number> v = Local<Number>::Cast(args[0]);
+  double value = v->Value();
+  obj->gzIface->SetPoseFilterMinimumQuaternionSquared(value);
+
+  return;
+}
+
+/////////////////////////////////////////////////
+void GZNode::GetPoseMsgFilterMinimumQuaternionSquared(const 
+    FunctionCallbackInfo<Value>& args)
+{
+  Isolate* isolate = args.GetIsolate();
+  GZNode *obj = ObjectWrap::Unwrap<GZNode>(args.This());
+  double value  = obj->gzIface->GetPoseFilterMinimumQuaternionSquared();
+  args.GetReturnValue().Set(Number::New(isolate ,value));
+}
+
+/////////////////////////////////////////////////
+void GZNode::GetMessages(const FunctionCallbackInfo<Value>& args)
+{
+  Isolate* isolate = args.GetIsolate();
+
+  GZNode* obj = ObjectWrap::Unwrap<GZNode>(args.This());
+
+  std::vector<std::string> msgs = obj->gzIface->PopOutgoingMessages();
+  // args.GetReturnValue().Set(Number::New(isolate ,msgs.size()));
+  Local<Array> arguments = Array::New(isolate, msgs.size());
+  for (unsigned int i = 0; i < msgs.size(); ++i) {
+    arguments->Set(i ,String::NewFromUtf8(isolate, msgs[i].c_str()));
+  }
+
+  args.GetReturnValue().Set(arguments);
+}
+
+
+////////////////////////////////////////////////
+void GZNode::Request(const FunctionCallbackInfo<Value>& args)
+{
+  Isolate* isolate = args.GetIsolate();
 
   if (args.Length() < 1)
   {
-    ThrowException(Exception::TypeError(
-        String::New("Wrong number of arguments")));
-    return scope.Close(Undefined());
+    isolate->ThrowException(Exception::TypeError(
+        String::NewFromUtf8(isolate, "Wrong number of arguments")));
+    return;
   }
 
   if (!args[0]->IsString())
   {
-    ThrowException(Exception::TypeError(
-        String::New("Wrong argument type. String expected.")));
-    return scope.Close(Undefined());
+    isolate->ThrowException(Exception::TypeError(
+        String::NewFromUtf8(isolate, "Wrong argument type. String expected.")));
+    return;
   }
 
   GZNode* obj = ObjectWrap::Unwrap<GZNode>(args.This());
@@ -205,128 +258,28 @@ Handle<Value> GZNode::Request(const Arguments& args)
   String::Utf8Value request(args[0]->ToString());
   obj->gzIface->PushRequest(std::string(*request));
 
-  return scope.Close(Undefined());
+  return;
 }
 
 /////////////////////////////////////////////////
-Handle<Value> GZNode::Callback(const Arguments& args) {
-  HandleScope scope;
-
-  v8::Local<v8::Function> cb = Local<Function>::Cast(args[0]);
-  const unsigned argc = 1;
-  Local<Value> argv[argc] = { Local<Value>::New(String::New("hello world")) };
-  cb->Call(Context::GetCurrent()->Global(), argc, argv);
-
-  return scope.Close(Undefined());
-}
-
-/////////////////////////////////////////////////
-Handle<v8::Value> GZNode::SetPoseMsgFilterMinimumAge(const v8::Arguments& args)
+void GZNode::SetPoseMsgFilterMinimumAge(const 
+    FunctionCallbackInfo<Value>& args)
 {
-  HandleScope scope;
-
   GZNode* obj = ObjectWrap::Unwrap<GZNode>(args.This());
   Local<Number> v = Local<Number>::Cast(args[0]);
   double value = v->Value();
   obj->gzIface->SetPoseFilterMinimumMsgAge(value);
 
-  return scope.Close(Undefined());
+  return;
 }
 
 /////////////////////////////////////////////////
-Handle<v8::Value> GZNode::GetPoseMsgFilterMinimumAge(const \
-														v8::Arguments& args)
+void GZNode::GetPoseMsgFilterMinimumAge(const 
+    FunctionCallbackInfo<Value>& args)
 {
-  HandleScope scope;
   GZNode* obj = ObjectWrap::Unwrap<GZNode>(args.This());
   double value  = obj->gzIface->GetPoseFilterMinimumMsgAge();
-  return scope.Close(Number::New(value));
-}
-
-/////////////////////////////////////////////////
-Handle<v8::Value> GZNode::SetPoseMsgFilterMinimumDistanceSquared(const
-    v8::Arguments& args)
-{
-  HandleScope scope;
-
-  GZNode* obj = ObjectWrap::Unwrap<GZNode>(args.This());
-  Local<Number> v = Local<Number>::Cast(args[0]);
-  double value = v->Value();
-  obj->gzIface->SetPoseFilterMinimumDistanceSquared(value);
-
-  return scope.Close(Undefined());
-}
-
-/////////////////////////////////////////////////
-Handle<v8::Value> GZNode::GetPoseMsgFilterMinimumDistanceSquared(const
-    v8::Arguments& args)
-{
-  HandleScope scope;
-  GZNode* obj = ObjectWrap::Unwrap<GZNode>(args.This());
-  double value  = obj->gzIface->GetPoseFilterMinimumDistanceSquared();
-  return scope.Close(Number::New(value));
-}
-
-/////////////////////////////////////////////////
-Handle<v8::Value> GZNode::SetPoseMsgFilterMinimumQuaternionSquared(const
-    v8::Arguments& args)
-{
-  HandleScope scope;
-
-  GZNode* obj = ObjectWrap::Unwrap<GZNode>(args.This());
-  Local<Number> v = Local<Number>::Cast(args[0]);
-  double value = v->Value();
-  obj->gzIface->SetPoseFilterMinimumQuaternionSquared(value);
-
-  return scope.Close(Undefined());
-}
-
-/////////////////////////////////////////////////
-Handle<v8::Value> GZNode::SetConnected(const v8::Arguments& args)
-{
-  HandleScope scope;
-
-  GZNode *obj = ObjectWrap::Unwrap<GZNode>(args.This());
-  bool value = args[0]->BooleanValue();
-  obj->gzIface->SetConnected(value);
-
-  return scope.Close(Undefined());
-}
-
-Handle<v8::Value> GZNode::GetIsGzServerConnected(const v8::Arguments& args)
-{
-  HandleScope scope;
-
-  GZNode *obj = ObjectWrap::Unwrap<GZNode>(args.This());
-  bool value = obj->isGzServerConnected;
-
-  return scope.Close(Boolean::New(value));
-}
-
-/////////////////////////////////////////////////
-Handle<v8::Value> GZNode::GetPoseMsgFilterMinimumQuaternionSquared(const
-    v8::Arguments& args)
-{
-  HandleScope scope;
-  GZNode* obj = ObjectWrap::Unwrap<GZNode>(args.This());
-  double value  = obj->gzIface->GetPoseFilterMinimumQuaternionSquared();
-  return scope.Close(Number::New(value));
-}
-
-/////////////////////////////////////////////////
-Handle<Value> GZNode::GetMessages(const Arguments& args)
-{
-  HandleScope scope;
-
-  GZNode* obj = ObjectWrap::Unwrap<GZNode>(args.This());
-
-  std::vector<std::string> msgs = obj->gzIface->PopOutgoingMessages();
-  Local<Array> arguments = Array::New(msgs.size());
-  for (unsigned int i = 0; i < msgs.size(); ++i) {
-    arguments->Set(i ,String::New(msgs[i].c_str()));
-  }
-
-  return scope.Close(arguments);
+  args.GetReturnValue().Set(value);
 }
 
 /////////////////////////////////////////////////
