@@ -845,7 +845,7 @@ GZ3D.Gui.prototype.init = function()
 
   var that = this;
 
-  // throttle model pose updates, otherwise complex models kills framerate
+  // throttle model pose updates, otherwise complex model kills framerate
   setInterval(function() {
     if (that.modelStatsDirty)
     {
