@@ -841,8 +841,18 @@ GZ3D.Gui.prototype.init = function()
   this.longPressContainerState = null;
   this.showNotifications = false;
   this.openTreeWhenSelected = false;
+  this.modelStatsDirty = false;
 
   var that = this;
+
+  // throttle model pose updates, otherwise complex models kills framerate
+  setInterval(function() {
+    if (that.modelStatsDirty)
+    {
+      that.updateStats();
+      that.modelStatsDirty = false;
+    }
+  }, 20);
 
   // On guiEvents, emitter events
   guiEvents.on('manipulation_mode',
@@ -1684,6 +1694,7 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
               axis2: formatted.axis2
             });
       }
+      this.updateStats();
     }
     // Update existing model
     else
@@ -1699,23 +1710,22 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
               return e.shortName === LinkShortName;
             });
 
-	if (link[0])
-        {        
-	    if (link[0].self_collide)
+        if (link[0])
+        {
+            if (link[0].self_collide)
             {
                 link[0].self_collide = this.trueOrFalse(stats.link[0].self_collide);
             }
             if (link[0].gravity)
             {
-               link[0].gravity = this.trueOrFalse(stats.link[0].gravity);
+                link[0].gravity = this.trueOrFalse(stats.link[0].gravity);
             }
             if (link[0].kinematic)
             {
-              link[0].kinematic = this.trueOrFalse(stats.link[0].kinematic);
+                link[0].kinematic = this.trueOrFalse(stats.link[0].kinematic);
             }
         }
       }
-
       // Update pose stats only if they're being displayed and are not focused
       var modelId = convertNameId(modelName);
       if (!((linkShortName &&
@@ -1724,18 +1734,15 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
           !$('#expandable-pose-'+modelId).is(':visible'))||
           $('#expandable-pose-'+modelId+' input').is(':focus')))
       {
-
         if (stats.position)
         {
           stats.pose = {};
           stats.pose.position = stats.position;
           stats.pose.orientation = stats.orientation;
         }
-
         if (stats.pose)
         {
           formatted = this.formatStats(stats);
-
           if (linkShortName === undefined)
           {
             model[0].position = formatted.pose.position;
@@ -1747,20 +1754,20 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
               {
                 return e.shortName === linkShortName;
               });
-
             link[0].position = formatted.pose.position;
             link[0].orientation = formatted.pose.orientation;
           }
         }
+        // throttle model pose updates
+        this.updateModelStatsAsync();
       }
     }
   }
   else if (action === 'delete')
   {
     this.deleteFromStats('model', modelName);
+    this.updateStats();
   }
-
-  this.updateStats();
 };
 
 var lightStats = [];
@@ -1897,6 +1904,11 @@ GZ3D.Gui.prototype.updateStats = function()
 {
   var tree = angular.element($('#treeMenu')).scope();
   tree.updateStats();
+};
+
+GZ3D.Gui.prototype.updateModelStatsAsync = function()
+{
+  this.modelStatsDirty = true;
 };
 
 /**
