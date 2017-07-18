@@ -1712,18 +1712,18 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
 
         if (link[0])
         {
-            if (link[0].self_collide)
-            {
-                link[0].self_collide = this.trueOrFalse(stats.link[0].self_collide);
-            }
-            if (link[0].gravity)
-            {
-                link[0].gravity = this.trueOrFalse(stats.link[0].gravity);
-            }
-            if (link[0].kinematic)
-            {
-                link[0].kinematic = this.trueOrFalse(stats.link[0].kinematic);
-            }
+          if (link[0].self_collide)
+          {
+            link[0].self_collide = this.trueOrFalse(stats.link[0].self_collide);
+          }
+          if (link[0].gravity)
+          {
+            link[0].gravity = this.trueOrFalse(stats.link[0].gravity);
+          }
+          if (link[0].kinematic)
+          {
+            link[0].kinematic = this.trueOrFalse(stats.link[0].kinematic);
+          }
         }
       }
       // Update pose stats only if they're being displayed and are not focused
