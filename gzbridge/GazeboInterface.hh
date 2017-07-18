@@ -60,15 +60,9 @@ namespace gzweb
     /// \return Incoming messages.
     public: std::vector<std::string> PopIncomingMessages();
 
-    /// \brief Clear incoming messages
-    public: void ClearIncomingMessages();
-
     /// \brief Get outgoing messages.
     /// \return Outgoing messages.
     public: std::vector<std::string> PopOutgoingMessages();
-
-    /// \brief Clear outgoing messages
-    public: void ClearOutgoingMessages();
 
     /// \brief Receive message from websocket server.
     /// \param[in] _msg Message received.

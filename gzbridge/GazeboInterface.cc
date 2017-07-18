@@ -655,7 +655,6 @@ void GazeboInterface::ProcessMessages()
       msg = this->PackOutgoingTopicMsg(this->visualTopic,
           pb2json(*(*visualIter).get()));
       this->Send(msg);
-      std::cerr << msg << std::endl;
     }
     this->visualMsgs.clear();
 
@@ -765,7 +764,6 @@ bool GazeboInterface::FilterPoses(const TimedPose &_old,
     // double ratio =  100.0 * this->skippedMsgCount  / this->messageWindowSize;
     // std::cout << "Message filter: " << ratio << " %" << std::endl;
     // std::cout << "Message count : " << this->skippedMsgCount;
-    // std::cout << " "  << << std::endl;
     this->skippedMsgCount = 0;
     this->messageCount = 0;
   }
@@ -814,7 +812,7 @@ bool GazeboInterface::FilterPoses(const TimedPose &_old,
     return true;
   }
 
-    return false;
+  return false;
 }
 
 /////////////////////////////////////////////////
@@ -868,7 +866,6 @@ void GazeboInterface::OnPoseMsg(ConstPosesStampedPtr &_msg)
       }
     }
   }
-  std::cout.flush();
 }
 
 /////////////////////////////////////////////////
@@ -1052,26 +1049,12 @@ std::vector<std::string> GazeboInterface::PopIncomingMessages()
 }
 
 /////////////////////////////////////////////////
-void GazeboInterface::ClearIncomingMessages()
-{
-  std::lock_guard<std::recursive_mutex> lock(this->incomingMutex);
-  this->incoming.clear();
-}
-
-/////////////////////////////////////////////////
 std::vector<std::string> GazeboInterface::PopOutgoingMessages()
 {
   std::lock_guard<std::recursive_mutex> lock(this->outgoingMutex);
   std::vector<std::string> out = this->outgoing;
   this->outgoing.clear();
   return out;
-}
-
-/////////////////////////////////////////////////
-void GazeboInterface::ClearOutgoingMessages()
-{
-  std::lock_guard<std::recursive_mutex> lock(this->outgoingMutex);
-  this->outgoing.clear();
 }
 
 /////////////////////////////////////////////////
