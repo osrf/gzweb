@@ -1,5 +1,5 @@
-#ifndef _OGRE_MATERIAL_PARSER_HH_
-#define _OGRE_MATERIAL_PARSER_HH_
+#ifndef GZBRIDGE_OGREMATERIALPARSER_HH_
+#define GZBRIDGE_OGREMATERIALPARSER_HH_
 
 #include <string>
 
@@ -18,7 +18,7 @@ namespace gzweb
 
     public: std::string GetMaterialAsJson() const;
 
-    private: ConfigLoader *configLoader;
+    private: ConfigLoader *configLoader = nullptr;
   };
 
 }

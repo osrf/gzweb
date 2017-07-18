@@ -15,8 +15,6 @@
  *
 */
 
-#include <boost/thread.hpp>
-
 #include "pb2json.hh"
 #include "OgreMaterialParser.hh"
 #include "GazeboInterface.hh"
@@ -25,20 +23,9 @@
 
 using namespace gzweb;
 
-std::vector<std::string> GazeboInterface::incoming;
-std::vector<std::string> GazeboInterface::outgoing;
-
-boost::recursive_mutex incomingMutex;
-boost::recursive_mutex outgoingMutex;
-
 /////////////////////////////////////////////////
 GazeboInterface::GazeboInterface()
 {
-//  this->socketServer = _server;
-  this->receiveMutex = new boost::recursive_mutex();
-  this->serviceMutex = new boost::recursive_mutex();
-  this->stop = false;
-
   // Create our node for communication
   this->node.reset(new gazebo::transport::Node());
   this->node->Init();
@@ -147,12 +134,6 @@ GazeboInterface::GazeboInterface()
   this->messageCount = 0;
 
   this->isConnected = false;
-
-  // initialize thread variables
-  this->runThread = NULL;
-  this->serviceThread = NULL;
-  this->connectionCondition = new boost::condition_variable();
-  this->connectionMutex = new boost::mutex();
 }
 
 /////////////////////////////////////////////////
@@ -187,20 +168,9 @@ GazeboInterface::~GazeboInterface()
   this->node.reset();
 
   if (this->runThread)
-  {
     this->runThread->join();
-    delete this->runThread;
-  }
   if (this->serviceThread)
-  {
     this->serviceThread->join();
-    delete this->serviceThread;
-  }
-
-  delete this->receiveMutex;
-  delete this->serviceMutex;
-  delete this->connectionCondition;
-  delete this->connectionMutex;
 }
 
 /////////////////////////////////////////////////
@@ -212,10 +182,10 @@ void GazeboInterface::Init()
 /////////////////////////////////////////////////
 void GazeboInterface::RunThread()
 {
-  this->runThread = new boost::thread(boost::bind(&GazeboInterface::Run, this));
-  this->serviceThread = new boost::thread(
-      boost::bind(&GazeboInterface::RunService, this));
-
+  this->runThread.reset(
+      new std::thread(std::bind(&GazeboInterface::Run, this)));
+  this->serviceThread.reset(new std::thread(
+      std::bind(&GazeboInterface::RunService, this)));
 }
 
 /////////////////////////////////////////////////
@@ -260,7 +230,7 @@ void GazeboInterface::ProcessMessages()
   static SensorMsgs_L::iterator sensorIter;
 
   {
-    boost::recursive_mutex::scoped_lock lock(*this->receiveMutex);
+    std::lock_guard<std::recursive_mutex> lock(this->receiveMutex);
 
     // Process incoming messages.
     std::vector<std::string> msgs = this->PopIncomingMessages();
@@ -293,7 +263,8 @@ void GazeboInterface::ProcessMessages()
         {
           gazebo::msgs::Request *requestPhysicsMsg;
           requestPhysicsMsg = gazebo::msgs::CreateRequest("physics_info", "");
-          if (this->requests.find(requestPhysicsMsg->id()) != this->requests.end())
+          if (this->requests.find(requestPhysicsMsg->id()) !=
+               this->requests.end())
             requests.erase(requestPhysicsMsg->id());
           this->requests[requestPhysicsMsg->id()] = requestPhysicsMsg;
           this->requestPub->Publish(*requestPhysicsMsg);
@@ -330,7 +301,8 @@ void GazeboInterface::ProcessMessages()
 
           this->modelPub->Publish(modelMsg);
         }
-        else if (topic == this->lightFactoryTopic || topic == this->lightModifyTopic)
+        else if (topic == this->lightFactoryTopic ||
+            topic == this->lightModifyTopic)
         {
           std::string name = get_value(msg, "msg:name");
           std::string type = get_value(msg, "msg:type");
@@ -441,7 +413,8 @@ void GazeboInterface::ProcessMessages()
               linkName = linkName.substr(index+1);
           linkMsg->set_name(linkName);
 
-          std::string self_collideStr = get_value(msg, "msg:link:self_collide").c_str();
+          std::string self_collideStr =
+              get_value(msg, "msg:link:self_collide").c_str();
           bool self_collide = false;
           if (self_collideStr == "1")
           {
@@ -449,7 +422,8 @@ void GazeboInterface::ProcessMessages()
           }
           linkMsg->set_self_collide(self_collide);
 
-          std::string gravityStr = get_value(msg, "msg:link:gravity").c_str();
+          std::string gravityStr =
+              get_value(msg, "msg:link:gravity").c_str();
           bool gravity = false;
           if (gravityStr == "1")
           {
@@ -457,7 +431,8 @@ void GazeboInterface::ProcessMessages()
           }
           linkMsg->set_gravity(gravity);
 
-          std::string kinematicStr = get_value(msg, "msg:link:kinematic").c_str();
+          std::string kinematicStr =
+              get_value(msg, "msg:link:kinematic").c_str();
           bool kinematic = false;
           if (kinematicStr == "1")
           {
@@ -511,8 +486,10 @@ void GazeboInterface::ProcessMessages()
 
             newModelStr << "<sdf version ='" << SDF_VERSION << "'>"
                 << "<model name='" << name << "'>"
-                << "<pose>" << pos.X() << " " << pos.Y() << " " << pos.Z() << " "
-                            << rpy.X() << " " << rpy.Y() << " " << rpy.Z() << "</pose>"
+                << "<pose>" << pos.X() << " " << pos.Y() << " " << pos.Z()
+                            << " "
+                            << rpy.X() << " " << rpy.Y() << " " << rpy.Z()
+                            << "</pose>"
                 << "<link name ='link'>"
                 <<   "<inertial><mass>1.0</mass></inertial>"
                 <<   "<collision name ='collision'>"
@@ -594,8 +571,8 @@ void GazeboInterface::ProcessMessages()
         }
         else if (topic == this->deleteTopic)
         {
-            std::string name = get_value(msg, "msg:name");
-            gazebo::transport::requestNoReply(this->node, "entity_delete", name);
+          std::string name = get_value(msg, "msg:name");
+          gazebo::transport::requestNoReply(this->node, "entity_delete", name);
         }
       }
       else
@@ -604,14 +581,13 @@ void GazeboInterface::ProcessMessages()
         std::string service = get_value(msg.c_str(), "service");
         if (!service.empty())
         {
-          boost::recursive_mutex::scoped_lock lock(*this->serviceMutex);
+          std::lock_guard<std::recursive_mutex> lock(this->serviceMutex);
           this->serviceRequests.push_back(msg);
         }
       }
-
     }
 
-    std::string msg = "";
+    std::string msg;
     // Forward the scene messages.
     for (sIter = this->sceneMsgs.begin(); sIter != this->sceneMsgs.end();
         ++sIter)
@@ -679,7 +655,6 @@ void GazeboInterface::ProcessMessages()
       msg = this->PackOutgoingTopicMsg(this->visualTopic,
           pb2json(*(*visualIter).get()));
       this->Send(msg);
-      std::cerr << msg << std::endl;
     }
     this->visualMsgs.clear();
 
@@ -731,7 +706,7 @@ void GazeboInterface::ProcessServiceRequests()
 {
   std::vector<std::string> services;
   {
-    boost::recursive_mutex::scoped_lock lock(*this->serviceMutex);
+    std::lock_guard<std::recursive_mutex> lock(this->serviceMutex);
     services = this->serviceRequests;
     this->serviceRequests.clear();
   }
@@ -776,7 +751,7 @@ void GazeboInterface::OnModelMsg(ConstModelPtr &_msg)
   if (!this->IsConnected())
     return;
 
-  boost::recursive_mutex::scoped_lock lock(*this->receiveMutex);
+  std::lock_guard<std::recursive_mutex> lock(this->receiveMutex);
   this->modelMsgs.push_back(_msg);
 }
 
@@ -789,7 +764,6 @@ bool GazeboInterface::FilterPoses(const TimedPose &_old,
     // double ratio =  100.0 * this->skippedMsgCount  / this->messageWindowSize;
     // std::cout << "Message filter: " << ratio << " %" << std::endl;
     // std::cout << "Message count : " << this->skippedMsgCount;
-    // std::cout << " "  << << std::endl;
     this->skippedMsgCount = 0;
     this->messageCount = 0;
   }
@@ -838,7 +812,7 @@ bool GazeboInterface::FilterPoses(const TimedPose &_old,
     return true;
   }
 
-    return false;
+  return false;
 }
 
 /////////////////////////////////////////////////
@@ -847,7 +821,7 @@ void GazeboInterface::OnPoseMsg(ConstPosesStampedPtr &_msg)
   if (!this->IsConnected())
     return;
 
-  boost::recursive_mutex::scoped_lock lock(*this->receiveMutex);
+  std::lock_guard<std::recursive_mutex> lock(this->receiveMutex);
   PoseMsgs_L::iterator iter;
 
   for (int i = 0; i < _msg->pose_size(); ++i)
@@ -882,7 +856,7 @@ void GazeboInterface::OnPoseMsg(ConstPosesStampedPtr &_msg)
     else
     {
       TimedPose oldPose = it->second;
-      filtered = FilterPoses(oldPose, currentPose);
+      filtered = this->FilterPoses(oldPose, currentPose);
       if (!filtered)
       {
         // update the map
@@ -892,7 +866,6 @@ void GazeboInterface::OnPoseMsg(ConstPosesStampedPtr &_msg)
       }
     }
   }
-  std::cout.flush();
 }
 
 /////////////////////////////////////////////////
@@ -901,7 +874,7 @@ void GazeboInterface::OnRequest(ConstRequestPtr &_msg)
   if (!this->IsConnected())
     return;
 
-  boost::recursive_mutex::scoped_lock lock(*this->receiveMutex);
+  std::lock_guard<std::recursive_mutex> lock(this->receiveMutex);
   this->requestMsgs.push_back(_msg);
 }
 
@@ -918,7 +891,8 @@ void GazeboInterface::OnResponse(ConstResponsePtr &_msg)
   {
     gazebo::msgs::Scene sceneMsg;
     sceneMsg.ParseFromString(_msg->serialized_data());
-    boost::shared_ptr<gazebo::msgs::Scene> sm(new gazebo::msgs::Scene(sceneMsg));
+    boost::shared_ptr<gazebo::msgs::Scene> sm(
+        new gazebo::msgs::Scene(sceneMsg));
     this->sceneMsgs.push_back(sm);
     this->requests.erase(_msg->id());
   }
@@ -926,7 +900,8 @@ void GazeboInterface::OnResponse(ConstResponsePtr &_msg)
   {
     gazebo::msgs::Physics physicsMsg;
     physicsMsg.ParseFromString(_msg->serialized_data());
-    boost::shared_ptr<gazebo::msgs::Physics> pm(new gazebo::msgs::Physics(physicsMsg));
+    boost::shared_ptr<gazebo::msgs::Physics> pm(
+        new gazebo::msgs::Physics(physicsMsg));
     this->physicsMsgs.push_back(pm);
     this->requests.erase(_msg->id());
   }
@@ -938,7 +913,7 @@ void GazeboInterface::OnLightFactoryMsg(ConstLightPtr &_msg)
   if (!this->IsConnected())
     return;
 
-  boost::recursive_mutex::scoped_lock lock(*this->receiveMutex);
+  std::lock_guard<std::recursive_mutex> lock(this->receiveMutex);
   this->lightFactoryMsgs.push_back(_msg);
 }
 
@@ -948,7 +923,7 @@ void GazeboInterface::OnLightModifyMsg(ConstLightPtr &_msg)
   if (!this->IsConnected())
     return;
 
-  boost::recursive_mutex::scoped_lock lock(*this->receiveMutex);
+  std::lock_guard<std::recursive_mutex> lock(this->receiveMutex);
   this->lightModifyMsgs.push_back(_msg);
 }
 
@@ -958,7 +933,7 @@ void GazeboInterface::OnScene(ConstScenePtr &_msg)
   if (!this->IsConnected())
     return;
 
-  boost::recursive_mutex::scoped_lock lock(*this->receiveMutex);
+  std::lock_guard<std::recursive_mutex> lock(this->receiveMutex);
   this->sceneMsgs.push_back(_msg);
 }
 
@@ -968,7 +943,7 @@ void GazeboInterface::OnPhysicsMsg(ConstPhysicsPtr &_msg)
   if (!this->IsConnected())
     return;
 
-  boost::recursive_mutex::scoped_lock lock(*this->receiveMutex);
+  std::lock_guard<std::recursive_mutex> lock(this->receiveMutex);
   this->physicsMsgs.push_back(_msg);
 }
 
@@ -989,7 +964,8 @@ void GazeboInterface::OnStats(ConstWorldStatisticsPtr &_msg)
   {
     this->lastStatsTime = wallTime;
     this->lastPausedState = paused;
-    boost::recursive_mutex::scoped_lock lock(*this->receiveMutex);
+
+    std::lock_guard<std::recursive_mutex> lock(this->receiveMutex);
     this->statsMsgs.push_back(_msg);
   }
 }
@@ -997,7 +973,7 @@ void GazeboInterface::OnStats(ConstWorldStatisticsPtr &_msg)
 /////////////////////////////////////////////////
 void GazeboInterface::OnRoad(ConstRoadPtr &_msg)
 {
-  boost::recursive_mutex::scoped_lock lock(*this->receiveMutex);
+  std::lock_guard<std::recursive_mutex> lock(this->receiveMutex);
   this->roadMsgs.push_back(_msg);
 }
 
@@ -1007,7 +983,7 @@ void GazeboInterface::OnJointMsg(ConstJointPtr &_msg)
   if (!this->IsConnected())
     return;
 
-  boost::recursive_mutex::scoped_lock lock(*this->receiveMutex);
+  std::lock_guard<std::recursive_mutex> lock(this->receiveMutex);
   this->jointMsgs.push_back(_msg);
 }
 
@@ -1017,7 +993,7 @@ void GazeboInterface::OnSensorMsg(ConstSensorPtr &_msg)
   if (!this->IsConnected())
     return;
 
-  boost::recursive_mutex::scoped_lock lock(*this->receiveMutex);
+  std::lock_guard<std::recursive_mutex> lock(this->receiveMutex);
   this->sensorMsgs.push_back(_msg);
 }
 
@@ -1027,7 +1003,7 @@ void GazeboInterface::OnVisualMsg(ConstVisualPtr &_msg)
   if (!this->IsConnected())
     return;
 
-  boost::recursive_mutex::scoped_lock lock(*this->receiveMutex);
+  std::lock_guard<std::recursive_mutex> lock(this->receiveMutex);
   this->visualMsgs.push_back(_msg);
 }
 
@@ -1058,60 +1034,35 @@ std::string GazeboInterface::PackOutgoingServiceMsg(const std::string &_id,
 /////////////////////////////////////////////////
 void GazeboInterface::Send(const std::string &_msg)
 {
-//  if (this->socketServer)
-//    this->socketServer->Write(_msg);
-  boost::recursive_mutex::scoped_lock lock(outgoingMutex);
+  std::lock_guard<std::recursive_mutex> lock(this->outgoingMutex);
   if (outgoing.size() < MAX_NUM_MSG_SIZE)
-    outgoing.push_back(_msg);
+    this->outgoing.push_back(_msg);
 }
-
-/*
-/////////////////////////////////////////////////
-void GazeboInterface::Write(const std::string &_msg)
-{
-  boost::recursive_mutex::scoped_lock lock(outgoingMutex);
-  if (outgoing.size() < MAX_NUM_MSG_SIZE)
-    outgoing.push_back(_msg);
-}*/
 
 /////////////////////////////////////////////////
 std::vector<std::string> GazeboInterface::PopIncomingMessages()
 {
-  boost::recursive_mutex::scoped_lock lock(incomingMutex);
-  std::vector<std::string> in = incoming;
-  incoming.clear();
+  std::lock_guard<std::recursive_mutex> lock(this->incomingMutex);
+  std::vector<std::string> in = this->incoming;
+  this->incoming.clear();
   return in;
-}
-
-/////////////////////////////////////////////////
-void GazeboInterface::ClearIncomingMessages()
-{
-  boost::recursive_mutex::scoped_lock lock(incomingMutex);
-  incoming.clear();
 }
 
 /////////////////////////////////////////////////
 std::vector<std::string> GazeboInterface::PopOutgoingMessages()
 {
-  boost::recursive_mutex::scoped_lock lock(outgoingMutex);
-  std::vector<std::string> out = outgoing;
-  outgoing.clear();
+  std::lock_guard<std::recursive_mutex> lock(this->outgoingMutex);
+  std::vector<std::string> out = this->outgoing;
+  this->outgoing.clear();
   return out;
-}
-
-/////////////////////////////////////////////////
-void GazeboInterface::ClearOutgoingMessages()
-{
-  boost::recursive_mutex::scoped_lock lock(outgoingMutex);
-  outgoing.clear();
 }
 
 /////////////////////////////////////////////////
 void GazeboInterface::PushRequest(const std::string &_msg)
 {
-  boost::recursive_mutex::scoped_lock lock(incomingMutex);
+  std::lock_guard<std::recursive_mutex> lock(this->incomingMutex);
   if (incoming.size() < MAX_NUM_MSG_SIZE)
-    incoming.push_back(_msg);
+    this->incoming.push_back(_msg);
 }
 
 /////////////////////////////////////////////////
@@ -1122,26 +1073,62 @@ void GazeboInterface::LoadMaterialScripts(const std::string &_path)
 }
 
 /////////////////////////////////////////////////
-void GazeboInterface::WaitForConnection() const
+void GazeboInterface::WaitForConnection()
 {
-  boost::mutex::scoped_lock lock(*this->connectionMutex);
+  std::unique_lock<std::mutex> lock(this->connectionMutex);
   while (!this->isConnected)
   {
-    this->connectionCondition->wait(lock);
+    this->connectionCondition.wait(lock);
   }
 }
 
 /////////////////////////////////////////////////
 void GazeboInterface::SetConnected(bool _connected)
 {
-  boost::mutex::scoped_lock lock(*this->connectionMutex);
+  std::lock_guard<std::mutex> lock(this->connectionMutex);
   this->isConnected = _connected;
-  this->connectionCondition->notify_all();
+  this->connectionCondition.notify_all();
 }
 
 /////////////////////////////////////////////////
-bool GazeboInterface::IsConnected() const
+bool GazeboInterface::IsConnected()
 {
-  boost::mutex::scoped_lock lock(*this->connectionMutex);
+  std::lock_guard<std::mutex> lock(this->connectionMutex);
   return this->isConnected;
+}
+
+/////////////////////////////////////////////////
+void GazeboInterface::SetPoseFilterMinimumDistanceSquared(double _m)
+{
+  this->minimumDistanceSquared = _m;
+}
+
+/////////////////////////////////////////////////
+double GazeboInterface::GetPoseFilterMinimumDistanceSquared()
+{
+  return this->minimumDistanceSquared;
+}
+
+/////////////////////////////////////////////////
+void GazeboInterface::SetPoseFilterMinimumQuaternionSquared(double _m)
+{
+  this->minimumQuaternionSquared = _m;
+}
+
+/////////////////////////////////////////////////
+double GazeboInterface::GetPoseFilterMinimumQuaternionSquared()
+{
+  return this->minimumQuaternionSquared;
+}
+
+/////////////////////////////////////////////////
+void GazeboInterface::SetPoseFilterMinimumMsgAge(double _m)
+{
+  this->minimumMsgAge = _m;
+}
+
+/////////////////////////////////////////////////
+double GazeboInterface::GetPoseFilterMinimumMsgAge()
+{
+  return this->minimumMsgAge;
 }

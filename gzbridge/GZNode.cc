@@ -27,12 +27,11 @@ using namespace gzweb;
 /////////////////////////////////////////////////
 GZNode::GZNode()
 {
-  isGzServerConnected = false;
   if (!gazebo::transport::init()) {
     return;
   }
 
-  isGzServerConnected = true;
+  this->isGzServerConnected = true;
   gazebo::transport::run();
 
   this->gzIface = new GazeboInterface();
@@ -65,17 +64,21 @@ void GZNode::Init(Handle<Object> exports)
   NODE_SET_PROTOTYPE_METHOD(tpl, "setPoseMsgFilterMinimumQuaternionSquared", SetPoseMsgFilterMinimumQuaternionSquared);
   NODE_SET_PROTOTYPE_METHOD(tpl, "getPoseMsgFilterMinimumQuaternionSquared", GetPoseMsgFilterMinimumQuaternionSquared);
 
-  NODE_SET_PROTOTYPE_METHOD(tpl, "getPoseMsgFilterMinimumAge", GetPoseMsgFilterMinimumAge);
+  NODE_SET_PROTOTYPE_METHOD(tpl, "getPoseMsgFilterMinimumAge",
+      GetPoseMsgFilterMinimumAge);
 
-  NODE_SET_PROTOTYPE_METHOD(tpl, "setPoseMsgFilterMinimumAge", SetPoseMsgFilterMinimumAge);
+  NODE_SET_PROTOTYPE_METHOD(tpl, "setPoseMsgFilterMinimumAge",
+      SetPoseMsgFilterMinimumAge);
 
   NODE_SET_PROTOTYPE_METHOD(tpl, "getMessages", GetMessages);
 
   NODE_SET_PROTOTYPE_METHOD(tpl, "request", Request);
 
-  NODE_SET_PROTOTYPE_METHOD(tpl, "getIsGzServerConnected", GetIsGzServerConnected);
+  NODE_SET_PROTOTYPE_METHOD(tpl, "getIsGzServerConnected",
+      GetIsGzServerConnected);
 
-  NODE_SET_PROTOTYPE_METHOD(tpl, "getMaterialScriptsMessage", GetMaterialScriptsMessage);
+  NODE_SET_PROTOTYPE_METHOD(tpl, "getMaterialScriptsMessage",
+      GetMaterialScriptsMessage);
 
   exports->Set(String::NewFromUtf8(isolate, "GZNode"),
                tpl->GetFunction());
@@ -185,7 +188,7 @@ void GZNode::SetPoseMsgFilterMinimumDistanceSquared(const
 }
 
 /////////////////////////////////////////////////
-void GZNode::GetPoseMsgFilterMinimumDistanceSquared(const 
+void GZNode::GetPoseMsgFilterMinimumDistanceSquared(const
     FunctionCallbackInfo<Value>& args)
 {
   Isolate* isolate = args.GetIsolate();
@@ -195,9 +198,9 @@ void GZNode::GetPoseMsgFilterMinimumDistanceSquared(const
 }
 
 /////////////////////////////////////////////////////
-void GZNode::SetPoseMsgFilterMinimumQuaternionSquared(const 
+void GZNode::SetPoseMsgFilterMinimumQuaternionSquared(const
     FunctionCallbackInfo<Value>& args)
-{  
+{
   GZNode *obj = ObjectWrap::Unwrap<GZNode>(args.This());
   Local<Number> v = Local<Number>::Cast(args[0]);
   double value = v->Value();
@@ -207,7 +210,7 @@ void GZNode::SetPoseMsgFilterMinimumQuaternionSquared(const
 }
 
 /////////////////////////////////////////////////
-void GZNode::GetPoseMsgFilterMinimumQuaternionSquared(const 
+void GZNode::GetPoseMsgFilterMinimumQuaternionSquared(const
     FunctionCallbackInfo<Value>& args)
 {
   Isolate* isolate = args.GetIsolate();
@@ -262,7 +265,7 @@ void GZNode::Request(const FunctionCallbackInfo<Value>& args)
 }
 
 /////////////////////////////////////////////////
-void GZNode::SetPoseMsgFilterMinimumAge(const 
+void GZNode::SetPoseMsgFilterMinimumAge(const
     FunctionCallbackInfo<Value>& args)
 {
   GZNode* obj = ObjectWrap::Unwrap<GZNode>(args.This());
@@ -274,7 +277,7 @@ void GZNode::SetPoseMsgFilterMinimumAge(const
 }
 
 /////////////////////////////////////////////////
-void GZNode::GetPoseMsgFilterMinimumAge(const 
+void GZNode::GetPoseMsgFilterMinimumAge(const
     FunctionCallbackInfo<Value>& args)
 {
   GZNode* obj = ObjectWrap::Unwrap<GZNode>(args.This());

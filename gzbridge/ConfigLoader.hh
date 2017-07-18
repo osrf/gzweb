@@ -1,5 +1,5 @@
-#ifndef _CONFIG_LOADER_HH_
-#define _CONFIG_LOADER_HH_
+#ifndef GZBRIDGE_CONFIG_LOADER_HH_
+#define GZBRIDGE_CONFIG_LOADER_HH_
 
 #include <map>
 #include <vector>
