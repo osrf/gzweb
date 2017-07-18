@@ -858,7 +858,7 @@ void GazeboInterface::OnPoseMsg(ConstPosesStampedPtr &_msg)
     else
     {
       TimedPose oldPose = it->second;
-      filtered = FilterPoses(oldPose, currentPose);
+      filtered = this->FilterPoses(oldPose, currentPose);
       if (!filtered)
       {
         // update the map
@@ -1039,7 +1039,7 @@ void GazeboInterface::Send(const std::string &_msg)
 {
   std::lock_guard<std::recursive_mutex> lock(this->outgoingMutex);
   if (outgoing.size() < MAX_NUM_MSG_SIZE)
-    outgoing.push_back(_msg);
+    this->outgoing.push_back(_msg);
 }
 
 /////////////////////////////////////////////////
