@@ -302,6 +302,9 @@ $(function()
   // Touch devices
   if (isTouchDevice)
   {
+    $('#logplay-slider')
+        .css('width', '100%');
+
     $('.mouse-only')
         .css('display','none');
 
@@ -619,6 +622,15 @@ $(function()
   {
     guiEvents.emit('resizePanel');
   });
+
+  $('#logplay-slider-input').on('slidestop', function(event, ui)
+  {
+    guiEvents.emit('logPlaySlideStop', $('#logplay-slider-input').val());
+  });
+  $('#logplay-slider-input').on('slidestart', function(event, ui)
+  {
+    guiEvents.emit('logPlaySlideStart');
+  });
 });
 
 function getNameFromPath(path)
@@ -825,6 +837,7 @@ GZ3D.Gui = function(scene)
   this.init();
   this.emitter = new EventEmitter2({verbose: true});
   this.guiEvents = guiEvents;
+  this.logPlayVisible = false;
 };
 
 /**
@@ -836,6 +849,9 @@ GZ3D.Gui.prototype.init = function()
   this.longPressContainerState = null;
   this.showNotifications = false;
   this.openTreeWhenSelected = false;
+
+  this.logPlay = new GZ3D.LogPlay(
+      this, guiEvents);
 
   var that = this;
 
@@ -1502,7 +1518,7 @@ GZ3D.Gui.prototype.setPaused = function(paused)
  */
 GZ3D.Gui.prototype.setRealTime = function(realTime)
 {
-  $('.real-time-value').text(realTime);
+  $('.real-time-value').text(formatTime(realTime));
 };
 
 /**
@@ -1511,7 +1527,7 @@ GZ3D.Gui.prototype.setRealTime = function(realTime)
  */
 GZ3D.Gui.prototype.setSimTime = function(simTime)
 {
-  $('.sim-time-value').text(simTime);
+  $('.sim-time-value').text(formatTime(simTime));
 };
 
 var sceneStats = {};
@@ -2167,6 +2183,66 @@ GZ3D.Gui.prototype.deleteFromStats = function(type, name)
 };
 
 /**
+ * Set the visibility of the log play back widget
+ * @param {} visible
+ */
+GZ3D.Gui.prototype.setLogPlayVisible = function(visible)
+{
+  if (visible === this.logPlayVisible)
+  {
+    return;
+  }
+
+  this.logPlayVisible = visible;
+
+  // update UI to be in log playback mode
+  if (visible)
+  {
+    $('#editMenu').hide();
+    $('#insertMenuTab').hide();
+    $('#manipulatorModeFieldset').hide();
+    $('#simpleShapesFieldset').hide();
+    $('#lightsFieldset').hide();
+    $('#clock-mouse').hide();
+    $('#clock-header-fieldset').hide();
+
+    // move the play button
+    $('#play-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '7.5em')
+        .css('bottom', '2.5em')
+//        .css('top', 'initial')
+        .css('z-index', '1000');
+  }
+  else
+  {
+    $('#editMenu').show();
+    $('#insertMenuTab').show();
+    $('#manipulatorModeFieldset').show();
+    $('#simpleShapesFieldset').show();
+    $('#lightsFieldset').show();
+    $('#clock-mouse').show();
+    $('#clock-header-fieldset').show();
+
+    /// TODO revert back to old pos
+  }
+  this.logPlay.setVisible(this.logPlayVisible);
+};
+
+/**
+ * Set the log play back stats
+ * @param {} simTime
+ * @param {} startTime
+ * @param {} endTime
+ */
+GZ3D.Gui.prototype.setLogPlayStats = function(simTime, startTime, endTime)
+{
+  this.logPlay.setStats(simTime, startTime, endTime);
+  $('.end-time-value').text(formatTime(endTime));
+};
+
+
+/**
  * Convert name to id and vice versa
  * @param {} name Entity Name
  * @param {} reverse convert id to name
@@ -2181,4 +2257,50 @@ var convertNameId = function(name, reverse)
   {
     return name.replace(new RegExp(' ', 'g'), '_gzspace_');
   }
+};
+
+/**
+ * Format time string
+ * @param {} time object
+ */
+var formatTime = function(time)
+{
+  var timeSec = time.sec;
+  var timeNSec = time.nsec;
+
+  var timeDay = Math.floor(timeSec / 86400);
+  timeSec -= timeDay * 86400;
+
+  var timeHour = Math.floor(timeSec / 3600);
+  timeSec -= timeHour * 3600;
+
+  var timeMin = Math.floor(timeSec / 60);
+  timeSec -= timeMin * 60;
+
+  var timeMsec = Math.floor(timeNSec * 1e-6);
+
+  var timeValue = '';
+
+  if (timeDay < 10)
+  {
+    timeValue += '0';
+  }
+  timeValue += timeDay.toFixed(0)  + ' ';
+  if (timeHour < 10)
+  {
+    timeValue += '0';
+  }
+  timeValue += timeHour.toFixed(0) + ':';
+  if (timeMin < 10)
+  {
+    timeValue += '0';
+  }
+  timeValue += timeMin.toFixed(0) + ':';
+  if (timeSec < 10)
+  {
+    timeValue += '0';
+  }
+  timeValue += timeSec.toFixed(0);
+
+  return timeValue;
 };

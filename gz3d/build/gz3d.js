@@ -307,6 +307,9 @@ $(function()
   // Touch devices
   if (isTouchDevice)
   {
+    $('#logplay-slider')
+        .css('width', '100%');
+
     $('.mouse-only')
         .css('display','none');
 
@@ -624,6 +627,15 @@ $(function()
   {
     guiEvents.emit('resizePanel');
   });
+
+  $('#logplay-slider-input').on('slidestop', function(event, ui)
+  {
+    guiEvents.emit('logPlaySlideStop', $('#logplay-slider-input').val());
+  });
+  $('#logplay-slider-input').on('slidestart', function(event, ui)
+  {
+    guiEvents.emit('logPlaySlideStart');
+  });
 });
 
 function getNameFromPath(path)
@@ -830,6 +842,7 @@ GZ3D.Gui = function(scene)
   this.init();
   this.emitter = new EventEmitter2({verbose: true});
   this.guiEvents = guiEvents;
+  this.logPlayVisible = false;
 };
 
 /**
@@ -841,6 +854,9 @@ GZ3D.Gui.prototype.init = function()
   this.longPressContainerState = null;
   this.showNotifications = false;
   this.openTreeWhenSelected = false;
+
+  this.logPlay = new GZ3D.LogPlay(
+      this, guiEvents);
 
   var that = this;
 
@@ -1507,7 +1523,7 @@ GZ3D.Gui.prototype.setPaused = function(paused)
  */
 GZ3D.Gui.prototype.setRealTime = function(realTime)
 {
-  $('.real-time-value').text(realTime);
+  $('.real-time-value').text(formatTime(realTime));
 };
 
 /**
@@ -1516,7 +1532,7 @@ GZ3D.Gui.prototype.setRealTime = function(realTime)
  */
 GZ3D.Gui.prototype.setSimTime = function(simTime)
 {
-  $('.sim-time-value').text(simTime);
+  $('.sim-time-value').text(formatTime(simTime));
 };
 
 var sceneStats = {};
@@ -1699,19 +1715,19 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
               return e.shortName === LinkShortName;
             });
 
-	if (link[0])
-        {        
-	    if (link[0].self_collide)
+        if (link[0])
+        {
+            if (link[0].self_collide)
             {
                 link[0].self_collide = this.trueOrFalse(stats.link[0].self_collide);
             }
             if (link[0].gravity)
             {
-               link[0].gravity = this.trueOrFalse(stats.link[0].gravity);
+                link[0].gravity = this.trueOrFalse(stats.link[0].gravity);
             }
             if (link[0].kinematic)
             {
-              link[0].kinematic = this.trueOrFalse(stats.link[0].kinematic);
+                link[0].kinematic = this.trueOrFalse(stats.link[0].kinematic);
             }
         }
       }
@@ -2172,6 +2188,66 @@ GZ3D.Gui.prototype.deleteFromStats = function(type, name)
 };
 
 /**
+ * Set the visibility of the log play back widget
+ * @param {} visible
+ */
+GZ3D.Gui.prototype.setLogPlayVisible = function(visible)
+{
+  if (visible === this.logPlayVisible)
+  {
+    return;
+  }
+
+  this.logPlayVisible = visible;
+
+  // update UI to be in log playback mode
+  if (visible)
+  {
+    $('#editMenu').hide();
+    $('#insertMenuTab').hide();
+    $('#manipulatorModeFieldset').hide();
+    $('#simpleShapesFieldset').hide();
+    $('#lightsFieldset').hide();
+    $('#clock-mouse').hide();
+    $('#clock-header-fieldset').hide();
+
+    // move the play button
+    $('#play-header-fieldset')
+        .css('position', 'absolute')
+        .css('right', '7.5em')
+        .css('bottom', '2.5em')
+//        .css('top', 'initial')
+        .css('z-index', '1000');
+  }
+  else
+  {
+    $('#editMenu').show();
+    $('#insertMenuTab').show();
+    $('#manipulatorModeFieldset').show();
+    $('#simpleShapesFieldset').show();
+    $('#lightsFieldset').show();
+    $('#clock-mouse').show();
+    $('#clock-header-fieldset').show();
+
+    /// TODO revert back to old pos
+  }
+  this.logPlay.setVisible(this.logPlayVisible);
+};
+
+/**
+ * Set the log play back stats
+ * @param {} simTime
+ * @param {} startTime
+ * @param {} endTime
+ */
+GZ3D.Gui.prototype.setLogPlayStats = function(simTime, startTime, endTime)
+{
+  this.logPlay.setStats(simTime, startTime, endTime);
+  $('.end-time-value').text(formatTime(endTime));
+};
+
+
+/**
  * Convert name to id and vice versa
  * @param {} name Entity Name
  * @param {} reverse convert id to name
@@ -2186,6 +2262,52 @@ var convertNameId = function(name, reverse)
   {
     return name.replace(new RegExp(' ', 'g'), '_gzspace_');
   }
+};
+
+/**
+ * Format time string
+ * @param {} time object
+ */
+var formatTime = function(time)
+{
+  var timeSec = time.sec;
+  var timeNSec = time.nsec;
+
+  var timeDay = Math.floor(timeSec / 86400);
+  timeSec -= timeDay * 86400;
+
+  var timeHour = Math.floor(timeSec / 3600);
+  timeSec -= timeHour * 3600;
+
+  var timeMin = Math.floor(timeSec / 60);
+  timeSec -= timeMin * 60;
+
+  var timeMsec = Math.floor(timeNSec * 1e-6);
+
+  var timeValue = '';
+
+  if (timeDay < 10)
+  {
+    timeValue += '0';
+  }
+  timeValue += timeDay.toFixed(0)  + ' ';
+  if (timeHour < 10)
+  {
+    timeValue += '0';
+  }
+  timeValue += timeHour.toFixed(0) + ':';
+  if (timeMin < 10)
+  {
+    timeValue += '0';
+  }
+  timeValue += timeMin.toFixed(0) + ':';
+  if (timeSec < 10)
+  {
+    timeValue += '0';
+  }
+  timeValue += timeSec.toFixed(0);
+
+  return timeValue;
 };
 
 //var GAZEBO_MODEL_DATABASE_URI='http://gazebosim.org/models';
@@ -2810,87 +2932,41 @@ GZ3D.GZIface.prototype.onConnected = function()
         publishWorldControl(paused, null);
       }
   );
+
+  // Log play control messages
+  this.playbackControlTopic = new ROSLIB.Topic({
+    ros : this.webSocket,
+    name : '~/playback_control',
+    messageType : 'playback_control',
+  });
+
+  var publishPlaybackControl = function(playbackControl)
+  {
+    that.playbackControlTopic.publish(playbackControl);
+  };
+
+  this.gui.emitter.on('logPlayChanged', publishPlaybackControl);
 };
 
 GZ3D.GZIface.prototype.updateStatsGuiFromMsg = function(stats)
 {
   this.gui.setPaused(stats.paused);
 
-  var simSec = stats.sim_time.sec;
-  var simNSec = stats.sim_time.nsec;
-
-  var simDay = Math.floor(simSec / 86400);
-  simSec -= simDay * 86400;
-
-  var simHour = Math.floor(simSec / 3600);
-  simSec -= simHour * 3600;
-
-  var simMin = Math.floor(simSec / 60);
-  simSec -= simMin * 60;
-
-  var simMsec = Math.floor(simNSec * 1e-6);
-
-  var realSec = stats.real_time.sec;
-  var realNSec = stats.real_time.nsec;
-
-  var realDay = Math.floor(realSec / 86400);
-  realSec -= realDay * 86400;
-
-  var realHour = Math.floor(realSec / 3600);
-  realSec -= realHour * 3600;
-
-  var realMin = Math.floor(realSec / 60);
-  realSec -= realMin * 60;
-
-  var realMsec = Math.floor(realNSec * 1e-6);
-
-  var simTimeValue = '';
-  var realTimeValue = '';
-
-  if (realDay < 10)
+  if (stats.log_playback_stats)
   {
-    realTimeValue += '0';
+    this.gui.setLogPlayVisible(true);
+    this.gui.setLogPlayStats(stats.sim_time,
+        stats.log_playback_stats.start_time,
+        stats.log_playback_stats.end_time);
   }
-  realTimeValue += realDay.toFixed(0) + ' ';
-  if (realHour < 10)
+  else
   {
-    realTimeValue += '0';
-  }
-  realTimeValue += realHour.toFixed(0) + ':';
-  if (realMin < 10)
-  {
-    realTimeValue += '0';
-  }
-  realTimeValue += realMin.toFixed(0)  + ':';
-  if (realSec < 10)
-  {
-    realTimeValue += '0';
-  }
-  realTimeValue += realSec.toFixed(0);
+    this.gui.setLogPlayVisible(false);
 
-  if (simDay < 10)
-  {
-    simTimeValue += '0';
+    this.gui.setRealTime(stats.real_time);
   }
-  simTimeValue += simDay.toFixed(0)  + ' ';
-  if (simHour < 10)
-  {
-    simTimeValue += '0';
-  }
-  simTimeValue += simHour.toFixed(0) + ':';
-  if (simMin < 10)
-  {
-    simTimeValue += '0';
-  }
-  simTimeValue += simMin.toFixed(0) + ':';
-  if (simSec < 10)
-  {
-    simTimeValue += '0';
-  }
-  simTimeValue += simSec.toFixed(0);
 
-  this.gui.setRealTime(realTimeValue);
-  this.gui.setSimTime(simTimeValue);
+  this.gui.setSimTime(stats.sim_time);
 };
 
 GZ3D.GZIface.prototype.createModelFromMsg = function(model)
@@ -3399,7 +3475,6 @@ GZ3D.GZIface.prototype.parseMaterial = function(material)
   };
 };
 
-
 /*GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
 {
   var obj;
@@ -3625,6 +3700,143 @@ GZ3D.GZIface.prototype.parseMaterial = function(material)
   }
 };
 */
+
+ var nsInSec = 1000000000;
+
+var correctTime = function(time)
+{
+  var n = 0;
+  // In the case sec and nsec have different signs, normalize
+  if (time.sec > 0 && time.nsec < 0)
+  {
+    n = Math.floor(Math.abs(time.nsec / nsInSec) + 1);
+    time.sec -= n;
+    time.nsec += n * nsInSec;
+  }
+  if (time.sec < 0 && time.nsec > 0)
+  {
+    n = Math.floor(Math.abs(time.nsec / nsInSec) + 1);
+    time.sec += n;
+    time.nsec -= n * nsInSec;
+  }
+
+  // Make any corrections
+  time.sec += Math.floor(time.nsec / nsInSec);
+  time.nsec = Math.floor(time.nsec % nsInSec);
+};
+
+var subtractTime = function(timeA, timeB)
+{
+  var result = {};
+  result.sec = timeA.sec - timeB.sec;
+  result.nsec = timeA.nsec - timeB.nsec;
+  correctTime(result);
+  return result;
+};
+
+/**
+ * log playback
+ * @constructor
+ */
+GZ3D.LogPlay = function(gui, guiEvents)
+{
+  this.gui = gui;
+  this.visible = null;
+  this.startTime = null;
+  this.endTime = null;
+  this.active = false;
+  this.sliderRange = 100;
+
+  var that = this;
+
+  // when slide pos changes
+  guiEvents.on('logPlaySlideStop', function (value)
+    {
+      if (!that.startTime || !that.endTime)
+      {
+        return;
+      }
+
+      var rel = value / that.sliderRange;
+      var seek = (that.startTime.sec + that.startTime.nsec * 1e-9) +
+        rel * (that.totalTime.sec + that.totalTime.nsec * 1e-9);
+
+      var playback = {};
+      playback.seek = {};
+      playback.seek.sec = Math.floor(seek);
+      playback.seek.nsec = Math.round((seek - playback.seek.sec) * nsInSec);
+
+      // publich playback control command msg
+      that.gui.emitter.emit('logPlayChanged', playback);
+      that.active = false;
+      console.log('no longer active !!!!!!!!!!!!!!!!!!!!!!!!');
+    }
+  );
+
+  guiEvents.on('logPlaySlideStart', function ()
+    {
+      console.log('active !!!!!!!!!!!!!!!!!!!!!!!!');
+      that.active = true;
+    }
+  );
+
+  this.init();
+};
+
+/**
+ * Initialize log playback
+ */
+GZ3D.LogPlay.prototype.init = function()
+{
+};
+
+/**
+ * Set log playback widget visibility
+ */
+GZ3D.LogPlay.prototype.setVisible = function(visible)
+{
+  console.log('set log play visible ' + visible);
+  if (visible)
+  {
+    $('#logplay').show();
+  }
+  else
+  {
+    $('#logplay').hide();
+  }
+};
+
+/**
+ * Set log playback stats based on data received
+ */
+GZ3D.LogPlay.prototype.setStats = function(simTime, startTime, endTime)
+{
+  this.simTime = simTime;
+
+  if (!this.startTime || !this.endTime || !this.totalTime ||
+      this.startTime.sec !== startTime.sec ||
+      this.startTime.nsec !== startTime.nsec ||
+      this.endTime.sec !== endTime.sec ||
+      this.endTime.nsec !== endTime.nsec)
+  {
+    this.startTime = startTime;
+    this.endTime = endTime;
+    this.totalTime = subtractTime(endTime, startTime);
+  }
+
+  if (!this.active)
+  {
+    // work out new slider value to set to
+    var relTime = subtractTime(this.simTime, this.startTime);
+    var newVal = (relTime.sec + relTime.nsec * 1e-9) /
+        (this.totalTime.sec + this.totalTime.nsec * 1e-9);
+    newVal = Math.max(newVal, 0);
+
+    // slider range: 0 - 100
+    $('#logplay-slider-input').val(newVal*this.sliderRange).slider('refresh');
+    $('#logplay-slider-input').text(newVal*this.sliderRange).slider('refresh');
+  }
+};
 
 // Based on TransformControls.js
 // original author: arodic / https://github.com/arodic

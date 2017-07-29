@@ -123,7 +123,7 @@
           </div>
           <div class="panelContent">
             <ul>
-              <div data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
+              <div id='editMenu' data-role="collapsible" data-inset="false" data-iconpos="left" data-collapsed-icon="carat-r" data-expanded-icon="carat-d">
                 <h3><span class="collapsible_header">Edit</span></h3>
                 <ul data-role="listview">
                   <li id='reset-world' data-icon="false"><a href="#"><span class="collapsible_item">Reset World</span></a></li>
@@ -1100,37 +1100,55 @@
         <p>Sim Time: <span class='sim-time-value'>00 00:00:00</span></p>
       </div>
 
-      <fieldset class="gzGUI" data-role="controlgroup" data-mini="true" data-type="horizontal" id="mode-header-fieldset">
-        <input type="radio" name="radio-mini" id="view-mode" value="choice-1" checked="checked" />
-        <label for="view-mode"><img style="height:1.8em" src="style/images/arrow.png" title="View Mode (ESC)"></label>
+      <div id='manipulatorModeFieldset'>
+        <fieldset class="gzGUI" data-role="controlgroup" data-mini="true" data-type="horizontal" id="mode-header-fieldset">
+          <input type="radio" name="radio-mini" id="view-mode" value="choice-1" checked="checked" />
+          <label for="view-mode"><img style="height:1.8em" src="style/images/arrow.png" title="View Mode (ESC)"></label>
 
-        <input type="radio" name="radio-mini" id="translate-mode" value="choice-2"  />
-        <label for="translate-mode"><img style="height:1.8em" src="style/images/translate.png" title="Translation Mode (T)"></label>
+          <input type="radio" name="radio-mini" id="translate-mode" value="choice-2"  />
+          <label for="translate-mode"><img style="height:1.8em" src="style/images/translate.png" title="Translation Mode (T)"></label>
 
-        <input type="radio" name="radio-mini" id="rotate-mode" value="choice-3"  />
-        <label for="rotate-mode"><img style="height:1.8em" src="style/images/rotate.png" title="Rotation Mode (R)"></label>
-      </fieldset>
+          <input type="radio" name="radio-mini" id="rotate-mode" value="choice-3"  />
+          <label for="rotate-mode"><img style="height:1.8em" src="style/images/rotate.png" title="Rotation Mode (R)"></label>
+        </fieldset>
+      </div>
 
-      <fieldset id="box-header-fieldset" class="gzGUI mouse-only">
-        <a data-role="button" id="header-insert-box" class="header-button"><span><img src="style/images/box.png" title="Insert box"></span></a>
-      </fieldset>
-      <fieldset id="sphere-header-fieldset" class="gzGUI mouse-only">
-        <a data-role="button" id="header-insert-sphere" class="header-button"><span><img src="style/images/sphere.png" title="Insert sphere"></span></a>
-      </fieldset>
-      <fieldset id="cylinder-header-fieldset" class="gzGUI mouse-only">
-        <a data-role="button" id="header-insert-cylinder" class="header-button"><span><img src="style/images/cylinder.png" title="Insert cylinder"></span></a>
-      </fieldset>
+      <div id='simpleShapesFieldset'>
+        <fieldset id="box-header-fieldset" class="gzGUI mouse-only">
+          <a data-role="button" id="header-insert-box" class="header-button"><span><img src="style/images/box.png" title="Insert box"></span></a>
+        </fieldset>
+        <fieldset id="sphere-header-fieldset" class="gzGUI mouse-only">
+          <a data-role="button" id="header-insert-sphere" class="header-button"><span><img src="style/images/sphere.png" title="Insert sphere"></span></a>
+        </fieldset>
+        <fieldset id="cylinder-header-fieldset" class="gzGUI mouse-only">
+          <a data-role="button" id="header-insert-cylinder" class="header-button"><span><img src="style/images/cylinder.png" title="Insert cylinder"></span></a>
+        </fieldset>
+      </div>
 
-      <fieldset id="pointlight-header-fieldset" class="gzGUI mouse-only">
-        <a data-role="button" id="header-insert-pointlight" class="header-button"><span><img style="height:1.45em;" src="style/images/pointlight.png" title="Insert point light"></span></a>
-      </fieldset>
-      <fieldset id="spotlight-header-fieldset" class="gzGUI mouse-only">
-        <a data-role="button" id="header-insert-spotlight" class="header-button"><span><img src="style/images/spotlight.png" title="Insert spot light"></span></a>
-      </fieldset>
-      <fieldset id="directionallight-header-fieldset" class="gzGUI mouse-only">
-        <a data-role="button" id="header-insert-directionallight" class="header-button"><span><img src="style/images/directionallight.png" title="Insert directional light"></span></a>
-      </fieldset>
+      <div id='lightsFieldset'>
+        <fieldset id="pointlight-header-fieldset" class="gzGUI mouse-only">
+          <a data-role="button" id="header-insert-pointlight" class="header-button"><span><img style="height:1.45em;" src="style/images/pointlight.png" title="Insert point light"></span></a>
+        </fieldset>
+        <fieldset id="spotlight-header-fieldset" class="gzGUI mouse-only">
+          <a data-role="button" id="header-insert-spotlight" class="header-button"><span><img src="style/images/spotlight.png" title="Insert spot light"></span></a>
+        </fieldset>
+        <fieldset id="directionallight-header-fieldset" class="gzGUI mouse-only">
+          <a data-role="button" id="header-insert-directionallight" class="header-button"><span><img src="style/images/directionallight.png" title="Insert directional light"></span></a>
+        </fieldset>
+      </div>
       <!-- header -->
+
+      <!-- log play-->
+      <div id="logplay" class="gzGUI" style="display: none">
+        <div id='logplay-slider' class="ui-field-contain gzGUI">
+          <label for="logplay-slider-input"></label>
+          <input type="range" name="logPlay" id="logplay-slider-input" value="0" min="0" max="100" data-mini="true" data-highlight="true" class="ui-hidden-accessible">
+        </div>
+        <fieldset id="logplay-clock-fieldset" class="gzGUI mouse-only">
+          <p><span class='sim-time-value'>00 00:00:00</span></p>
+          <p><span class='end-time-value'>00 00:00:00</span></p>
+        </fieldset>
+      </div>
 
       <!-- content -->
       <div data-role="content" id="container">

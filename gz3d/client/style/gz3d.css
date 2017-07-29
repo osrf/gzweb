@@ -733,3 +733,31 @@ input[type=number]::-webkit-inner-spin-button
   }
 }
 
+#logplay-slider
+{
+  right: 0px;
+  width: 70%;
+  position: absolute;
+  bottom: 0px;
+  z-index: 1000;
+}
+
+#logplay-clock-fieldset
+{
+  position: absolute;
+  bottom: 3em;
+  right: 1em;
+  width: 5.6em;
+  height: 2.5em;
+  background-color: #333333;
+  padding: 3px;
+  border-radius: 3px;
+  z-index: 1000;
+}
+
+#logplay-clock-fieldset > p
+{
+  margin: 0;
+  margin-right: 0.25em;
+  text-align: right;
+}
