@@ -400,7 +400,7 @@ $(function()
         .css('right', '29.0em')
         .css('top', '0.5em')
         .css('z-index', '100')
-        .css('width', '11em')
+        .css('width', '11.5em')
         .css('height', '2.5em')
         .css('background-color', '#333333')
         .css('padding', '3px')
@@ -631,6 +631,33 @@ $(function()
   {
     guiEvents.emit('logPlaySlideStart');
   });
+  $('#logplay-rewind').click(function()
+      {
+        guiEvents.emit('logPlayRewind');
+      });
+  $('#logplay-stepback').click(function()
+      {
+        guiEvents.emit('logPlayStepback');
+      });
+  $('#logplay-play').click(function()
+      {
+        if ( $('#logplay-playText').html().indexOf('Play') !== -1 )
+        {
+          guiEvents.emit('pause', false);
+        }
+        else
+        {
+          guiEvents.emit('pause', true);
+        }
+      });
+  $('#logplay-stepforward').click(function()
+      {
+        guiEvents.emit('logPlayStepforward');
+      });
+  $('#logplay-forward').click(function()
+      {
+        guiEvents.emit('logPlayForward');
+      });
 });
 
 function getNameFromPath(path)
@@ -1510,6 +1537,10 @@ GZ3D.Gui.prototype.setPaused = function(paused)
         '<img style="height:1.2em" src="style/images/pause.png" title="Pause">'
         );
   }
+  // pause'd' event to inidicate simulation pause state has changed
+  // this is different from the 'pause' event which indicates user has pressed
+  // the play/pause button.
+  guiEvents.emit('paused', paused);
 };
 
 /**
@@ -2205,14 +2236,7 @@ GZ3D.Gui.prototype.setLogPlayVisible = function(visible)
     $('#lightsFieldset').hide();
     $('#clock-mouse').hide();
     $('#clock-header-fieldset').hide();
-
-    // move the play button
-    $('#play-header-fieldset')
-        .css('position', 'absolute')
-        .css('right', '7.5em')
-        .css('bottom', '2.5em')
-//        .css('top', 'initial')
-        .css('z-index', '1000');
+    $('#play-header-fieldset').hide();
   }
   else
   {
@@ -2223,8 +2247,7 @@ GZ3D.Gui.prototype.setLogPlayVisible = function(visible)
     $('#lightsFieldset').show();
     $('#clock-mouse').show();
     $('#clock-header-fieldset').show();
-
-    /// TODO revert back to old pos
+    $('#play-header-fieldset').show();
   }
   this.logPlay.setVisible(this.logPlayVisible);
 };
@@ -2281,11 +2304,13 @@ var formatTime = function(time)
 
   var timeValue = '';
 
+/*
   if (timeDay < 10)
   {
     timeValue += '0';
   }
   timeValue += timeDay.toFixed(0)  + ' ';
+*/
   if (timeHour < 10)
   {
     timeValue += '0';
@@ -2300,7 +2325,9 @@ var formatTime = function(time)
   {
     timeValue += '0';
   }
-  timeValue += timeSec.toFixed(0);
+  timeValue += timeSec.toFixed(0) + '.';
+
+  timeValue += ('00' + timeMsec.toFixed(0)).slice(-3);
 
   return timeValue;
 };

@@ -609,8 +609,7 @@ void GazeboInterface::ProcessMessages()
           // simulate latching stats topic
           if (this->statsMsgs.empty())
           {
-            std::cerr << " latch stats " << std::endl;
-            this->statsMsgs.push_back(this->lastStatsMsg);
+            this->statsMsgs.push_back(this->statsMsg);
           }
         }
       }
@@ -989,9 +988,9 @@ void GazeboInterface::OnPhysicsMsg(ConstPhysicsPtr &_msg)
 /////////////////////////////////////////////////
 void GazeboInterface::OnStats(ConstWorldStatisticsPtr &_msg)
 {
-  // get last stats msg. This is used by client to determine if
-  // gazebo is in sim or playback mode
-  this->lastStatsMsg = _msg;
+  // store stats msg. This is sent to all clients when they first connect to
+  // the bridge to determine if gazebo is in sim or playback mode
+  this->statsMsg = _msg;
 
   if (!this->IsConnected())
     return;
@@ -1011,6 +1010,7 @@ void GazeboInterface::OnStats(ConstWorldStatisticsPtr &_msg)
       this->lastPausedState != paused)
   {
     this->lastPausedState = paused;
+    this->lastStatsMsg = _msg;
 
     std::lock_guard<std::recursive_mutex> lock(this->receiveMutex);
     this->statsMsgs.push_back(_msg);

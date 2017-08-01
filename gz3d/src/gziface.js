@@ -650,7 +650,6 @@ GZ3D.GZIface.prototype.updateStatsGuiFromMsg = function(stats)
   else
   {
     this.gui.setLogPlayVisible(false);
-
     this.gui.setRealTime(stats.real_time);
   }
 

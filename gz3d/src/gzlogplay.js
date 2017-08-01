@@ -1,4 +1,4 @@
- var nsInSec = 1000000000;
+var nsInSec = 1000000000;
 
 var correctTime = function(time)
 {
@@ -74,6 +74,51 @@ GZ3D.LogPlay = function(gui, guiEvents)
     {
       console.log('active !!!!!!!!!!!!!!!!!!!!!!!!');
       that.active = true;
+    }
+  );
+
+  guiEvents.on('logPlayRewind', function ()
+    {
+      var playback = {};
+      playback.rewind = true;
+      that.gui.emitter.emit('logPlayChanged', playback);
+    }
+  );
+  guiEvents.on('logPlayForward', function ()
+    {
+      var playback = {};
+      playback.forward = true;
+      that.gui.emitter.emit('logPlayChanged', playback);
+    }
+  );
+  guiEvents.on('logPlayStepforward', function ()
+    {
+      var playback = {};
+      playback.multi_step = 1;
+      that.gui.emitter.emit('logPlayChanged', playback);
+    }
+  );
+  guiEvents.on('logPlayStepback', function ()
+    {
+      var playback = {};
+      playback.multi_step = -1;
+      that.gui.emitter.emit('logPlayChanged', playback);
+    }
+  );
+  guiEvents.on('paused', function (paused)
+    {
+      if (paused)
+      {
+        $('#logplay-playText').html(
+            '<img style="height:1.2em" src="style/images/play.png" ' +
+            'title="Play">');
+      }
+      else
+      {
+        $('#logplay-playText').html(
+            '<img style="height:1.2em" src="style/images/pause.png" ' +
+            'title="Pause">');
+      }
     }
   );
 

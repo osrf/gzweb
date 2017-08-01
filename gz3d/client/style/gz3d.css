@@ -41,6 +41,7 @@ input[type=number]::-webkit-inner-spin-button
 .header-button img
 {
   height: 1.45em;
+  vertical-align: middle;
 }
 #clock-touch
 {
@@ -736,7 +737,7 @@ input[type=number]::-webkit-inner-spin-button
 #logplay-slider
 {
   right: 0px;
-  width: 70%;
+  width: 540px;
   position: absolute;
   bottom: 0px;
   z-index: 1000;
@@ -746,8 +747,8 @@ input[type=number]::-webkit-inner-spin-button
 {
   position: absolute;
   bottom: 3em;
-  right: 1em;
-  width: 5.6em;
+  right: 0.6em;
+  width: 6.3em;
   height: 2.5em;
   background-color: #333333;
   padding: 3px;
@@ -760,4 +761,74 @@ input[type=number]::-webkit-inner-spin-button
   margin: 0;
   margin-right: 0.25em;
   text-align: right;
+}
+
+#logplay-rewind-fieldset
+{
+  position: absolute;
+  right: 19.5em;
+  bottom: 2.5em;
+  z-index: 1000;
+}
+
+#logplay-rewind-fieldset img
+{
+  width: 13px;
+  height: 16px;
+}
+
+#logplay-stepback-fieldset
+{
+  position: absolute;
+  right: 16.5em;
+  bottom: 2.5em;
+  z-index: 1000;
+}
+
+#logplay-stepback-fieldset img
+{
+  width: 13px;
+  height: 16px;
+}
+
+#logplay-play-fieldset
+{
+  position: absolute;
+  right: 13.5em;
+  bottom: 2.5em;
+  z-index: 1000;
+}
+
+#logplay-play-fieldset img
+{
+  width: 16px;
+  height: 16px;
+}
+
+#logplay-stepforward-fieldset
+{
+  position: absolute;
+  right: 10.5em;
+  bottom: 2.5em;
+  z-index: 1000;
+}
+
+#logplay-stepforward-fieldset img
+{
+  width: 13px;
+  height: 16px;
+}
+
+#logplay-forward-fieldset
+{
+  position: absolute;
+  right: 7.5em;
+  bottom: 2.5em;
+  z-index: 1000;
+}
+
+#logplay-forward-fieldset img
+{
+  width: 13px;
+  height: 16px;
 }

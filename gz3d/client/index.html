@@ -1077,8 +1077,8 @@
 
       <!-- tabs -->
       <a id="mainMenuTab" class="gzGUI tab clickable"><img src="style/images/bars.png" title="Menu"></a>
-      <a id="insertMenuTab" class="gzGUI tab clickable"><img src="style/images/insert.png" title="Insert"></a>
       <a id="treeMenuTab" class="gzGUI tab clickable"><img src="style/images/tree.png" title="Scene Tree"></a>
+      <a id="insertMenuTab" class="gzGUI tab clickable"><img src="style/images/insert.png" title="Insert"></a>
       <!-- tabs -->
 
       <!-- header -->
@@ -1091,13 +1091,13 @@
       </fieldset>
 
       <fieldset id="clock-mouse" class="gzGUI mouse-only">
-        <p>Real Time: <span class='real-time-value'>00 00:00:00</span></p>
-        <p>Sim Time: <span class='sim-time-value'>00 00:00:00</span></p>
+        <p>Real Time: <span class='real-time-value'>00:00:00.000</span></p>
+        <p>Sim Time: <span class='sim-time-value'>00:00:00.000</span></p>
       </fieldset>
 
       <div class="gzGUI" id="clock-touch" data-role="popup" data-history="false">
-        <p>Real Time: <span class='real-time-value'>00 00:00:00</span></p>
-        <p>Sim Time: <span class='sim-time-value'>00 00:00:00</span></p>
+        <p>Real Time: <span class='real-time-value'>00:00:00.000</span></p>
+        <p>Sim Time: <span class='sim-time-value'>00:00:00.000</span></p>
       </div>
 
       <div id='manipulatorModeFieldset'>
@@ -1144,9 +1144,25 @@
           <label for="logplay-slider-input"></label>
           <input type="range" name="logPlay" id="logplay-slider-input" value="0" min="0" max="100" data-mini="true" data-highlight="true" class="ui-hidden-accessible">
         </div>
-        <fieldset id="logplay-clock-fieldset" class="gzGUI mouse-only">
-          <p><span class='sim-time-value'>00 00:00:00</span></p>
-          <p><span class='end-time-value'>00 00:00:00</span></p>
+        <fieldset id="logplay-clock-fieldset" class="gzGUI">
+          <p><span class='sim-time-value'>00:00:00.000</span></p>
+          <p><span class='end-time-value'>00:00:00.000</span></p>
+        </fieldset>
+
+        <fieldset class="gzGUI" id="logplay-rewind-fieldset">
+          <a data-role="button" class="header-button" id="logplay-rewind"><span><img src="style/images/log_rewind.png" title="Rewind"></span></a>
+        </fieldset>
+        <fieldset class="gzGUI" id="logplay-stepback-fieldset">
+          <a data-role="button" class="header-button" id="logplay-stepback"><span><img src="style/images/log_step_back.png" title="Step back"></span></a>
+        </fieldset>
+        <fieldset class="gzGUI" id="logplay-play-fieldset">
+          <a data-role="button" class="header-button" id="logplay-play"><span id='logplay-playText'><img src="style/images/play.png" title="Play"></span></a>
+        </fieldset>
+        <fieldset class="gzGUI" id="logplay-stepforward-fieldset">
+          <a data-role="button" class="header-button" id="logplay-stepforward"><span><img src="style/images/log_step_forward.png" title="Step forward"></span></a>
+        </fieldset>
+        <fieldset class="gzGUI" id="logplay-forward-fieldset">
+          <a data-role="button" class="header-button" id="logplay-forward"><span><img src="style/images/log_forward.png" title="Forward"></span></a>
         </fieldset>
       </div>
 

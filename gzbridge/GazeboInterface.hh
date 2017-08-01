@@ -435,6 +435,10 @@ namespace gzweb
     private: boost::shared_ptr<gazebo::msgs::WorldStatistics const>
         lastStatsMsg;
 
+    /// \brief Most recent world stats msg received
+    private: boost::shared_ptr<gazebo::msgs::WorldStatistics const>
+        statsMsg;
+
     /// \brief Last world state received, play or paused.
     private: bool lastPausedState;
 
