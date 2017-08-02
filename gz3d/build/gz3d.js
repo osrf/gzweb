@@ -3847,7 +3847,7 @@ GZ3D.LogPlay = function(gui, guiEvents)
 };
 
 /**
- * Initialize log playback
+ * get log playback widget visibility
  */
 GZ3D.LogPlay.prototype.isVisible = function()
 {
