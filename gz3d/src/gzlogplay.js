@@ -43,6 +43,7 @@ GZ3D.LogPlay = function(gui, guiEvents)
   this.endTime = null;
   this.active = false;
   this.sliderRange = 100;
+  this.visible = false;
 
   var that = this;
 
@@ -66,13 +67,11 @@ GZ3D.LogPlay = function(gui, guiEvents)
       // publich playback control command msg
       that.gui.emitter.emit('logPlayChanged', playback);
       that.active = false;
-      console.log('no longer active !!!!!!!!!!!!!!!!!!!!!!!!');
     }
   );
 
   guiEvents.on('logPlaySlideStart', function ()
     {
-      console.log('active !!!!!!!!!!!!!!!!!!!!!!!!');
       that.active = true;
     }
   );
@@ -121,15 +120,14 @@ GZ3D.LogPlay = function(gui, guiEvents)
       }
     }
   );
-
-  this.init();
 };
 
 /**
  * Initialize log playback
  */
-GZ3D.LogPlay.prototype.init = function()
+GZ3D.LogPlay.prototype.isVisible = function()
 {
+  return this.visible;
 };
 
 /**
@@ -137,8 +135,13 @@ GZ3D.LogPlay.prototype.init = function()
  */
 GZ3D.LogPlay.prototype.setVisible = function(visible)
 {
-  console.log('set log play visible ' + visible);
-  if (visible)
+  if (visible === this.visible)
+  {
+    return;
+  }
+  this.visible = visible;
+
+  if (this.visible)
   {
     $('#logplay').show();
   }

@@ -307,9 +307,6 @@ $(function()
   // Touch devices
   if (isTouchDevice)
   {
-    $('#logplay-slider')
-        .css('width', '100%');
-
     $('.mouse-only')
         .css('display','none');
 
@@ -869,7 +866,6 @@ GZ3D.Gui = function(scene)
   this.init();
   this.emitter = new EventEmitter2({verbose: true});
   this.guiEvents = guiEvents;
-  this.logPlayVisible = false;
 };
 
 /**
@@ -2224,12 +2220,12 @@ GZ3D.Gui.prototype.deleteFromStats = function(type, name)
  */
 GZ3D.Gui.prototype.setLogPlayVisible = function(visible)
 {
-  if (visible === this.logPlayVisible)
+  if (visible === this.logPlay.isVisible())
   {
     return;
   }
 
-  this.logPlayVisible = visible;
+  this.logPlay.setVisible(visible);
 
   // update UI to be in log playback mode
   if (visible)
@@ -2254,7 +2250,6 @@ GZ3D.Gui.prototype.setLogPlayVisible = function(visible)
     $('#clock-header-fieldset').show();
     $('#play-header-fieldset').show();
   }
-  this.logPlay.setVisible(this.logPlayVisible);
 };
 
 /**
@@ -3772,6 +3767,7 @@ GZ3D.LogPlay = function(gui, guiEvents)
   this.endTime = null;
   this.active = false;
   this.sliderRange = 100;
+  this.visible = false;
 
   var that = this;
 
@@ -3850,15 +3846,14 @@ GZ3D.LogPlay = function(gui, guiEvents)
       }
     }
   );
-
-  this.init();
 };
 
 /**
  * Initialize log playback
  */
-GZ3D.LogPlay.prototype.init = function()
+GZ3D.LogPlay.prototype.isVisible = function()
 {
+  return this.visible;
 };
 
 /**
@@ -3866,8 +3861,13 @@ GZ3D.LogPlay.prototype.init = function()
  */
 GZ3D.LogPlay.prototype.setVisible = function(visible)
 {
-  console.log('set log play visible ' + visible);
-  if (visible)
+  if (visible === this.visible)
+  {
+    return;
+  }
+  this.visible = visible;
+
+  if (this.visible)
   {
     $('#logplay').show();
   }
