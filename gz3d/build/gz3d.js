@@ -3791,13 +3791,11 @@ GZ3D.LogPlay = function(gui, guiEvents)
       // publich playback control command msg
       that.gui.emitter.emit('logPlayChanged', playback);
       that.active = false;
-      console.log('no longer active !!!!!!!!!!!!!!!!!!!!!!!!');
     }
   );
 
   guiEvents.on('logPlaySlideStart', function ()
     {
-      console.log('active !!!!!!!!!!!!!!!!!!!!!!!!');
       that.active = true;
     }
   );
