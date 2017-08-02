@@ -302,6 +302,9 @@ $(function()
   // Touch devices
   if (isTouchDevice)
   {
+    $('#logplay-slider')
+        .css('width','100%');
+
     $('.mouse-only')
         .css('display','none');
 

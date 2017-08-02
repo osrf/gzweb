@@ -737,10 +737,15 @@ input[type=number]::-webkit-inner-spin-button
 #logplay-slider
 {
   right: 0px;
-  width: 540px;
+  width: 34em;
   position: absolute;
   bottom: 0px;
   z-index: 1000;
+}
+
+#logplay-slider input
+{
+  display: none;
 }
 
 #logplay-clock-fieldset
