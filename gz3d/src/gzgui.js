@@ -1057,6 +1057,9 @@ GZ3D.Gui.prototype.init = function()
         }
         else
         {
+          var ev = event.originalEvent;
+          var pointer = ev.touches ? ev.touches[ 0 ] : ev;
+          var pos = new THREE.Vector2(pointer.clientX, pointer.clientY);
           that.scene.showRadialMenu(event);
           that.longPressContainerState = 'START';
         }

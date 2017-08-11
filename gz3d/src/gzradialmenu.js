@@ -24,7 +24,8 @@ GZ3D.RadialMenu.prototype.init = function()
   this.bgSizeSelected = 68*scale;
   this.highlightSize = 45*scale;
   this.iconProportion = 0.6;
-  this.bgShape = THREE.ImageUtils.loadTexture(
+  this.textureLoader = new THREE.TextureLoader();
+  this.bgShape = this.textureLoader.load(
       'style/images/icon_background.png' );
   this.layers = {
     ICON: 0,
@@ -52,7 +53,8 @@ GZ3D.RadialMenu.prototype.init = function()
   this.model = null;
 
   // Object containing all items
-  this.menu = new THREE.Object3D();
+  // this.menu = new THREE.Object3D();
+  this.menu = new THREE.Group();
 
   // Add items to the menu
   this.addItem('delete','style/images/trash.png');
@@ -160,17 +162,17 @@ GZ3D.RadialMenu.prototype.show = function(event,model)
     var item = this.menu.children[i];
 
     item.children[this.layers.ICON].visible = true;
-    item.children[this.layers.ICON].position.set(pointer.x,pointer.y,0);
+    item.children[this.layers.ICON].position.set(pointer.x,pointer.y, 1);
 
     item.children[this.layers.BACKGROUND].visible = true;
-    item.children[this.layers.BACKGROUND].position.set(pointer.x,pointer.y,0);
+    item.children[this.layers.BACKGROUND].position.set(pointer.x,pointer.y, 1);
     if (item.isDisabled)
     {
       item.children[this.layers.BACKGROUND].material.color = this.disabledColor;
     }
 
     item.children[this.layers.HIGHLIGHT].visible = item.isHighlighted;
-    item.children[this.layers.HIGHLIGHT].position.set(pointer.x,pointer.y,0);
+    item.children[this.layers.HIGHLIGHT].position.set(pointer.x,pointer.y, 1);
   }
 
   this.moving = true;
@@ -192,31 +194,35 @@ GZ3D.RadialMenu.prototype.update = function()
   {
     var item = this.menu.children[i];
 
-    var X = item.children[this.layers.ICON].position.x -
+    var xdelta = item.children[this.layers.ICON].position.x -
         this.startPosition.x;
-    var Y = item.children[this.layers.ICON].position.y -
+    var ydelta = item.children[this.layers.ICON].position.y -
         this.startPosition.y;
 
-    var d = Math.sqrt(Math.pow(X,2) + Math.pow(Y,2));
+    var d = Math.sqrt(Math.pow(xdelta,2) + Math.pow(ydelta,2));
 
     if ( d < this.radius)
     {
-      X = X - ( this.speed * Math.sin( ( this.offset - i ) * Math.PI/4 ) );
-      Y = Y - ( this.speed * Math.cos( ( this.offset - i ) * Math.PI/4 ) );
+      xdelta = xdelta -
+          ( this.speed * Math.sin( ( this.offset - i ) * Math.PI/4 ) );
+      ydelta = ydelta +
+          ( this.speed * Math.cos( ( this.offset - i ) * Math.PI/4 ) );
     }
     else
     {
       this.moving = false;
     }
 
-    item.children[this.layers.ICON].position.x = X + this.startPosition.x;
-    item.children[this.layers.ICON].position.y = Y + this.startPosition.y;
+    var newX = xdelta + this.startPosition.x;
+    var newY = ydelta + this.startPosition.y;
+    item.children[this.layers.ICON].position.x = newX;
+    item.children[this.layers.ICON].position.y = newY;
 
-    item.children[this.layers.BACKGROUND].position.x = X + this.startPosition.x;
-    item.children[this.layers.BACKGROUND].position.y = Y + this.startPosition.y;
+    item.children[this.layers.BACKGROUND].position.x = newX;
+    item.children[this.layers.BACKGROUND].position.y = newY;
 
-    item.children[this.layers.HIGHLIGHT].position.x = X + this.startPosition.x;
-    item.children[this.layers.HIGHLIGHT].position.y = Y + this.startPosition.y;
+    item.children[this.layers.HIGHLIGHT].position.x = newX;
+    item.children[this.layers.HIGHLIGHT].position.y = newY;
   }
 
 };
@@ -236,6 +242,9 @@ GZ3D.RadialMenu.prototype.getPointer = function(event)
   var posX = (pointer.clientX - rect.left);
   var posY = (pointer.clientY - rect.top);
 
+  posX = posX - rect.width * 0.5;
+  posY = -(posY - rect.height * 0.5);
+
   return {x: posX, y:posY};
 };
 
@@ -254,7 +263,7 @@ GZ3D.RadialMenu.prototype.onLongPressMove = function(event)
   // Check angle region
   var region = null;
   // bottom-left
-  if (angle > 5*Math.PI/8 && angle < 7*Math.PI/8)
+  if (angle > -7*Math.PI/8 && angle < -5*Math.PI/8)
   {
     region = 1;
   }
@@ -265,17 +274,17 @@ GZ3D.RadialMenu.prototype.onLongPressMove = function(event)
     region = 2;
   }
   // top-left
-  else if (angle > -7*Math.PI/8 && angle < -5*Math.PI/8)
+  else if (angle > 5*Math.PI/8 && angle < 7*Math.PI/8)
   {
     region = 3;
   }
   // top
-  else if (angle > -5*Math.PI/8 && angle < -3*Math.PI/8)
+  else if (angle > 3*Math.PI/8 && angle < 5*Math.PI/8)
   {
     region = 4;
   }
   // top-right
-  else if (angle > -3*Math.PI/8 && angle < -1*Math.PI/8)
+  else if (angle > 1*Math.PI/8 && angle < 3*Math.PI/8)
   {
     region = 5;
   }
@@ -285,12 +294,12 @@ GZ3D.RadialMenu.prototype.onLongPressMove = function(event)
     region = 6;
   }
   // bottom-right
-  else if (angle > 1*Math.PI/8 && angle < 3*Math.PI/8)
+  else if (angle > -3*Math.PI/8 && angle < -1*Math.PI/8)
   {
     region = 7;
   }
   // bottom
-  else if (angle > 3*Math.PI/8 && angle < 5*Math.PI/8)
+  else if (angle > -5*Math.PI/8 && angle < -3*Math.PI/8)
   {
     region = 8;
   }
@@ -351,39 +360,38 @@ GZ3D.RadialMenu.prototype.onLongPressMove = function(event)
 GZ3D.RadialMenu.prototype.addItem = function(type, iconTexture)
 {
   // Icon
-  iconTexture = THREE.ImageUtils.loadTexture( iconTexture );
+  iconTexture = this.textureLoader.load( iconTexture );
 
-  var iconMaterial = new THREE.SpriteMaterial( { useScreenCoordinates: true,
-      alignment: THREE.SpriteAlignment.center } );
-  iconMaterial.map = iconTexture;
+  var iconMaterial = new THREE.SpriteMaterial( {
+    map: iconTexture
+  } );
 
   var icon = new THREE.Sprite( iconMaterial );
   icon.scale.set( this.bgSize*this.iconProportion,
       this.bgSize*this.iconProportion, 1.0 );
   icon.name = type;
+  icon.position.set(0, 0, 1);
 
   // Background
   var bgMaterial = new THREE.SpriteMaterial( {
       map: this.bgShape,
-      useScreenCoordinates: true,
-      alignment: THREE.SpriteAlignment.center,
       color: this.plainColor } );
 
   var bg = new THREE.Sprite( bgMaterial );
   bg.scale.set( this.bgSize, this.bgSize, 1.0 );
+  bg.position.set(0, 0, 1);
 
   // Highlight
   var highlightMaterial = new THREE.SpriteMaterial({
       map: this.bgShape,
-      useScreenCoordinates: true,
-      alignment: THREE.SpriteAlignment.center,
       color: this.highlightColor});
 
   var highlight = new THREE.Sprite(highlightMaterial);
   highlight.scale.set(this.highlightSize, this.highlightSize, 1.0);
+  bg.position.set(0, 0, 1);
   highlight.visible = false;
 
-  var item = new THREE.Object3D();
+  var item = new THREE.Group();
   // Respect layer order
   item.add(icon);
   item.add(bg);

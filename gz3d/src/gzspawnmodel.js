@@ -18,7 +18,6 @@ GZ3D.SpawnModel = function(scene, domElement)
 GZ3D.SpawnModel.prototype.init = function()
 {
   this.plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
-  this.projector = new THREE.Projector();
   this.ray = new THREE.Ray();
   this.obj = null;
   this.active = false;
@@ -243,7 +242,7 @@ GZ3D.SpawnModel.prototype.moveSpawnedModel = function(positionX, positionY)
 {
   var vector = new THREE.Vector3( (positionX / window.innerWidth) * 2 - 1,
         -(positionY / window.innerHeight) * 2 + 1, 0.5);
-  this.projector.unprojectVector(vector, this.scene.camera);
+  vector.unproject(this.scene.camera);
   this.ray.set(this.scene.camera.position,
       vector.sub(this.scene.camera.position).normalize());
   var point = this.ray.intersectPlane(this.plane);

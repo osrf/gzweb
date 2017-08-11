@@ -25,9 +25,14 @@ GZ3D.Scene.prototype.init = function()
   this.manipulationMode = 'view';
   this.pointerOnMenu = false;
 
+  // texture loader
+  this.textureLoader = new THREE.TextureLoader();
+
   this.renderer = new THREE.WebGLRenderer({antialias: true });
-  this.renderer.setClearColor(0xb2b2b2, 1); // Sky
+  this.renderer.setPixelRatio(window.devicePixelRatio);
+  this.renderer.setClearColor(0xb2b2b2, 1);
   this.renderer.setSize( window.innerWidth, window.innerHeight);
+  this.renderer.autoClear = false;
   // this.renderer.shadowMapEnabled = true;
   // this.renderer.shadowMapSoft = true;
 
@@ -41,13 +46,19 @@ GZ3D.Scene.prototype.init = function()
   this.defaultCameraPosition = new THREE.Vector3(0, -5, 5);
   this.resetView();
 
+  // ortho camera and scene for rendering sprites
+  this.cameraOrtho = new THREE.OrthographicCamera( -window.innerWidth * 0.5,
+      window.innerWidth * 0.5, window.innerHeight*0.5, -window.innerHeight*0.5,
+      1, 10);
+  this.cameraOrtho.position.z = 10;
+  this.sceneOrtho = new THREE.Scene();
+
   // Grid
-  this.grid = new THREE.GridHelper(10, 1);
+  this.grid = new THREE.GridHelper(20, 20, 0xCCCCCC, 0x4D4D4D);
   this.grid.name = 'grid';
   this.grid.position.z = 0.05;
   this.grid.rotation.x = Math.PI * 0.5;
   this.grid.castShadow = false;
-  this.grid.setColors(new THREE.Color( 0xCCCCCC ),new THREE.Color( 0x4D4D4D ));
   this.grid.material.transparent = true;
   this.grid.material.opacity = 0.5;
   this.grid.visible = false;
@@ -101,7 +112,7 @@ GZ3D.Scene.prototype.init = function()
 
   this.emitter = new EventEmitter2({ verbose: true });
 
-  // SSAO
+/*  // SSAO
   this.effectsEnabled = false;
   // depth
   var depthShader = THREE.ShaderLib[ 'depthRGBA'];
@@ -127,44 +138,25 @@ GZ3D.Scene.prototype.init = function()
   effect.uniforms[ 'cameraNear' ].value = this.camera.near;
   effect.uniforms[ 'cameraFar' ].value = this.camera.far;
   effect.renderToScreen = true;
-  this.composer.addPass( effect );
+  this.composer.addPass( effect );*/
 
   // Radial menu (only triggered by touch)
   this.radialMenu = new GZ3D.RadialMenu(this.getDomElement());
-  this.scene.add(this.radialMenu.menu);
+  this.sceneOrtho.add(this.radialMenu.menu);
 
   // Bounding Box
-  var vertices = [
-    new THREE.Vector3(0, 0, 0),
-    new THREE.Vector3(0, 0, 0),
-    new THREE.Vector3(0, 0, 0),
-    new THREE.Vector3(0, 0, 0),
+  var indices = new Uint16Array(
+      [ 0, 1, 1, 2, 2, 3, 3, 0,
+        4, 5, 5, 6, 6, 7, 7, 4,
+        0, 4, 1, 5, 2, 6, 3, 7 ] );
+  var positions = new Float32Array(8 * 3);
+  var boxGeometry = new THREE.BufferGeometry();
+  boxGeometry.setIndex(new THREE.BufferAttribute( indices, 1 ));
+  boxGeometry.addAttribute( 'position',
+      new THREE.BufferAttribute(positions, 3));
+  this.boundingBox = new THREE.LineSegments(boxGeometry,
+      new THREE.LineBasicMaterial({color: 0xffffff}));
 
-    new THREE.Vector3(0, 0, 0),
-    new THREE.Vector3(0, 0, 0),
-    new THREE.Vector3(0, 0, 0),
-    new THREE.Vector3(0, 0, 0)
-  ];
-  var boxGeometry = new THREE.Geometry();
-  boxGeometry.vertices.push(
-    vertices[0], vertices[1],
-    vertices[1], vertices[2],
-    vertices[2], vertices[3],
-    vertices[3], vertices[0],
-
-    vertices[4], vertices[5],
-    vertices[5], vertices[6],
-    vertices[6], vertices[7],
-    vertices[7], vertices[4],
-
-    vertices[0], vertices[4],
-    vertices[1], vertices[5],
-    vertices[2], vertices[6],
-    vertices[3], vertices[7]
-  );
-  this.boundingBox = new THREE.Line(boxGeometry,
-      new THREE.LineBasicMaterial({color: 0xffffff}),
-      THREE.LinePieces);
   this.boundingBox.visible = false;
 
   // Joint visuals
@@ -176,7 +168,8 @@ GZ3D.Scene.prototype.init = function()
         UNIVERSAL: 4,
         BALL: 5,
         SCREW: 6,
-        GEARBOX: 7
+        GEARBOX: 7,
+        FIXED: 8
       };
   this.jointAxis = new THREE.Object3D();
   this.jointAxis.name = 'JOINT_VISUAL';
@@ -235,12 +228,13 @@ GZ3D.Scene.prototype.init = function()
 
   material = new THREE.MeshLambertMaterial();
   material.color = new THREE.Color(0xffff00);
-  material.ambient = material.color;
 
-  geometry = new THREE.CylinderGeometry(0.02, 0.02, 0.25, 36, 1, false);
+  var mainAxisLen = 0.3;
+  geometry = new THREE.CylinderGeometry(0.015, 0.015, mainAxisLen, 36, 1,
+      false);
 
   mesh = new THREE.Mesh(geometry, material);
-  mesh.position.z = -0.175;
+  mesh.position.z = mainAxisLen * 0.5;
   mesh.rotation.x = Math.PI/2;
   mesh.name = 'JOINT_VISUAL';
   mainAxis.add(mesh);
@@ -248,6 +242,7 @@ GZ3D.Scene.prototype.init = function()
   geometry = new THREE.CylinderGeometry(0, 0.035, 0.1, 36, 1, false);
 
   mesh = new THREE.Mesh(geometry, material);
+  mesh.position.z = mainAxisLen;
   mesh.rotation.x = Math.PI/2;
   mesh.name = 'JOINT_VISUAL';
   mainAxis.add(mesh);
@@ -259,6 +254,7 @@ GZ3D.Scene.prototype.init = function()
   geometry = new THREE.TorusGeometry(0.04, 0.006, 10, 36, Math.PI * 3/2);
 
   mesh = new THREE.Mesh(geometry, material);
+  mesh.position.z = mainAxisLen;
   mesh.name = 'JOINT_VISUAL';
   rotAxis.add(mesh);
 
@@ -266,6 +262,7 @@ GZ3D.Scene.prototype.init = function()
 
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.y = -0.04;
+  mesh.position.z = mainAxisLen;
   mesh.rotation.z = Math.PI/2;
   mesh.name = 'JOINT_VISUAL';
   rotAxis.add(mesh);
@@ -279,7 +276,7 @@ GZ3D.Scene.prototype.init = function()
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.x = 0.03;
   mesh.position.y = 0.03;
-  mesh.position.z = -0.15;
+  mesh.position.z = mainAxisLen * 0.5;
   mesh.rotation.x = Math.PI/2;
   mesh.name = 'JOINT_VISUAL';
   transAxis.add(mesh);
@@ -289,7 +286,7 @@ GZ3D.Scene.prototype.init = function()
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.x = 0.03;
   mesh.position.y = 0.03;
-  mesh.position.z = -0.15 + 0.05;
+  mesh.position.z = mainAxisLen * 0.5 + 0.05;
   mesh.rotation.x = -Math.PI/2;
   mesh.name = 'JOINT_VISUAL';
   transAxis.add(mesh);
@@ -297,7 +294,7 @@ GZ3D.Scene.prototype.init = function()
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.x = 0.03;
   mesh.position.y = 0.03;
-  mesh.position.z = -0.15 - 0.05;
+  mesh.position.z = mainAxisLen * 0.5 - 0.05;
   mesh.rotation.x = Math.PI/2;
   mesh.name = 'JOINT_VISUAL';
   transAxis.add(mesh);
@@ -308,7 +305,7 @@ GZ3D.Scene.prototype.init = function()
 
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.x = -0.04;
-  mesh.position.z = -0.11;
+  mesh.position.z = mainAxisLen - 0.11;
   mesh.rotation.z = -Math.PI/4;
   mesh.rotation.x = -Math.PI/10;
   mesh.name = 'JOINT_VISUAL';
@@ -316,17 +313,18 @@ GZ3D.Scene.prototype.init = function()
 
   var radius = 0.04;
   var length = 0.02;
-  var curve = new THREE.SplineCurve3([new THREE.Vector3(radius, 0, 0*length),
-                                      new THREE.Vector3(0, radius, 1*length),
-                                      new THREE.Vector3(-radius, 0, 2*length),
-                                      new THREE.Vector3(0, -radius, 3*length),
-                                      new THREE.Vector3(radius, 0, 4*length),
-                                      new THREE.Vector3(0, radius, 5*length),
-                                      new THREE.Vector3(-radius, 0, 6*length)]);
-  geometry = new THREE.TubeGeometry(curve, 36, 0.01, 10, false, false);
+  var curve = new THREE.CatmullRomCurve3(
+      [new THREE.Vector3(radius, 0, 0*length),
+      new THREE.Vector3(0, radius, 1*length),
+      new THREE.Vector3(-radius, 0, 2*length),
+      new THREE.Vector3(0, -radius, 3*length),
+      new THREE.Vector3(radius, 0, 4*length),
+      new THREE.Vector3(0, radius, 5*length),
+      new THREE.Vector3(-radius, 0, 6*length)]);
+  geometry = new THREE.TubeGeometry(curve, 36, 0.01, 10, false);
 
   mesh = new THREE.Mesh(geometry, material);
-  mesh.position.z = -0.23;
+  mesh.position.z = mainAxisLen - 0.23;
   mesh.name = 'JOINT_VISUAL';
   screwAxis.add(mesh);
 
@@ -570,13 +568,12 @@ GZ3D.Scene.prototype.onKeyDown = function(event)
  */
 GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
 {
-  var projector = new THREE.Projector();
   var vector = new THREE.Vector3(
       ((pos.x - this.renderer.domElement.offsetLeft)
       / window.innerWidth) * 2 - 1,
       -((pos.y - this.renderer.domElement.offsetTop)
       / window.innerHeight) * 2 + 1, 1);
-  projector.unprojectVector(vector, this.camera);
+  vector.unproject(this.camera);
   var ray = new THREE.Raycaster( this.camera.position,
       vector.sub(this.camera.position).normalize() );
 
@@ -698,7 +695,7 @@ GZ3D.Scene.prototype.render = function()
   this.modelManipulator.update();
   this.radialMenu.update();
 
-  if (this.effectsEnabled)
+/*  if (this.effectsEnabled)
   {
     this.scene.overrideMaterial = this.depthMaterial;
     this.renderer.render(this.scene, this.camera, this.depthTarget);
@@ -709,6 +706,13 @@ GZ3D.Scene.prototype.render = function()
   {
     this.renderer.render(this.scene, this.camera);
   }
+*/
+
+  this.renderer.clear();
+  this.renderer.render(this.scene, this.camera);
+
+  this.renderer.clearDepth();
+  this.renderer.render(this.sceneOrtho, this.cameraOrtho);
 };
 
 /**
@@ -721,7 +725,13 @@ GZ3D.Scene.prototype.setWindowSize = function(width, height)
   this.camera.aspect = width / height;
   this.camera.updateProjectionMatrix();
 
-  this.renderer.setSize( width, height);
+  this.cameraOrtho.left = -width / 2;
+  this.cameraOrtho.right = width / 2;
+  this.cameraOrtho.top = height / 2;
+  this.cameraOrtho.bottom = -height / 2;
+  this.cameraOrtho.updateProjectionMatrix();
+
+  this.renderer.setSize(width, height);
   this.render();
 };
 
@@ -751,7 +761,7 @@ GZ3D.Scene.prototype.remove = function(model)
  */
 GZ3D.Scene.prototype.getByName = function(name)
 {
-  return this.scene.getObjectByName(name, true);
+  return this.scene.getObjectByName(name);
 };
 
 /**
@@ -809,8 +819,7 @@ GZ3D.Scene.prototype.createPlane = function(normalX, normalY, normalZ,
     width, height)
 {
   var geometry = new THREE.PlaneGeometry(width, height, 1, 1);
-  var material =  new THREE.MeshPhongMaterial(
-      {color:0xbbbbbb, shading: THREE.SmoothShading} ); // Later Gazebo/Grey
+  var material =  new THREE.MeshPhongMaterial();
   var mesh = new THREE.Mesh(geometry, material);
   var normal = new THREE.Vector3(normalX, normalY, normalZ);
   var cross = normal.crossVectors(normal, mesh.up);
@@ -856,7 +865,7 @@ GZ3D.Scene.prototype.createCylinder = function(radius, length)
  */
 GZ3D.Scene.prototype.createBox = function(width, height, depth)
 {
-  var geometry = new THREE.CubeGeometry(width, height, depth, 1, 1, 1);
+  var geometry = new THREE.BoxGeometry(width, height, depth, 1, 1, 1);
 
   // Fix UVs so textures are mapped in a way that is consistent to gazebo
   // Some face uvs need to be rotated clockwise, while others anticlockwise
@@ -1108,18 +1117,16 @@ GZ3D.Scene.prototype.createDirectionalLight = function(obj, color, intensity,
   }
 
   var lightObj = new THREE.DirectionalLight(color, intensity);
-  lightObj.shadowCameraNear = 1;
-  lightObj.shadowCameraFar = 50;
-  lightObj.shadowMapWidth = 4094;
-  lightObj.shadowMapHeight = 4094;
-  lightObj.shadowCameraVisible = false;
-  lightObj.shadowCameraBottom = -100;
-  lightObj.shadowCameraLeft = -100;
-  lightObj.shadowCameraRight = 100;
-  lightObj.shadowCameraTop = 100;
-  lightObj.shadowBias = 0.0001;
+  lightObj.shadow.camera.near = 1;
+  lightObj.shadow.camera.far = 50;
+  lightObj.shadow.mapSize.width = 4094;
+  lightObj.shadow.mapSize.height = 4094;
+  lightObj.shadow.camera.bottom = -100;
+  lightObj.shadow.camera.feft = -100;
+  lightObj.shadow.camera.right = 100;
+  lightObj.shadow.camera.top = 100;
+  lightObj.shadow.bias = 0.0001;
   lightObj.position.set(0,0,0);
-  lightObj.shadowDarkness = 0.3;
 
   if (cast_shadows)
   {
@@ -1139,7 +1146,7 @@ GZ3D.Scene.prototype.createDirectionalLight = function(obj, color, intensity,
   helperGeometry.vertices.push(new THREE.Vector3(   0,    0, -0.5));
   var helperMaterial = new THREE.LineBasicMaterial({color: 0x00ff00});
   var helper = new THREE.Line(helperGeometry, helperMaterial,
-      THREE.LinePieces);
+      THREE.LineSegments);
 
   return [lightObj, helper];
 };
@@ -1296,7 +1303,7 @@ GZ3D.Scene.prototype.createRoads = function(points, width, texture)
   }*/
   if (texture)
   {
-    var tex = THREE.ImageUtils.loadTexture(texture);
+    var tex = this.textureLoader.load(texture);
     tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
     material.map = tex;
   }
@@ -1373,7 +1380,7 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
     var repeats = [];
     for (var t = 0; t < textures.length; ++t)
     {
-      textureLoaded[t] = THREE.ImageUtils.loadTexture(textures[t].diffuse,
+      textureLoaded[t] = this.textureLoader.load(textures[t].diffuse,
           new THREE.UVMapping());
       textureLoaded[t].wrapS = THREE.RepeatWrapping;
       textureLoaded[t].wrapT = THREE.RepeatWrapping;
@@ -1660,37 +1667,6 @@ GZ3D.Scene.prototype.useColladaSubMesh = function(dae, submesh, centerSubmesh)
   return mesh;
 };
 
-/*GZ3D.Scene.prototype.setMaterial = function(mesh, texture, normalMap)
-{
-  if (!mesh)
-  {
-    return;
-  }
-
-  if (texture || normalMap)
-  {
-    // normal map shader
-    var shader = THREE.ShaderLib['normalmap'];
-    var uniforms = THREE.UniformsUtils.clone( shader.uniforms );
-    if (texture)
-    {
-      uniforms['enableDiffuse'].value = true;
-      uniforms['tDiffuse'].value = THREE.ImageUtils.loadTexture(texture);
-    }
-    if (normalMap)
-    {
-      uniforms['tNormal'].value = THREE.ImageUtils.loadTexture(normalMap);
-    }
-
-    var parameters = { fragmentShader: shader.fragmentShader,
-        vertexShader: shader.vertexShader, uniforms: uniforms,
-        lights: true, fog: false };
-    var shaderMaterial = new THREE.ShaderMaterial(parameters);
-    mesh.geometry.computeTangents();
-    mesh.material = shaderMaterial;
-  }
-};*/
-
 /**
  * Set material for an object
  * @param {} obj
@@ -1704,14 +1680,24 @@ GZ3D.Scene.prototype.setMaterial = function(obj, material)
     {
       obj.material = new THREE.MeshPhongMaterial();
       var ambient = material.ambient;
-      if (ambient)
-      {
-        obj.material.ambient.setRGB(ambient[0], ambient[1], ambient[2]);
-      }
       var diffuse = material.diffuse;
       if (diffuse)
       {
-        obj.material.color.setRGB(diffuse[0], diffuse[1], diffuse[2]);
+        // threejs removed ambient from phong and lambert materials so
+        // aproximate the resulting color by mixing ambient and diffuse
+        var dc = [];
+        dc[0] = diffuse[0];
+        dc[1] = diffuse[1];
+        dc[2] = diffuse[2];
+        if (ambient)
+        {
+          var a = 0.4;
+          var d = 0.6;
+          dc[0] = ambient[0]*a + diffuse[0]*d;
+          dc[1] = ambient[1]*a + diffuse[1]*d;
+          dc[2] = ambient[2]*a + diffuse[2]*d;
+        }
+        obj.material.color.setRGB(dc[0], dc[1], dc[2]);
       }
       var specular = material.specular;
       if (specular)
@@ -1730,7 +1716,7 @@ GZ3D.Scene.prototype.setMaterial = function(obj, material)
 
       if (material.texture)
       {
-        var texture = THREE.ImageUtils.loadTexture(material.texture);
+        var texture = this.textureLoader.load(material.texture);
         if (material.scale)
         {
           texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
@@ -1742,7 +1728,7 @@ GZ3D.Scene.prototype.setMaterial = function(obj, material)
       if (material.normalMap)
       {
         obj.material.normalMap =
-            THREE.ImageUtils.loadTexture(material.normalMap);
+            this.textureLoader.load(material.normalMap);
       }
     }
   }
@@ -1903,47 +1889,18 @@ GZ3D.Scene.prototype.showBoundingBox = function(model)
   box.max.y = box.max.y - model.position.y;
   box.max.z = box.max.z - model.position.z;
 
-  var vertex = new THREE.Vector3(box.max.x, box.max.y, box.max.z); // 0
-  this.boundingBox.geometry.vertices[0].copy(vertex);
-  this.boundingBox.geometry.vertices[7].copy(vertex);
-  this.boundingBox.geometry.vertices[16].copy(vertex);
-
-  vertex.set(box.min.x, box.max.y, box.max.z); // 1
-  this.boundingBox.geometry.vertices[1].copy(vertex);
-  this.boundingBox.geometry.vertices[2].copy(vertex);
-  this.boundingBox.geometry.vertices[18].copy(vertex);
-
-  vertex.set(box.min.x, box.min.y, box.max.z); // 2
-  this.boundingBox.geometry.vertices[3].copy(vertex);
-  this.boundingBox.geometry.vertices[4].copy(vertex);
-  this.boundingBox.geometry.vertices[20].copy(vertex);
-
-  vertex.set(box.max.x, box.min.y, box.max.z); // 3
-  this.boundingBox.geometry.vertices[5].copy(vertex);
-  this.boundingBox.geometry.vertices[6].copy(vertex);
-  this.boundingBox.geometry.vertices[22].copy(vertex);
-
-  vertex.set(box.max.x, box.max.y, box.min.z); // 4
-  this.boundingBox.geometry.vertices[8].copy(vertex);
-  this.boundingBox.geometry.vertices[15].copy(vertex);
-  this.boundingBox.geometry.vertices[17].copy(vertex);
-
-  vertex.set(box.min.x, box.max.y, box.min.z); // 5
-  this.boundingBox.geometry.vertices[9].copy(vertex);
-  this.boundingBox.geometry.vertices[10].copy(vertex);
-  this.boundingBox.geometry.vertices[19].copy(vertex);
-
-  vertex.set(box.min.x, box.min.y, box.min.z); // 6
-  this.boundingBox.geometry.vertices[11].copy(vertex);
-  this.boundingBox.geometry.vertices[12].copy(vertex);
-  this.boundingBox.geometry.vertices[21].copy(vertex);
-
-  vertex.set(box.max.x, box.min.y, box.min.z); // 7
-  this.boundingBox.geometry.vertices[13].copy(vertex);
-  this.boundingBox.geometry.vertices[14].copy(vertex);
-  this.boundingBox.geometry.vertices[23].copy(vertex);
-
-  this.boundingBox.geometry.verticesNeedUpdate = true;
+  var position = this.boundingBox.geometry.attributes.position;
+  var array = position.array;
+  array[  0 ] = box.max.x; array[  1 ] = box.max.y; array[  2 ] = box.max.z;
+  array[  3 ] = box.min.x; array[  4 ] = box.max.y; array[  5 ] = box.max.z;
+  array[  6 ] = box.min.x; array[  7 ] = box.min.y; array[  8 ] = box.max.z;
+  array[  9 ] = box.max.x; array[ 10 ] = box.min.y; array[ 11 ] = box.max.z;
+  array[ 12 ] = box.max.x; array[ 13 ] = box.max.y; array[ 14 ] = box.min.z;
+  array[ 15 ] = box.min.x; array[ 16 ] = box.max.y; array[ 17 ] = box.min.z;
+  array[ 18 ] = box.min.x; array[ 19 ] = box.min.y; array[ 20 ] = box.min.z;
+  array[ 21 ] = box.max.x; array[ 22 ] = box.min.y; array[ 23 ] = box.min.z;
+  position.needsUpdate = true;
+  this.boundingBox.geometry.computeBoundingSphere();
 
   // rotate the box back to the world
   var modelRotation = new THREE.Matrix4();
@@ -2182,14 +2139,15 @@ GZ3D.Scene.prototype.viewJoints = function(model)
       this.setPose(jointVisual, model.joint[j].pose.position,
           model.joint[j].pose.orientation);
 
-      var mainAxis;
-      if (model.joint[j].type !== this.jointTypes.BALL)
+      var mainAxis = null;
+      if (model.joint[j].type !== this.jointTypes.BALL &&
+          model.joint[j].type !== this.jointTypes.FIXED)
       {
         mainAxis = this.jointAxis['mainAxis'].clone();
         jointVisual.add(mainAxis);
       }
 
-      var secondAxis;
+      var secondAxis = null;
       if (model.joint[j].type === this.jointTypes.REVOLUTE2 ||
           model.joint[j].type === this.jointTypes.UNIVERSAL)
       {
@@ -2227,6 +2185,11 @@ GZ3D.Scene.prototype.viewJoints = function(model)
         // main axis expressed w.r.t. parent model or joint frame
         // needs Gazebo issue #1268 fixed, receive use_parent_model_frame on msg
         // for now, true by default because most old models have it true
+        if (!model.joint[j].axis1)
+        {
+          console.log('no joint axis ' +  model.joint[j].type + 'vs '
+            + this.jointTypes.FIXED);
+        }
         if (model.joint[j].axis1.use_parent_model_frame === undefined)
         {
           model.joint[j].axis1.use_parent_model_frame = true;
@@ -2249,7 +2212,6 @@ GZ3D.Scene.prototype.viewJoints = function(model)
           direction.applyMatrix4(tempMatrix);
         }
 
-        mainAxis.position =  direction.multiplyScalar(0.3);
         rotMatrix = new THREE.Matrix4();
         rotMatrix.lookAt(direction, new THREE.Vector3(0, 0, 0), mainAxis.up);
         mainAxis.quaternion.setFromRotationMatrix(rotMatrix);
@@ -2355,10 +2317,11 @@ GZ3D.Scene.prototype.updateLight = function(entity, msg)
 
   if (msg.range)
   {
-    // THREE.js's light distance impacts the attenuation factor defined in the shader:
+    // THREE.js's light distance impacts the attenuation factor defined in the
+    // shader:
     // attenuation factor = 1.0 - distance-to-enlighted-point / light.distance
-    // Gazebo's range (taken from OGRE 3D API) does not contribute to attenuation;
-    // it is a hard limit for light scope.
+    // Gazebo's range (taken from OGRE 3D API) does not contribute to
+    // attenuation; it is a hard limit for light scope.
     // Nevertheless, we identify them for sake of simplicity.
     lightObj.distance = msg.range;
   }

@@ -1052,6 +1052,7 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
   }
 };
 
+/*
 GZ3D.GZIface.prototype.applyMaterial = function(obj, mat)
 {
   if (obj)
@@ -1095,6 +1096,7 @@ GZ3D.GZIface.prototype.applyMaterial = function(obj, mat)
     }
   }
 };
+*/
 
 GZ3D.GZIface.prototype.parseMaterial = function(material)
 {

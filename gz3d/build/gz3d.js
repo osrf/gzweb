@@ -1062,6 +1062,9 @@ GZ3D.Gui.prototype.init = function()
         }
         else
         {
+          var ev = event.originalEvent;
+          var pointer = ev.touches ? ev.touches[ 0 ] : ev;
+          var pos = new THREE.Vector2(pointer.clientX, pointer.clientY);
           that.scene.showRadialMenu(event);
           that.longPressContainerState = 'START';
         }
@@ -3254,6 +3257,7 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
   }
 };
 
+/*
 GZ3D.GZIface.prototype.applyMaterial = function(obj, mat)
 {
   if (obj)
@@ -3297,6 +3301,7 @@ GZ3D.GZIface.prototype.applyMaterial = function(obj, mat)
     }
   }
 };
+*/
 
 GZ3D.GZIface.prototype.parseMaterial = function(material)
 {
@@ -3686,15 +3691,13 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
   var changeEvent = {type: 'change'};
 
   var ray = new THREE.Raycaster();
-  var projector = new THREE.Projector();
-  var pointerVector = new THREE.Vector3();
+  var pointerVector = new THREE.Vector2();
 
   var point = new THREE.Vector3();
   var offset = new THREE.Vector3();
 
   var rotation = new THREE.Vector3();
   var offsetRotation = new THREE.Vector3();
-  var scale = 1;
 
   var lookAtMatrix = new THREE.Matrix4();
   var eye = new THREE.Vector3();
@@ -3738,13 +3741,14 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
   var planes = new THREE.Object3D();
   this.gizmo.add(planes);
 
+  var planeMaterial = new THREE.MeshBasicMaterial(
+      {visible: false, side: THREE.DoubleSide});
   for(var i in intersectionPlaneList)
   {
     intersectionPlanes[intersectionPlaneList[i]] =
-        new THREE.Mesh(new THREE.PlaneGeometry(500, 500));
+        new THREE.Mesh(new THREE.PlaneGeometry(500, 500), planeMaterial);
     intersectionPlanes[intersectionPlaneList[i]].material.side =
         THREE.DoubleSide;
-    intersectionPlanes[intersectionPlaneList[i]].visible = false;
     planes.add(intersectionPlanes[intersectionPlaneList[i]]);
   }
 
@@ -3758,18 +3762,22 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
   var pickerAxes = {};
   var displayAxes = {};
 
-  var HandleMaterial = function(color, over, opacity)
+  var HandleMaterial = function(parameters, over)
   {
     var material = new THREE.MeshBasicMaterial();
-    material.color = color;
     if(over)
     {
       material.side = THREE.DoubleSide;
       material.depthTest = false;
       material.depthWrite = false;
     }
-    material.opacity = opacity !== undefined ? opacity : 0.5;
     material.transparent = true;
+    material.setValues(parameters);
+    if (parameters.opacity === undefined)
+    {
+      material.opacity = 0.5;
+    }
+
     return material;
   };
 
@@ -3813,7 +3821,8 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
     geometry = new THREE.CylinderGeometry(0.2, 0.1, 0.8, 4, 1, false);
   }
 
-  mesh = new THREE.Mesh(geometry, new HandleMaterial(red, true));
+  mesh = new THREE.Mesh(geometry,
+      new HandleMaterial({color: red, visible: false, transparent: false}));
   mesh.position.x = 0.7;
   mesh.rotation.z = -Math.PI/2;
   bakeTransformations(mesh);
@@ -3821,14 +3830,16 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
   pickerAxes['translate'].add(mesh);
   this.pickerNames.push(mesh.name);
 
-  mesh = new THREE.Mesh(geometry, new HandleMaterial(green, true));
+  mesh = new THREE.Mesh(geometry,
+      new HandleMaterial({color: green, visible: false, transparent: false}));
   mesh.position.y = 0.7;
   bakeTransformations(mesh);
   mesh.name = 'TY';
   pickerAxes['translate'].add(mesh);
   this.pickerNames.push(mesh.name);
 
-  mesh = new THREE.Mesh(geometry, new HandleMaterial(blue, true));
+  mesh = new THREE.Mesh(geometry,
+      new HandleMaterial({color: blue, visible: false, transparent: false}));
   mesh.position.z = 0.7;
   mesh.rotation.x = Math.PI/2;
   bakeTransformations(mesh);
@@ -3836,25 +3847,28 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
   pickerAxes['translate'].add(mesh);
   this.pickerNames.push(mesh.name);
 
-  if(this.mobile)
+  if (this.mobile)
   {
     // Display cylinder
     geometry = new THREE.CylinderGeometry(0.1, 0.1, 1, 10, 1, false);
 
-    mesh = new THREE.Mesh(geometry, new HandleMaterial(red, true));
+    var mTXColor = new HandleMaterial({color: red}, true);
+    mesh = new THREE.Mesh(geometry, mTXColor);
     mesh.position.x = 0.5;
     mesh.rotation.z = -Math.PI/2;
     bakeTransformations(mesh);
     mesh.name = 'TX';
     displayAxes['translate'].add(mesh);
 
-    mesh = new THREE.Mesh(geometry, new HandleMaterial(green, true));
+    var mTYColor = new HandleMaterial({color: green}, true);
+    mesh = new THREE.Mesh(geometry, mTYColor);
     mesh.position.y = 0.5;
     bakeTransformations(mesh);
     mesh.name = 'TY';
     displayAxes['translate'].add(mesh);
 
-    mesh = new THREE.Mesh(geometry, new HandleMaterial(blue, true));
+    var mTZColor = new HandleMaterial({color: blue}, true);
+    mesh = new THREE.Mesh(geometry, mTZColor);
     mesh.position.z = 0.5;
     mesh.rotation.x = Math.PI/2;
     bakeTransformations(mesh);
@@ -3862,22 +3876,24 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
     displayAxes['translate'].add(mesh);
 
     // Display cone (arrow tip)
+    // make sure to reference the same material as the arrow body
+    // so both can be corrected highlighted on touch start / end.
     geometry = new THREE.CylinderGeometry(0, 0.15, 0.4, 10, 1, false);
 
-    mesh = new THREE.Mesh(geometry, new HandleMaterial(red, true));
+    mesh = new THREE.Mesh(geometry, mTXColor);
     mesh.position.x = 1.2;
     mesh.rotation.z = -Math.PI/2;
     bakeTransformations(mesh);
     mesh.name = 'TX';
     displayAxes['translate'].add(mesh);
 
-    mesh = new THREE.Mesh(geometry, new HandleMaterial(green, true));
+    mesh = new THREE.Mesh(geometry, mTYColor);
     mesh.position.y = 1.2;
     bakeTransformations(mesh);
     mesh.name = 'TY';
     displayAxes['translate'].add(mesh);
 
-    mesh = new THREE.Mesh(geometry, new HandleMaterial(blue, true));
+    mesh = new THREE.Mesh(geometry, mTZColor);
     mesh.position.z = 1.2;
     mesh.rotation.x = Math.PI/2;
     bakeTransformations(mesh);
@@ -3902,26 +3918,29 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
         depthWrite: false,
         transparent: true
     });
-    mesh = new THREE.Line(geometry, material, THREE.LinePieces);
+    mesh = new THREE.Line(geometry, material, THREE.LineSegments);
     displayAxes['translate'].add(mesh);
 
     // Display cone (arrow tip)
     geometry = new THREE.CylinderGeometry(0, 0.05, 0.2, 4, 1, true);
 
-    mesh = new THREE.Mesh(geometry, new HandleMaterial(red, true, 1));
+    mesh = new THREE.Mesh(geometry, new HandleMaterial(
+        {color: red, opacity: 1}, true));
     mesh.position.x = 1.1;
     mesh.rotation.z = -Math.PI/2;
     bakeTransformations(mesh);
     mesh.name = 'TX';
     displayAxes['translate'].add(mesh);
 
-    mesh = new THREE.Mesh(geometry, new HandleMaterial(green, true, 1));
+    mesh = new THREE.Mesh(geometry, new HandleMaterial(
+        {color: green, opacity: 1}, true));
     mesh.position.y = 1.1;
     bakeTransformations(mesh);
     mesh.name = 'TY';
     displayAxes['translate'].add(mesh);
 
-    mesh = new THREE.Mesh(geometry, new HandleMaterial(blue, true, 1));
+    mesh = new THREE.Mesh(geometry, new HandleMaterial(
+        {color: blue, opacity: 1}, true));
     mesh.position.z = 1.1;
     mesh.rotation.x = Math.PI/2;
     bakeTransformations(mesh);
@@ -3930,41 +3949,67 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
 
     // Picker and display octahedron for TXYZ
     mesh = new THREE.Mesh(new THREE.OctahedronGeometry(0.1, 0),
-        new HandleMaterial(white, true, 0.25));
+        new HandleMaterial({color: white, opacity: 0.25}, true));
     mesh.name = 'TXYZ';
     this.pickerNames.push(mesh.name);
     displayAxes['translate'].add(mesh);
-    pickerAxes['translate'].add(mesh.clone());
+
+    mesh = new THREE.Mesh(new THREE.OctahedronGeometry(0.1, 0),
+        new HandleMaterial({color: white, visible: false}, true));
+    mesh.name = 'TXYZ';
+    pickerAxes['translate'].add(mesh);
 
     // Picker and display planes
     geometry = new THREE.PlaneGeometry(0.3, 0.3);
 
-    mesh = new THREE.Mesh(geometry, new HandleMaterial(yellow, 0.25));
+    mesh = new THREE.Mesh(geometry, new HandleMaterial(
+        {color: yellow, opacity: 0.25}, true));
     mesh.position.set(0.15, 0.15, 0);
     bakeTransformations(mesh);
     mesh.name = 'TXY';
     this.pickerNames.push(mesh.name);
     displayAxes['translate'].add(mesh);
-    pickerAxes['translate'].add(mesh.clone());
 
-    mesh = new THREE.Mesh(geometry, new HandleMaterial(cyan, 0.25));
+    mesh = new THREE.Mesh(geometry, new HandleMaterial(
+        {color: yellow, visible: false}, true));
+    mesh.position.set(0.15, 0.15, 0);
+    bakeTransformations(mesh);
+    mesh.name = 'TXY';
+    pickerAxes['translate'].add(mesh);
+
+    mesh = new THREE.Mesh(geometry, new HandleMaterial(
+        {color: cyan, opacity: 0.25}, true));
     mesh.position.set(0, 0.15, 0.15);
     mesh.rotation.y = Math.PI/2;
     bakeTransformations(mesh);
     mesh.name = 'TYZ';
     this.pickerNames.push(mesh.name);
     displayAxes['translate'].add(mesh);
-    pickerAxes['translate'].add(mesh.clone());
 
-    mesh = new THREE.Mesh(geometry, new HandleMaterial(magenta, 0.25));
+    mesh = new THREE.Mesh(geometry, new HandleMaterial(
+        {color: cyan, visible: false}, true));
+    mesh.position.set(0, 0.15, 0.15);
+    mesh.rotation.y = Math.PI/2;
+    bakeTransformations(mesh);
+    mesh.name = 'TYZ';
+    pickerAxes['translate'].add(mesh);
+
+    mesh = new THREE.Mesh(geometry, new HandleMaterial(
+        {color: magenta, opacity: 0.25}, true));
     mesh.position.set(0.15, 0, 0.15);
     mesh.rotation.x = Math.PI/2;
     bakeTransformations(mesh);
     mesh.name = 'TXZ';
     this.pickerNames.push(mesh.name);
     displayAxes['translate'].add(mesh);
-    pickerAxes['translate'].add(mesh.clone());
 
+    mesh = new THREE.Mesh(geometry, new HandleMaterial(
+        {color: magenta, visible: false}, true));
+    mesh.position.set(0.15, 0, 0.15);
+    mesh.rotation.x = Math.PI/2;
+    bakeTransformations(mesh);
+    mesh.name = 'TXZ';
+    pickerAxes['translate'].add(mesh);
   }
 
   // Rotate
@@ -3986,7 +4031,8 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
     geometry = new THREE.TorusGeometry(1, 0.15, 4, 6, Math.PI);
   }
 
-  mesh = new THREE.Mesh(geometry, new HandleMaterial(red, false));
+  mesh = new THREE.Mesh(geometry, new HandleMaterial(
+      {color: red, visible: false, transparent: false}, false));
   mesh.rotation.z = -Math.PI/2;
   mesh.rotation.y = -Math.PI/2;
   bakeTransformations(mesh);
@@ -3994,7 +4040,8 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
   pickerAxes['rotate'].add(mesh);
   this.pickerNames.push(mesh.name);
 
-  mesh = new THREE.Mesh(geometry, new HandleMaterial(green, false));
+  mesh = new THREE.Mesh(geometry, new HandleMaterial(
+      {color: green, visible: false, transparent: false}, false));
   mesh.rotation.z = Math.PI;
   mesh.rotation.x = -Math.PI/2;
   bakeTransformations(mesh);
@@ -4002,32 +4049,33 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
   pickerAxes['rotate'].add(mesh);
   this.pickerNames.push(mesh.name);
 
-  mesh = new THREE.Mesh(geometry, new HandleMaterial(blue, false));
+  mesh = new THREE.Mesh(geometry, new HandleMaterial(
+      {color: blue, visible: false, transparent: false}, false));
   mesh.rotation.z = -Math.PI/2;
   bakeTransformations(mesh);
   mesh.name = 'RZ';
   pickerAxes['rotate'].add(mesh);
   this.pickerNames.push(mesh.name);
 
-  if(this.mobile)
+  if (this.mobile)
   {
     // Display torus
     geometry = new THREE.TorusGeometry(1, 0.1, 4, 36, 2*Math.PI);
 
-    mesh = new THREE.Mesh(geometry, new HandleMaterial(blue, false));
+    mesh = new THREE.Mesh(geometry, new HandleMaterial({color: blue}, false));
     mesh.rotation.z = -Math.PI/2;
     bakeTransformations(mesh);
     mesh.name = 'RZ';
     displayAxes['rotate'].add(mesh);
 
-    mesh = new THREE.Mesh(geometry, new HandleMaterial(red, false));
+    mesh = new THREE.Mesh(geometry, new HandleMaterial({color: red}, false));
     mesh.rotation.z = -Math.PI/2;
     mesh.rotation.y = -Math.PI/2;
     bakeTransformations(mesh);
     mesh.name = 'RX';
     displayAxes['rotate'].add(mesh);
 
-    mesh = new THREE.Mesh(geometry, new HandleMaterial(green, false));
+    mesh = new THREE.Mesh(geometry, new HandleMaterial({color: green}, false));
     mesh.rotation.z = Math.PI;
     mesh.rotation.x = -Math.PI/2;
     bakeTransformations(mesh);
@@ -4090,18 +4138,18 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
 
     // Picker spheres
     mesh = new THREE.Mesh(new THREE.SphereGeometry(0.95, 12, 12),
-        new HandleMaterial(white, 0.25));
+        new HandleMaterial({color: gray, visible: false}, true));
     mesh.name = 'RXYZE';
     pickerAxes['rotate'].add(mesh);
     this.pickerNames.push(mesh.name);
 
     intersectionPlanes['SPHERE'] = new THREE.Mesh(new
-        THREE.SphereGeometry(0.95, 12, 12));
-    intersectionPlanes['SPHERE'].visible = false;
+        THREE.SphereGeometry(0.95, 12, 12),
+        new HandleMaterial({color: white, visible: false}, true));
     planes.add(intersectionPlanes['SPHERE']);
 
     mesh = new THREE.Mesh(new THREE.TorusGeometry(1.30, 0.15, 4, 12),
-        new HandleMaterial(yellow, 0.25));
+        new HandleMaterial({color: yellow, visible: false}, true));
     mesh.name = 'RE';
     pickerAxes['rotate'].add(mesh);
     this.pickerNames.push(mesh.name);
@@ -4161,12 +4209,12 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
     }
 
     this.object.updateMatrixWorld();
-    worldPosition.getPositionFromMatrix(this.object.matrixWorld);
+    worldPosition.setFromMatrixPosition(this.object.matrixWorld);
 
     this.camera.updateMatrixWorld();
-    camPosition.getPositionFromMatrix(this.camera.matrixWorld);
+    camPosition.setFromMatrixPosition(this.camera.matrixWorld);
 
-    scale = worldPosition.distanceTo(camPosition) / 6 * this.scale;
+    var scale = worldPosition.distanceTo(camPosition) / 6 * this.scale;
     this.gizmo.position.copy(worldPosition);
     this.gizmo.scale.set(scale, scale, scale);
 
@@ -4196,7 +4244,7 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
             {
               tempMatrix.makeRotationFromQuaternion(tempQuaternion)
                   .getInverse(tempMatrix);
-              eye.applyProjection(tempMatrix);
+              eye.applyMatrix4(tempMatrix);
 
               if (name === 'RX')
               {
@@ -4250,18 +4298,6 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
         displayAxes[i].children[j].visible = false;
       }
     }
-    for(var k in pickerAxes)
-    {
-      for(var l in pickerAxes[k].children)
-      {
-        pickerAxes[k].children[l].visible = false;
-      }
-    }
-
-    for(var m in intersectionPlaneList)
-    {
-      intersectionPlanes[intersectionPlaneList[m]].visible = false;
-    }
   };
 
   /**
@@ -4278,17 +4314,6 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
     {
       displayAxes[this.mode].children[i].visible = true;
     }
-
-    for(var j in pickerAxes[this.mode].children)
-    {
-      pickerAxes[this.mode].children[j].visible = false; // debug
-    }
-
-    for(var k in intersectionPlaneList)
-    {
-      intersectionPlanes[intersectionPlaneList[k]].visible = false; // debug
-    }
-
     scope.update();
   };
 
@@ -4383,10 +4408,16 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
     {
       if(selectedPicker !== intersect.object)
       {
+        var selectedDisplay = null;
         // Back to original color
         if(selectedPicker !== null)
         {
-            selectedPicker.material.color.copy(selectedColor);
+          selectedDisplay =
+              displayAxes[scope.mode].getObjectByName(selectedPicker.name);
+          if (selectedDisplay)
+          {
+            selectedDisplay.material.color.copy(selectedColor);
+          }
         }
 
         selectedPicker = intersect.object;
@@ -4395,7 +4426,13 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
         selectedColor.copy(selectedPicker.material.color);
 
         // Darken color
-        selectedPicker.material.color.offsetHSL(0, 0, -0.3);
+        selectedDisplay =
+            displayAxes[scope.mode].getObjectByName(selectedPicker.name);
+        if (selectedDisplay)
+        {
+          selectedDisplay.material.color.offsetHSL(0, 0, -0.3);
+        }
+
 
         scope.dispatchEvent(changeEvent);
       }
@@ -4437,7 +4474,12 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
     // Previously selected picker back to its color
     if(selectedPicker)
     {
-      selectedPicker.material.color.copy(selectedColor);
+      var selectedDisplay =
+          displayAxes[scope.mode].getObjectByName(selectedPicker.name);
+      if (selectedDisplay)
+      {
+        selectedDisplay.material.color.copy(selectedColor);
+      }
     }
 
     selectedPicker = null;
@@ -4463,34 +4505,54 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
     {
       var intersect = intersectObjects(event, pickerAxes[scope.mode].children);
 
-        if(intersect)
+      var hoveredDisplay = null;
+      if(intersect)
+      {
+        if(hovered !== intersect.object)
         {
-          if(hovered !== intersect.object)
+          if(hovered !== null)
           {
-            if(hovered !== null)
+            // revert display axis color
+            hoveredDisplay =
+                displayAxes[scope.mode].getObjectByName(hovered.name);
+            if (hoveredDisplay)
             {
-              hovered.material.color.copy(hoveredColor);
+              hoveredDisplay.material.color.copy(hoveredColor);
             }
-
-            selectedPicker = intersect.object;
-            hovered = intersect.object;
-            hoveredColor.copy(hovered.material.color);
-
-            hovered.material.color.offsetHSL(0, 0, -0.3);
-
-            scope.dispatchEvent(changeEvent);
           }
-          scope.hovered = true;
-        }
-        else if(hovered !== null)
-        {
-          hovered.material.color.copy(hoveredColor);
 
-          hovered = null;
+          selectedPicker = intersect.object;
+          hovered = intersect.object;
+          hoveredColor.copy(hovered.material.color);
+
+          // highlight display axis color
+          hoveredDisplay =
+              displayAxes[scope.mode].getObjectByName(hovered.name);
+          if (hoveredDisplay)
+          {
+            hoveredDisplay.material.color.offsetHSL(0, 0, -0.3);
+          }
 
           scope.dispatchEvent(changeEvent);
+        }
+        scope.hovered = true;
+      }
+      else if(hovered !== null)
+      {
+        // hovered.material.color.copy(hoveredColor);
+        // revert display axis color
+        hoveredDisplay =
+            displayAxes[scope.mode].getObjectByName(hovered.name);
+        if (hoveredDisplay)
+        {
+          hoveredDisplay.material.color.copy(hoveredColor);
+        }
 
-          scope.hovered = false;
+        hovered = null;
+
+        scope.dispatchEvent(changeEvent);
+
+        scope.hovered = false;
       }
     }
     scope.document.addEventListener('mousemove', onPointerMove, false);
@@ -4780,14 +4842,14 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
     var rect = domElement.getBoundingClientRect();
     var x = (pointer.clientX - rect.left) / rect.width;
     var y = (pointer.clientY - rect.top) / rect.height;
-    pointerVector.set((x) * 2 - 1, - (y) * 2 + 1, 0.5);
-
-    projector.unprojectVector(pointerVector, scope.camera);
-    ray.set(camPosition, pointerVector.sub(camPosition).normalize());
+    pointerVector.set(x * 2 - 1, - y * 2 + 1);
+    ray.setFromCamera(pointerVector, scope.camera);
 
     // checks all intersections between the ray and the objects,
     // true to check the descendants
     var intersections = ray.intersectObjects(objects, true);
+
+    console.log('intersections ' + intersections[0]);
     return intersections[0] ? intersections[0] : false;
   }
 
@@ -4815,7 +4877,8 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
   function bakeTransformations(object)
   {
     var tempGeometry = new THREE.Geometry();
-    THREE.GeometryUtils.merge(tempGeometry, object);
+    object.updateMatrix();
+    tempGeometry.merge(object.geometry, object.matrix);
     object.geometry = tempGeometry;
     object.position.set(0, 0, 0);
     object.rotation.set(0, 0, 0);
@@ -4824,7 +4887,6 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
 };
 
 GZ3D.Manipulator.prototype = Object.create(THREE.EventDispatcher.prototype);
-
 
 /**
  * Radial menu for an object
@@ -4852,7 +4914,8 @@ GZ3D.RadialMenu.prototype.init = function()
   this.bgSizeSelected = 68*scale;
   this.highlightSize = 45*scale;
   this.iconProportion = 0.6;
-  this.bgShape = THREE.ImageUtils.loadTexture(
+  this.textureLoader = new THREE.TextureLoader();
+  this.bgShape = this.textureLoader.load(
       'style/images/icon_background.png' );
   this.layers = {
     ICON: 0,
@@ -4880,7 +4943,8 @@ GZ3D.RadialMenu.prototype.init = function()
   this.model = null;
 
   // Object containing all items
-  this.menu = new THREE.Object3D();
+  // this.menu = new THREE.Object3D();
+  this.menu = new THREE.Group();
 
   // Add items to the menu
   this.addItem('delete','style/images/trash.png');
@@ -4988,17 +5052,17 @@ GZ3D.RadialMenu.prototype.show = function(event,model)
     var item = this.menu.children[i];
 
     item.children[this.layers.ICON].visible = true;
-    item.children[this.layers.ICON].position.set(pointer.x,pointer.y,0);
+    item.children[this.layers.ICON].position.set(pointer.x,pointer.y, 1);
 
     item.children[this.layers.BACKGROUND].visible = true;
-    item.children[this.layers.BACKGROUND].position.set(pointer.x,pointer.y,0);
+    item.children[this.layers.BACKGROUND].position.set(pointer.x,pointer.y, 1);
     if (item.isDisabled)
     {
       item.children[this.layers.BACKGROUND].material.color = this.disabledColor;
     }
 
     item.children[this.layers.HIGHLIGHT].visible = item.isHighlighted;
-    item.children[this.layers.HIGHLIGHT].position.set(pointer.x,pointer.y,0);
+    item.children[this.layers.HIGHLIGHT].position.set(pointer.x,pointer.y, 1);
   }
 
   this.moving = true;
@@ -5020,31 +5084,35 @@ GZ3D.RadialMenu.prototype.update = function()
   {
     var item = this.menu.children[i];
 
-    var X = item.children[this.layers.ICON].position.x -
+    var xdelta = item.children[this.layers.ICON].position.x -
         this.startPosition.x;
-    var Y = item.children[this.layers.ICON].position.y -
+    var ydelta = item.children[this.layers.ICON].position.y -
         this.startPosition.y;
 
-    var d = Math.sqrt(Math.pow(X,2) + Math.pow(Y,2));
+    var d = Math.sqrt(Math.pow(xdelta,2) + Math.pow(ydelta,2));
 
     if ( d < this.radius)
     {
-      X = X - ( this.speed * Math.sin( ( this.offset - i ) * Math.PI/4 ) );
-      Y = Y - ( this.speed * Math.cos( ( this.offset - i ) * Math.PI/4 ) );
+      xdelta = xdelta -
+          ( this.speed * Math.sin( ( this.offset - i ) * Math.PI/4 ) );
+      ydelta = ydelta +
+          ( this.speed * Math.cos( ( this.offset - i ) * Math.PI/4 ) );
     }
     else
     {
       this.moving = false;
     }
 
-    item.children[this.layers.ICON].position.x = X + this.startPosition.x;
-    item.children[this.layers.ICON].position.y = Y + this.startPosition.y;
+    var newX = xdelta + this.startPosition.x;
+    var newY = ydelta + this.startPosition.y;
+    item.children[this.layers.ICON].position.x = newX;
+    item.children[this.layers.ICON].position.y = newY;
 
-    item.children[this.layers.BACKGROUND].position.x = X + this.startPosition.x;
-    item.children[this.layers.BACKGROUND].position.y = Y + this.startPosition.y;
+    item.children[this.layers.BACKGROUND].position.x = newX;
+    item.children[this.layers.BACKGROUND].position.y = newY;
 
-    item.children[this.layers.HIGHLIGHT].position.x = X + this.startPosition.x;
-    item.children[this.layers.HIGHLIGHT].position.y = Y + this.startPosition.y;
+    item.children[this.layers.HIGHLIGHT].position.x = newX;
+    item.children[this.layers.HIGHLIGHT].position.y = newY;
   }
 
 };
@@ -5064,6 +5132,9 @@ GZ3D.RadialMenu.prototype.getPointer = function(event)
   var posX = (pointer.clientX - rect.left);
   var posY = (pointer.clientY - rect.top);
 
+  posX = posX - rect.width * 0.5;
+  posY = -(posY - rect.height * 0.5);
+
   return {x: posX, y:posY};
 };
 
@@ -5082,7 +5153,7 @@ GZ3D.RadialMenu.prototype.onLongPressMove = function(event)
   // Check angle region
   var region = null;
   // bottom-left
-  if (angle > 5*Math.PI/8 && angle < 7*Math.PI/8)
+  if (angle > -7*Math.PI/8 && angle < -5*Math.PI/8)
   {
     region = 1;
   }
@@ -5093,17 +5164,17 @@ GZ3D.RadialMenu.prototype.onLongPressMove = function(event)
     region = 2;
   }
   // top-left
-  else if (angle > -7*Math.PI/8 && angle < -5*Math.PI/8)
+  else if (angle > 5*Math.PI/8 && angle < 7*Math.PI/8)
   {
     region = 3;
   }
   // top
-  else if (angle > -5*Math.PI/8 && angle < -3*Math.PI/8)
+  else if (angle > 3*Math.PI/8 && angle < 5*Math.PI/8)
   {
     region = 4;
   }
   // top-right
-  else if (angle > -3*Math.PI/8 && angle < -1*Math.PI/8)
+  else if (angle > 1*Math.PI/8 && angle < 3*Math.PI/8)
   {
     region = 5;
   }
@@ -5113,12 +5184,12 @@ GZ3D.RadialMenu.prototype.onLongPressMove = function(event)
     region = 6;
   }
   // bottom-right
-  else if (angle > 1*Math.PI/8 && angle < 3*Math.PI/8)
+  else if (angle > -3*Math.PI/8 && angle < -1*Math.PI/8)
   {
     region = 7;
   }
   // bottom
-  else if (angle > 3*Math.PI/8 && angle < 5*Math.PI/8)
+  else if (angle > -5*Math.PI/8 && angle < -3*Math.PI/8)
   {
     region = 8;
   }
@@ -5179,39 +5250,38 @@ GZ3D.RadialMenu.prototype.onLongPressMove = function(event)
 GZ3D.RadialMenu.prototype.addItem = function(type, iconTexture)
 {
   // Icon
-  iconTexture = THREE.ImageUtils.loadTexture( iconTexture );
+  iconTexture = this.textureLoader.load( iconTexture );
 
-  var iconMaterial = new THREE.SpriteMaterial( { useScreenCoordinates: true,
-      alignment: THREE.SpriteAlignment.center } );
-  iconMaterial.map = iconTexture;
+  var iconMaterial = new THREE.SpriteMaterial( {
+    map: iconTexture
+  } );
 
   var icon = new THREE.Sprite( iconMaterial );
   icon.scale.set( this.bgSize*this.iconProportion,
       this.bgSize*this.iconProportion, 1.0 );
   icon.name = type;
+  icon.position.set(0, 0, 1);
 
   // Background
   var bgMaterial = new THREE.SpriteMaterial( {
       map: this.bgShape,
-      useScreenCoordinates: true,
-      alignment: THREE.SpriteAlignment.center,
       color: this.plainColor } );
 
   var bg = new THREE.Sprite( bgMaterial );
   bg.scale.set( this.bgSize, this.bgSize, 1.0 );
+  bg.position.set(0, 0, 1);
 
   // Highlight
   var highlightMaterial = new THREE.SpriteMaterial({
       map: this.bgShape,
-      useScreenCoordinates: true,
-      alignment: THREE.SpriteAlignment.center,
       color: this.highlightColor});
 
   var highlight = new THREE.Sprite(highlightMaterial);
   highlight.scale.set(this.highlightSize, this.highlightSize, 1.0);
+  bg.position.set(0, 0, 1);
   highlight.visible = false;
 
-  var item = new THREE.Object3D();
+  var item = new THREE.Group();
   // Respect layer order
   item.add(icon);
   item.add(bg);
@@ -5259,9 +5329,14 @@ GZ3D.Scene.prototype.init = function()
   this.manipulationMode = 'view';
   this.pointerOnMenu = false;
 
+  // texture loader
+  this.textureLoader = new THREE.TextureLoader();
+
   this.renderer = new THREE.WebGLRenderer({antialias: true });
-  this.renderer.setClearColor(0xb2b2b2, 1); // Sky
+  this.renderer.setPixelRatio(window.devicePixelRatio);
+  this.renderer.setClearColor(0xb2b2b2, 1);
   this.renderer.setSize( window.innerWidth, window.innerHeight);
+  this.renderer.autoClear = false;
   // this.renderer.shadowMapEnabled = true;
   // this.renderer.shadowMapSoft = true;
 
@@ -5275,13 +5350,19 @@ GZ3D.Scene.prototype.init = function()
   this.defaultCameraPosition = new THREE.Vector3(0, -5, 5);
   this.resetView();
 
+  // ortho camera and scene for rendering sprites
+  this.cameraOrtho = new THREE.OrthographicCamera( -window.innerWidth * 0.5,
+      window.innerWidth * 0.5, window.innerHeight*0.5, -window.innerHeight*0.5,
+      1, 10);
+  this.cameraOrtho.position.z = 10;
+  this.sceneOrtho = new THREE.Scene();
+
   // Grid
-  this.grid = new THREE.GridHelper(10, 1);
+  this.grid = new THREE.GridHelper(20, 20, 0xCCCCCC, 0x4D4D4D);
   this.grid.name = 'grid';
   this.grid.position.z = 0.05;
   this.grid.rotation.x = Math.PI * 0.5;
   this.grid.castShadow = false;
-  this.grid.setColors(new THREE.Color( 0xCCCCCC ),new THREE.Color( 0x4D4D4D ));
   this.grid.material.transparent = true;
   this.grid.material.opacity = 0.5;
   this.grid.visible = false;
@@ -5335,7 +5416,7 @@ GZ3D.Scene.prototype.init = function()
 
   this.emitter = new EventEmitter2({ verbose: true });
 
-  // SSAO
+/*  // SSAO
   this.effectsEnabled = false;
   // depth
   var depthShader = THREE.ShaderLib[ 'depthRGBA'];
@@ -5361,44 +5442,25 @@ GZ3D.Scene.prototype.init = function()
   effect.uniforms[ 'cameraNear' ].value = this.camera.near;
   effect.uniforms[ 'cameraFar' ].value = this.camera.far;
   effect.renderToScreen = true;
-  this.composer.addPass( effect );
+  this.composer.addPass( effect );*/
 
   // Radial menu (only triggered by touch)
   this.radialMenu = new GZ3D.RadialMenu(this.getDomElement());
-  this.scene.add(this.radialMenu.menu);
+  this.sceneOrtho.add(this.radialMenu.menu);
 
   // Bounding Box
-  var vertices = [
-    new THREE.Vector3(0, 0, 0),
-    new THREE.Vector3(0, 0, 0),
-    new THREE.Vector3(0, 0, 0),
-    new THREE.Vector3(0, 0, 0),
+  var indices = new Uint16Array(
+      [ 0, 1, 1, 2, 2, 3, 3, 0,
+        4, 5, 5, 6, 6, 7, 7, 4,
+        0, 4, 1, 5, 2, 6, 3, 7 ] );
+  var positions = new Float32Array(8 * 3);
+  var boxGeometry = new THREE.BufferGeometry();
+  boxGeometry.setIndex(new THREE.BufferAttribute( indices, 1 ));
+  boxGeometry.addAttribute( 'position',
+      new THREE.BufferAttribute(positions, 3));
+  this.boundingBox = new THREE.LineSegments(boxGeometry,
+      new THREE.LineBasicMaterial({color: 0xffffff}));
 
-    new THREE.Vector3(0, 0, 0),
-    new THREE.Vector3(0, 0, 0),
-    new THREE.Vector3(0, 0, 0),
-    new THREE.Vector3(0, 0, 0)
-  ];
-  var boxGeometry = new THREE.Geometry();
-  boxGeometry.vertices.push(
-    vertices[0], vertices[1],
-    vertices[1], vertices[2],
-    vertices[2], vertices[3],
-    vertices[3], vertices[0],
-
-    vertices[4], vertices[5],
-    vertices[5], vertices[6],
-    vertices[6], vertices[7],
-    vertices[7], vertices[4],
-
-    vertices[0], vertices[4],
-    vertices[1], vertices[5],
-    vertices[2], vertices[6],
-    vertices[3], vertices[7]
-  );
-  this.boundingBox = new THREE.Line(boxGeometry,
-      new THREE.LineBasicMaterial({color: 0xffffff}),
-      THREE.LinePieces);
   this.boundingBox.visible = false;
 
   // Joint visuals
@@ -5410,7 +5472,8 @@ GZ3D.Scene.prototype.init = function()
         UNIVERSAL: 4,
         BALL: 5,
         SCREW: 6,
-        GEARBOX: 7
+        GEARBOX: 7,
+        FIXED: 8
       };
   this.jointAxis = new THREE.Object3D();
   this.jointAxis.name = 'JOINT_VISUAL';
@@ -5469,12 +5532,13 @@ GZ3D.Scene.prototype.init = function()
 
   material = new THREE.MeshLambertMaterial();
   material.color = new THREE.Color(0xffff00);
-  material.ambient = material.color;
 
-  geometry = new THREE.CylinderGeometry(0.02, 0.02, 0.25, 36, 1, false);
+  var mainAxisLen = 0.3;
+  geometry = new THREE.CylinderGeometry(0.015, 0.015, mainAxisLen, 36, 1,
+      false);
 
   mesh = new THREE.Mesh(geometry, material);
-  mesh.position.z = -0.175;
+  mesh.position.z = mainAxisLen * 0.5;
   mesh.rotation.x = Math.PI/2;
   mesh.name = 'JOINT_VISUAL';
   mainAxis.add(mesh);
@@ -5482,6 +5546,7 @@ GZ3D.Scene.prototype.init = function()
   geometry = new THREE.CylinderGeometry(0, 0.035, 0.1, 36, 1, false);
 
   mesh = new THREE.Mesh(geometry, material);
+  mesh.position.z = mainAxisLen;
   mesh.rotation.x = Math.PI/2;
   mesh.name = 'JOINT_VISUAL';
   mainAxis.add(mesh);
@@ -5493,6 +5558,7 @@ GZ3D.Scene.prototype.init = function()
   geometry = new THREE.TorusGeometry(0.04, 0.006, 10, 36, Math.PI * 3/2);
 
   mesh = new THREE.Mesh(geometry, material);
+  mesh.position.z = mainAxisLen;
   mesh.name = 'JOINT_VISUAL';
   rotAxis.add(mesh);
 
@@ -5500,6 +5566,7 @@ GZ3D.Scene.prototype.init = function()
 
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.y = -0.04;
+  mesh.position.z = mainAxisLen;
   mesh.rotation.z = Math.PI/2;
   mesh.name = 'JOINT_VISUAL';
   rotAxis.add(mesh);
@@ -5513,7 +5580,7 @@ GZ3D.Scene.prototype.init = function()
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.x = 0.03;
   mesh.position.y = 0.03;
-  mesh.position.z = -0.15;
+  mesh.position.z = mainAxisLen * 0.5;
   mesh.rotation.x = Math.PI/2;
   mesh.name = 'JOINT_VISUAL';
   transAxis.add(mesh);
@@ -5523,7 +5590,7 @@ GZ3D.Scene.prototype.init = function()
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.x = 0.03;
   mesh.position.y = 0.03;
-  mesh.position.z = -0.15 + 0.05;
+  mesh.position.z = mainAxisLen * 0.5 + 0.05;
   mesh.rotation.x = -Math.PI/2;
   mesh.name = 'JOINT_VISUAL';
   transAxis.add(mesh);
@@ -5531,7 +5598,7 @@ GZ3D.Scene.prototype.init = function()
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.x = 0.03;
   mesh.position.y = 0.03;
-  mesh.position.z = -0.15 - 0.05;
+  mesh.position.z = mainAxisLen * 0.5 - 0.05;
   mesh.rotation.x = Math.PI/2;
   mesh.name = 'JOINT_VISUAL';
   transAxis.add(mesh);
@@ -5542,7 +5609,7 @@ GZ3D.Scene.prototype.init = function()
 
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.x = -0.04;
-  mesh.position.z = -0.11;
+  mesh.position.z = mainAxisLen - 0.11;
   mesh.rotation.z = -Math.PI/4;
   mesh.rotation.x = -Math.PI/10;
   mesh.name = 'JOINT_VISUAL';
@@ -5550,17 +5617,18 @@ GZ3D.Scene.prototype.init = function()
 
   var radius = 0.04;
   var length = 0.02;
-  var curve = new THREE.SplineCurve3([new THREE.Vector3(radius, 0, 0*length),
-                                      new THREE.Vector3(0, radius, 1*length),
-                                      new THREE.Vector3(-radius, 0, 2*length),
-                                      new THREE.Vector3(0, -radius, 3*length),
-                                      new THREE.Vector3(radius, 0, 4*length),
-                                      new THREE.Vector3(0, radius, 5*length),
-                                      new THREE.Vector3(-radius, 0, 6*length)]);
-  geometry = new THREE.TubeGeometry(curve, 36, 0.01, 10, false, false);
+  var curve = new THREE.CatmullRomCurve3(
+      [new THREE.Vector3(radius, 0, 0*length),
+      new THREE.Vector3(0, radius, 1*length),
+      new THREE.Vector3(-radius, 0, 2*length),
+      new THREE.Vector3(0, -radius, 3*length),
+      new THREE.Vector3(radius, 0, 4*length),
+      new THREE.Vector3(0, radius, 5*length),
+      new THREE.Vector3(-radius, 0, 6*length)]);
+  geometry = new THREE.TubeGeometry(curve, 36, 0.01, 10, false);
 
   mesh = new THREE.Mesh(geometry, material);
-  mesh.position.z = -0.23;
+  mesh.position.z = mainAxisLen - 0.23;
   mesh.name = 'JOINT_VISUAL';
   screwAxis.add(mesh);
 
@@ -5804,13 +5872,12 @@ GZ3D.Scene.prototype.onKeyDown = function(event)
  */
 GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
 {
-  var projector = new THREE.Projector();
   var vector = new THREE.Vector3(
       ((pos.x - this.renderer.domElement.offsetLeft)
       / window.innerWidth) * 2 - 1,
       -((pos.y - this.renderer.domElement.offsetTop)
       / window.innerHeight) * 2 + 1, 1);
-  projector.unprojectVector(vector, this.camera);
+  vector.unproject(this.camera);
   var ray = new THREE.Raycaster( this.camera.position,
       vector.sub(this.camera.position).normalize() );
 
@@ -5932,7 +5999,7 @@ GZ3D.Scene.prototype.render = function()
   this.modelManipulator.update();
   this.radialMenu.update();
 
-  if (this.effectsEnabled)
+/*  if (this.effectsEnabled)
   {
     this.scene.overrideMaterial = this.depthMaterial;
     this.renderer.render(this.scene, this.camera, this.depthTarget);
@@ -5943,6 +6010,13 @@ GZ3D.Scene.prototype.render = function()
   {
     this.renderer.render(this.scene, this.camera);
   }
+*/
+
+  this.renderer.clear();
+  this.renderer.render(this.scene, this.camera);
+
+  this.renderer.clearDepth();
+  this.renderer.render(this.sceneOrtho, this.cameraOrtho);
 };
 
 /**
@@ -5955,7 +6029,13 @@ GZ3D.Scene.prototype.setWindowSize = function(width, height)
   this.camera.aspect = width / height;
   this.camera.updateProjectionMatrix();
 
-  this.renderer.setSize( width, height);
+  this.cameraOrtho.left = -width / 2;
+  this.cameraOrtho.right = width / 2;
+  this.cameraOrtho.top = height / 2;
+  this.cameraOrtho.bottom = -height / 2;
+  this.cameraOrtho.updateProjectionMatrix();
+
+  this.renderer.setSize(width, height);
   this.render();
 };
 
@@ -5985,7 +6065,7 @@ GZ3D.Scene.prototype.remove = function(model)
  */
 GZ3D.Scene.prototype.getByName = function(name)
 {
-  return this.scene.getObjectByName(name, true);
+  return this.scene.getObjectByName(name);
 };
 
 /**
@@ -6043,8 +6123,7 @@ GZ3D.Scene.prototype.createPlane = function(normalX, normalY, normalZ,
     width, height)
 {
   var geometry = new THREE.PlaneGeometry(width, height, 1, 1);
-  var material =  new THREE.MeshPhongMaterial(
-      {color:0xbbbbbb, shading: THREE.SmoothShading} ); // Later Gazebo/Grey
+  var material =  new THREE.MeshPhongMaterial();
   var mesh = new THREE.Mesh(geometry, material);
   var normal = new THREE.Vector3(normalX, normalY, normalZ);
   var cross = normal.crossVectors(normal, mesh.up);
@@ -6090,7 +6169,7 @@ GZ3D.Scene.prototype.createCylinder = function(radius, length)
  */
 GZ3D.Scene.prototype.createBox = function(width, height, depth)
 {
-  var geometry = new THREE.CubeGeometry(width, height, depth, 1, 1, 1);
+  var geometry = new THREE.BoxGeometry(width, height, depth, 1, 1, 1);
 
   // Fix UVs so textures are mapped in a way that is consistent to gazebo
   // Some face uvs need to be rotated clockwise, while others anticlockwise
@@ -6342,18 +6421,16 @@ GZ3D.Scene.prototype.createDirectionalLight = function(obj, color, intensity,
   }
 
   var lightObj = new THREE.DirectionalLight(color, intensity);
-  lightObj.shadowCameraNear = 1;
-  lightObj.shadowCameraFar = 50;
-  lightObj.shadowMapWidth = 4094;
-  lightObj.shadowMapHeight = 4094;
-  lightObj.shadowCameraVisible = false;
-  lightObj.shadowCameraBottom = -100;
-  lightObj.shadowCameraLeft = -100;
-  lightObj.shadowCameraRight = 100;
-  lightObj.shadowCameraTop = 100;
-  lightObj.shadowBias = 0.0001;
+  lightObj.shadow.camera.near = 1;
+  lightObj.shadow.camera.far = 50;
+  lightObj.shadow.mapSize.width = 4094;
+  lightObj.shadow.mapSize.height = 4094;
+  lightObj.shadow.camera.bottom = -100;
+  lightObj.shadow.camera.feft = -100;
+  lightObj.shadow.camera.right = 100;
+  lightObj.shadow.camera.top = 100;
+  lightObj.shadow.bias = 0.0001;
   lightObj.position.set(0,0,0);
-  lightObj.shadowDarkness = 0.3;
 
   if (cast_shadows)
   {
@@ -6373,7 +6450,7 @@ GZ3D.Scene.prototype.createDirectionalLight = function(obj, color, intensity,
   helperGeometry.vertices.push(new THREE.Vector3(   0,    0, -0.5));
   var helperMaterial = new THREE.LineBasicMaterial({color: 0x00ff00});
   var helper = new THREE.Line(helperGeometry, helperMaterial,
-      THREE.LinePieces);
+      THREE.LineSegments);
 
   return [lightObj, helper];
 };
@@ -6530,7 +6607,7 @@ GZ3D.Scene.prototype.createRoads = function(points, width, texture)
   }*/
   if (texture)
   {
-    var tex = THREE.ImageUtils.loadTexture(texture);
+    var tex = this.textureLoader.load(texture);
     tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
     material.map = tex;
   }
@@ -6607,7 +6684,7 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
     var repeats = [];
     for (var t = 0; t < textures.length; ++t)
     {
-      textureLoaded[t] = THREE.ImageUtils.loadTexture(textures[t].diffuse,
+      textureLoaded[t] = this.textureLoader.load(textures[t].diffuse,
           new THREE.UVMapping());
       textureLoaded[t].wrapS = THREE.RepeatWrapping;
       textureLoaded[t].wrapT = THREE.RepeatWrapping;
@@ -6894,37 +6971,6 @@ GZ3D.Scene.prototype.useColladaSubMesh = function(dae, submesh, centerSubmesh)
   return mesh;
 };
 
-/*GZ3D.Scene.prototype.setMaterial = function(mesh, texture, normalMap)
-{
-  if (!mesh)
-  {
-    return;
-  }
-
-  if (texture || normalMap)
-  {
-    // normal map shader
-    var shader = THREE.ShaderLib['normalmap'];
-    var uniforms = THREE.UniformsUtils.clone( shader.uniforms );
-    if (texture)
-    {
-      uniforms['enableDiffuse'].value = true;
-      uniforms['tDiffuse'].value = THREE.ImageUtils.loadTexture(texture);
-    }
-    if (normalMap)
-    {
-      uniforms['tNormal'].value = THREE.ImageUtils.loadTexture(normalMap);
-    }
-
-    var parameters = { fragmentShader: shader.fragmentShader,
-        vertexShader: shader.vertexShader, uniforms: uniforms,
-        lights: true, fog: false };
-    var shaderMaterial = new THREE.ShaderMaterial(parameters);
-    mesh.geometry.computeTangents();
-    mesh.material = shaderMaterial;
-  }
-};*/
-
 /**
  * Set material for an object
  * @param {} obj
@@ -6938,14 +6984,24 @@ GZ3D.Scene.prototype.setMaterial = function(obj, material)
     {
       obj.material = new THREE.MeshPhongMaterial();
       var ambient = material.ambient;
-      if (ambient)
-      {
-        obj.material.ambient.setRGB(ambient[0], ambient[1], ambient[2]);
-      }
       var diffuse = material.diffuse;
       if (diffuse)
       {
-        obj.material.color.setRGB(diffuse[0], diffuse[1], diffuse[2]);
+        // threejs removed ambient from phong and lambert materials so
+        // aproximate the resulting color by mixing ambient and diffuse
+        var dc = [];
+        dc[0] = diffuse[0];
+        dc[1] = diffuse[1];
+        dc[2] = diffuse[2];
+        if (ambient)
+        {
+          var a = 0.4;
+          var d = 0.6;
+          dc[0] = ambient[0]*a + diffuse[0]*d;
+          dc[1] = ambient[1]*a + diffuse[1]*d;
+          dc[2] = ambient[2]*a + diffuse[2]*d;
+        }
+        obj.material.color.setRGB(dc[0], dc[1], dc[2]);
       }
       var specular = material.specular;
       if (specular)
@@ -6964,7 +7020,7 @@ GZ3D.Scene.prototype.setMaterial = function(obj, material)
 
       if (material.texture)
       {
-        var texture = THREE.ImageUtils.loadTexture(material.texture);
+        var texture = this.textureLoader.load(material.texture);
         if (material.scale)
         {
           texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
@@ -6976,7 +7032,7 @@ GZ3D.Scene.prototype.setMaterial = function(obj, material)
       if (material.normalMap)
       {
         obj.material.normalMap =
-            THREE.ImageUtils.loadTexture(material.normalMap);
+            this.textureLoader.load(material.normalMap);
       }
     }
   }
@@ -7137,47 +7193,18 @@ GZ3D.Scene.prototype.showBoundingBox = function(model)
   box.max.y = box.max.y - model.position.y;
   box.max.z = box.max.z - model.position.z;
 
-  var vertex = new THREE.Vector3(box.max.x, box.max.y, box.max.z); // 0
-  this.boundingBox.geometry.vertices[0].copy(vertex);
-  this.boundingBox.geometry.vertices[7].copy(vertex);
-  this.boundingBox.geometry.vertices[16].copy(vertex);
-
-  vertex.set(box.min.x, box.max.y, box.max.z); // 1
-  this.boundingBox.geometry.vertices[1].copy(vertex);
-  this.boundingBox.geometry.vertices[2].copy(vertex);
-  this.boundingBox.geometry.vertices[18].copy(vertex);
-
-  vertex.set(box.min.x, box.min.y, box.max.z); // 2
-  this.boundingBox.geometry.vertices[3].copy(vertex);
-  this.boundingBox.geometry.vertices[4].copy(vertex);
-  this.boundingBox.geometry.vertices[20].copy(vertex);
-
-  vertex.set(box.max.x, box.min.y, box.max.z); // 3
-  this.boundingBox.geometry.vertices[5].copy(vertex);
-  this.boundingBox.geometry.vertices[6].copy(vertex);
-  this.boundingBox.geometry.vertices[22].copy(vertex);
-
-  vertex.set(box.max.x, box.max.y, box.min.z); // 4
-  this.boundingBox.geometry.vertices[8].copy(vertex);
-  this.boundingBox.geometry.vertices[15].copy(vertex);
-  this.boundingBox.geometry.vertices[17].copy(vertex);
-
-  vertex.set(box.min.x, box.max.y, box.min.z); // 5
-  this.boundingBox.geometry.vertices[9].copy(vertex);
-  this.boundingBox.geometry.vertices[10].copy(vertex);
-  this.boundingBox.geometry.vertices[19].copy(vertex);
-
-  vertex.set(box.min.x, box.min.y, box.min.z); // 6
-  this.boundingBox.geometry.vertices[11].copy(vertex);
-  this.boundingBox.geometry.vertices[12].copy(vertex);
-  this.boundingBox.geometry.vertices[21].copy(vertex);
-
-  vertex.set(box.max.x, box.min.y, box.min.z); // 7
-  this.boundingBox.geometry.vertices[13].copy(vertex);
-  this.boundingBox.geometry.vertices[14].copy(vertex);
-  this.boundingBox.geometry.vertices[23].copy(vertex);
-
-  this.boundingBox.geometry.verticesNeedUpdate = true;
+  var position = this.boundingBox.geometry.attributes.position;
+  var array = position.array;
+  array[  0 ] = box.max.x; array[  1 ] = box.max.y; array[  2 ] = box.max.z;
+  array[  3 ] = box.min.x; array[  4 ] = box.max.y; array[  5 ] = box.max.z;
+  array[  6 ] = box.min.x; array[  7 ] = box.min.y; array[  8 ] = box.max.z;
+  array[  9 ] = box.max.x; array[ 10 ] = box.min.y; array[ 11 ] = box.max.z;
+  array[ 12 ] = box.max.x; array[ 13 ] = box.max.y; array[ 14 ] = box.min.z;
+  array[ 15 ] = box.min.x; array[ 16 ] = box.max.y; array[ 17 ] = box.min.z;
+  array[ 18 ] = box.min.x; array[ 19 ] = box.min.y; array[ 20 ] = box.min.z;
+  array[ 21 ] = box.max.x; array[ 22 ] = box.min.y; array[ 23 ] = box.min.z;
+  position.needsUpdate = true;
+  this.boundingBox.geometry.computeBoundingSphere();
 
   // rotate the box back to the world
   var modelRotation = new THREE.Matrix4();
@@ -7416,14 +7443,15 @@ GZ3D.Scene.prototype.viewJoints = function(model)
       this.setPose(jointVisual, model.joint[j].pose.position,
           model.joint[j].pose.orientation);
 
-      var mainAxis;
-      if (model.joint[j].type !== this.jointTypes.BALL)
+      var mainAxis = null;
+      if (model.joint[j].type !== this.jointTypes.BALL &&
+          model.joint[j].type !== this.jointTypes.FIXED)
       {
         mainAxis = this.jointAxis['mainAxis'].clone();
         jointVisual.add(mainAxis);
       }
 
-      var secondAxis;
+      var secondAxis = null;
       if (model.joint[j].type === this.jointTypes.REVOLUTE2 ||
           model.joint[j].type === this.jointTypes.UNIVERSAL)
       {
@@ -7461,6 +7489,11 @@ GZ3D.Scene.prototype.viewJoints = function(model)
         // main axis expressed w.r.t. parent model or joint frame
         // needs Gazebo issue #1268 fixed, receive use_parent_model_frame on msg
         // for now, true by default because most old models have it true
+        if (!model.joint[j].axis1)
+        {
+          console.log('no joint axis ' +  model.joint[j].type + 'vs '
+            + this.jointTypes.FIXED);
+        }
         if (model.joint[j].axis1.use_parent_model_frame === undefined)
         {
           model.joint[j].axis1.use_parent_model_frame = true;
@@ -7483,7 +7516,6 @@ GZ3D.Scene.prototype.viewJoints = function(model)
           direction.applyMatrix4(tempMatrix);
         }
 
-        mainAxis.position =  direction.multiplyScalar(0.3);
         rotMatrix = new THREE.Matrix4();
         rotMatrix.lookAt(direction, new THREE.Vector3(0, 0, 0), mainAxis.up);
         mainAxis.quaternion.setFromRotationMatrix(rotMatrix);
@@ -7589,10 +7621,11 @@ GZ3D.Scene.prototype.updateLight = function(entity, msg)
 
   if (msg.range)
   {
-    // THREE.js's light distance impacts the attenuation factor defined in the shader:
+    // THREE.js's light distance impacts the attenuation factor defined in the
+    // shader:
     // attenuation factor = 1.0 - distance-to-enlighted-point / light.distance
-    // Gazebo's range (taken from OGRE 3D API) does not contribute to attenuation;
-    // it is a hard limit for light scope.
+    // Gazebo's range (taken from OGRE 3D API) does not contribute to
+    // attenuation; it is a hard limit for light scope.
     // Nevertheless, we identify them for sake of simplicity.
     lightObj.distance = msg.range;
   }
@@ -8571,7 +8604,6 @@ GZ3D.SpawnModel = function(scene, domElement)
 GZ3D.SpawnModel.prototype.init = function()
 {
   this.plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
-  this.projector = new THREE.Projector();
   this.ray = new THREE.Ray();
   this.obj = null;
   this.active = false;
@@ -8796,7 +8828,7 @@ GZ3D.SpawnModel.prototype.moveSpawnedModel = function(positionX, positionY)
 {
   var vector = new THREE.Vector3( (positionX / window.innerWidth) * 2 - 1,
         -(positionY / window.innerHeight) * 2 + 1, 0.5);
-  this.projector.unprojectVector(vector, this.scene.camera);
+  vector.unproject(this.scene.camera);
   this.ray.set(this.scene.camera.position,
       vector.sub(this.scene.camera.position).normalize());
   var point = this.ray.intersectPlane(this.plane);
