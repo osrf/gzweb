@@ -1476,6 +1476,10 @@ GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh,
   {
     return this.loadCollada(uri, submesh, centerSubmesh, callback);
   }
+  else if (uriFile.substr(-4).toLowerCase() === '.obj')
+  {
+    return this.loadOBJ(uri, submesh, centerSubmesh, callback);
+  }
   else if (uriFile.substr(-5).toLowerCase() === '.urdf')
   {
     /*var urdfModel = new ROSLIB.UrdfModel({
@@ -1665,6 +1669,60 @@ GZ3D.Scene.prototype.useColladaSubMesh = function(dae, submesh, centerSubmesh)
     }
   }
   return mesh;
+};
+
+/**
+ * Load collada file
+ * @param {string} uri
+ * @param {} submesh
+ * @param {} centerSubmesh
+ * @param {function} callback
+ */
+GZ3D.Scene.prototype.loadOBJ = function(uri, submesh, centerSubmesh,
+    callback)
+{
+  var obj = null;
+
+  var thatURI = uri;
+  var thatSubmesh = submesh;
+  var thatCenterSubmesh = centerSubmesh;
+
+  var baseUrl = uri.substr(0, uri.lastIndexOf('/') + 1);
+
+  var objLoader = new THREE.OBJLoader();
+  objLoader.load(uri, function(container)
+  {
+    var mtlLoader = new THREE.MTLLoader();
+    mtlLoader.setPath(baseUrl);
+
+    var applyMaterial = function(mtlCreator)
+    {
+      var allChildren = [];
+      container.getDescendants(allChildren);
+      for (var j =0; j < allChildren.length; ++j)
+      {
+        var child = allChildren[j];
+        if (child && child.material && child.material.name)
+        {
+          child.material = mtlCreator.create(child.material.name);
+        }
+      }
+    };
+
+    for (var i=0; i < container.materialLibraries.length; ++i)
+    {
+      var mltPath = container.materialLibraries[i];
+      mtlLoader.load(mltPath, applyMaterial);
+    }
+
+    obj = container;
+    this.scene.meshes[thatURI] = obj;
+//    obj = obj.clone();
+//    this.scene.useColladaSubMesh(obj, thatSubmesh, centerSubmesh);
+
+    obj.name = uri;
+    callback(obj);
+  });
 };
 
 /**
