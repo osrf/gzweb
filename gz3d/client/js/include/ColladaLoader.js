@@ -3621,8 +3621,13 @@ THREE.ColladaLoader = function () {
 							this[ 'bump' ] = ( new ColorOrTexture() ).parse( child );
 						}
 					} else {
-						console.warn( "Shader.prototype.parse: Attribute 'bumptype' missing from bump node - defaulting to 'HEIGHTFIELD'" );
-						this[ 'bump' ] = ( new ColorOrTexture() ).parse( child );
+            // NOTE: modified from original ColladaLoader.js.r86
+            // use normal map be default instead of heightfield
+						// console.warn( "Shader.prototype.parse: Attribute 'bumptype' missing from bump node - defaulting to 'HEIGHTFIELD'" );
+						// this[ 'bump' ] = ( new ColorOrTexture() ).parse( child );
+						console.error( "Shader.prototype.parse: Invalid value for attribute 'bumptype' (" + bumpType + ") - valid bumptypes are 'HEIGHTFIELD' and 'NORMALMAP' - defaulting to 'NORMALMAP'" );
+						this[ 'normal' ] = ( new ColorOrTexture() ).parse( child );
+
 					}
 
 					break;
@@ -3705,24 +3710,19 @@ THREE.ColladaLoader = function () {
               // some incorrectly exported dae meshes reference <image> id to get the
               // texture instead of <sampler2D>
               // Added workaround to skip sampler and surface lookup
-              var texImage = undefined;
-              if ( sampler === undefined )
-                texImage = images[samplerId];
-              var skipSampler = ( texImage !== undefined ) ? true : false;
+              var image = undefined;
+							if ( sampler !== undefined && sampler.source !== undefined ) {
 
-							if ( sampler !== undefined && sampler.source !== undefined || skipSampler ) {
+                var surface = this.effect.surface[sampler.source];
 
-                var surface = undefined;
-                if (!skipSampler)
-								  surface = this.effect.surface[sampler.source];
+								if ( surface !== undefined) {
 
-								if ( surface !== undefined || skipSampler ) {
-
-									var image = undefined;
-                  if (skipSampler)
-                    image = texImage;
-                  else
-                    image = images[ surface.init_from ];
+									image = images[ surface.init_from ];
+                }
+              }
+              else {
+                image = images[samplerId];
+              }
 
 									if ( image ) {
 
@@ -3782,9 +3782,9 @@ THREE.ColladaLoader = function () {
 
 									}
 
-								}
+//								}
 
-							}
+//							}
 
 						} else if ( prop === 'diffuse' || !transparent ) {
 
@@ -3859,8 +3859,13 @@ THREE.ColladaLoader = function () {
 
 			case 'lambert':
 			default:
-
-				this.material = new THREE.MeshLambertMaterial( props );
+        // NOTE: modified from original ColladaLoader.js.r86
+        // use phong material if normalMap exists because lambert
+        // does not support.
+        if (props.normalMap !== undefined)
+				  this.material = new THREE.MeshPhongMaterial( props );
+        else
+				  this.material = new THREE.MeshLambertMaterial( props );
 				break;
 
 		}
