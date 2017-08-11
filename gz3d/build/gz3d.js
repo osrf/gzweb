@@ -5329,8 +5329,11 @@ GZ3D.Scene.prototype.init = function()
   this.manipulationMode = 'view';
   this.pointerOnMenu = false;
 
-  // texture loader
+  // loaders
   this.textureLoader = new THREE.TextureLoader();
+  this.colladaLoader = new THREE.ColladaLoader();
+  this.objLoader = new THREE.OBJLoader();
+  this.mtlLoader = new THREE.MTLLoader();
 
   this.renderer = new THREE.WebGLRenderer({antialias: true });
   this.renderer.setPixelRatio(window.devicePixelRatio);
@@ -6775,6 +6778,15 @@ GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh,
   var uriPath = uri.substring(0, uri.lastIndexOf('/'));
   var uriFile = uri.substring(uri.lastIndexOf('/') + 1);
 
+  if (this.meshes[uri])
+  {
+    var mesh = this.meshes[uri];
+    mesh = mesh.clone();
+    this.useSubMesh(mesh, submesh, centerSubmesh);
+    callback(mesh);
+    return;
+  }
+
   // load urdf model
   if (uriFile.substr(-4).toLowerCase() === '.dae')
   {
@@ -6831,27 +6843,9 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
     callback)
 {
   var dae;
-  var mesh = null;
-  /*
-  // Crashes: issue #36
-  if (this.meshes[uri])
-  {
-    dae = this.meshes[uri];
-    dae = dae.clone();
-    this.useColladaSubMesh(dae, submesh, centerSubmesh);
-    callback(dae);
-    return;
-  }
-  */
-
-  var loader = new THREE.ColladaLoader();
   // var loader = new ColladaLoader2();
   // loader.options.convertUpAxis = true;
-  var thatURI = uri;
-  var thatSubmesh = submesh;
-  var thatCenterSubmesh = centerSubmesh;
-
-  loader.load(uri, function(collada)
+  this.colladaLoader.load(uri, function(collada)
   {
     // check for a scale factor
     /*if(collada.dae.asset.unit)
@@ -6863,9 +6857,9 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
     dae = collada.scene;
     dae.updateMatrix();
     this.scene.prepareColladaMesh(dae);
-    this.scene.meshes[thatURI] = dae;
+    this.scene.meshes[uri] = dae;
     dae = dae.clone();
-    this.scene.useColladaSubMesh(dae, thatSubmesh, centerSubmesh);
+    this.scene.useSubMesh(dae, submesh, centerSubmesh);
 
     dae.name = uri;
     callback(dae);
@@ -6890,37 +6884,71 @@ GZ3D.Scene.prototype.prepareColladaMesh = function(dae)
 };
 
 /**
- * Prepare collada by handling submesh-only loading
- * @param {} dae
+ * Prepare mesh by handling submesh-only loading
+ * @param {} mesh
  * @param {} submesh
  * @param {} centerSubmesh
  * @returns {THREE.Mesh} mesh
  */
-GZ3D.Scene.prototype.useColladaSubMesh = function(dae, submesh, centerSubmesh)
+GZ3D.Scene.prototype.useSubMesh = function(mesh, submesh, centerSubmesh)
 {
   if (!submesh)
   {
     return null;
   }
 
-  var mesh;
+  var result;
   var allChildren = [];
-  dae.getDescendants(allChildren);
+  mesh.getDescendants(allChildren);
   for (var i = 0; i < allChildren.length; ++i)
   {
     if (allChildren[i] instanceof THREE.Mesh)
     {
-      if (!submesh && !mesh)
+      if (allChildren[i].name === submesh ||
+          allChildren[i].geometry.name === submesh)
       {
-        mesh = allChildren[i];
-      }
-
-      if (submesh)
-      {
-
-        if (allChildren[i].geometry.name === submesh)
+        if (centerSubmesh)
         {
-          if (centerSubmesh)
+          // obj
+          if (allChildren[i].geometry instanceof THREE.BufferGeometry)
+          {
+            var geomPosition = allChildren[i].geometry.attributes.position;
+            var dim = geomPosition.itemSize;
+            var minPos = [];
+            var maxPos = [];
+            var centerPos = [];
+            var m = 0;
+            for (m = 0; m < dim; ++m)
+            {
+              minPos[m] = geomPosition.array[m];
+              maxPos[m] = minPos[m];
+            }
+            var kk = 0;
+            for (kk = dim; kk < geomPosition.count * dim; kk+=dim)
+            {
+              for (m = 0; m < dim; ++m)
+              {
+                minPos[m] = Math.min(minPos[m], geomPosition.array[kk + m]);
+                maxPos[m] = Math.max(maxPos[m], geomPosition.array[kk + m]);
+              }
+            }
+
+            for (m = 0; m < dim; ++m)
+            {
+              centerPos[m] = minPos[m] + (0.5 * (maxPos[m] - minPos[m]));
+            }
+
+            for (kk = 0; kk < geomPosition.count * dim; kk+=dim)
+            {
+              for (m = 0; m < dim; ++m)
+              {
+                geomPosition.array[kk + m] -= centerPos[m];
+              }
+            }
+            allChildren[i].geometry.attributes.position.needsUpdate = true;
+          }
+          // dae
+          else
           {
             var vertices = allChildren[i].geometry.vertices;
             var vMin = new THREE.Vector3();
@@ -6953,26 +6981,29 @@ GZ3D.Scene.prototype.useColladaSubMesh = function(dae, submesh, centerSubmesh)
               vertices[k].y -= center.y;
               vertices[k].z -= center.z;
             }
+
             allChildren[i].geometry.verticesNeedUpdate = true;
 
-            allChildren[i].position.x = 0;
-            allChildren[i].position.y = 0;
-            allChildren[i].position.z = 0;
-
-            allChildren[i].parent.position.x = 0;
-            allChildren[i].parent.position.y = 0;
-            allChildren[i].parent.position.z = 0;
+            allChildren[i].position.set(0, 0, 0);
+            if (allChildren[i].parent)
+            {
+              allChildren[i].parent.position.set(0, 0, 0);
+              if (allChildren[i].parent.parent)
+              {
+                allChildren[i].parent.parent.position.set(0, 0, 0);
+              }
+            }
           }
-          mesh = allChildren[i];
         }
-        else
-        {
-          allChildren[i].parent.remove(allChildren[i]);
-        }
+        result = allChildren[i];
+      }
+      else
+      {
+        allChildren[i].parent.remove(allChildren[i]);
       }
     }
   }
-  return mesh;
+  return result;
 };
 
 /**
@@ -6986,19 +7017,25 @@ GZ3D.Scene.prototype.loadOBJ = function(uri, submesh, centerSubmesh,
     callback)
 {
   var obj = null;
-
-  var thatURI = uri;
-  var thatSubmesh = submesh;
-  var thatCenterSubmesh = centerSubmesh;
-
   var baseUrl = uri.substr(0, uri.lastIndexOf('/') + 1);
 
-  var objLoader = new THREE.OBJLoader();
-  objLoader.load(uri, function(container)
+  this.objLoader.load(uri, function(container)
   {
-    var mtlLoader = new THREE.MTLLoader();
-    mtlLoader.setPath(baseUrl);
+    this.scene.mtlLoader.setPath(baseUrl);
 
+    // callback to signal mesh loading is complete
+    var loadComplete = function()
+    {
+      obj = container;
+      this.scene.meshes[uri] = obj;
+      obj = obj.clone();
+      this.scene.useSubMesh(obj, submesh, centerSubmesh);
+
+      obj.name = uri;
+      callback(obj);
+    };
+
+    // apply material to obj mesh
     var applyMaterial = function(mtlCreator)
     {
       var allChildren = [];
@@ -7011,53 +7048,21 @@ GZ3D.Scene.prototype.loadOBJ = function(uri, submesh, centerSubmesh,
           child.material = mtlCreator.create(child.material.name);
         }
       }
+      loadComplete();
     };
+
+    if (container.materialLibraries.length === 0)
+    {
+      // return if there are no materials to be applied
+      loadComplete();
+    }
 
     for (var i=0; i < container.materialLibraries.length; ++i)
     {
       var mltPath = container.materialLibraries[i];
-      mtlLoader.load(mltPath, applyMaterial);
+      this.scene.mtlLoader.load(mltPath, applyMaterial);
     }
-
-    obj = container;
-    this.scene.meshes[thatURI] = obj;
-//    obj = obj.clone();
-//    this.scene.useColladaSubMesh(obj, thatSubmesh, centerSubmesh);
-
-    obj.name = uri;
-    callback(obj);
   });
-
-/*  var mtlLoader = new THREE.MTLLoader();
-  // mtlLoader.setPath( 'obj/male02/' );
-  mtlLoader.load( 'male02_dds.mtl', function( materials ) {
-    materials.preload();
-    var objLoader = new THREE.OBJLoader();
-    objLoader.setMaterials(materials);
-    // objLoader.setPath( 'obj/male02/' );
-    objLoader.load( uri, function ( object ) {
-      obj = object;
-      obj.updateMatrix();
-      this.scene.meshes[thatURI] = obj;
-      obj = obj.clone();
-
-      obj.name = uri;
-      callback(obj);
-    }, onProgress, onError);
-  });
-*/
-/*  loader.load(uri, function(collada)
-  {
-    obj = collada.scene;
-    obj.updateMatrix();
-    this.scene.prepareColladaMesh(dae);
-    this.scene.meshes[thatURI] = dae;
-    obj = dae.clone();
-    // this.scene.useColladaSubMesh(dae, thatSubmesh, centerSubmesh);
-
-    obj.name = uri;
-    callback(obj);
-  });*/
 };
 
 /**
