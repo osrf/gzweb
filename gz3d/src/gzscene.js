@@ -1646,14 +1646,14 @@ GZ3D.Scene.prototype.useColladaSubMesh = function(dae, submesh, centerSubmesh)
               vertices[k].z -= center.z;
             }
             allChildren[i].geometry.verticesNeedUpdate = true;
-
-            allChildren[i].position.x = 0;
-            allChildren[i].position.y = 0;
-            allChildren[i].position.z = 0;
-
-            allChildren[i].parent.position.x = 0;
-            allChildren[i].parent.position.y = 0;
-            allChildren[i].parent.position.z = 0;
+            if (allChildren[i].parent)
+            {
+              allChildren[i].parent.position.set(0, 0, 0);
+              if (allChildren[i].parent.parent)
+              {
+                allChildren[i].parent.parent.position.set(0, 0, 0);
+              }
+            }
           }
           mesh = allChildren[i];
         }

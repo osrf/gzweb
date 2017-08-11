@@ -1246,6 +1246,7 @@ THREE.ColladaLoader = function () {
 					} else {
 
 						mesh = new THREE.Mesh( geom, material );
+            mesh.geometry.name = geometry.name
 
 					}
 
@@ -2727,6 +2728,7 @@ THREE.ColladaLoader = function () {
 	function Geometry() {
 
 		this.id = "";
+		this.name = "";
 		this.mesh = null;
 
 	}
@@ -2734,6 +2736,7 @@ THREE.ColladaLoader = function () {
 	Geometry.prototype.parse = function ( element ) {
 
 		this.id = element.getAttribute('id');
+		this.name = element.getAttribute('name');
 
 		extractDoubleSided( this, element );
 
