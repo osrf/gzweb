@@ -1062,9 +1062,6 @@ GZ3D.Gui.prototype.init = function()
         }
         else
         {
-          var ev = event.originalEvent;
-          var pointer = ev.touches ? ev.touches[ 0 ] : ev;
-          var pos = new THREE.Vector2(pointer.clientX, pointer.clientY);
           that.scene.showRadialMenu(event);
           that.longPressContainerState = 'START';
         }
@@ -3852,7 +3849,7 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
     // Display cylinder
     geometry = new THREE.CylinderGeometry(0.1, 0.1, 1, 10, 1, false);
 
-    var mTXColor = new HandleMaterial({color: red}, true);
+    var mTXColor = new HandleMaterial({color: red, transparent: true}, true);
     mesh = new THREE.Mesh(geometry, mTXColor);
     mesh.position.x = 0.5;
     mesh.rotation.z = -Math.PI/2;
@@ -3860,14 +3857,14 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
     mesh.name = 'TX';
     displayAxes['translate'].add(mesh);
 
-    var mTYColor = new HandleMaterial({color: green}, true);
+    var mTYColor = new HandleMaterial({color: green, transparent: true}, true);
     mesh = new THREE.Mesh(geometry, mTYColor);
     mesh.position.y = 0.5;
     bakeTransformations(mesh);
     mesh.name = 'TY';
     displayAxes['translate'].add(mesh);
 
-    var mTZColor = new HandleMaterial({color: blue}, true);
+    var mTZColor = new HandleMaterial({color: blue, transparent: true}, true);
     mesh = new THREE.Mesh(geometry, mTZColor);
     mesh.position.z = 0.5;
     mesh.rotation.x = Math.PI/2;
