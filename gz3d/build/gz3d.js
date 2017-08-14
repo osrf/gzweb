@@ -7040,9 +7040,19 @@ GZ3D.Scene.prototype.loadOBJ = function(uri, submesh, centerSubmesh,
       for (var j =0; j < allChildren.length; ++j)
       {
         var child = allChildren[j];
-        if (child && child.material && child.material.name)
+        if (child && child.material)
         {
-          child.material = mtlCreator.create(child.material.name);
+          if (child.material.name)
+          {
+            child.material = mtlCreator.create(child.material.name);
+          }
+          else if (Array.isArray(child.material))
+          {
+            for (var k = 0; k < child.material.length; ++k)
+            {
+              child.material[k] = mtlCreator.create(child.material[k].name);
+            }
+          }
         }
       }
       loadComplete();
@@ -7056,8 +7066,8 @@ GZ3D.Scene.prototype.loadOBJ = function(uri, submesh, centerSubmesh,
 
     for (var i=0; i < container.materialLibraries.length; ++i)
     {
-      var mltPath = container.materialLibraries[i];
-      this.scene.mtlLoader.load(mltPath, applyMaterial);
+      var mtlPath = container.materialLibraries[i];
+      this.scene.mtlLoader.load(mtlPath, applyMaterial);
     }
   });
 };
