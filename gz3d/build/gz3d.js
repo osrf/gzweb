@@ -1062,9 +1062,6 @@ GZ3D.Gui.prototype.init = function()
         }
         else
         {
-          var ev = event.originalEvent;
-          var pointer = ev.touches ? ev.touches[ 0 ] : ev;
-          var pos = new THREE.Vector2(pointer.clientX, pointer.clientY);
           that.scene.showRadialMenu(event);
           that.longPressContainerState = 'START';
         }
@@ -3852,7 +3849,7 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
     // Display cylinder
     geometry = new THREE.CylinderGeometry(0.1, 0.1, 1, 10, 1, false);
 
-    var mTXColor = new HandleMaterial({color: red}, true);
+    var mTXColor = new HandleMaterial({color: red, transparent: true}, true);
     mesh = new THREE.Mesh(geometry, mTXColor);
     mesh.position.x = 0.5;
     mesh.rotation.z = -Math.PI/2;
@@ -3860,14 +3857,14 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
     mesh.name = 'TX';
     displayAxes['translate'].add(mesh);
 
-    var mTYColor = new HandleMaterial({color: green}, true);
+    var mTYColor = new HandleMaterial({color: green, transparent: true}, true);
     mesh = new THREE.Mesh(geometry, mTYColor);
     mesh.position.y = 0.5;
     bakeTransformations(mesh);
     mesh.name = 'TY';
     displayAxes['translate'].add(mesh);
 
-    var mTZColor = new HandleMaterial({color: blue}, true);
+    var mTZColor = new HandleMaterial({color: blue, transparent: true}, true);
     mesh = new THREE.Mesh(geometry, mTZColor);
     mesh.position.z = 0.5;
     mesh.rotation.x = Math.PI/2;
@@ -7782,7 +7779,7 @@ GZ3D.SdfParser = function(scene, gui, gziface)
 {
   // set the sdf version
   this.SDF_VERSION = 1.5;
-  this.MATERIAL_ROOT = 'assets/';
+  this.MATERIAL_ROOT = 'assets';
 
   // set the xml parser function
   this.parseXML = function(xmlStr) {
@@ -7813,11 +7810,11 @@ GZ3D.SdfParser.prototype.init = function()
             'When connected scene will be reinitialized', 5000);
     that.onConnectionError();
   });
-  
+
   this.gziface.emitter.on('material', function(mat) {
     that.materials = mat;
   });
-  
+
   this.gziface.emitter.on('gzstatus', function(gzstatus) {
     if (gzstatus === 'error')
     {
@@ -7838,7 +7835,7 @@ GZ3D.SdfParser.prototype.init = function()
 GZ3D.SdfParser.prototype.onConnectionError = function()
 {
   this.scene.initScene();
-  
+
   var that = this;
   var entityCreated = function(model, type)
   {
@@ -7848,7 +7845,7 @@ GZ3D.SdfParser.prototype.onConnectionError = function()
     }
   };
   this.gui.emitter.on('entityCreated', entityCreated);
-  
+
   var deleteEntity = function(entity)
   {
     var name = entity.name;
@@ -7969,7 +7966,7 @@ GZ3D.SdfParser.prototype.spawnLightFromSDF = function(sdfObj)
     this.scene.setPose(lightObj, pose.position, pose.orientation);
   }
   lightObj.intensity = parseFloat(light.attenuation.constant);
-  lightObj.castShadow = light.cast_shadows;
+  lightObj.castShadow = this.parseBool(light.cast_shadows);
   lightObj.shadowDarkness = 0.3;
   lightObj.name = light['@name'];
 
@@ -8019,6 +8016,17 @@ GZ3D.SdfParser.prototype.parseScale = function(scaleStr)
   var scale = new THREE.Vector3(parseFloat(values[0]), parseFloat(values[1]),
           parseFloat(values[2]));
   return scale;
+};
+
+/**
+ * Parses a string which is a boolean
+ * @param {string} boolStr - string which denotes a boolean value
+ * where the values can be true, false, 1, or 0.
+ * @returns {bool} bool - bool value
+ */
+GZ3D.SdfParser.prototype.parseBool = function(boolStr)
+{
+  return JSON.parse(boolStr);
 };
 
 /**
@@ -8086,7 +8094,7 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
                 }
               }
             }
-            texture = this.MATERIAL_ROOT + textureUri + '/' + mat.texture;
+            texture = this.MATERIAL_ROOT + '/' + textureUri + '/' + mat.texture;
           }
         }
         else
@@ -8121,7 +8129,8 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
       }
       var normalMapName = material.normal_map.substr(startIndex,
               material.normal_map.lastIndexOf('.') - startIndex);
-      normalMap = this.MATERIAL_ROOT + mapUri + '/' + normalMapName + '.png';
+      normalMap = this.MATERIAL_ROOT + '/' + mapUri + '/' +
+          normalMapName + '.png';
     }
   }
 
@@ -8200,8 +8209,13 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
   {
     {
       var meshUri = geom.mesh.uri;
-      var submesh = geom.mesh.submesh;
-      var centerSubmesh = geom.mesh.center_submesh;
+      var submesh;
+      var centerSubmesh;
+      if (geom.mesh.submesh)
+      {
+        submesh = geom.mesh.submesh.name;
+        centerSubmesh = this.parseBool(geom.mesh.submesh.center);
+      }
 
       var uriType = meshUri.substring(0, meshUri.indexOf('://'));
       if (uriType === 'file' || uriType === 'model')
@@ -8562,9 +8576,9 @@ GZ3D.SdfParser.prototype.addModelByType = function(model, type)
     modelObj.name = model.name;
     this.scene.setPose(modelObj, translation, quaternion);
   }
-  
+
   var that = this;
-  
+
   var addModelFunc;
   addModelFunc = function()
   {
@@ -8580,7 +8594,7 @@ GZ3D.SdfParser.prototype.addModelByType = function(model, type)
       setTimeout(addModelFunc, 100);
     }
   };
-  
+
   setTimeout(addModelFunc , 100);
 
 //  this.scene.add(modelObj);
@@ -8669,7 +8683,7 @@ GZ3D.SdfParser.prototype.createCylinderSDF = function(translation, euler)
  */
 GZ3D.SdfParser.prototype.loadModel = function(modelName)
 {
-  var modelFile = this.MATERIAL_ROOT + modelName + '/model.sdf';
+  var modelFile = this.MATERIAL_ROOT + '/' + modelName + '/model.sdf';
 
   var xhttp = new XMLHttpRequest();
   xhttp.overrideMimeType('text/xml');
