@@ -172,14 +172,14 @@ THREE.OrbitControls = function (object, domElement)
       var position = scope.object.position;
       var offset = position.clone().sub(scope.target);
 
-      var targetDistance = Math.max(offset.length(), 15);
+      var targetDistance = offset.length();
 
-      // half of the fov is center to top of screen
-      targetDistance *= Math.tan((scope.object.fov/2) * Math.PI / 180.0);
-      // we actually don't use screenWidth, since perspective camera is fixed
-      // to screen height
-      scope.panLeft(2 * delta.x * targetDistance / element.clientHeight);
-      scope.panUp(2 * delta.y * targetDistance / element.clientHeight);
+      var vfov = scope.object.fov * Math.PI / 180.0;
+      var hfov = 2 * Math.atan(Math.tan(vfov / 2.0) * scope.object.aspect);
+      scope.panLeft(2 * delta.x * targetDistance * Math.tan(hfov/2)
+          / element.clientWidth);
+      scope.panUp(2 * delta.y * targetDistance * Math.tan(vfov/2)
+          / element.clientHeight);
     }
     else if (scope.object.top !== undefined)
     {
