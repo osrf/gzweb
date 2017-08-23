@@ -85,6 +85,8 @@ Start gazebo or gzserver first
 
      gzserver
 
+Make Sure that port 7681,is usable before starting.
+
 Start the http and websocket servers
 
     ./start_gzweb.sh
