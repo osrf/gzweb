@@ -85,7 +85,7 @@ Start gazebo or gzserver first
 
      gzserver
 
-Make Sure that port 7681,is usable before starting.
+Make sure that ports 8080 and 7681 are open and start the http and websocket servers
 
 Start the http and websocket servers
 
