@@ -85,7 +85,7 @@ Start gazebo or gzserver first
 
      gzserver
 
-Start the http and websocket servers
+Make sure that ports 8080 and 7681 are open and start the http and websocket servers.
 
     ./start_gzweb.sh
 
@@ -125,6 +125,3 @@ Install grunt packages. From the `gzweb/gz3d/utils` directory, run:
         ./start_gzweb.sh
 
 1. Open browser to localhost:8080 or just refresh page.
-
-
-Open ports 8080 and 7681 on your server
