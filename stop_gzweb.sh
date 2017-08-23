@@ -1,5 +1,5 @@
 #!/bin/sh
 
-kill -9 `pgrep -f http/client`
-kill -9 `pgrep -f ws_server`
+kill `pgrep -f http/client`
+kill `pgrep -f ws_server`
 
