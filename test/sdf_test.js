@@ -1,5 +1,3 @@
-var emitter = new EventEmitter2({ verbose: true });
-
 describe("Sdf Parser tests", function() {
 
   // beforeEach(module('gzangular'));
@@ -69,11 +67,6 @@ describe("Sdf Parser tests", function() {
       var position = {x:3,y:1,z:1};
       var rotation = {x:0.5,y:1,z:0};
       var sdf = sdfparser.createBoxSDF(position, rotation);
-
-      // scene.spawnModel.start('box',function(obj)
-      // {
-      //   emitter.emit('entityCreated', obj, 'box');
-      // });
 
       expect(position.x).toEqual(sdfparser.spawnFromSDF(sdf).position.x);
       expect(position.y).toEqual(sdfparser.spawnFromSDF(sdf).position.y);
