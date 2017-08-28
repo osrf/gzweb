@@ -7,9 +7,6 @@ describe("Sdf Parser tests", function() {
   gui = new GZ3D.Gui(scene);
   iface = new GZ3D.GZIface(scene, gui);
   sdfparser = new GZ3D.SdfParser(scene, gui, iface);
-  sdfparser.init();
-  spawnModel = new GZ3D.SpawnModel(scene);
-  spawnModel.init();
 
   describe("parse color test, string to json", function() {
     it("should return a json color", function() {
