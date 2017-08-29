@@ -7259,13 +7259,12 @@ GZ3D.Scene.prototype.setViewAs = function(model, viewAs)
     viewAs = 'normal';
   }
 
+  var showWireframe = (viewAs === 'wireframe');
   function materialViewAs(material)
   {
     if (materials.indexOf(material.id) === -1)
     {
       materials.push(material.id);
-      material.transparent = true;
-
       if (viewAs === 'transparent')
       {
         if (material.opacity)
@@ -7277,11 +7276,19 @@ GZ3D.Scene.prototype.setViewAs = function(model, viewAs)
           material.originalOpacity = 1.0;
         }
         material.opacity = 0.25;
+        material.transparent = true;
       }
       else
       {
-        material.opacity = material.originalOpacity ? material.originalOpacity : 1.0;
+        material.opacity = material.originalOpacity ?
+            material.originalOpacity : 1.0;
+        if (material.opacity >= 1.0)
+        {
+          material.transparent = false;
+        }
       }
+      // wireframe handling
+      material.wireframe = showWireframe;
     }
   }
 
@@ -7294,34 +7301,28 @@ GZ3D.Scene.prototype.setViewAs = function(model, viewAs)
     if (descendants[i].material &&
         descendants[i].name.indexOf('boundingBox') === -1 &&
         descendants[i].name.indexOf('COLLISION_VISUAL') === -1 &&
-        !this.getParentByPartialName(descendants[i], 'COLLISION_VISUAL')&&
+        !this.getParentByPartialName(descendants[i], 'COLLISION_VISUAL') &&
         descendants[i].name.indexOf('wireframe') === -1 &&
         descendants[i].name.indexOf('JOINT_VISUAL') === -1)
     {
-      if (descendants[i].material instanceof THREE.MeshFaceMaterial)
+      // Note: multi-material is being deprecated and will be removed soon
+      if (descendants[i].material instanceof THREE.MultiMaterial)
       {
         for (var j = 0; j < descendants[i].material.materials.length; ++j)
         {
           materialViewAs(descendants[i].material.materials[j]);
         }
       }
-      else
+      else if (Array.isArray(descendants[i].material))
       {
-        materialViewAs(descendants[i].material);
-      }
-
-      // wireframe handling
-      var showWireframe = (viewAs === 'wireframe');
-      if (descendants[i].material instanceof THREE.MeshFaceMaterial)
-      {
-        for (var m = 0; m < descendants[i].material.materials.length; m=m+1)
+        for (var k = 0; k < descendants[i].material.length; ++k)
         {
-          descendants[i].material.materials[m].wireframe = showWireframe;
+          materialViewAs(descendants[i].material[k]);
         }
       }
       else
       {
-        descendants[i].material.wireframe = showWireframe;
+        materialViewAs(descendants[i].material);
       }
     }
   }
