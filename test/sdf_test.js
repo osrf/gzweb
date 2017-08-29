@@ -1,44 +1,59 @@
-describe("Sdf Parser tests", function() {
+describe('Sdf Parser tests', function() {
 
-  // beforeEach(module('gzangular'));
-
-  // Initializating object used in the test.
+  // Initializing object used in the test.
   scene = new GZ3D.Scene();
   gui = new GZ3D.Gui(scene);
   iface = new GZ3D.GZIface(scene, gui);
   sdfparser = new GZ3D.SdfParser(scene, gui, iface);
 
-  describe("parse color test, string to json", function() {
-    it("should return a json color", function() {
-      var color = {r: 1, g: 1, b: 1, a: 1};
-      expect(color).toEqual(sdfparser.parseColor("1 1 1 1"));
+  describe('Parse color test, string to json', function() {
+    it('should return a json color', function() {
+      var color = {r: 212, g: 199, b: 0.2, a: 0.9};
+      expect(sdfparser.parseColor('212 199 0.2 0.9')).toEqual(color);
+      color = {r: 0, g: 300, b: 0.0001, a: -278};
+      expect(sdfparser.parseColor('0 300 0.0001 -278')).toEqual(color);
+      // Shouldn't equal
+      expect(sdfparser.parseColor('0 300 0.0001-278')).not.toEqual(color);
     });
   });
 
-  describe("parse 3Dvector test, string to json", function() {
-    it("should return a json", function() {
-      var size = {x: 1, y: 1, z: 1};
-      expect(size).toEqual(sdfparser.parseSize("1 1 1"));
+  describe('Parse string size test, string to json', function() {
+    it('should return a json', function() {
+      var size = {x: 0.092, y: 1, z: 1.1};
+      expect(sdfparser.parseSize('0.092 1 1.1')).toEqual(size);
+      // Shouldn't equal
+      expect(sdfparser.parseSize('0.0 9.2. 11.1')).not.toEqual(size);
+      expect(sdfparser.parseSize('0112121')).not.toEqual(size);      
+      expect(sdfparser.parseSize('x y z')).not.toEqual(size);            
     });
   });
 
-  describe("parse size test, string to json", function() {
-    it("should return a json size object", function() {
-      var color = {r: 1, g: 1, b: 1, a: 1};
-      expect(color).toEqual(sdfparser.parseColor("1 1 1 1"));
+  describe('Parse 3DVector test, string to json', function() {
+    it('should return a json object', function() {
+      var vec = {x: 1.001, y: 3, z: 0.0001};
+      expect(sdfparser.parse3DVector('1.001 3 0.0001')).toEqual(vec);
+      // Shouldn't equal
+      expect(sdfparser.parse3DVector('1.001 3 0.0.0001')).not.toEqual(vec);
+      expect(sdfparser.parse3DVector('a b c')).not.toEqual(vec);      
     });
   });
 
-  describe("parse scale test, string to Vector3", function() {
-    it("should return a vector3 object", function() {
+  describe('Parse scale test, string to Vector3', function() {
+    it('should return a vector3 object', function() {
       var vec = new THREE.Vector3(0.1,0.4,0.66);
-      expect(vec).toEqual(sdfparser.parseScale("0.1 0.4 0.66"));
+      expect(sdfparser.parseScale('0.1 0.4 0.66')).toEqual(vec);
+      // Shouldn't equal
+      expect(sdfparser.parseScale('0..1 0.4 0.66')).not.toEqual(vec);
+      expect(sdfparser.parseScale('0.104 0.66')).not.toEqual(vec);
+      expect(sdfparser.parseScale('1 2 A')).not.toEqual(vec);            
     });
   });
 
-  describe("spawn a light from SDF", function() {
-    it("should return a json", function() {
-      var sdfLight = '<?xml version="1.0" ?>'+
+  describe('Spawn a light from SDF', function() {
+    it('Should create a THREE.Object3D of type directional light', function() {
+      var sdfLight, obj3D;
+
+      sdfLight = '<?xml version="1.0" ?>'+
       '<sdf version="1.5">'+
         '<light type="directional" name="sun">'+
           '<cast_shadows>true</cast_shadows>'+
@@ -54,32 +69,41 @@ describe("Sdf Parser tests", function() {
           '<direction>-0.5 0.1 -0.9</direction>'+
         '</light>'+
       '</sdf>';
-      expect('DirectionalLight').toEqual(sdfparser.spawnFromSDF(sdfLight).type);
+
+      obj3D = sdfparser.spawnFromSDF(sdfLight);
+      expect(obj3D.color.r).toEqual(0.8);
+      expect(obj3D.color.g).toEqual(0.8);
+      expect(obj3D.color.b).toEqual(0.8);
+      expect(obj3D.intensity).toEqual(0.9);      
+      expect(obj3D.type).toEqual('DirectionalLight');
+      expect(obj3D.name).toEqual('sun');
     });
   });
 
-  describe("spawn a model from SDF, and verify it's position", function() {
-    it("should return a json object", function() {
+  describe('Spawn a box from SDF, initialize and verify it\'s position', function() {
+    it('Should spawn in the right position', function() {
+      var pose, rotation, sdf, obj3D;
 
-      var position = {x:3,y:1,z:1};
-      var rotation = {x:0.5,y:1,z:0};
-      var sdf = sdfparser.createBoxSDF(position, rotation);
-
-      expect(position.x).toEqual(sdfparser.spawnFromSDF(sdf).position.x);
-      expect(position.y).toEqual(sdfparser.spawnFromSDF(sdf).position.y);
-      expect(position.z).toEqual(sdfparser.spawnFromSDF(sdf).position.z);      
+      position = {x:3, y:1, z:1};
+      rotation = {x:0.5, y:1, z:0};
+      sdf = sdfparser.createBoxSDF(position, rotation);
+      obj3D = sdfparser.spawnFromSDF(sdf);
+      expect(obj3D.position.x).toEqual(position.x);
+      expect(obj3D.position.y).toEqual(position.y);
+      expect(obj3D.position.z).toEqual(position.z);
+      // Shouldn't equal
+      expect(obj3D.position.z).not.toEqual(0.9);
       // How does it transform the rotation angels into Eulers?
       // expect(rotation.x).toEqual(sdfparser.spawnFromSDF(sdf).rotation.x);
       // expect(rotation.y).toEqual(sdfparser.spawnFromSDF(sdf).rotation.y);
       // expect(rotation.z).toEqual(sdfparser.spawnFromSDF(sdf).rotation.z);      
-
     });
   });
 
   // the testing server doesn't look in the right place 
   // for the assets
-  // describe("loading a model by it's name", function() {
-  //   it("test by verifing the model name", function() {
+  // describe('loading a model by it's name', function() {
+  //   it('test by verifing the model name', function() {
 
   //     var sdf = sdfparser.loadSDF('arm_part');
   //     expect('arm_part').toEqual(sdfparser.spawnFromSDF(sdf).name);
