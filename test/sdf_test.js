@@ -14,6 +14,8 @@ describe('Sdf Parser tests', function() {
       expect(sdfparser.parseColor('0 300 0.0001 -278')).toEqual(color);
       // Shouldn't equal
       expect(sdfparser.parseColor('0 300 0.0001-278')).not.toEqual(color);
+      expect(sdfparser.parseColor('0 300 0.0001')).not.toEqual(color);
+      expect(sdfparser.parseColor('0 A 0.0001-278')).not.toEqual(color);      
     });
   });
 
@@ -23,8 +25,8 @@ describe('Sdf Parser tests', function() {
       expect(sdfparser.parseSize('0.092 1 1.1')).toEqual(size);
       // Shouldn't equal
       expect(sdfparser.parseSize('0.0 9.2. 11.1')).not.toEqual(size);
-      expect(sdfparser.parseSize('0112121')).not.toEqual(size);      
-      expect(sdfparser.parseSize('x y z')).not.toEqual(size);            
+      expect(sdfparser.parseSize('11 2121')).not.toEqual(size);      
+      expect(sdfparser.parseSize('x 21 z')).not.toEqual(size);            
     });
   });
 
@@ -34,7 +36,8 @@ describe('Sdf Parser tests', function() {
       expect(sdfparser.parse3DVector('1.001 3 0.0001')).toEqual(vec);
       // Shouldn't equal
       expect(sdfparser.parse3DVector('1.001 3 0.0.0001')).not.toEqual(vec);
-      expect(sdfparser.parse3DVector('a b c')).not.toEqual(vec);      
+      expect(sdfparser.parse3DVector('1 21')).not.toEqual(vec);      
+      expect(sdfparser.parse3DVector('a 20 c')).not.toEqual(vec);
     });
   });
 
