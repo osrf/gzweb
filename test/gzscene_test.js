@@ -294,7 +294,7 @@ describe('Sdf Parser tests', function() {
       });
 
       describe('Test gzscene Set Pose', function() {
-        it('Position and orientation should match', function() {
+        it('Position and orientation of the returned model should match', function() {
           
           var model, pos, ori, quaternion;
           pos = new THREE.Vector3(-1,0.5,3);
