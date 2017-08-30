@@ -292,6 +292,25 @@ describe('Sdf Parser tests', function() {
                
         });
       });
+
+      describe('Test gzscene Set Pose', function() {
+        it('Position and orientation should match', function() {
+          
+          var model, pos, ori, quaternion;
+          pos = new THREE.Vector3(-1,0.5,3);
+          ori = new THREE.Quaternion(0.1,-0.3,2,0);
+          model = new THREE.Object3D();
+          scene.setPose(model, pos, ori);
+          expect(model.position).toEqual(pos);
+
+          quaternion = model.quaternion;
+          expect(quaternion.x).toEqual(ori.x);
+          expect(quaternion.y).toEqual(ori.y);
+          expect(quaternion.z).toEqual(ori.z);
+          expect(quaternion.w).toEqual(ori.w);
+        });
+      });
+
       
     });
     
