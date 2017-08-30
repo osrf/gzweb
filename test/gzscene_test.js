@@ -35,7 +35,7 @@ describe('Sdf Parser tests', function() {
             // expect(scene.radialMenu).toEqual(new GZ3D.RadialMenu(scene.getDomElement()));
 
             expect(scene.emitter).toEqual(new EventEmitter2({ verbose: true }));
-            
+
             expect(scene.timeDown).toEqual(null);
 
             // Bounding Box
@@ -201,7 +201,6 @@ describe('Sdf Parser tests', function() {
             vec3.x = 0;
             vec3.y = 0;
             vec3.z = mainAxisLen;
-            console.log(pos);
             expect(mesh.name).toEqual('JOINT_VISUAL');
             expect(mesh.material.color).toEqual(new THREE.Color(0xffff00));
             expect(pos).toEqual(vec3);
@@ -271,7 +270,6 @@ describe('Sdf Parser tests', function() {
             vec3.x = -0.04;
             vec3.y = 0;
             vec3.z = mainAxisLen - 0.11;
-            console.log(pos);
             expect(mesh.name).toEqual('JOINT_VISUAL');
             expect(mesh.material.color).toEqual(new THREE.Color(0xffff00));
             expect(pos).toEqual(vec3);
