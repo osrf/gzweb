@@ -31,7 +31,7 @@ describe('Sdf Parser tests', function() {
             expect(scene.spawnedShapeMaterial.transparent).toEqual(true);
 
             // TODO test event listeners
-            // TODO test thing that involve the DOM
+            // TODO test things that involve the DOM
             // expect(scene.radialMenu).toEqual(new GZ3D.RadialMenu(scene.getDomElement()));
 
             expect(scene.emitter).toEqual(new EventEmitter2({ verbose: true }));
@@ -83,8 +83,8 @@ describe('Sdf Parser tests', function() {
             pos = mesh.position;
             rot = mesh.rotation;
             vec3.x = 0.15;
-            vec3.y=0;
-            vec3.z=0;
+            vec3.y = 0;
+            vec3.z = 0;
             expect(mesh.name).toEqual('JOINT_VISUAL');
             expect(mesh.material.color).toEqual(new THREE.Color(0xff0000));
             expect(pos).toEqual(vec3);
@@ -96,8 +96,8 @@ describe('Sdf Parser tests', function() {
             pos = mesh.position;
             rot = mesh.rotation;
             vec3.x = 0;
-            vec3.y=0.15;
-            vec3.z=0;
+            vec3.y = 0.15;
+            vec3.z = 0;
             expect(mesh.name).toEqual('JOINT_VISUAL');
             expect(mesh.material.color).toEqual(new THREE.Color(0x00ff00));
             expect(pos).toEqual(vec3);
@@ -110,8 +110,8 @@ describe('Sdf Parser tests', function() {
             pos = mesh.position;
             rot = mesh.rotation;
             vec3.x = 0;
-            vec3.y=0;
-            vec3.z=0.15;
+            vec3.y = 0;
+            vec3.z = 0.15;
             expect(mesh.name).toEqual('JOINT_VISUAL');
             expect(mesh.material.color).toEqual(new THREE.Color(0x0000ff));
             expect(pos).toEqual(vec3);
@@ -124,8 +124,8 @@ describe('Sdf Parser tests', function() {
             pos = mesh.position;
             rot = mesh.rotation;
             vec3.x = 0.3;
-            vec3.y=0;
-            vec3.z=0;
+            vec3.y = 0;
+            vec3.z = 0;
             expect(mesh.name).toEqual('JOINT_VISUAL');
             expect(mesh.material.color).toEqual(new THREE.Color(0xff0000));
             expect(pos).toEqual(vec3);            
@@ -137,8 +137,8 @@ describe('Sdf Parser tests', function() {
             pos = mesh.position;
             rot = mesh.rotation;
             vec3.x = 0.;
-            vec3.y=0.3;
-            vec3.z=0;
+            vec3.y = 0.3;
+            vec3.z = 0;
             expect(mesh.name).toEqual('JOINT_VISUAL');
             expect(mesh.material.color).toEqual(new THREE.Color(0x00ff00));
             expect(pos).toEqual(vec3);
@@ -151,8 +151,8 @@ describe('Sdf Parser tests', function() {
             pos = mesh.position;
             rot = mesh.rotation;
             vec3.x = 0;
-            vec3.y=0;
-            vec3.z=0.3;
+            vec3.y = 0;
+            vec3.z = 0.3;
             expect(mesh.name).toEqual('JOINT_VISUAL');
             expect(mesh.material.color).toEqual(new THREE.Color(0x0000ff));
             expect(pos).toEqual(vec3);
