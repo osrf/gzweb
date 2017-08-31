@@ -338,33 +338,43 @@ describe('Sdf Parser tests', function() {
         });
       });
 
-      // Test model Spawning first
-      // describe('Test gzscene OnPointerDown', function() {
-      //   it('Should ', function() {
-
-      //   });
-      // });
-      
 
       // Test manipulation_mode
       describe('Test manipulation mode', function() {
+        // For some reasone that I yet to discover, 
+        // I've to do this for the eventEmiiter to work!
+        // else we get "Error: cannot call methods on popup prior \
+        // to initialization; attempted to call method 'close'"
+        describe('Reintialize', function() {
+          // Initializing object used in the test.
+          scene = new GZ3D.Scene();
+          gui = new GZ3D.Gui(scene);
+          iface = new GZ3D.GZIface(scene, gui);
+          sdfparser = new GZ3D.SdfParser(scene, gui, iface);
+        });
+
         it('Should change manipulation mode to translate', function() {
           guiEvents.emit('manipulation_mode', 'translate');
-
+            
           expect(scene.manipulationMode).not.toEqual('view');  
-          expect(scene.manipulationMode).toEqual('translate');  
-        });          
+          expect(scene.manipulationMode).toEqual('translate');
+        });              
       });
+
+      // Test Model spawning
+      describe('Test manipulation mode', function() {
+        it('Spwan model', function() {
+   
+          var $scope = {};
+          var controller = $controller('insertControl', { $scope: $scope });
+          // console.log($scope);
+          // $scope.spawnEntity('box');
+          // console.log($scope.models);
+        });              
+      });
+
+
 });
     
-    // For some reasone that I yet to discover, 
-    // I've to do this for the eventEmiiter to work!
-    // else we get "Error: cannot call methods on popup prior \
-    // to initialization; attempted to call method 'close'" 
-    describe('Test manipulation_mode', function() {
-      // Initializing object used in the test.
-      scene = new GZ3D.Scene();
-      gui = new GZ3D.Gui(scene);
-      iface = new GZ3D.GZIface(scene, gui);
-      sdfparser = new GZ3D.SdfParser(scene, gui, iface);
-    });
+ 
+ 
