@@ -15,14 +15,16 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
+      { pattern: 'test/fixture/*.html', included: false, served: true },
       "gz3d/client/js/include/jquery-1.9.1.js",      
       "gz3d/client/js/include/jquery.mobile-1.4.0.min.js",
+      'node_modules/jasmine-jquery/lib/jasmine-jquery.js',      
       "gz3d/client/js/include/angular.min.js",
       "gz3d/client/js/include/three.js",
       "gz3d/client/js/include/three.compat.js",
       "gz3d/client/js/include/OrbitControls.js",
-      "gz3d/client/js/include/Detector.js",
       "gz3d/client/js/include/stats.min.js",
+      "gz3d/client/js/include/Detector.js",
       "gz3d/client/js/include/eventemitter2.js",
       "gz3d/client/js/include/roslib.js",
       "gz3d/client/js/include/ColladaLoader.js",
@@ -34,7 +36,8 @@ module.exports = function(config) {
       "gz3d/client/js/include/ShaderPass.js",
       "gz3d/client/js/include/xml2json.js",
       'gz3d/build/gz3d.js',
-      "test/lib/*.js",
+      "https://cdnjs.cloudflare.com/ajax/libs/angular-mocks/1.3.0/angular-mocks.min.js",      
+      // 'test/fixture/*.html',
       'test/*.js'
     ],
 
