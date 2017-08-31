@@ -268,8 +268,8 @@ describe('Sdf Parser tests', function() {
             pos = mesh.position;
             rot = mesh.rotation;
             vec3.x = 0.03;
-            vec3.y=0.03;
-            vec3.z=mainAxisLen * 0.5 - 0.05;
+            vec3.y = 0.03;
+            vec3.z = mainAxisLen * 0.5 - 0.05;
             expect(mesh.name).toEqual('JOINT_VISUAL');
             expect(pos).toEqual(vec3);
             expect(rot.x).toEqual(Math.PI/2);
