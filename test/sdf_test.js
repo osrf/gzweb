@@ -15,7 +15,7 @@ describe('Sdf Parser tests', function() {
       // Shouldn't equal
       expect(sdfparser.parseColor('0 300 0.0001-278')).not.toEqual(color);
       expect(sdfparser.parseColor('0 300 0.0001')).not.toEqual(color);
-      expect(sdfparser.parseColor('0 A 0.0001-278')).not.toEqual(color);      
+      expect(sdfparser.parseColor('0 A 0.0001-278')).not.toEqual(color);
     });
   });
 
@@ -25,8 +25,8 @@ describe('Sdf Parser tests', function() {
       expect(sdfparser.parseSize('0.092 1 1.1')).toEqual(size);
       // Shouldn't equal
       expect(sdfparser.parseSize('0.0 9.2. 11.1')).not.toEqual(size);
-      expect(sdfparser.parseSize('11 2121')).not.toEqual(size);      
-      expect(sdfparser.parseSize('x 21 z')).not.toEqual(size);            
+      expect(sdfparser.parseSize('11 2121')).not.toEqual(size);
+      expect(sdfparser.parseSize('x 21 z')).not.toEqual(size);
     });
   });
 
@@ -36,7 +36,7 @@ describe('Sdf Parser tests', function() {
       expect(sdfparser.parse3DVector('1.001 3 0.0001')).toEqual(vec);
       // Shouldn't equal
       expect(sdfparser.parse3DVector('1.001 3 0.0.0001')).not.toEqual(vec);
-      expect(sdfparser.parse3DVector('1 21')).not.toEqual(vec);      
+      expect(sdfparser.parse3DVector('1 21')).not.toEqual(vec);
       expect(sdfparser.parse3DVector('a 20 c')).not.toEqual(vec);
     });
   });
@@ -48,7 +48,7 @@ describe('Sdf Parser tests', function() {
       // Shouldn't equal
       expect(sdfparser.parseScale('0..1 0.4 0.66')).not.toEqual(vec);
       expect(sdfparser.parseScale('0.104 0.66')).not.toEqual(vec);
-      expect(sdfparser.parseScale('1 2 A')).not.toEqual(vec);            
+      expect(sdfparser.parseScale('1 2 A')).not.toEqual(vec);
     });
   });
 
@@ -77,13 +77,14 @@ describe('Sdf Parser tests', function() {
       expect(obj3D.color.r).toEqual(0.8);
       expect(obj3D.color.g).toEqual(0.8);
       expect(obj3D.color.b).toEqual(0.8);
-      expect(obj3D.intensity).toEqual(0.9);      
+      expect(obj3D.color.b).toEqual(1);
+      expect(obj3D.intensity).toEqual(0.9);
       expect(obj3D.type).toEqual('DirectionalLight');
       expect(obj3D.name).toEqual('sun');
     });
   });
 
-  describe('Spawn a box from SDF, initialize and verify it\'s position', function() {
+  describe('Spawn a box from SDF, initialize and verify its position', function() {
     it('Should spawn in the right position', function() {
       var pose, rotation, sdf, obj3D;
 
@@ -103,19 +104,8 @@ describe('Sdf Parser tests', function() {
     });
   });
 
-  // the testing server doesn't look in the right place 
-  // for the assets
-  // describe('loading a model by it's name', function() {
-  //   it('test by verifing the model name', function() {
-
-  //     var sdf = sdfparser.loadSDF('arm_part');
-  //     expect('arm_part').toEqual(sdfparser.spawnFromSDF(sdf).name);
-  //   });
-  // });
-
   // TODO: test sdfParser.createMaterial
   // have to be able to load the materials with no gzserver
   // or an another solution
-
 
 });
