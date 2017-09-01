@@ -4940,7 +4940,6 @@ GZ3D.RadialMenu.prototype.init = function()
   this.model = null;
 
   // Object containing all items
-  // this.menu = new THREE.Object3D();
   this.menu = new THREE.Group();
 
   // Add items to the menu
@@ -5412,34 +5411,6 @@ GZ3D.Scene.prototype.init = function()
   this.scene.add(this.controls.targetIndicator);
 
   this.emitter = new EventEmitter2({ verbose: true });
-
-/*  // SSAO
-  this.effectsEnabled = false;
-  // depth
-  var depthShader = THREE.ShaderLib[ 'depthRGBA'];
-  var depthUniforms = THREE.UniformsUtils.clone( depthShader.uniforms );
-
-  this.depthMaterial = new THREE.ShaderMaterial( {
-      fragmentShader: depthShader.fragmentShader,
-      vertexShader: depthShader.vertexShader,
-      uniforms: depthUniforms } );
-  this.depthMaterial.blending = THREE.NoBlending;
-
-  // postprocessing
-  this.composer = new THREE.EffectComposer(this.renderer );
-  this.composer.addPass( new THREE.RenderPass(this.scene,this.camera));
-
-  this.depthTarget = new THREE.WebGLRenderTarget( window.innerWidth,
-      window.innerHeight, { minFilter: THREE.NearestFilter,
-      magFilter: THREE.NearestFilter, format: THREE.RGBAFormat } );
-
-  var effect = new THREE.ShaderPass( THREE.SSAOShader );
-  effect.uniforms[ 'tDepth' ].value = this.depthTarget;
-  effect.uniforms[ 'size' ].value.set( window.innerWidth, window.innerHeight );
-  effect.uniforms[ 'cameraNear' ].value = this.camera.near;
-  effect.uniforms[ 'cameraFar' ].value = this.camera.far;
-  effect.renderToScreen = true;
-  this.composer.addPass( effect );*/
 
   // Radial menu (only triggered by touch)
   this.radialMenu = new GZ3D.RadialMenu(this.getDomElement());
@@ -5995,19 +5966,6 @@ GZ3D.Scene.prototype.render = function()
 
   this.modelManipulator.update();
   this.radialMenu.update();
-
-/*  if (this.effectsEnabled)
-  {
-    this.scene.overrideMaterial = this.depthMaterial;
-    this.renderer.render(this.scene, this.camera, this.depthTarget);
-    this.scene.overrideMaterial = null;
-    this.composer.render();
-  }
-  else
-  {
-    this.renderer.render(this.scene, this.camera);
-  }
-*/
 
   this.renderer.clear();
   this.renderer.render(this.scene, this.camera);
@@ -7485,8 +7443,6 @@ GZ3D.Scene.prototype.viewJoints = function(model)
       if (mainAxis)
       {
         // main axis expressed w.r.t. parent model or joint frame
-        // needs Gazebo issue #1268 fixed, receive use_parent_model_frame on msg
-        // for now, true by default because most old models have it true
         if (!model.joint[j].axis1)
         {
           console.log('no joint axis ' +  model.joint[j].type + 'vs '
