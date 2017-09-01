@@ -261,8 +261,13 @@ GZ3D.SpawnModel.prototype.moveSpawnedModel = function(positionX, positionY)
       this.obj.children[0].children[0] instanceof THREE.DirectionalLight))
   {
     var lightObj = this.obj.children[0].children[0];
-    lightObj.target.position.copy(this.obj.position);
-    lightObj.target.position.add(new THREE.Vector3(0,0,-0.5));
+    if (lightObj.direction)
+    {
+      if (lightObj.target)
+      {
+        lightObj.target.position.copy(lightObj.direction);
+      }
+    }
   }
 };
 

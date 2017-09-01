@@ -906,24 +906,8 @@ GZ3D.Scene.prototype.createLight = function(type, diffuse, intensity, pose,
     specular = color.clone();
   }
 
-  var matrixWorld;
-
   if (pose)
   {
-    var quaternion = new THREE.Quaternion(
-        pose.orientation.x,
-        pose.orientation.y,
-        pose.orientation.z,
-        pose.orientation.w);
-
-    var translation = new THREE.Vector3(
-        pose.position.x,
-        pose.position.y,
-        pose.position.z);
-
-    matrixWorld = new THREE.Matrix4();
-    matrixWorld.compose(translation, quaternion, new THREE.Vector3(1,1,1));
-
     this.setPose(obj, pose.position, pose.orientation);
     obj.matrixWorldNeedsUpdate = true;
   }
@@ -955,17 +939,21 @@ GZ3D.Scene.prototype.createLight = function(type, diffuse, intensity, pose,
     helper.name = name + '_lightHelper';
   }
 
+  var dir = new THREE.Vector3(0, 0, -1);
   if (direction)
   {
-    var dir = new THREE.Vector3(direction.x, direction.y,
-        direction.z);
-
-    obj.direction = new THREE.Vector3();
-    obj.direction.copy(dir);
-
-    dir.applyMatrix4(matrixWorld); // localToWorld
-    lightObj.target.position.copy(dir);
+    dir.x = direction.x;
+    dir.y = direction.y;
+    dir.z = direction.z;
   }
+  obj.direction = new THREE.Vector3(dir.x, dir.y, dir.z);
+
+  var targetObj = new THREE.Object3D();
+  lightObj.add(targetObj);
+
+  targetObj.position.copy(dir);
+  targetObj.matrixWorldNeedsUpdate = true;
+  lightObj.target = targetObj;
 
   // Add properties which exist on the server but have no meaning on THREE.js
   obj.serverProperties = {};
@@ -2240,37 +2228,8 @@ GZ3D.Scene.prototype.updateLight = function(entity, msg)
   if (msg.pose)
   {
     // needed to update light's direction
-    var quaternion = new THREE.Quaternion(
-        msg.pose.orientation.x,
-        msg.pose.orientation.y,
-        msg.pose.orientation.z,
-        msg.pose.orientation.w);
-
-    var translation = new THREE.Vector3(
-        msg.pose.position.x,
-        msg.pose.position.y,
-        msg.pose.position.z);
-
-    matrixWorld = new THREE.Matrix4();
-    matrixWorld.compose(translation, quaternion, new THREE.Vector3(1,1,1));
-
     this.setPose(entity, msg.pose.position, msg.pose.orientation);
     entity.matrixWorldNeedsUpdate = true;
-
-    if (entity.direction)
-    {
-      dir = new THREE.Vector3(entity.direction.x, entity.direction.y,
-          entity.direction.z);
-
-      entity.direction = new THREE.Vector3();
-      entity.direction.copy(dir);
-
-      dir.applyMatrix4(matrixWorld); // localToWorld
-      if (lightObj.target)
-      {
-        lightObj.target.position.copy(dir);
-      }
-    }
   }
 
   if (msg.range)
@@ -2323,7 +2282,6 @@ GZ3D.Scene.prototype.updateLight = function(entity, msg)
     entity.direction = new THREE.Vector3();
     entity.direction.copy(dir);
 
-    dir.applyMatrix4(matrixWorld); // localToWorld
     if (lightObj.target)
     {
       lightObj.target.position.copy(dir);

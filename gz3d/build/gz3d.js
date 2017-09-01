@@ -3254,52 +3254,6 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
   }
 };
 
-/*
-GZ3D.GZIface.prototype.applyMaterial = function(obj, mat)
-{
-  if (obj)
-  {
-    if (mat)
-    {
-      obj.material = new THREE.MeshPhongMaterial();
-      var ambient = mat.ambient;
-      if (ambient)
-      {
-        obj.material.ambient.setRGB(ambient[0], ambient[1], ambient[2]);
-      }
-      var diffuse = mat.diffuse;
-      if (diffuse)
-      {
-        obj.material.color.setRGB(diffuse[0], diffuse[1], diffuse[2]);
-      }
-      var specular = mat.specular;
-      if (specular)
-      {
-        obj.material.specular.setRGB(specular[0], specular[1], specular[2]);
-      }
-      var opacity = mat.opacity;
-      if (opacity)
-      {
-        if (opacity < 1)
-        {
-          obj.material.transparent = true;
-          obj.material.opacity = opacity;
-        }
-      }
-
-      if (mat.texture)
-      {
-        obj.material.map = THREE.ImageUtils.loadTexture(mat.texture);
-      }
-      if (mat.normalMap)
-      {
-        obj.material.normalMap = THREE.ImageUtils.loadTexture(mat.normalMap);
-      }
-    }
-  }
-};
-*/
-
 GZ3D.GZIface.prototype.parseMaterial = function(material)
 {
   if (!material)
@@ -4802,18 +4756,6 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
       }
     }
 
-    // Move light target
-    if (scope.object.children[0] &&
-       (scope.object.children[0] instanceof THREE.SpotLight ||
-        scope.object.children[0] instanceof THREE.DirectionalLight))
-    {
-      var lightObj = scope.object.children[0];
-      var dir = new THREE.Vector3(0,0,0);
-      dir.copy(scope.object.direction);
-      scope.object.localToWorld(dir);
-      lightObj.target.position.copy(dir);
-    }
-
     scope.update();
     scope.dispatchEvent(changeEvent);
   }
@@ -6206,24 +6148,8 @@ GZ3D.Scene.prototype.createLight = function(type, diffuse, intensity, pose,
     specular = color.clone();
   }
 
-  var matrixWorld;
-
   if (pose)
   {
-    var quaternion = new THREE.Quaternion(
-        pose.orientation.x,
-        pose.orientation.y,
-        pose.orientation.z,
-        pose.orientation.w);
-
-    var translation = new THREE.Vector3(
-        pose.position.x,
-        pose.position.y,
-        pose.position.z);
-
-    matrixWorld = new THREE.Matrix4();
-    matrixWorld.compose(translation, quaternion, new THREE.Vector3(1,1,1));
-
     this.setPose(obj, pose.position, pose.orientation);
     obj.matrixWorldNeedsUpdate = true;
   }
@@ -6255,17 +6181,21 @@ GZ3D.Scene.prototype.createLight = function(type, diffuse, intensity, pose,
     helper.name = name + '_lightHelper';
   }
 
+  var dir = new THREE.Vector3(0, 0, -1);
   if (direction)
   {
-    var dir = new THREE.Vector3(direction.x, direction.y,
-        direction.z);
-
-    obj.direction = new THREE.Vector3();
-    obj.direction.copy(dir);
-
-    dir.applyMatrix4(matrixWorld); // localToWorld
-    lightObj.target.position.copy(dir);
+    dir.x = direction.x;
+    dir.y = direction.y;
+    dir.z = direction.z;
   }
+  obj.direction = new THREE.Vector3(dir.x, dir.y, dir.z);
+
+  var targetObj = new THREE.Object3D();
+  lightObj.add(targetObj);
+
+  targetObj.position.copy(dir);
+  targetObj.matrixWorldNeedsUpdate = true;
+  lightObj.target = targetObj;
 
   // Add properties which exist on the server but have no meaning on THREE.js
   obj.serverProperties = {};
@@ -7540,37 +7470,8 @@ GZ3D.Scene.prototype.updateLight = function(entity, msg)
   if (msg.pose)
   {
     // needed to update light's direction
-    var quaternion = new THREE.Quaternion(
-        msg.pose.orientation.x,
-        msg.pose.orientation.y,
-        msg.pose.orientation.z,
-        msg.pose.orientation.w);
-
-    var translation = new THREE.Vector3(
-        msg.pose.position.x,
-        msg.pose.position.y,
-        msg.pose.position.z);
-
-    matrixWorld = new THREE.Matrix4();
-    matrixWorld.compose(translation, quaternion, new THREE.Vector3(1,1,1));
-
     this.setPose(entity, msg.pose.position, msg.pose.orientation);
     entity.matrixWorldNeedsUpdate = true;
-
-    if (entity.direction)
-    {
-      dir = new THREE.Vector3(entity.direction.x, entity.direction.y,
-          entity.direction.z);
-
-      entity.direction = new THREE.Vector3();
-      entity.direction.copy(dir);
-
-      dir.applyMatrix4(matrixWorld); // localToWorld
-      if (lightObj.target)
-      {
-        lightObj.target.position.copy(dir);
-      }
-    }
   }
 
   if (msg.range)
@@ -7623,7 +7524,6 @@ GZ3D.Scene.prototype.updateLight = function(entity, msg)
     entity.direction = new THREE.Vector3();
     entity.direction.copy(dir);
 
-    dir.applyMatrix4(matrixWorld); // localToWorld
     if (lightObj.target)
     {
       lightObj.target.position.copy(dir);
@@ -8818,8 +8718,13 @@ GZ3D.SpawnModel.prototype.moveSpawnedModel = function(positionX, positionY)
       this.obj.children[0].children[0] instanceof THREE.DirectionalLight))
   {
     var lightObj = this.obj.children[0].children[0];
-    lightObj.target.position.copy(this.obj.position);
-    lightObj.target.position.add(new THREE.Vector3(0,0,-0.5));
+    if (lightObj.direction)
+    {
+      if (lightObj.target)
+      {
+        lightObj.target.position.copy(lightObj.direction);
+      }
+    }
   }
 };
 
