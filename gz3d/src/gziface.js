@@ -1052,52 +1052,6 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
   }
 };
 
-/*
-GZ3D.GZIface.prototype.applyMaterial = function(obj, mat)
-{
-  if (obj)
-  {
-    if (mat)
-    {
-      obj.material = new THREE.MeshPhongMaterial();
-      var ambient = mat.ambient;
-      if (ambient)
-      {
-        obj.material.ambient.setRGB(ambient[0], ambient[1], ambient[2]);
-      }
-      var diffuse = mat.diffuse;
-      if (diffuse)
-      {
-        obj.material.color.setRGB(diffuse[0], diffuse[1], diffuse[2]);
-      }
-      var specular = mat.specular;
-      if (specular)
-      {
-        obj.material.specular.setRGB(specular[0], specular[1], specular[2]);
-      }
-      var opacity = mat.opacity;
-      if (opacity)
-      {
-        if (opacity < 1)
-        {
-          obj.material.transparent = true;
-          obj.material.opacity = opacity;
-        }
-      }
-
-      if (mat.texture)
-      {
-        obj.material.map = THREE.ImageUtils.loadTexture(mat.texture);
-      }
-      if (mat.normalMap)
-      {
-        obj.material.normalMap = THREE.ImageUtils.loadTexture(mat.normalMap);
-      }
-    }
-  }
-};
-*/
-
 GZ3D.GZIface.prototype.parseMaterial = function(material)
 {
   if (!material)
