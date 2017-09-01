@@ -181,23 +181,21 @@ GZ3D.SdfParser.prototype.spawnLightFromSDF = function(sdfObj)
     target.z -= pose.position.z;
 
     lightObj.target.position = target;
-    lightObj.shadowCameraNear = 1;
-    lightObj.shadowCameraFar = 50;
-    lightObj.shadowMapWidth = 4094;
-    lightObj.shadowMapHeight = 4094;
-    lightObj.shadowCameraVisible = false;
-    lightObj.shadowCameraBottom = -100;
-    lightObj.shadowCameraLeft = -100;
-    lightObj.shadowCameraRight = 100;
-    lightObj.shadowCameraTop = 100;
-    lightObj.shadowBias = 0.0001;
+    lightObj.shadow.camera.near = 1;
+    lightObj.shadow.camera.far = 50;
+    lightObj.shadow.mapSize.width = 4094;
+    lightObj.shadow.mapSize.height = 4094;
+    lightObj.shadow.camera.bottom = -100;
+    lightObj.shadow.camera.left = -100;
+    lightObj.shadow.camera.right = 100;
+    lightObj.shadow.cameraTop = 100;
+    lightObj.shadow.bias = 0.0001;
 
     lightObj.position.set(negDir.x, negDir.y, negDir.z);
     this.scene.setPose(lightObj, pose.position, pose.orientation);
   }
   lightObj.intensity = parseFloat(light.attenuation.constant);
   lightObj.castShadow = this.parseBool(light.cast_shadows);
-  lightObj.shadowDarkness = 0.3;
   lightObj.name = light['@name'];
 
   return lightObj;

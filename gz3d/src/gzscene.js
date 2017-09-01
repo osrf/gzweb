@@ -985,7 +985,6 @@ GZ3D.Scene.prototype.createPointLight = function(obj, color, intensity,
   }
 
   var lightObj = new THREE.PointLight(color, intensity);
-  lightObj.shadowDarkness = 0.3;
 
   if (distance)
   {
@@ -1029,7 +1028,6 @@ GZ3D.Scene.prototype.createSpotLight = function(obj, color, intensity,
   var lightObj = new THREE.SpotLight(color, intensity);
   lightObj.distance = distance;
   lightObj.position.set(0,0,0);
-  lightObj.shadowDarkness = 0.3;
 
   if (cast_shadows)
   {
