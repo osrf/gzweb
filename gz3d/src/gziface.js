@@ -1074,52 +1074,57 @@ GZ3D.GZIface.prototype.parseMaterial = function(material)
   var script  = material.script;
   if (script)
   {
-    if (script.uri.length > 0)
+    if (script.name)
     {
-      if (script.name)
+      mat = this.material[script.name];
+      if (mat)
       {
-        mat = this.material[script.name];
-        if (mat)
+        ambient = mat['ambient'];
+        diffuse = mat['diffuse'];
+        specular = mat['specular'];
+        opacity = mat['opacity'];
+        scale = mat['scale'];
+
+        var textureName = mat['texture'];
+        if (textureName)
         {
-          ambient = mat['ambient'];
-          diffuse = mat['diffuse'];
-          specular = mat['specular'];
-          opacity = mat['opacity'];
-          scale = mat['scale'];
-
-          var textureName = mat['texture'];
-          if (textureName)
+          for (var i = 0; i < script.uri.length; ++i)
           {
-            for (var i = 0; i < script.uri.length; ++i)
+            // handle the weird case where empty scripts become converted to
+            // a single '__default__' script
+            var scriptUri = script.uri[i];
+            if (scriptUri === '__default__')
             {
-              var type = script.uri[i].substring(0,
-                    script.uri[i].indexOf('://'));
+              scriptUri = 'file://media/materials/scripts/gazebo.material';
+            }
 
-              if (type === 'model')
-              {
-                if (script.uri[i].indexOf('textures') > 0)
-                {
-                  textureUri = script.uri[i].substring(
-                      script.uri[i].indexOf('://') + 3);
-                  break;
-                }
-              }
-              else if (type === 'file')
-              {
-                if (script.uri[i].indexOf('materials') > 0)
-                {
-                  textureUri = script.uri[i].substring(
-                      script.uri[i].indexOf('://') + 3,
-                      script.uri[i].indexOf('materials') + 9) + '/textures';
-                  break;
-                }
-              }
-            }
-            if (textureUri)
+            var type = scriptUri.substring(0,
+                  scriptUri.indexOf('://'));
+
+            if (type === 'model')
             {
-              texture = uriPath + '/' +
-                  textureUri  + '/' + textureName;
+              if (scriptUri.indexOf('textures') > 0)
+              {
+                textureUri = scriptUri.substring(
+                    scriptUri.indexOf('://') + 3);
+                break;
+              }
             }
+            else if (type === 'file')
+            {
+              if (scriptUri.indexOf('materials') > 0)
+              {
+                textureUri = scriptUri.substring(
+                    scriptUri.indexOf('://') + 3,
+                    scriptUri.indexOf('materials') + 9) + '/textures';
+                break;
+              }
+            }
+          }
+          if (textureUri)
+          {
+            texture = uriPath + '/' +
+                textureUri  + '/' + textureName;
           }
         }
       }
