@@ -425,7 +425,7 @@ namespace gzweb
     /// \brief Name of delete topic.
     private: std::string deleteTopic;
 
-    /// \brief Name of world control topic.
+    /// \brief Name of playback control topic.
     private: std::string playbackControlTopic;
 
     /// \brief Ogre material parser.
