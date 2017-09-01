@@ -4,9 +4,15 @@ describe('Sdf Parser tests', function() {
 
       beforeEach(function(){
           module('gzangular');
-          loadFixtures('myfixture.html');                   
+          loadFixtures('myfixture.html');               
+          originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
+          jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000;              
         });
       
+      afterEach(function() {
+          jasmine.DEFAULT_TIMEOUT_INTERVAL = originalTimeout;
+      });
+
       var $controller;
      
       beforeEach(inject(function(_$controller_){
@@ -369,7 +375,7 @@ describe('Sdf Parser tests', function() {
           var controller = $controller('insertControl', { $scope: $scope });
           // console.log($scope);
           // $scope.spawnEntity('box');
-          // console.log($scope.models);
+          // console.log(modelStats);
         });              
       });
 
