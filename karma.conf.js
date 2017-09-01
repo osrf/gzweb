@@ -15,7 +15,7 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      "gz3d/client/js/include/jquery-1.9.1.js",      
+      "gz3d/client/js/include/jquery-1.9.1.js",
       "gz3d/client/js/include/jquery.mobile-1.4.0.min.js",
       "gz3d/client/js/include/angular.min.js",
       "gz3d/client/js/include/three.js",
@@ -35,7 +35,7 @@ module.exports = function(config) {
       "gz3d/client/js/include/xml2json.js",
       'gz3d/build/gz3d.js',
       "test/lib/*.js",
-      'test/*.js'
+      'gz3d/test/*.js'
     ],
 
 
