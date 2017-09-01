@@ -776,24 +776,12 @@ input[type=number]::-webkit-inner-spin-button
   z-index: 1000;
 }
 
-#logplay-rewind-fieldset img
-{
-  width: 13px;
-  height: 16px;
-}
-
 #logplay-stepback-fieldset
 {
   position: absolute;
   right: 16.5em;
   bottom: 2.5em;
   z-index: 1000;
-}
-
-#logplay-stepback-fieldset img
-{
-  width: 13px;
-  height: 16px;
 }
 
 #logplay-play-fieldset
@@ -804,24 +792,12 @@ input[type=number]::-webkit-inner-spin-button
   z-index: 1000;
 }
 
-#logplay-play-fieldset img
-{
-  width: 16px;
-  height: 16px;
-}
-
 #logplay-stepforward-fieldset
 {
   position: absolute;
   right: 10.5em;
   bottom: 2.5em;
   z-index: 1000;
-}
-
-#logplay-stepforward-fieldset img
-{
-  width: 13px;
-  height: 16px;
 }
 
 #logplay-forward-fieldset
@@ -832,7 +808,8 @@ input[type=number]::-webkit-inner-spin-button
   z-index: 1000;
 }
 
-#logplay-forward-fieldset img
+
+.logplay-fieldset img
 {
   width: 13px;
   height: 16px;

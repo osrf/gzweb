@@ -3739,6 +3739,11 @@ GZ3D.GZIface.prototype.parseMaterial = function(material)
 
 var nsInSec = 1000000000;
 
+/**
+ * Correct the time so that small additions/substractions
+ * preserve the internal seconds and nanoseconds separation
+ * @param {} time - Time to be corrected
+ */
 var correctTime = function(time)
 {
   var n = 0;
@@ -3761,6 +3766,12 @@ var correctTime = function(time)
   time.nsec = Math.floor(time.nsec % nsInSec);
 };
 
+
+/*
+ * Subtract time and preseve seconds and nanonsecods separation
+ * @param {} timeA - Time being subtracted
+ * @param {} timeB - Time to subtract
+ */
 var subtractTime = function(timeA, timeB)
 {
   var result = {};
