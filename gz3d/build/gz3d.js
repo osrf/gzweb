@@ -15,6 +15,7 @@ var emUnits = function(value)
 
 var isTouchDevice = 'ontouchstart' in window || 'onmsgesturechange' in window;
 
+isTouchDevice = false;
 var isWideScreen = function()
     {
       return $(window).width() / emUnits(1) > 35;
@@ -341,8 +342,8 @@ $(function()
     $('#container')
       .on('touchstart', function (event) {
         $(this).data('checkdown', setTimeout(function () {
-          guiEvents.emit('longpress_container_start',event);
         }, press_time_container));
+        guiEvents.emit('longpress_container_start',event);
       })
       .on('touchend', function (event) {
         clearTimeout($(this).data('checkdown'));
