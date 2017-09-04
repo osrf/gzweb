@@ -1,24 +1,13 @@
-jasmine.getFixtures().fixturesPath = 'base/test/fixture';
+jasmine.getFixtures().fixturesPath = 'base/gz3d/test/fixture';
 
 describe('Sdf Parser tests', function() {
 
       beforeEach(function(){
-          module('gzangular');
-          loadFixtures('myfixture.html');               
+          loadFixtures('myfixture.html');
           originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
-          jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000;              
+          jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000;
         });
-      
-      afterEach(function() {
-          jasmine.DEFAULT_TIMEOUT_INTERVAL = originalTimeout;
-      });
 
-      var $controller;
-     
-      beforeEach(inject(function(_$controller_){
-        // The injector unwraps the underscores (_) from around the parameter names when matching
-        $controller = _$controller_;
-      }));
 
       // Initializing object used in the test.
       scene = new GZ3D.Scene();
@@ -26,19 +15,18 @@ describe('Sdf Parser tests', function() {
       iface = new GZ3D.GZIface(scene, gui);
       sdfparser = new GZ3D.SdfParser(scene, gui, iface);
 
-
       describe('Test gzscene Initialize', function() {
         it('Intial values should match', function() {
 
-            var bbox, indices, positions, boxGeometry, 
+            var bbox, indices, positions, boxGeometry,
             bbox_rotation, jointTypes, jointAxis, jointAxisMeshes,
-            jointMainAxisMeshes, mesh, rot, pos, mainAxisLen, 
+            jointMainAxisMeshes, mesh, rot, pos, mainAxisLen,
             jointRotMeshes, jointTransMeshes, jointScrewMeshes;
             var vec3 = new THREE.Vector3(0,0,0);
 
             expect(scene.manipulationMode).toEqual('view');
             expect(scene.name).toEqual('default');
-  
+
             // Grid initialize
             expect(scene.grid.position.z).toEqual(0.05);
             expect(scene.grid.rotation.x).toEqual(Math.PI * 0.5);
@@ -48,12 +36,8 @@ describe('Sdf Parser tests', function() {
             expect(scene.grid.visible).toEqual(false);
 
             expect(scene.showCollisions).toEqual(false);
-            expect(scene.spawnedShapeMaterial.opacity).toEqual(0.5);            
+            expect(scene.spawnedShapeMaterial.opacity).toEqual(0.5);
             expect(scene.spawnedShapeMaterial.transparent).toEqual(true);
-
-            // TODO test event listeners
-            // TODO test things that involve the DOM
-            // expect(scene.radialMenu).toEqual(new GZ3D.RadialMenu(scene.getDomElement()));
 
             expect(scene.emitter).toEqual(new EventEmitter2({ verbose: true }));
 
@@ -79,7 +63,7 @@ describe('Sdf Parser tests', function() {
             expect(bbox_rotation._y).toEqual(0);
             expect(bbox_rotation._z).toEqual(0);
             expect(bbox.visible).toEqual(false);
-            
+
             // Joint visuals
             jointTypes =
             {
@@ -94,12 +78,12 @@ describe('Sdf Parser tests', function() {
             };
 
             jointAxis = scene.jointAxis;
-            expect(scene.jointTypes).toEqual(jointTypes);            
+            expect(scene.jointTypes).toEqual(jointTypes);
             expect(jointAxis.name).toEqual('JOINT_VISUAL');
-            
+
             // Joint Axes XYZ
             jointAxisMeshes = jointAxis['XYZaxes'].children;
-            
+
             mesh = jointAxisMeshes[0];
             pos = mesh.position;
             rot = mesh.rotation;
@@ -110,7 +94,7 @@ describe('Sdf Parser tests', function() {
             expect(mesh.material.color).toEqual(new THREE.Color(0xff0000));
             expect(pos).toEqual(vec3);
             expect(rot.x).toEqual(0);
-            expect(rot.y).toEqual(0);            
+            expect(rot.y).toEqual(0);
             expect(rot.z).toEqual(-Math.PI/2);
 
             mesh = jointAxisMeshes[1];
@@ -125,7 +109,6 @@ describe('Sdf Parser tests', function() {
             expect(rot.x).toEqual(0);
             expect(rot.y).toEqual(0);
             expect(rot.z).toEqual(0);
-            
 
             mesh = jointAxisMeshes[2];
             pos = mesh.position;
@@ -139,7 +122,6 @@ describe('Sdf Parser tests', function() {
             expect(rot.x).toEqual(Math.PI/2);
             expect(rot.y).toEqual(0);
             expect(rot.z).toEqual(0);
-            
 
             mesh = jointAxisMeshes[3];
             pos = mesh.position;
@@ -149,11 +131,11 @@ describe('Sdf Parser tests', function() {
             vec3.z = 0;
             expect(mesh.name).toEqual('JOINT_VISUAL');
             expect(mesh.material.color).toEqual(new THREE.Color(0xff0000));
-            expect(pos).toEqual(vec3);            
+            expect(pos).toEqual(vec3);
             expect(rot.x).toEqual(0);
             expect(rot.y).toEqual(0);
             expect(rot.z).toEqual(-Math.PI/2);
-            
+
             mesh = jointAxisMeshes[4];
             pos = mesh.position;
             rot = mesh.rotation;
@@ -166,8 +148,7 @@ describe('Sdf Parser tests', function() {
             expect(rot.x).toEqual(0);
             expect(rot.y).toEqual(0);
             expect(rot.z).toEqual(0);
-            
-            
+
             mesh = jointAxisMeshes[5];
             pos = mesh.position;
             rot = mesh.rotation;
@@ -180,11 +161,10 @@ describe('Sdf Parser tests', function() {
             expect(rot.x).toEqual(Math.PI/2);
             expect(rot.y).toEqual(0);
             expect(rot.z).toEqual(0);
-            
-            
+
             // Joint MainAxis
             jointMainAxisMeshes = jointAxis['mainAxis'].children;
-            mainAxisLen = 0.3;            
+            mainAxisLen = 0.3;
 
             mesh = jointMainAxisMeshes[0];
             pos = mesh.position;
@@ -196,7 +176,7 @@ describe('Sdf Parser tests', function() {
             expect(mesh.material.color).toEqual(new THREE.Color(0xffff00));
             expect(pos).toEqual(vec3);
             expect(rot.x).toEqual(Math.PI/2);
-            expect(rot.y).toEqual(0);            
+            expect(rot.y).toEqual(0);
             expect(rot.z).toEqual(0);
 
             mesh = jointMainAxisMeshes[1];
@@ -211,8 +191,7 @@ describe('Sdf Parser tests', function() {
             expect(rot.x).toEqual(Math.PI/2);
             expect(rot.y).toEqual(0);
             expect(rot.z).toEqual(0);
-            
-            
+
             // Joint RotAxis
             jointRotMeshes = jointAxis['rotAxis'].children;
 
@@ -226,7 +205,7 @@ describe('Sdf Parser tests', function() {
             expect(mesh.material.color).toEqual(new THREE.Color(0xffff00));
             expect(pos).toEqual(vec3);
             expect(rot.x).toEqual(0);
-            expect(rot.y).toEqual(0);            
+            expect(rot.y).toEqual(0);
             expect(rot.z).toEqual(0);
 
             mesh = jointRotMeshes[1];
@@ -244,7 +223,7 @@ describe('Sdf Parser tests', function() {
 
             // Joint TransAxis
             jointTransMeshes = jointAxis['transAxis'].children;
-            
+
             mesh = jointTransMeshes[0];
             pos = mesh.position;
             rot = mesh.rotation;
@@ -254,7 +233,7 @@ describe('Sdf Parser tests', function() {
             expect(mesh.name).toEqual('JOINT_VISUAL');
             expect(pos).toEqual(vec3);
             expect(rot.x).toEqual(Math.PI/2);
-            expect(rot.y).toEqual(0);            
+            expect(rot.y).toEqual(0);
             expect(rot.z).toEqual(0);
 
             mesh = jointTransMeshes[1];
@@ -268,7 +247,6 @@ describe('Sdf Parser tests', function() {
             expect(rot.x).toEqual(-Math.PI/2);
             expect(rot.y).toEqual(0);
             expect(rot.z).toEqual(0);
-            
 
             mesh = jointTransMeshes[2];
             pos = mesh.position;
@@ -281,7 +259,7 @@ describe('Sdf Parser tests', function() {
             expect(rot.x).toEqual(Math.PI/2);
             expect(rot.y).toEqual(0);
             expect(rot.z).toEqual(0);
-            
+
             // Joint ScrewAxis
             jointScrewMeshes = jointAxis['screwAxis'].children;
 
@@ -295,7 +273,7 @@ describe('Sdf Parser tests', function() {
             expect(mesh.material.color).toEqual(new THREE.Color(0xffff00));
             expect(pos).toEqual(vec3);
             expect(rot.x).toEqual(-Math.PI/10);
-            expect(rot.y).toEqual(0);            
+            expect(rot.y).toEqual(0);
             expect(rot.z).toEqual(-Math.PI/4);
 
             mesh = jointScrewMeshes[1];
@@ -309,14 +287,14 @@ describe('Sdf Parser tests', function() {
             expect(pos).toEqual(vec3);
             expect(rot.x).toEqual(0);
             expect(rot.y).toEqual(0);
-            expect(rot.z).toEqual(0);            
-               
+            expect(rot.z).toEqual(0);
+
         });
       });
 
       describe('Test gzscene Set Pose', function() {
         it('Position and orientation of the returned model should match', function() {
-          
+
           var model, pos, ori, quaternion;
           pos = new THREE.Vector3(-1,0.5,3);
           ori = new THREE.Quaternion(0.1,-0.3,2,0);
@@ -344,12 +322,11 @@ describe('Sdf Parser tests', function() {
         });
       });
 
-
       // Test manipulation_mode
       describe('Test manipulation mode', function() {
-        // For some reasone that I yet to discover, 
+        // For some reasone that I yet to discover,
         // I've to do this for the eventEmiiter to work!
-        // else we get "Error: cannot call methods on popup prior \
+        // else we get "Error: cannot call methods on popup prior 
         // to initialization; attempted to call method 'close'"
         describe('Reintialize', function() {
           // Initializing object used in the test.
@@ -361,26 +338,10 @@ describe('Sdf Parser tests', function() {
 
         it('Should change manipulation mode to translate', function() {
           guiEvents.emit('manipulation_mode', 'translate');
-            
-          expect(scene.manipulationMode).not.toEqual('view');  
+
+          expect(scene.manipulationMode).not.toEqual('view');
           expect(scene.manipulationMode).toEqual('translate');
-        });              
+        });
       });
-
-      // Test Model spawning
-      describe('Test manipulation mode', function() {
-        it('Spwan model', function() {
-   
-          var $scope = {};
-          var controller = $controller('insertControl', { $scope: $scope });
-          // console.log($scope);
-          // $scope.spawnEntity('box');
-          // console.log(modelStats);
-        });              
-      });
-
 
 });
-    
- 
- 
