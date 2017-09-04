@@ -22,12 +22,14 @@ describe('Sdf Parser tests', function() {
 
       describe('Test gzscene Set Pose', function() {
         it('Position and orientation of the returned model should match', function() {
-          
+          guiEvents.on('setPoseStats', function(args){
+            console.log('on setPoses received');
+          });
           var model, pos, ori, quaternion;
           pos = new THREE.Vector3(-1,0.5,3);
           ori = new THREE.Quaternion(0.1,-0.3,2,0);
           model = new THREE.Object3D();
-          scene.setPose(model, pos, ori);
+          scene.setPose(model, pos, ori); 
           expect(model.position).toEqual(pos);
 
           quaternion = model.quaternion;
@@ -45,6 +47,8 @@ describe('Sdf Parser tests', function() {
       describe('Test gzscene Set SDFParser', function() {
         it('Should return scene\'s SdfParser ', function() {
 
+          guiEvents.emit('setPoseStats', 'box', 'subPropName');          
+          
           scene.setSDFParser(sdfparser);
           expect(scene.spawnModel.sdfParser).toEqual(sdfparser);
         });
