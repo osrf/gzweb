@@ -7,7 +7,7 @@
     "url": "https://bitbucket.org/osrf/gzweb"
   },
   "scripts": {
-    "test": "/home/mh/ws/gzweb/orggzweb/node_modules/karma/bin/karma start --singleRun"
+    "test": "./node_modules/karma/bin/karma start --singleRun"
   },
   "dependencies": {
     "websocket": "",
