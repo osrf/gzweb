@@ -4,7 +4,7 @@ describe('Sdf Parser tests', function() {
 
       beforeEach(function(){
           module('gzangular');
-          loadFixtures('myfixture.html');                   
+          loadFixtures('myfixture.html');
         });
 
       var $controller;
@@ -20,63 +20,119 @@ describe('Sdf Parser tests', function() {
       iface = new GZ3D.GZIface(scene, gui);
       sdfparser = new GZ3D.SdfParser(scene, gui, iface);
 
-      describe('Test gzscene Set Pose', function() {
-        it('Position and orientation of the returned model should match', function() {
-          guiEvents.on('setPoseStats', function(args){
-            console.log('on setPoses received');
-          });
-          var model, pos, ori, quaternion;
-          pos = new THREE.Vector3(-1,0.5,3);
-          ori = new THREE.Quaternion(0.1,-0.3,2,0);
-          model = new THREE.Object3D();
-          scene.setPose(model, pos, ori); 
-          expect(model.position).toEqual(pos);
+      // Test buttons/clicks
+      describe('Gui clicks test', function() {
+        it('Should ensure all clickable elements are working', function() {
 
-          quaternion = model.quaternion;
-          expect(quaternion.x).toEqual(ori.x);
-          expect(quaternion.y).toEqual(ori.y);
-          expect(quaternion.z).toEqual(ori.z);
-          expect(quaternion.w).toEqual(ori.w);
+          var spyEvent = spyOnEvent('#translate-mode', 'click')
+          $('#translate-mode').click()
+          expect('click').toHaveBeenTriggeredOn('#translate-mode')
+          expect(spyEvent).toHaveBeenTriggered()
 
-          // var evt = document.createEvent("MouseEvents");
-          // evt.initMouseEvent("click", true, true, window, 0, 0, 0, 80, 20, false, false, false, false, 0, null);
-          // document.body.dispatchEvent(evt);
+          var spyEvent = spyOnEvent('#view-mode', 'click')
+          $('#view-mode').click()
+          expect('click').toHaveBeenTriggeredOn('#view-mode')
+          expect(spyEvent).toHaveBeenTriggered()
+
+          var spyEvent = spyOnEvent('#rotate-mode', 'click')
+          $('#rotate-mode').click()
+          expect('click').toHaveBeenTriggeredOn('#rotate-mode')
+          expect(spyEvent).toHaveBeenTriggered()
+
+          var spyEvent = spyOnEvent('.tab', 'click')
+          $('.tab').click()
+          expect('click').toHaveBeenTriggeredOn('.tab')
+          expect(spyEvent).toHaveBeenTriggered()
+
+          var spyEvent = spyOnEvent('.closePanels', 'click')
+          $('.closePanels').click()
+          expect('click').toHaveBeenTriggeredOn('.closePanels')
+          expect(spyEvent).toHaveBeenTriggered()
+
+          var spyEvent = spyOnEvent('[id^="header-insert-"]', 'click')
+          $('[id^="header-insert-"]').click()
+          expect('click').toHaveBeenTriggeredOn('[id^="header-insert-"]')
+          expect(spyEvent).toHaveBeenTriggered()
+
+          var spyEvent = spyOnEvent('#play', 'click')
+          $('#play').click()
+          expect('click').toHaveBeenTriggeredOn('#play')
+          expect(spyEvent).toHaveBeenTriggered()
+
+          var spyEvent = spyOnEvent('#clock', 'click')
+          $('#clock').click()
+          expect('click').toHaveBeenTriggeredOn('#clock')
+          expect(spyEvent).toHaveBeenTriggered()
+
+          var spyEvent = spyOnEvent('#reset-model', 'click')
+          $('#reset-model').click()
+          expect('click').toHaveBeenTriggeredOn('#reset-model')
+          expect(spyEvent).toHaveBeenTriggered()
+
+          var spyEvent = spyOnEvent('#reset-world', 'click')
+          $('#reset-world').click()
+          expect('click').toHaveBeenTriggeredOn('#reset-world')
+          expect(spyEvent).toHaveBeenTriggered()
+
+          var spyEvent = spyOnEvent('#reset-view', 'click')
+          $('#reset-view').click()
+          expect('click').toHaveBeenTriggeredOn('#reset-view')
+          expect(spyEvent).toHaveBeenTriggered()
+
+          var spyEvent = spyOnEvent('#view-mode', 'click')
+          $('#view-mode').click()
+          expect('click').toHaveBeenTriggeredOn('#view-mode')
+          expect(spyEvent).toHaveBeenTriggered()
+
+          var spyEvent = spyOnEvent('#view-grid', 'click')
+          $('#view-grid').click()
+          expect('click').toHaveBeenTriggeredOn('#view-grid')
+          expect(spyEvent).toHaveBeenTriggered()
+
+          var spyEvent = spyOnEvent('#view-collisions', 'click')
+          $('#view-collisions').click()
+          expect('click').toHaveBeenTriggeredOn('#view-collisions')
+          expect(spyEvent).toHaveBeenTriggered()
+
+          var spyEvent = spyOnEvent('#view-orbit-indicator', 'click')
+          $('#view-orbit-indicator').click()
+          expect('click').toHaveBeenTriggeredOn('#view-orbit-indicator')
+          expect(spyEvent).toHaveBeenTriggered()
+
+          var spyEvent = spyOnEvent('#snap-to-grid', 'click')
+          $('#snap-to-grid').click()
+          expect('click').toHaveBeenTriggeredOn('#snap-to-grid')
+          expect(spyEvent).toHaveBeenTriggered()
+
+          var spyEvent = spyOnEvent('#open-tree-when-selected', 'click')
+          $('#open-tree-when-selected').click()
+          expect('click').toHaveBeenTriggeredOn('#open-tree-when-selected')
+          expect(spyEvent).toHaveBeenTriggered()
+
+          var spyEvent = spyOnEvent('#toggle-notifications', 'click')
+          $('#toggle-notifications').click()
+          expect('click').toHaveBeenTriggeredOn('#toggle-notifications')
+          expect(spyEvent).toHaveBeenTriggered()
+
+          var spyEvent = spyOnEvent('#view-transparent', 'click')
+          $('#view-transparent').click()
+          expect('click').toHaveBeenTriggeredOn('#view-transparent')
+          expect(spyEvent).toHaveBeenTriggered()
+
+          var spyEvent = spyOnEvent('#view-wireframe', 'click')
+          $('#view-wireframe').click()
+          expect('click').toHaveBeenTriggeredOn('#view-wireframe')
+          expect(spyEvent).toHaveBeenTriggered()
+
+          var spyEvent = spyOnEvent('#view-joints', 'click')
+          $('#view-joints').click()
+          expect('click').toHaveBeenTriggeredOn('#view-joints')
+          expect(spyEvent).toHaveBeenTriggered()
+
+          var spyEvent = spyOnEvent('#delete-entity', 'click')
+          $('#delete-entity').click()
+          expect('click').toHaveBeenTriggeredOn('#delete-entity')
+          expect(spyEvent).toHaveBeenTriggered()
         });
       });
-
-      describe('Test gzscene Set SDFParser', function() {
-        it('Should return scene\'s SdfParser ', function() {
-
-          guiEvents.emit('setPoseStats', 'box', 'subPropName');          
-          
-          scene.setSDFParser(sdfparser);
-          expect(scene.spawnModel.sdfParser).toEqual(sdfparser);
-        });
-      });
-
-
-      // Test manipulation_mode
-      describe('Test manipulation mode', function() {
-        // For some reasone that I yet to discover, 
-        // I've to do this for the eventEmiiter to work!
-        // else we get "Error: cannot call methods on popup prior \
-        // to initialization; attempted to call method 'close'"
-        describe('Reintialize', function() {
-          // Initializing object used in the test.
-          scene = new GZ3D.Scene();
-          gui = new GZ3D.Gui(scene);
-          iface = new GZ3D.GZIface(scene, gui);
-          sdfparser = new GZ3D.SdfParser(scene, gui, iface);
-        });
-
-        it('Should change manipulation mode to translate', function() {
-          guiEvents.emit('manipulation_mode', 'translate');
-            
-          expect(scene.manipulationMode).not.toEqual('view');  
-          expect(scene.manipulationMode).toEqual('translate');
-        });              
-      });
-
-
-
 });
