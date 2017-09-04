@@ -6,7 +6,9 @@
     "type": "mercurial",
     "url": "https://bitbucket.org/osrf/gzweb"
   },
-  "scripts": {},
+  "scripts": {
+    "test": "/home/mh/ws/gzweb/orggzweb/node_modules/karma/bin/karma start --singleRun"
+  },
   "dependencies": {
     "websocket": "",
     "http-server": "",

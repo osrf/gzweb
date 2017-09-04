@@ -15,7 +15,6 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      { pattern: 'test/fixture/*.html', included: false, served: true },
       "gz3d/client/js/include/jquery-1.9.1.js",      
       "gz3d/client/js/include/jquery.mobile-1.4.0.min.js",
       'node_modules/jasmine-jquery/lib/jasmine-jquery.js',      
@@ -36,9 +35,9 @@ module.exports = function(config) {
       "gz3d/client/js/include/ShaderPass.js",
       "gz3d/client/js/include/xml2json.js",
       'gz3d/build/gz3d.js',
-      "https://cdnjs.cloudflare.com/ajax/libs/angular-mocks/1.3.0/angular-mocks.min.js",      
-      // 'test/fixture/*.html',
-      'test/*.js'
+      "gz3d/test/utils/angular-mocks.min.js",      
+      'gz3d/test/fixture/*.html',
+      'gz3d/test/*.js'
     ],
 
 
