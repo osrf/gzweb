@@ -105,7 +105,7 @@ GZ3D.SdfParser.prototype.onConnectionError = function()
 GZ3D.SdfParser.prototype.parseColor = function(colorStr)
 {
   var color = {};
-  var values = colorStr.split(' ');
+  var values = colorStr.split(/\s+/);
 
   color.r = parseFloat(values[0]);
   color.g = parseFloat(values[1]);
@@ -124,7 +124,7 @@ GZ3D.SdfParser.prototype.parseColor = function(colorStr)
 GZ3D.SdfParser.prototype.parse3DVector = function(vectorStr)
 {
   var vector3D = {};
-  var values = vectorStr.split(' ');
+  var values = vectorStr.split(/\s+/);
   vector3D.x = parseFloat(values[0]);
   vector3D.y = parseFloat(values[1]);
   vector3D.z = parseFloat(values[2]);
@@ -211,7 +211,7 @@ GZ3D.SdfParser.prototype.spawnLightFromSDF = function(sdfObj)
  */
 GZ3D.SdfParser.prototype.parsePose = function(poseStr)
 {
-  var values = poseStr.split(' ');
+  var values = poseStr.split(/\s+/);
 
   var position = new THREE.Vector3(parseFloat(values[0]),
           parseFloat(values[1]), parseFloat(values[2]));
@@ -219,7 +219,7 @@ GZ3D.SdfParser.prototype.parsePose = function(poseStr)
   // get euler rotation and convert it to Quaternion
   var quaternion = new THREE.Quaternion();
   var euler = new THREE.Euler(parseFloat(values[3]), parseFloat(values[4]),
-          parseFloat(values[5]), 'ZYX');
+          parseFloat(values[5]), 'XYZ');
   quaternion.setFromEuler(euler);
 
   var pose = {
@@ -240,7 +240,7 @@ GZ3D.SdfParser.prototype.parsePose = function(poseStr)
  */
 GZ3D.SdfParser.prototype.parseScale = function(scaleStr)
 {
-  var values = scaleStr.split(' ');
+  var values = scaleStr.split(/\s+/);
   var scale = new THREE.Vector3(parseFloat(values[0]), parseFloat(values[1]),
           parseFloat(values[2]));
   return scale;
@@ -275,61 +275,63 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
   var script = material.script;
   if (script)
   {
-    if (script.uri)
+    // if there is just one uri convert it to array
+    if (!script.uri)
     {
-      // if there is just one uri convert it to array
-      if (!(script.uri instanceof Array))
-      {
-        script.uri = [script.uri];
-      }
+      script.uri = ['file://media/materials/scripts/gazebo.material'];
+    }
 
-      if (script.name)
+    if (!(script.uri instanceof Array))
+    {
+      script.uri = [script.uri];
+    }
+
+    if (script.name)
+    {
+      mat = this.materials[script.name];
+      // if we already cached the materials
+      if (mat)
       {
-        mat = this.materials[script.name];
-        // if we already cached the materials
-        if (mat)
+        ambient = mat.ambient;
+        diffuse = mat.diffuse;
+        specular = mat.specular;
+        opacity = mat.opacity;
+
+        if (mat.texture)
         {
-          ambient = mat.ambient;
-          diffuse = mat.diffuse;
-          specular = mat.specular;
-          opacity = mat.opacity;
-
-          if (mat.texture)
+          for (var i = 0; i < script.uri.length; ++i)
           {
-            for (var i = 0; i < script.uri.length; ++i)
+            var uriType = script.uri[i].substring(0, script.uri[i]
+                    .indexOf('://'));
+            if (uriType === 'model')
             {
-              var uriType = script.uri[i].substring(0, script.uri[i]
-                      .indexOf('://'));
-              if (uriType === 'model')
+              // if texture uri
+              if (script.uri[i].indexOf('textures') > 0)
               {
-                // if texture uri
-                if (script.uri[i].indexOf('textures') > 0)
-                {
-                  textureUri = script.uri[i].substring(script.uri[i]
-                          .indexOf('://') + 3);
-                  break;
-                }
-              }
-              else if (uriType === 'file')
-              {
-                if (script.uri[i].indexOf('materials') > 0)
-                {
-                  textureUri = script.uri[i].substring(script.uri[i]
-                          .indexOf('://') + 3, script.uri[i]
-                          .indexOf('materials') + 9)
-                          + '/textures';
-                  break;
-                }
+                textureUri = script.uri[i].substring(script.uri[i]
+                        .indexOf('://') + 3);
+                break;
               }
             }
-            texture = this.MATERIAL_ROOT + '/' + textureUri + '/' + mat.texture;
+            else if (uriType === 'file')
+            {
+              if (script.uri[i].indexOf('materials') > 0)
+              {
+                textureUri = script.uri[i].substring(script.uri[i]
+                        .indexOf('://') + 3, script.uri[i]
+                        .indexOf('materials') + 9)
+                        + '/textures';
+                break;
+              }
+            }
           }
+          texture = this.MATERIAL_ROOT + '/' + textureUri + '/' + mat.texture;
         }
-        else
-        {
-          //TODO: how to handle if material is not cached
-          console.log(script.name + ' is not cached!!!');
-        }
+      }
+      else
+      {
+        //TODO: how to handle if material is not cached
+        console.log(script.name + ' is not cached!!!');
       }
     }
   }
@@ -383,7 +385,7 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
 GZ3D.SdfParser.prototype.parseSize = function(sizeStr)
 {
   var sizeObj;
-  var values = sizeStr.split(' ');
+  var values = sizeStr.split(/\s+/);
   var x = parseFloat(values[0]);
   var y = parseFloat(values[1]);
   var z = parseFloat(values[2]);
