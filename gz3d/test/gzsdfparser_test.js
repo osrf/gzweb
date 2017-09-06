@@ -84,8 +84,8 @@ describe('Sdf Parser tests', function() {
     });
   });
 
-  describe('Spawn a box from SDF, initialize and verify its position', function() {
-    it('Should spawn in the right position', function() {
+  describe('Spawn a box from SDF, initialize and verify its pose', function() {
+    it('Should spawn in the right pose', function() {
       var pose, rotation, sdf, obj3D;
 
       position = {x:3, y:1, z:1};
@@ -97,10 +97,9 @@ describe('Sdf Parser tests', function() {
       expect(obj3D.position.z).toEqual(position.z);
       // Shouldn't equal
       expect(obj3D.position.z).not.toEqual(0.9);
-      // How does it transform the rotation angels into Eulers?
-      // expect(rotation.x).toEqual(sdfparser.spawnFromSDF(sdf).rotation.x);
-      // expect(rotation.y).toEqual(sdfparser.spawnFromSDF(sdf).rotation.y);
-      // expect(rotation.z).toEqual(sdfparser.spawnFromSDF(sdf).rotation.z);      
+      expect(obj3D.rotation.x).toBeCloseTo(rotation.x, 3);
+      expect(obj3D.rotation.y).toBeCloseTo(rotation.y, 3);
+      expect(obj3D.rotation.z).toBeCloseTo(rotation.z, 3);
     });
   });
 
