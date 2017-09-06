@@ -13,7 +13,8 @@ var emUnits = function(value)
       return value*parseFloat($('body').css('font-size'));
     };
 
-var isTouchDevice = 'ontouchstart' in window || 'onmsgesturechange' in window;
+// Assuming all mobile devices are touch devices.
+var isTouchDevice = /Mobi/.test(navigator.userAgent);
 
 var isWideScreen = function()
     {
@@ -5315,11 +5316,9 @@ GZ3D.Scene.prototype.init = function()
 
   this.spawnModel = new GZ3D.SpawnModel(
       this, this.getDomElement());
-  // Material for simple shapes being spawned (grey transparent)
-  this.spawnedShapeMaterial = new THREE.MeshPhongMaterial(
+
+  this.simpleShapesMaterial = new THREE.MeshPhongMaterial(
       {color:0xffffff, shading: THREE.SmoothShading} );
-  this.spawnedShapeMaterial.transparent = true;
-  this.spawnedShapeMaterial.opacity = 0.5;
 
   var that = this;
 
@@ -6043,7 +6042,7 @@ GZ3D.Scene.prototype.createPlane = function(normalX, normalY, normalZ,
 GZ3D.Scene.prototype.createSphere = function(radius)
 {
   var geometry = new THREE.SphereGeometry(radius, 32, 32);
-  var mesh = new THREE.Mesh(geometry, this.spawnedShapeMaterial);
+  var mesh = new THREE.Mesh(geometry, this.simpleShapesMaterial);
   return mesh;
 };
 
@@ -6057,7 +6056,7 @@ GZ3D.Scene.prototype.createCylinder = function(radius, length)
 {
   var geometry = new THREE.CylinderGeometry(radius, radius, length, 32, 1,
       false);
-  var mesh = new THREE.Mesh(geometry, this.spawnedShapeMaterial);
+  var mesh = new THREE.Mesh(geometry, this.simpleShapesMaterial);
   mesh.rotation.x = Math.PI * 0.5;
   return mesh;
 };
@@ -6106,7 +6105,7 @@ GZ3D.Scene.prototype.createBox = function(width, height, depth)
   }
   geometry.uvsNeedUpdate = true;
 
-  var mesh = new THREE.Mesh(geometry, this.spawnedShapeMaterial);
+  var mesh = new THREE.Mesh(geometry, this.simpleShapesMaterial);
   mesh.castShadow = true;
   return mesh;
 };
@@ -8468,6 +8467,12 @@ GZ3D.SpawnModel = function(scene, domElement)
   this.obj = undefined;
   this.callback = undefined;
   this.sdfParser = undefined;
+
+  // Material for simple shapes being spawned (grey transparent)
+  this.spawnedShapeMaterial = new THREE.MeshPhongMaterial(
+      {color:0xffffff, shading: THREE.SmoothShading} );
+  this.spawnedShapeMaterial.transparent = true;
+  this.spawnedShapeMaterial.opacity = 0.5;
 };
 
 /**
@@ -8502,14 +8507,17 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
   if (entity === 'box')
   {
     mesh = this.scene.createBox(1, 1, 1);
+    mesh.material = this.spawnedShapeMaterial;
   }
   else if (entity === 'sphere')
   {
     mesh = this.scene.createSphere(0.5);
+    mesh.material = this.spawnedShapeMaterial;
   }
   else if (entity === 'cylinder')
   {
     mesh = this.scene.createCylinder(0.5, 1.0);
+    mesh.material = this.spawnedShapeMaterial;
   }
   else if (entity === 'pointlight')
   {
