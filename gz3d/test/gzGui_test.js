@@ -32,6 +32,9 @@ describe('Sdf Parser tests', function() {
           expect(gui.modelStatsDirty).toEqual(false);
 
           // On guiEvents, emitter events
+
+          // Manipulation modes
+          expect(scene.manipulationMode).toEqual('view');
           guiEvents.emit('manipulation_mode', 'translate');
           expect(scene.manipulationMode).toEqual('translate');
           guiEvents.emit('manipulation_mode', 'rotate');
@@ -198,6 +201,4 @@ describe('Sdf Parser tests', function() {
           expect(spyEvent).toHaveBeenTriggered()
         });
       });
-
-      // TODO: test angular controllers.
 });
