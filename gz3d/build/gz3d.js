@@ -16,7 +16,6 @@ var emUnits = function(value)
 // Assuming all mobile devices are touch devices.
 var isTouchDevice = /Mobi/.test(navigator.userAgent);
 
-isTouchDevice = false;
 var isWideScreen = function()
     {
       return $(window).width() / emUnits(1) > 35;
@@ -343,8 +342,8 @@ $(function()
     $('#container')
       .on('touchstart', function (event) {
         $(this).data('checkdown', setTimeout(function () {
+          guiEvents.emit('longpress_container_start',event);          
         }, press_time_container));
-        guiEvents.emit('longpress_container_start',event);
       })
       .on('touchend', function (event) {
         clearTimeout($(this).data('checkdown'));
