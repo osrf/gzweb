@@ -13,7 +13,8 @@ var emUnits = function(value)
       return value*parseFloat($('body').css('font-size'));
     };
 
-var isTouchDevice = 'ontouchstart' in window || 'onmsgesturechange' in window;
+// Assuming all mobile devices are touch devices.
+var isTouchDevice = /Mobi/.test(navigator.userAgent);
 
 var isWideScreen = function()
     {
@@ -3254,52 +3255,6 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
   }
 };
 
-/*
-GZ3D.GZIface.prototype.applyMaterial = function(obj, mat)
-{
-  if (obj)
-  {
-    if (mat)
-    {
-      obj.material = new THREE.MeshPhongMaterial();
-      var ambient = mat.ambient;
-      if (ambient)
-      {
-        obj.material.ambient.setRGB(ambient[0], ambient[1], ambient[2]);
-      }
-      var diffuse = mat.diffuse;
-      if (diffuse)
-      {
-        obj.material.color.setRGB(diffuse[0], diffuse[1], diffuse[2]);
-      }
-      var specular = mat.specular;
-      if (specular)
-      {
-        obj.material.specular.setRGB(specular[0], specular[1], specular[2]);
-      }
-      var opacity = mat.opacity;
-      if (opacity)
-      {
-        if (opacity < 1)
-        {
-          obj.material.transparent = true;
-          obj.material.opacity = opacity;
-        }
-      }
-
-      if (mat.texture)
-      {
-        obj.material.map = THREE.ImageUtils.loadTexture(mat.texture);
-      }
-      if (mat.normalMap)
-      {
-        obj.material.normalMap = THREE.ImageUtils.loadTexture(mat.normalMap);
-      }
-    }
-  }
-};
-*/
-
 GZ3D.GZIface.prototype.parseMaterial = function(material)
 {
   if (!material)
@@ -3322,52 +3277,57 @@ GZ3D.GZIface.prototype.parseMaterial = function(material)
   var script  = material.script;
   if (script)
   {
-    if (script.uri.length > 0)
+    if (script.name)
     {
-      if (script.name)
+      mat = this.material[script.name];
+      if (mat)
       {
-        mat = this.material[script.name];
-        if (mat)
+        ambient = mat['ambient'];
+        diffuse = mat['diffuse'];
+        specular = mat['specular'];
+        opacity = mat['opacity'];
+        scale = mat['scale'];
+
+        var textureName = mat['texture'];
+        if (textureName)
         {
-          ambient = mat['ambient'];
-          diffuse = mat['diffuse'];
-          specular = mat['specular'];
-          opacity = mat['opacity'];
-          scale = mat['scale'];
-
-          var textureName = mat['texture'];
-          if (textureName)
+          for (var i = 0; i < script.uri.length; ++i)
           {
-            for (var i = 0; i < script.uri.length; ++i)
+            // handle the weird case where empty scripts become converted to
+            // a single '__default__' script
+            var scriptUri = script.uri[i];
+            if (scriptUri === '__default__')
             {
-              var type = script.uri[i].substring(0,
-                    script.uri[i].indexOf('://'));
+              scriptUri = 'file://media/materials/scripts/gazebo.material';
+            }
 
-              if (type === 'model')
-              {
-                if (script.uri[i].indexOf('textures') > 0)
-                {
-                  textureUri = script.uri[i].substring(
-                      script.uri[i].indexOf('://') + 3);
-                  break;
-                }
-              }
-              else if (type === 'file')
-              {
-                if (script.uri[i].indexOf('materials') > 0)
-                {
-                  textureUri = script.uri[i].substring(
-                      script.uri[i].indexOf('://') + 3,
-                      script.uri[i].indexOf('materials') + 9) + '/textures';
-                  break;
-                }
-              }
-            }
-            if (textureUri)
+            var type = scriptUri.substring(0,
+                  scriptUri.indexOf('://'));
+
+            if (type === 'model')
             {
-              texture = uriPath + '/' +
-                  textureUri  + '/' + textureName;
+              if (scriptUri.indexOf('textures') > 0)
+              {
+                textureUri = scriptUri.substring(
+                    scriptUri.indexOf('://') + 3);
+                break;
+              }
             }
+            else if (type === 'file')
+            {
+              if (scriptUri.indexOf('materials') > 0)
+              {
+                textureUri = scriptUri.substring(
+                    scriptUri.indexOf('://') + 3,
+                    scriptUri.indexOf('materials') + 9) + '/textures';
+                break;
+              }
+            }
+          }
+          if (textureUri)
+          {
+            texture = uriPath + '/' +
+                textureUri  + '/' + textureName;
           }
         }
       }
@@ -4802,18 +4762,6 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
       }
     }
 
-    // Move light target
-    if (scope.object.children[0] &&
-       (scope.object.children[0] instanceof THREE.SpotLight ||
-        scope.object.children[0] instanceof THREE.DirectionalLight))
-    {
-      var lightObj = scope.object.children[0];
-      var dir = new THREE.Vector3(0,0,0);
-      dir.copy(scope.object.direction);
-      scope.object.localToWorld(dir);
-      lightObj.target.position.copy(dir);
-    }
-
     scope.update();
     scope.dispatchEvent(changeEvent);
   }
@@ -4846,7 +4794,6 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
     // true to check the descendants
     var intersections = ray.intersectObjects(objects, true);
 
-    console.log('intersections ' + intersections[0]);
     return intersections[0] ? intersections[0] : false;
   }
 
@@ -4940,7 +4887,6 @@ GZ3D.RadialMenu.prototype.init = function()
   this.model = null;
 
   // Object containing all items
-  // this.menu = new THREE.Object3D();
   this.menu = new THREE.Group();
 
   // Add items to the menu
@@ -5369,11 +5315,9 @@ GZ3D.Scene.prototype.init = function()
 
   this.spawnModel = new GZ3D.SpawnModel(
       this, this.getDomElement());
-  // Material for simple shapes being spawned (grey transparent)
-  this.spawnedShapeMaterial = new THREE.MeshPhongMaterial(
+
+  this.simpleShapesMaterial = new THREE.MeshPhongMaterial(
       {color:0xffffff, shading: THREE.SmoothShading} );
-  this.spawnedShapeMaterial.transparent = true;
-  this.spawnedShapeMaterial.opacity = 0.5;
 
   var that = this;
 
@@ -5412,34 +5356,6 @@ GZ3D.Scene.prototype.init = function()
   this.scene.add(this.controls.targetIndicator);
 
   this.emitter = new EventEmitter2({ verbose: true });
-
-/*  // SSAO
-  this.effectsEnabled = false;
-  // depth
-  var depthShader = THREE.ShaderLib[ 'depthRGBA'];
-  var depthUniforms = THREE.UniformsUtils.clone( depthShader.uniforms );
-
-  this.depthMaterial = new THREE.ShaderMaterial( {
-      fragmentShader: depthShader.fragmentShader,
-      vertexShader: depthShader.vertexShader,
-      uniforms: depthUniforms } );
-  this.depthMaterial.blending = THREE.NoBlending;
-
-  // postprocessing
-  this.composer = new THREE.EffectComposer(this.renderer );
-  this.composer.addPass( new THREE.RenderPass(this.scene,this.camera));
-
-  this.depthTarget = new THREE.WebGLRenderTarget( window.innerWidth,
-      window.innerHeight, { minFilter: THREE.NearestFilter,
-      magFilter: THREE.NearestFilter, format: THREE.RGBAFormat } );
-
-  var effect = new THREE.ShaderPass( THREE.SSAOShader );
-  effect.uniforms[ 'tDepth' ].value = this.depthTarget;
-  effect.uniforms[ 'size' ].value.set( window.innerWidth, window.innerHeight );
-  effect.uniforms[ 'cameraNear' ].value = this.camera.near;
-  effect.uniforms[ 'cameraFar' ].value = this.camera.far;
-  effect.renderToScreen = true;
-  this.composer.addPass( effect );*/
 
   // Radial menu (only triggered by touch)
   this.radialMenu = new GZ3D.RadialMenu(this.getDomElement());
@@ -5996,19 +5912,6 @@ GZ3D.Scene.prototype.render = function()
   this.modelManipulator.update();
   this.radialMenu.update();
 
-/*  if (this.effectsEnabled)
-  {
-    this.scene.overrideMaterial = this.depthMaterial;
-    this.renderer.render(this.scene, this.camera, this.depthTarget);
-    this.scene.overrideMaterial = null;
-    this.composer.render();
-  }
-  else
-  {
-    this.renderer.render(this.scene, this.camera);
-  }
-*/
-
   this.renderer.clear();
   this.renderer.render(this.scene, this.camera);
 
@@ -6138,7 +6041,7 @@ GZ3D.Scene.prototype.createPlane = function(normalX, normalY, normalZ,
 GZ3D.Scene.prototype.createSphere = function(radius)
 {
   var geometry = new THREE.SphereGeometry(radius, 32, 32);
-  var mesh = new THREE.Mesh(geometry, this.spawnedShapeMaterial);
+  var mesh = new THREE.Mesh(geometry, this.simpleShapesMaterial);
   return mesh;
 };
 
@@ -6152,7 +6055,7 @@ GZ3D.Scene.prototype.createCylinder = function(radius, length)
 {
   var geometry = new THREE.CylinderGeometry(radius, radius, length, 32, 1,
       false);
-  var mesh = new THREE.Mesh(geometry, this.spawnedShapeMaterial);
+  var mesh = new THREE.Mesh(geometry, this.simpleShapesMaterial);
   mesh.rotation.x = Math.PI * 0.5;
   return mesh;
 };
@@ -6201,7 +6104,7 @@ GZ3D.Scene.prototype.createBox = function(width, height, depth)
   }
   geometry.uvsNeedUpdate = true;
 
-  var mesh = new THREE.Mesh(geometry, this.spawnedShapeMaterial);
+  var mesh = new THREE.Mesh(geometry, this.simpleShapesMaterial);
   mesh.castShadow = true;
   return mesh;
 };
@@ -6248,24 +6151,8 @@ GZ3D.Scene.prototype.createLight = function(type, diffuse, intensity, pose,
     specular = color.clone();
   }
 
-  var matrixWorld;
-
   if (pose)
   {
-    var quaternion = new THREE.Quaternion(
-        pose.orientation.x,
-        pose.orientation.y,
-        pose.orientation.z,
-        pose.orientation.w);
-
-    var translation = new THREE.Vector3(
-        pose.position.x,
-        pose.position.y,
-        pose.position.z);
-
-    matrixWorld = new THREE.Matrix4();
-    matrixWorld.compose(translation, quaternion, new THREE.Vector3(1,1,1));
-
     this.setPose(obj, pose.position, pose.orientation);
     obj.matrixWorldNeedsUpdate = true;
   }
@@ -6297,17 +6184,21 @@ GZ3D.Scene.prototype.createLight = function(type, diffuse, intensity, pose,
     helper.name = name + '_lightHelper';
   }
 
+  var dir = new THREE.Vector3(0, 0, -1);
   if (direction)
   {
-    var dir = new THREE.Vector3(direction.x, direction.y,
-        direction.z);
-
-    obj.direction = new THREE.Vector3();
-    obj.direction.copy(dir);
-
-    dir.applyMatrix4(matrixWorld); // localToWorld
-    lightObj.target.position.copy(dir);
+    dir.x = direction.x;
+    dir.y = direction.y;
+    dir.z = direction.z;
   }
+  obj.direction = new THREE.Vector3(dir.x, dir.y, dir.z);
+
+  var targetObj = new THREE.Object3D();
+  lightObj.add(targetObj);
+
+  targetObj.position.copy(dir);
+  targetObj.matrixWorldNeedsUpdate = true;
+  lightObj.target = targetObj;
 
   // Add properties which exist on the server but have no meaning on THREE.js
   obj.serverProperties = {};
@@ -6339,7 +6230,6 @@ GZ3D.Scene.prototype.createPointLight = function(obj, color, intensity,
   }
 
   var lightObj = new THREE.PointLight(color, intensity);
-  lightObj.shadowDarkness = 0.3;
 
   if (distance)
   {
@@ -6383,7 +6273,6 @@ GZ3D.Scene.prototype.createSpotLight = function(obj, color, intensity,
   var lightObj = new THREE.SpotLight(color, intensity);
   lightObj.distance = distance;
   lightObj.position.set(0,0,0);
-  lightObj.shadowDarkness = 0.3;
 
   if (cast_shadows)
   {
@@ -7259,13 +7148,12 @@ GZ3D.Scene.prototype.setViewAs = function(model, viewAs)
     viewAs = 'normal';
   }
 
+  var showWireframe = (viewAs === 'wireframe');
   function materialViewAs(material)
   {
     if (materials.indexOf(material.id) === -1)
     {
       materials.push(material.id);
-      material.transparent = true;
-
       if (viewAs === 'transparent')
       {
         if (material.opacity)
@@ -7277,11 +7165,19 @@ GZ3D.Scene.prototype.setViewAs = function(model, viewAs)
           material.originalOpacity = 1.0;
         }
         material.opacity = 0.25;
+        material.transparent = true;
       }
       else
       {
-        material.opacity = material.originalOpacity ? material.originalOpacity : 1.0;
+        material.opacity = material.originalOpacity ?
+            material.originalOpacity : 1.0;
+        if (material.opacity >= 1.0)
+        {
+          material.transparent = false;
+        }
       }
+      // wireframe handling
+      material.wireframe = showWireframe;
     }
   }
 
@@ -7294,34 +7190,28 @@ GZ3D.Scene.prototype.setViewAs = function(model, viewAs)
     if (descendants[i].material &&
         descendants[i].name.indexOf('boundingBox') === -1 &&
         descendants[i].name.indexOf('COLLISION_VISUAL') === -1 &&
-        !this.getParentByPartialName(descendants[i], 'COLLISION_VISUAL')&&
+        !this.getParentByPartialName(descendants[i], 'COLLISION_VISUAL') &&
         descendants[i].name.indexOf('wireframe') === -1 &&
         descendants[i].name.indexOf('JOINT_VISUAL') === -1)
     {
-      if (descendants[i].material instanceof THREE.MeshFaceMaterial)
+      // Note: multi-material is being deprecated and will be removed soon
+      if (descendants[i].material instanceof THREE.MultiMaterial)
       {
         for (var j = 0; j < descendants[i].material.materials.length; ++j)
         {
           materialViewAs(descendants[i].material.materials[j]);
         }
       }
-      else
+      else if (Array.isArray(descendants[i].material))
       {
-        materialViewAs(descendants[i].material);
-      }
-
-      // wireframe handling
-      var showWireframe = (viewAs === 'wireframe');
-      if (descendants[i].material instanceof THREE.MeshFaceMaterial)
-      {
-        for (var m = 0; m < descendants[i].material.materials.length; m=m+1)
+        for (var k = 0; k < descendants[i].material.length; ++k)
         {
-          descendants[i].material.materials[m].wireframe = showWireframe;
+          materialViewAs(descendants[i].material[k]);
         }
       }
       else
       {
-        descendants[i].material.wireframe = showWireframe;
+        materialViewAs(descendants[i].material);
       }
     }
   }
@@ -7484,8 +7374,6 @@ GZ3D.Scene.prototype.viewJoints = function(model)
       if (mainAxis)
       {
         // main axis expressed w.r.t. parent model or joint frame
-        // needs Gazebo issue #1268 fixed, receive use_parent_model_frame on msg
-        // for now, true by default because most old models have it true
         if (!model.joint[j].axis1)
         {
           console.log('no joint axis ' +  model.joint[j].type + 'vs '
@@ -7583,37 +7471,8 @@ GZ3D.Scene.prototype.updateLight = function(entity, msg)
   if (msg.pose)
   {
     // needed to update light's direction
-    var quaternion = new THREE.Quaternion(
-        msg.pose.orientation.x,
-        msg.pose.orientation.y,
-        msg.pose.orientation.z,
-        msg.pose.orientation.w);
-
-    var translation = new THREE.Vector3(
-        msg.pose.position.x,
-        msg.pose.position.y,
-        msg.pose.position.z);
-
-    matrixWorld = new THREE.Matrix4();
-    matrixWorld.compose(translation, quaternion, new THREE.Vector3(1,1,1));
-
     this.setPose(entity, msg.pose.position, msg.pose.orientation);
     entity.matrixWorldNeedsUpdate = true;
-
-    if (entity.direction)
-    {
-      dir = new THREE.Vector3(entity.direction.x, entity.direction.y,
-          entity.direction.z);
-
-      entity.direction = new THREE.Vector3();
-      entity.direction.copy(dir);
-
-      dir.applyMatrix4(matrixWorld); // localToWorld
-      if (lightObj.target)
-      {
-        lightObj.target.position.copy(dir);
-      }
-    }
   }
 
   if (msg.range)
@@ -7666,7 +7525,6 @@ GZ3D.Scene.prototype.updateLight = function(entity, msg)
     entity.direction = new THREE.Vector3();
     entity.direction.copy(dir);
 
-    dir.applyMatrix4(matrixWorld); // localToWorld
     if (lightObj.target)
     {
       lightObj.target.position.copy(dir);
@@ -7781,7 +7639,7 @@ GZ3D.SdfParser.prototype.onConnectionError = function()
 GZ3D.SdfParser.prototype.parseColor = function(colorStr)
 {
   var color = {};
-  var values = colorStr.split(' ');
+  var values = colorStr.split(/\s+/);
 
   color.r = parseFloat(values[0]);
   color.g = parseFloat(values[1]);
@@ -7800,7 +7658,7 @@ GZ3D.SdfParser.prototype.parseColor = function(colorStr)
 GZ3D.SdfParser.prototype.parse3DVector = function(vectorStr)
 {
   var vector3D = {};
-  var values = vectorStr.split(' ');
+  var values = vectorStr.split(/\s+/);
   vector3D.x = parseFloat(values[0]);
   vector3D.y = parseFloat(values[1]);
   vector3D.z = parseFloat(values[2]);
@@ -7857,23 +7715,21 @@ GZ3D.SdfParser.prototype.spawnLightFromSDF = function(sdfObj)
     target.z -= pose.position.z;
 
     lightObj.target.position = target;
-    lightObj.shadowCameraNear = 1;
-    lightObj.shadowCameraFar = 50;
-    lightObj.shadowMapWidth = 4094;
-    lightObj.shadowMapHeight = 4094;
-    lightObj.shadowCameraVisible = false;
-    lightObj.shadowCameraBottom = -100;
-    lightObj.shadowCameraLeft = -100;
-    lightObj.shadowCameraRight = 100;
-    lightObj.shadowCameraTop = 100;
-    lightObj.shadowBias = 0.0001;
+    lightObj.shadow.camera.near = 1;
+    lightObj.shadow.camera.far = 50;
+    lightObj.shadow.mapSize.width = 4094;
+    lightObj.shadow.mapSize.height = 4094;
+    lightObj.shadow.camera.bottom = -100;
+    lightObj.shadow.camera.left = -100;
+    lightObj.shadow.camera.right = 100;
+    lightObj.shadow.cameraTop = 100;
+    lightObj.shadow.bias = 0.0001;
 
     lightObj.position.set(negDir.x, negDir.y, negDir.z);
     this.scene.setPose(lightObj, pose.position, pose.orientation);
   }
   lightObj.intensity = parseFloat(light.attenuation.constant);
   lightObj.castShadow = this.parseBool(light.cast_shadows);
-  lightObj.shadowDarkness = 0.3;
   lightObj.name = light['@name'];
 
   return lightObj;
@@ -7889,7 +7745,7 @@ GZ3D.SdfParser.prototype.spawnLightFromSDF = function(sdfObj)
  */
 GZ3D.SdfParser.prototype.parsePose = function(poseStr)
 {
-  var values = poseStr.split(' ');
+  var values = poseStr.split(/\s+/);
 
   var position = new THREE.Vector3(parseFloat(values[0]),
           parseFloat(values[1]), parseFloat(values[2]));
@@ -7906,7 +7762,6 @@ GZ3D.SdfParser.prototype.parsePose = function(poseStr)
   };
 
   return pose;
-
 };
 
 /**
@@ -7918,7 +7773,7 @@ GZ3D.SdfParser.prototype.parsePose = function(poseStr)
  */
 GZ3D.SdfParser.prototype.parseScale = function(scaleStr)
 {
-  var values = scaleStr.split(' ');
+  var values = scaleStr.split(/\s+/);
   var scale = new THREE.Vector3(parseFloat(values[0]), parseFloat(values[1]),
           parseFloat(values[2]));
   return scale;
@@ -7946,68 +7801,71 @@ GZ3D.SdfParser.prototype.parseBool = function(boolStr)
 GZ3D.SdfParser.prototype.createMaterial = function(material)
 {
   var textureUri, texture, mat;
-  var ambient, diffuse, specular, opacity, normalMap;
+  var ambient, diffuse, specular, opacity, normalMap, scale;
 
   if (!material) { return null; }
 
   var script = material.script;
   if (script)
   {
-    if (script.uri)
+    // if there is just one uri convert it to array
+    if (!script.uri)
     {
-      // if there is just one uri convert it to array
-      if (!(script.uri instanceof Array))
-      {
-        script.uri = [script.uri];
-      }
+      script.uri = ['file://media/materials/scripts/gazebo.material'];
+    }
 
-      if (script.name)
+    if (!(script.uri instanceof Array))
+    {
+      script.uri = [script.uri];
+    }
+
+    if (script.name)
+    {
+      mat = this.materials[script.name];
+      // if we already cached the materials
+      if (mat)
       {
-        mat = this.materials[script.name];
-        // if we already cached the materials
-        if (mat)
+        ambient = mat.ambient;
+        diffuse = mat.diffuse;
+        specular = mat.specular;
+        opacity = mat.opacity;
+        scale = mat.scale;
+
+        if (mat.texture)
         {
-          ambient = mat.ambient;
-          diffuse = mat.diffuse;
-          specular = mat.specular;
-          opacity = mat.opacity;
-
-          if (mat.texture)
+          for (var i = 0; i < script.uri.length; ++i)
           {
-            for (var i = 0; i < script.uri.length; ++i)
+            var uriType = script.uri[i].substring(0, script.uri[i]
+                    .indexOf('://'));
+            if (uriType === 'model')
             {
-              var uriType = script.uri[i].substring(0, script.uri[i]
-                      .indexOf('://'));
-              if (uriType === 'model')
+              // if texture uri
+              if (script.uri[i].indexOf('textures') > 0)
               {
-                // if texture uri
-                if (script.uri[i].indexOf('textures') > 0)
-                {
-                  textureUri = script.uri[i].substring(script.uri[i]
-                          .indexOf('://') + 3);
-                  break;
-                }
-              }
-              else if (uriType === 'file')
-              {
-                if (script.uri[i].indexOf('materials') > 0)
-                {
-                  textureUri = script.uri[i].substring(script.uri[i]
-                          .indexOf('://') + 3, script.uri[i]
-                          .indexOf('materials') + 9)
-                          + '/textures';
-                  break;
-                }
+                textureUri = script.uri[i].substring(script.uri[i]
+                        .indexOf('://') + 3);
+                break;
               }
             }
-            texture = this.MATERIAL_ROOT + '/' + textureUri + '/' + mat.texture;
+            else if (uriType === 'file')
+            {
+              if (script.uri[i].indexOf('materials') > 0)
+              {
+                textureUri = script.uri[i].substring(script.uri[i]
+                        .indexOf('://') + 3, script.uri[i]
+                        .indexOf('materials') + 9)
+                        + '/textures';
+                break;
+              }
+            }
           }
+          texture = this.MATERIAL_ROOT + '/' + textureUri + '/' + mat.texture;
         }
-        else
-        {
-          //TODO: how to handle if material is not cached
-          console.log(script.name + ' is not cached!!!');
-        }
+      }
+      else
+      {
+        //TODO: how to handle if material is not cached
+        console.log(script.name + ' is not cached!!!');
       }
     }
   }
@@ -8046,7 +7904,8 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
     ambient: ambient,
     diffuse: diffuse,
     specular: specular,
-    opacity: opacity
+    opacity: opacity,
+    scale: scale
   };
 
 };
@@ -8061,7 +7920,7 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
 GZ3D.SdfParser.prototype.parseSize = function(sizeStr)
 {
   var sizeObj;
-  var values = sizeStr.split(' ');
+  var values = sizeStr.split(/\s+/);
   var x = parseFloat(values[0]);
   var y = parseFloat(values[1]);
   var z = parseFloat(values[2]);
@@ -8610,6 +8469,12 @@ GZ3D.SpawnModel = function(scene, domElement)
   this.obj = undefined;
   this.callback = undefined;
   this.sdfParser = undefined;
+
+  // Material for simple shapes being spawned (grey transparent)
+  this.spawnedShapeMaterial = new THREE.MeshPhongMaterial(
+      {color:0xffffff, shading: THREE.SmoothShading} );
+  this.spawnedShapeMaterial.transparent = true;
+  this.spawnedShapeMaterial.opacity = 0.5;
 };
 
 /**
@@ -8644,14 +8509,17 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
   if (entity === 'box')
   {
     mesh = this.scene.createBox(1, 1, 1);
+    mesh.material = this.spawnedShapeMaterial;
   }
   else if (entity === 'sphere')
   {
     mesh = this.scene.createSphere(0.5);
+    mesh.material = this.spawnedShapeMaterial;
   }
   else if (entity === 'cylinder')
   {
     mesh = this.scene.createCylinder(0.5, 1.0);
+    mesh.material = this.spawnedShapeMaterial;
   }
   else if (entity === 'pointlight')
   {
@@ -8846,6 +8714,12 @@ GZ3D.SpawnModel.prototype.moveSpawnedModel = function(positionX, positionY)
   this.ray.set(this.scene.camera.position,
       vector.sub(this.scene.camera.position).normalize());
   var point = this.ray.intersectPlane(this.plane);
+
+  if (!point)
+  {
+    return;
+  }
+
   point.z = this.obj.position.z;
 
   if(this.snapDist)
@@ -8861,8 +8735,13 @@ GZ3D.SpawnModel.prototype.moveSpawnedModel = function(positionX, positionY)
       this.obj.children[0].children[0] instanceof THREE.DirectionalLight))
   {
     var lightObj = this.obj.children[0].children[0];
-    lightObj.target.position.copy(this.obj.position);
-    lightObj.target.position.add(new THREE.Vector3(0,0,-0.5));
+    if (lightObj.direction)
+    {
+      if (lightObj.target)
+      {
+        lightObj.target.position.copy(lightObj.direction);
+      }
+    }
   }
 };
 
