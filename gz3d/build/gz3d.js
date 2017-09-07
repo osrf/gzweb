@@ -5763,7 +5763,8 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
 GZ3D.Scene.prototype.onPointerUp = function(event)
 {
   event.preventDefault();
-
+  if(this.selectedEntity)
+    this.setViewAs(this.selectedEntity, 'normal')
   // Clicks (<150ms) outside any models trigger view mode
   var millisecs = new Date().getTime();
   if (millisecs - this.timeDown < 150)
