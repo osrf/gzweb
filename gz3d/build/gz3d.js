@@ -6836,13 +6836,11 @@ GZ3D.Scene.prototype.useColladaSubMesh = function(dae, submesh, centerSubmesh)
               vertices[k].z -= center.z;
             }
             allChildren[i].geometry.verticesNeedUpdate = true;
-            if (allChildren[i].parent)
+            var p = allChildren[i].parent;
+            while (p)
             {
-              allChildren[i].parent.position.set(0, 0, 0);
-              if (allChildren[i].parent.parent)
-              {
-                allChildren[i].parent.parent.position.set(0, 0, 0);
-              }
+              p.position.set(0, 0, 0);
+              p = p.parent;
             }
           }
           mesh = allChildren[i];
