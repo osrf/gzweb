@@ -1192,7 +1192,6 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
     // true to check the descendants
     var intersections = ray.intersectObjects(objects, true);
 
-    console.log('intersections ' + intersections[0]);
     return intersections[0] ? intersections[0] : false;
   }
 

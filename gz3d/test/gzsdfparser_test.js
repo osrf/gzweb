@@ -86,10 +86,10 @@ describe('Sdf Parser tests', function() {
 
   describe('Spawn a box from SDF, initialize and verify its pose', function() {
     it('Should spawn in the right pose', function() {
-      var pose, rotation, sdf, obj3D;
+      var pose, rotation, sdf, obj3D, expectedRot;
 
       position = {x:3, y:1, z:1};
-      rotation = {x:0.5, y:1, z:0};
+      rotation = {x:0.5, y:1, z:0.2};
       sdf = sdfparser.createBoxSDF(position, rotation);
       obj3D = sdfparser.spawnFromSDF(sdf);
       expect(obj3D.position.x).toEqual(position.x);
@@ -97,9 +97,10 @@ describe('Sdf Parser tests', function() {
       expect(obj3D.position.z).toEqual(position.z);
       // Shouldn't equal
       expect(obj3D.position.z).not.toEqual(0.9);
-      expect(obj3D.rotation.x).toBeCloseTo(rotation.x, 3);
-      expect(obj3D.rotation.y).toBeCloseTo(rotation.y, 3);
-      expect(obj3D.rotation.z).toBeCloseTo(rotation.z, 3);
+      expectedRot = obj3D.rotation.reorder('ZYX');
+      expect(expectedRot.x).toBeCloseTo(rotation.x, 3);
+      expect(expectedRot.y).toBeCloseTo(rotation.y, 3);
+      expect(expectedRot.z).toBeCloseTo(rotation.z, 3);
     });
   });
 

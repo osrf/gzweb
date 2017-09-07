@@ -255,6 +255,12 @@ GZ3D.SpawnModel.prototype.moveSpawnedModel = function(positionX, positionY)
   this.ray.set(this.scene.camera.position,
       vector.sub(this.scene.camera.position).normalize());
   var point = this.ray.intersectPlane(this.plane);
+
+  if (!point)
+  {
+    return;
+  }
+
   point.z = this.obj.position.z;
 
   if(this.snapDist)

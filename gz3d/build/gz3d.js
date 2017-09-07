@@ -4794,7 +4794,6 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
     // true to check the descendants
     var intersections = ray.intersectObjects(objects, true);
 
-    console.log('intersections ' + intersections[0]);
     return intersections[0] ? intersections[0] : false;
   }
 
@@ -7754,7 +7753,7 @@ GZ3D.SdfParser.prototype.parsePose = function(poseStr)
   // get euler rotation and convert it to Quaternion
   var quaternion = new THREE.Quaternion();
   var euler = new THREE.Euler(parseFloat(values[3]), parseFloat(values[4]),
-          parseFloat(values[5]), 'XYZ');
+          parseFloat(values[5]), 'ZYX');
   quaternion.setFromEuler(euler);
 
   var pose = {
@@ -7763,7 +7762,6 @@ GZ3D.SdfParser.prototype.parsePose = function(poseStr)
   };
 
   return pose;
-
 };
 
 /**
@@ -7803,7 +7801,7 @@ GZ3D.SdfParser.prototype.parseBool = function(boolStr)
 GZ3D.SdfParser.prototype.createMaterial = function(material)
 {
   var textureUri, texture, mat;
-  var ambient, diffuse, specular, opacity, normalMap;
+  var ambient, diffuse, specular, opacity, normalMap, scale;
 
   if (!material) { return null; }
 
@@ -7831,6 +7829,7 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
         diffuse = mat.diffuse;
         specular = mat.specular;
         opacity = mat.opacity;
+        scale = mat.scale;
 
         if (mat.texture)
         {
@@ -7905,7 +7904,8 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
     ambient: ambient,
     diffuse: diffuse,
     specular: specular,
-    opacity: opacity
+    opacity: opacity,
+    scale: scale
   };
 
 };
@@ -8714,6 +8714,12 @@ GZ3D.SpawnModel.prototype.moveSpawnedModel = function(positionX, positionY)
   this.ray.set(this.scene.camera.position,
       vector.sub(this.scene.camera.position).normalize());
   var point = this.ray.intersectPlane(this.plane);
+
+  if (!point)
+  {
+    return;
+  }
+
   point.z = this.obj.position.z;
 
   if(this.snapDist)
