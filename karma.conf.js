@@ -34,7 +34,6 @@ module.exports = function(config) {
       "gz3d/client/js/include/ShaderPass.js",
       "gz3d/client/js/include/xml2json.js",
       'gz3d/build/gz3d.js',
-      "test/lib/*.js",
       'gz3d/test/*.js'
     ],
 
@@ -47,7 +46,7 @@ module.exports = function(config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
-      'gz3d/build/gz3d.js': 'coverage'      
+      'gz3d/build/gz3d.js': 'coverage'
     },
 
 
@@ -55,7 +54,12 @@ module.exports = function(config) {
     // possible values: 'dots', 'progress'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
     reporters: ['progress', 'coverage'],
-    
+
+    // optionally, configure the reporter
+    coverageReporter: {
+      type : 'html',
+      dir : 'coverage/'
+    },
 
     // web server port
     port: 9876,
