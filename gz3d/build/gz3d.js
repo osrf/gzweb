@@ -342,7 +342,7 @@ $(function()
     $('#container')
       .on('touchstart', function (event) {
         $(this).data('checkdown', setTimeout(function () {
-          guiEvents.emit('longpress_container_start',event);          
+          guiEvents.emit('longpress_container_start',event);
         }, press_time_container));
       })
       .on('touchend', function (event) {
