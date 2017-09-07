@@ -1,13 +1,16 @@
 jasmine.getFixtures().fixturesPath = 'base/gz3d/test/fixture';
 
-describe('Sdf Parser tests', function() {
+describe('Gscene tests', function() {
 
       beforeEach(function(){
           loadFixtures('myfixture.html');
           originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
           jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000;
+          scene = new GZ3D.Scene();
+          gui = new GZ3D.Gui(scene);
+          iface = new GZ3D.GZIface(scene, gui);
+          sdfparser = new GZ3D.SdfParser(scene, gui, iface);
         });
-
 
       // Initializing object used in the test.
       scene = new GZ3D.Scene();
@@ -307,15 +310,11 @@ describe('Sdf Parser tests', function() {
           expect(quaternion.y).toEqual(ori.y);
           expect(quaternion.z).toEqual(ori.z);
           expect(quaternion.w).toEqual(ori.w);
-
-          // var evt = document.createEvent("MouseEvents");
-          // evt.initMouseEvent("click", true, true, window, 0, 0, 0, 80, 20, false, false, false, false, 0, null);
-          // document.body.dispatchEvent(evt);
         });
       });
 
       describe('Test gzscene Set SDFParser', function() {
-        it('Should return scene\'s SdfParser ', function() {
+        it('Should return the scene SdfParser ', function() {
 
           scene.setSDFParser(sdfparser);
           expect(scene.spawnModel.sdfParser).toEqual(sdfparser);
@@ -324,24 +323,11 @@ describe('Sdf Parser tests', function() {
 
       // Test manipulation_mode
       describe('Test manipulation mode', function() {
-        // For some reasone that I yet to discover,
-        // I've to do this for the eventEmiiter to work!
-        // else we get "Error: cannot call methods on popup prior 
-        // to initialization; attempted to call method 'close'"
-        describe('Reintialize', function() {
-          // Initializing object used in the test.
-          scene = new GZ3D.Scene();
-          gui = new GZ3D.Gui(scene);
-          iface = new GZ3D.GZIface(scene, gui);
-          sdfparser = new GZ3D.SdfParser(scene, gui, iface);
-        });
-
         it('Should change manipulation mode to translate', function() {
-          guiEvents.emit('manipulation_mode', 'translate');
 
+          guiEvents.emit('manipulation_mode', 'translate');
           expect(scene.manipulationMode).not.toEqual('view');
           expect(scene.manipulationMode).toEqual('translate');
         });
       });
-
 });
