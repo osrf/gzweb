@@ -41,7 +41,7 @@ THREE.OrbitControls = function (object, domElement)
   this.target = new THREE.Vector3();
   this.targetIndicator = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 20),
       new THREE.MeshPhongMaterial({emissive: 0x333300,
-      ambient: 0xffff00,
+      color: 0xffff00,
       shading: THREE.SmoothShading}));
   this.targetIndicator.visible = false;
   this.showTargetIndicator = false;
