@@ -1,6 +1,6 @@
 jasmine.getFixtures().fixturesPath = 'base/gz3d/test/fixture';
 
-describe('Sdf Parser tests', function() {
+describe('Gui tests', function() {
 
       beforeEach(function(){
           module('gzangular');
