@@ -21,7 +21,7 @@ describe('Gui tests', function() {
       sdfparser = new GZ3D.SdfParser(scene, gui, iface);
 
 
-      // Intialize test
+      // Initialize test
       describe('Test gzgui init', function() {
         it('Should verify the status of the gui after initialization', function() {
 
