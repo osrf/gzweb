@@ -53,7 +53,6 @@ GZ3D.RadialMenu.prototype.init = function()
   this.model = null;
 
   // Object containing all items
-  // this.menu = new THREE.Object3D();
   this.menu = new THREE.Group();
 
   // Add items to the menu

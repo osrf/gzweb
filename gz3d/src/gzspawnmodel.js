@@ -10,6 +10,12 @@ GZ3D.SpawnModel = function(scene, domElement)
   this.obj = undefined;
   this.callback = undefined;
   this.sdfParser = undefined;
+
+  // Material for simple shapes being spawned (grey transparent)
+  this.spawnedShapeMaterial = new THREE.MeshPhongMaterial(
+      {color:0xffffff, shading: THREE.SmoothShading} );
+  this.spawnedShapeMaterial.transparent = true;
+  this.spawnedShapeMaterial.opacity = 0.5;
 };
 
 /**
@@ -44,14 +50,17 @@ GZ3D.SpawnModel.prototype.start = function(entity, callback)
   if (entity === 'box')
   {
     mesh = this.scene.createBox(1, 1, 1);
+    mesh.material = this.spawnedShapeMaterial;
   }
   else if (entity === 'sphere')
   {
     mesh = this.scene.createSphere(0.5);
+    mesh.material = this.spawnedShapeMaterial;
   }
   else if (entity === 'cylinder')
   {
     mesh = this.scene.createCylinder(0.5, 1.0);
+    mesh.material = this.spawnedShapeMaterial;
   }
   else if (entity === 'pointlight')
   {
@@ -246,6 +255,12 @@ GZ3D.SpawnModel.prototype.moveSpawnedModel = function(positionX, positionY)
   this.ray.set(this.scene.camera.position,
       vector.sub(this.scene.camera.position).normalize());
   var point = this.ray.intersectPlane(this.plane);
+
+  if (!point)
+  {
+    return;
+  }
+
   point.z = this.obj.position.z;
 
   if(this.snapDist)
@@ -261,8 +276,13 @@ GZ3D.SpawnModel.prototype.moveSpawnedModel = function(positionX, positionY)
       this.obj.children[0].children[0] instanceof THREE.DirectionalLight))
   {
     var lightObj = this.obj.children[0].children[0];
-    lightObj.target.position.copy(this.obj.position);
-    lightObj.target.position.add(new THREE.Vector3(0,0,-0.5));
+    if (lightObj.direction)
+    {
+      if (lightObj.target)
+      {
+        lightObj.target.position.copy(lightObj.direction);
+      }
+    }
   }
 };
 
