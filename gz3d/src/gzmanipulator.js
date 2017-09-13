@@ -808,7 +808,7 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
         worldRotationMatrix.extractRotation(scope.object.matrixWorld);
 
         parentRotationMatrix.extractRotation(scope.object.parent.matrixWorld);
-        parentScale.getScaleFromMatrix(tempMatrix.getInverse(
+        parentScale.setFromMatrixScale(tempMatrix.getInverse(
             scope.object.parent.matrixWorld));
 
         offset.copy(planeIntersect.point);
@@ -948,7 +948,7 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
 
           parentRotationMatrix.extractRotation(
               scope.object.parent.matrixWorld);
-          parentScale.getScaleFromMatrix(tempMatrix.getInverse(
+          parentScale.setFromMatrixScale(tempMatrix.getInverse(
               scope.object.parent.matrixWorld));
 
           offset.copy(planeIntersect.point);
