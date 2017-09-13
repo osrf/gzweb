@@ -7,7 +7,8 @@
     "url": "https://bitbucket.org/osrf/gzweb"
   },
   "scripts": {
-    "test": "./node_modules/karma/bin/karma start --singleRun"
+    "test": "./node_modules/karma/bin/karma start --singleRun",
+    "update": "cd gz3d/utils && grunt build && cd ../../build && cmake .."
   },
   "dependencies": {
     "websocket": "",
