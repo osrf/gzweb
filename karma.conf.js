@@ -15,15 +15,15 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      "gz3d/client/js/include/jquery-1.9.1.js",      
+      "gz3d/client/js/include/jquery-1.9.1.js",
       "gz3d/client/js/include/jquery.mobile-1.4.0.min.js",
       'node_modules/jasmine-jquery/lib/jasmine-jquery.js',      
       "gz3d/client/js/include/angular.min.js",
       "gz3d/client/js/include/three.js",
       "gz3d/client/js/include/three.compat.js",
       "gz3d/client/js/include/OrbitControls.js",
-      "gz3d/client/js/include/stats.min.js",
       "gz3d/client/js/include/Detector.js",
+      "gz3d/client/js/include/stats.min.js",
       "gz3d/client/js/include/eventemitter2.js",
       "gz3d/client/js/include/roslib.js",
       "gz3d/client/js/include/ColladaLoader.js",
@@ -49,14 +49,20 @@ module.exports = function(config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
+      'gz3d/build/gz3d.js': 'coverage'
     },
 
 
     // test results reporter to use
     // possible values: 'dots', 'progress'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-    reporters: ['progress'],
+    reporters: ['progress', 'coverage'],
 
+    // optionally, configure the reporter
+    coverageReporter: {
+      type : 'html',
+      dir : 'coverage/'
+    },
 
     // web server port
     port: 9876,

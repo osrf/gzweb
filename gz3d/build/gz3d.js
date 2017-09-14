@@ -4410,7 +4410,7 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
         worldRotationMatrix.extractRotation(scope.object.matrixWorld);
 
         parentRotationMatrix.extractRotation(scope.object.parent.matrixWorld);
-        parentScale.getScaleFromMatrix(tempMatrix.getInverse(
+        parentScale.setFromMatrixScale(tempMatrix.getInverse(
             scope.object.parent.matrixWorld));
 
         offset.copy(planeIntersect.point);
@@ -4550,7 +4550,7 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
 
           parentRotationMatrix.extractRotation(
               scope.object.parent.matrixWorld);
-          parentScale.getScaleFromMatrix(tempMatrix.getInverse(
+          parentScale.setFromMatrixScale(tempMatrix.getInverse(
               scope.object.parent.matrixWorld));
 
           offset.copy(planeIntersect.point);
@@ -6836,13 +6836,11 @@ GZ3D.Scene.prototype.useColladaSubMesh = function(dae, submesh, centerSubmesh)
               vertices[k].z -= center.z;
             }
             allChildren[i].geometry.verticesNeedUpdate = true;
-            if (allChildren[i].parent)
+            var p = allChildren[i].parent;
+            while (p)
             {
-              allChildren[i].parent.position.set(0, 0, 0);
-              if (allChildren[i].parent.parent)
-              {
-                allChildren[i].parent.parent.position.set(0, 0, 0);
-              }
+              p.position.set(0, 0, 0);
+              p = p.parent;
             }
           }
           mesh = allChildren[i];

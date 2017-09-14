@@ -1,6 +1,5 @@
-#!/bin/bash
+#!/bin/sh
 
-if [ "$(pidof node)" ] 
-then
-  killall node
-fi
+kill `pgrep -f http/client`
+kill `pgrep -f ws_server`
+
