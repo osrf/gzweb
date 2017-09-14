@@ -7565,26 +7565,28 @@ GZ3D.SdfParser = function(scene, gui, gziface)
  */
 GZ3D.SdfParser.prototype.init = function()
 {
-  var that = this;
-  this.gziface.emitter.on('error', function() {
-    that.gui.guiEvents.emit('notification_popup', 'GzWeb is currently running' +
-            'without a server, and materials could not be loaded.' +
-            'When connected scene will be reinitialized', 5000);
-    that.onConnectionError();
-  });
-
-  this.gziface.emitter.on('material', function(mat) {
-    that.materials = mat;
-  });
-
-  this.gziface.emitter.on('gzstatus', function(gzstatus) {
-    if (gzstatus === 'error')
-    {
-      that.gui.guiEvents.emit('notification_popup', 'GzWeb is currently ' +
-              'running without a GzServer, and Scene is reinitialized.', 5000);
+  if(this.gziface){
+    var that = this;
+    this.gziface.emitter.on('error', function() {
+      that.gui.guiEvents.emit('notification_popup', 'GzWeb is currently running' +
+              'without a server, and materials could not be loaded.' +
+              'When connected scene will be reinitialized', 5000);
       that.onConnectionError();
-    }
-  });
+    });
+
+    this.gziface.emitter.on('material', function(mat) {
+      that.materials = mat;
+    });
+
+    this.gziface.emitter.on('gzstatus', function(gzstatus) {
+      if (gzstatus === 'error')
+      {
+        that.gui.guiEvents.emit('notification_popup', 'GzWeb is currently ' +
+                'running without a GzServer, and Scene is reinitialized.', 5000);
+        that.onConnectionError();
+      }
+    });
+  }
 };
 
 /**
@@ -7601,9 +7603,11 @@ GZ3D.SdfParser.prototype.onConnectionError = function()
   var that = this;
   var entityCreated = function(model, type)
   {
-    if (!that.gziface.isConnected)
-    {
-      that.addModelByType(model, type);
+    if(that.gziface){
+      if (!that.gziface.isConnected)
+      {
+        that.addModelByType(model, type);
+      }
     }
   };
   this.gui.emitter.on('entityCreated', entityCreated);
