@@ -12,11 +12,6 @@ describe('Gscene tests', function() {
           sdfparser = new GZ3D.SdfParser(scene, gui, iface);
         });
 
-      // Initializing object used in the test.
-      scene = new GZ3D.Scene();
-      gui = new GZ3D.Gui(scene);
-      iface = new GZ3D.GZIface(scene, gui);
-      sdfparser = new GZ3D.SdfParser(scene, gui, iface);
 
       describe('Test gzscene Initialize', function() {
         it('Intial values should match', function() {
@@ -39,8 +34,6 @@ describe('Gscene tests', function() {
             expect(scene.grid.visible).toEqual(false);
 
             expect(scene.showCollisions).toEqual(false);
-            expect(scene.spawnedShapeMaterial.opacity).toEqual(0.5);
-            expect(scene.spawnedShapeMaterial.transparent).toEqual(true);
 
             expect(scene.emitter).toEqual(new EventEmitter2({ verbose: true }));
 
