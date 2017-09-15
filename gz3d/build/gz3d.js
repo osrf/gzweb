@@ -7565,7 +7565,8 @@ GZ3D.SdfParser = function(scene, gui, gziface)
  */
 GZ3D.SdfParser.prototype.init = function()
 {
-  if(this.gziface){
+  if(this.gziface)
+  {
     var that = this;
     this.gziface.emitter.on('error', function() {
       that.gui.guiEvents.emit('notification_popup', 'GzWeb is currently running' +
@@ -7587,6 +7588,10 @@ GZ3D.SdfParser.prototype.init = function()
       }
     });
   }
+  else
+  {
+    this.scene.initScene();
+  }
 };
 
 /**
@@ -7603,11 +7608,9 @@ GZ3D.SdfParser.prototype.onConnectionError = function()
   var that = this;
   var entityCreated = function(model, type)
   {
-    if(that.gziface){
-      if (!that.gziface.isConnected)
-      {
-        that.addModelByType(model, type);
-      }
+    if (!that.gziface.isConnected)
+    {
+      that.addModelByType(model, type);
     }
   };
   this.gui.emitter.on('entityCreated', entityCreated);
