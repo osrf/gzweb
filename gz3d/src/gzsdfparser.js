@@ -3,8 +3,9 @@
  * and defines a DOM parser function to parse SDF XML files
  * @param {object} scene - the gz3d scene object
  * @param {object} gui - the gz3d gui object
- * @param {object} gziface - the gz3d gziface object
- */
+ * @param {object} gziface [optional] - the gz3d gziface object, if not gziface
+ * object was provided, sdfParser wont try to connect to gzserver.
+ **/
 GZ3D.SdfParser = function(scene, gui, gziface)
 {
   // set the sdf version
@@ -29,7 +30,9 @@ GZ3D.SdfParser = function(scene, gui, gziface)
 };
 
 /**
- * Initializes SDF parser by connecting relevant events from gziface
+ * Initializes SDF parser by connecting relevant events from gziface,
+ * if gziface was not provided, just initialize the scene and don't listen
+ * on gziface events.
  */
 GZ3D.SdfParser.prototype.init = function()
 {
