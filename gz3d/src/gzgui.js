@@ -1614,7 +1614,8 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
       var newModel = modelStats[modelStats.length-1];
 
       // links
-      if(stats.link){
+      if (stats.link)
+      {
         for (var l = 0; l < stats.link.length; ++l)
         {
           var shortName = stats.link[l].name.substring(
@@ -1638,7 +1639,8 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
       }
 
       // joints
-      if(stats.joint){
+      if (stats.joint)
+      {
         for (var j = 0; j < stats.joint.length; ++j)
         {
           var jointShortName = stats.joint[j].name.substring(
