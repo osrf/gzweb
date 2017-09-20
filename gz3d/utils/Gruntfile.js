@@ -4,13 +4,8 @@ module.exports = function(grunt) {
     pkg: grunt.file.readJSON('package.json'),
     concat: {
       build: {
-        src  : ['../src/*.js', '../src/**/*.js', '!../src/??sdfview*.js'],
+        src  : ['../src/*.js', '../src/**/*.js'],
         dest : '../build/gz3d.js'
-      },
-      sdf_build: {
-        src  : ['../src/gz*.js', '!../src/gziface.js', '!../src/gzgui.js',
-        '../src/gzsdf*.js'],
-        dest : '../build/sdfviewer.js'
       },
     },
     jshint: {
@@ -83,7 +78,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-jsdoc');
 
   grunt.registerTask('dev', ['concat', 'watch']);
-  grunt.registerTask('build', ['concat', 'uglify']);
+  grunt.registerTask('build', ['concat', 'jshint', 'uglify']);
   grunt.registerTask('build_and_watch', ['watch']);
   grunt.registerTask('doc', ['clean', 'jsdoc']);
 };
