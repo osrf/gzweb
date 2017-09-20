@@ -6,7 +6,7 @@ module.exports = function(grunt) {
       build: {
         src  : ['../src/*.js', '../src/**/*.js'],
         dest : '../build/gz3d.js'
-      },
+      }
     },
     jshint: {
       options: {
