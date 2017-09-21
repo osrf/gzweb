@@ -612,6 +612,14 @@ $(function()
     }
   });
 
+  $( '#view-com' ).click(function() {
+    if ($('#view-com a').css('color') === 'rgb(255, 255, 255)')
+    {
+      $('#model-popup').popup('close');
+      guiEvents.emit('view_com');
+    }
+  });
+
   $( '#delete-entity' ).click(function() {
     guiEvents.emit('delete_entity');
   });
@@ -1204,6 +1212,12 @@ GZ3D.Gui.prototype.init = function()
   guiEvents.on('view_joints', function ()
       {
         that.scene.viewJoints(that.scene.selectedEntity);
+      }
+  );
+
+  guiEvents.on('view_com', function ()
+      {
+        that.scene.viewCOM(that.scene.selectedEntity);
       }
   );
 
@@ -1922,6 +1936,7 @@ GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
     $('#view-transparent').css('visibility','collapse');
     $('#view-wireframe').css('visibility','collapse');
     $('#view-joints').css('visibility','collapse');
+    $('#view-com').css('visibility','collapse');
     $('#model-popup').popup('open',
       {x: event.clientX + emUnits(6),
        y: event.clientY + emUnits(-8)});
