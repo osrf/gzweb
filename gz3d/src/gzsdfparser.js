@@ -701,6 +701,7 @@ GZ3D.SdfParser.prototype.createLink = function(link)
 
   if (link.inertial)
   {
+    linkObj.userData.inertial = {};
     if (link.inertial.mass)
     {
       linkObj.userData.inertial.mass = link.inertial.mass;

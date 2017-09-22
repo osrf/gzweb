@@ -2197,7 +2197,7 @@ GZ3D.Scene.prototype.viewJoints = function(model)
  */
 GZ3D.Scene.prototype.viewCOM = function(model)
 {
-  if (model.link === undefined || model.link.length === 0)
+  if (model.children.length === 0)
   {
     return;
   }
@@ -2234,20 +2234,53 @@ GZ3D.Scene.prototype.viewCOM = function(model)
   // Create visuals
   else
   {
-    model.COMVisuals = [];
-    for (var j = 0; j < model.link.length; ++j)
+    model.userData.COMVisuals = true;
+    for (var j = 0; j < model.children.length; ++j)
     {
-      child = model.getObjectByName(model.link[j].child);
-      var linkNmae = model.link[j].name;
-      var inertial = model.link[j].inertial;
-      var inertialPose = model.link[j].inertial.pose;
-      var inertialMass = model.link[j].inertial.mass;
-      var radius = 20;
-      // radius = cbrt((0.75 * mass ) / (M_PI * 11340));
-      this.createSphere(radius);
-      if (!child)
+      child = model.getObjectByName(model.children[j].name);
+
+      if (child.userData.inertial)
       {
-        continue;
+        var mesh, radius, inertialMass, inertialPose = {};
+        var inertial = child.userData.inertial;
+
+        if (child.position)
+        {
+          inertialPose.position = child.position;
+          inertialPose.orientation = child.quaternion;
+        }
+        else if (child.userData.inertial.pose)
+        {
+          inertialPose = child.userData.inertial.pose;
+        }
+        else
+        {
+          inertialPose = {position: {x:0,y:0,z:0}, orientation:{_w:1, _x:0, _y:0, _z:0}};
+        }
+
+        inertialMass = child.userData.inertial.mass;
+        radius = Math.cbrt((0.75 * inertialMass ) / (Math.PI * 11340));
+
+        var COMVisual = new THREE.Object3D();
+
+        // Set up the material.
+        var spawnedShapeMaterial = new THREE.MeshPhongMaterial(
+          {color:0xffffff, shading: THREE.SmoothShading} );
+        spawnedShapeMaterial.transparent = true;
+        spawnedShapeMaterial.opacity = 0.5;
+        var comMaterial = {'Gazebo/CoM':{'ambient':[0.5,0.5,0.5,1.000000],'texture':'com.png'}};
+
+        mesh = this.createSphere(radius);
+        this.setMaterial(mesh, comMaterial);
+        COMVisual.name = linkName + '_' + j.toString() + '_COM_VISUAL';
+        COMVisual.add(mesh);
+        this.setPose(COMVisual, inertialPose.position, inertialPose.orientation);
+
+        model.add(COMVisual);
+        if (!child)
+        {
+          continue;
+        }
       }
 
     }
