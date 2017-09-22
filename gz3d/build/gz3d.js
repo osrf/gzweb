@@ -2653,7 +2653,7 @@ GZ3D.GZIface.prototype.onConnected = function()
     var entityMsg =
     {
       name : entity.name,
-      id : entity.userData,
+      id : entity.userData.id,
       createEntity : 0,
       position :
       {
@@ -2712,11 +2712,11 @@ GZ3D.GZIface.prototype.onConnected = function()
     var modelMsg =
     {
       name : entity.parent.name,
-      id : entity.parent.userData,
+      id : entity.parent.userData.id,
       link:
       {
         name: entity.name,
-        id: entity.userData,
+        id: entity.userData.id,
         self_collide: entity.serverProperties.self_collide,
         gravity: entity.serverProperties.gravity,
         kinematic: entity.serverProperties.kinematic
@@ -2925,7 +2925,7 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
 {
   var modelObj = new THREE.Object3D();
   modelObj.name = model.name;
-  modelObj.userData = model.id;
+  modelObj.userData.id = model.id;
   if (model.pose)
   {
     this.scene.setPose(modelObj, model.pose.position, model.pose.orientation);
@@ -2935,13 +2935,28 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
     var link = model.link[j];
     var linkObj = new THREE.Object3D();
     linkObj.name = link.name;
-    linkObj.userData = link.id;
+    linkObj.userData.id = link.id;
     linkObj.serverProperties =
         {
           self_collide: link.self_collide,
           gravity: link.gravity,
           kinematic: link.kinematic
         };
+
+    if (link.inertial)
+    {
+      var inertialPose = link.inertial.pose;
+      var inertialMass = link.inertial.mass;
+      linkObj.userData.inertial = {};
+      if (inertialMass)
+      {
+        linkObj.userData.inertial.mass = inertialMass;
+      }
+      if (inertialPose)
+      {
+        linkObj.userData.inertial.pose = inertialPose;
+      }
+    }
 
     if (link.pose)
     {
@@ -7453,13 +7468,13 @@ GZ3D.Scene.prototype.viewJoints = function(model)
 };
 
 /**
- * View joints
- * Toggle: if there are joints, hide, otherwise, show.
+ * View Center Of Mass
+ * Toggle: if there are COM visuals, hide, otherwise, show.
  * @param {} model
  */
 GZ3D.Scene.prototype.viewCOM = function(model)
 {
-  if (model.joint === undefined || model.joint.length === 0)
+  if (model.link === undefined || model.link.length === 0)
   {
     return;
   }
@@ -7467,159 +7482,51 @@ GZ3D.Scene.prototype.viewCOM = function(model)
   var child;
 
   // Visuals already exist
-  if (model.jointVisuals)
+  if (model.COMVisuals)
   {
     // Hide = remove from parent
-    if (model.jointVisuals[0].parent !== undefined)
+    if (model.COMVisuals[0].parent !== undefined)
     {
-      for (var v = 0; v < model.jointVisuals.length; ++v)
+      for (var v = 0; v < model.COMVisuals.length; ++v)
       {
-        model.jointVisuals[v].parent.remove(model.jointVisuals[v]);
+        model.COMVisuals[v].parent.remove(model.COMVisuals[v]);
       }
     }
     // Show: attach to parent
     else
     {
-      for (var s = 0; s < model.joint.length; ++s)
+      for (var s = 0; s < model.link.length; ++s)
       {
-        child = model.getObjectByName(model.joint[s].child);
+        child = model.getObjectByName(model.link[s].child);
 
         if (!child)
         {
           continue;
         }
 
-        child.add(model.jointVisuals[s]);
+        child.add(model.COMVisuals[s]);
       }
     }
   }
   // Create visuals
   else
   {
-    model.jointVisuals = [];
-    for (var j = 0; j < model.joint.length; ++j)
+    model.COMVisuals = [];
+    for (var j = 0; j < model.link.length; ++j)
     {
-      child = model.getObjectByName(model.joint[j].child);
-
+      child = model.getObjectByName(model.link[j].child);
+      var linkNmae = model.link[j].name;
+      var inertial = model.link[j].inertial;
+      var inertialPose = model.link[j].inertial.pose;
+      var inertialMass = model.link[j].inertial.mass;
+      var radius = 20;
+      // radius = cbrt((0.75 * mass ) / (M_PI * 11340));
+      this.createSphere(radius);
       if (!child)
       {
         continue;
       }
 
-      // XYZ expressed w.r.t. child
-      var jointVisual = this.jointAxis['XYZaxes'].clone();
-      child.add(jointVisual);
-      model.jointVisuals.push(jointVisual);
-      jointVisual.scale.set(0.7, 0.7, 0.7);
-
-      this.setPose(jointVisual, model.joint[j].pose.position,
-          model.joint[j].pose.orientation);
-
-      var mainAxis = null;
-      if (model.joint[j].type !== this.jointTypes.BALL &&
-          model.joint[j].type !== this.jointTypes.FIXED)
-      {
-        mainAxis = this.jointAxis['mainAxis'].clone();
-        jointVisual.add(mainAxis);
-      }
-
-      var secondAxis = null;
-      if (model.joint[j].type === this.jointTypes.REVOLUTE2 ||
-          model.joint[j].type === this.jointTypes.UNIVERSAL)
-      {
-        secondAxis = this.jointAxis['mainAxis'].clone();
-        jointVisual.add(secondAxis);
-      }
-
-      if (model.joint[j].type === this.jointTypes.REVOLUTE ||
-          model.joint[j].type === this.jointTypes.GEARBOX)
-      {
-        mainAxis.add(this.jointAxis['rotAxis'].clone());
-      }
-      else if (model.joint[j].type === this.jointTypes.REVOLUTE2 ||
-               model.joint[j].type === this.jointTypes.UNIVERSAL)
-      {
-        mainAxis.add(this.jointAxis['rotAxis'].clone());
-        secondAxis.add(this.jointAxis['rotAxis'].clone());
-      }
-      else if (model.joint[j].type === this.jointTypes.BALL)
-      {
-        jointVisual.add(this.jointAxis['ballVisual'].clone());
-      }
-      else if (model.joint[j].type === this.jointTypes.PRISMATIC)
-      {
-        mainAxis.add(this.jointAxis['transAxis'].clone());
-      }
-      else if (model.joint[j].type === this.jointTypes.SCREW)
-      {
-        mainAxis.add(this.jointAxis['screwAxis'].clone());
-      }
-
-      var direction, tempMatrix, rotMatrix;
-      if (mainAxis)
-      {
-        // main axis expressed w.r.t. parent model or joint frame
-        if (!model.joint[j].axis1)
-        {
-          console.log('no joint axis ' +  model.joint[j].type + 'vs '
-            + this.jointTypes.FIXED);
-        }
-        if (model.joint[j].axis1.use_parent_model_frame === undefined)
-        {
-          model.joint[j].axis1.use_parent_model_frame = true;
-        }
-
-        direction = new THREE.Vector3(
-            model.joint[j].axis1.xyz.x,
-            model.joint[j].axis1.xyz.y,
-            model.joint[j].axis1.xyz.z);
-        direction.normalize();
-
-        tempMatrix = new THREE.Matrix4();
-        if (model.joint[j].axis1.use_parent_model_frame)
-        {
-          tempMatrix.extractRotation(jointVisual.matrix);
-          tempMatrix.getInverse(tempMatrix);
-          direction.applyMatrix4(tempMatrix);
-          tempMatrix.extractRotation(child.matrix);
-          tempMatrix.getInverse(tempMatrix);
-          direction.applyMatrix4(tempMatrix);
-        }
-
-        rotMatrix = new THREE.Matrix4();
-        rotMatrix.lookAt(direction, new THREE.Vector3(0, 0, 0), mainAxis.up);
-        mainAxis.quaternion.setFromRotationMatrix(rotMatrix);
-      }
-
-      if (secondAxis)
-      {
-        if (model.joint[j].axis2.use_parent_model_frame === undefined)
-        {
-          model.joint[j].axis2.use_parent_model_frame = true;
-        }
-
-        direction = new THREE.Vector3(
-            model.joint[j].axis2.xyz.x,
-            model.joint[j].axis2.xyz.y,
-            model.joint[j].axis2.xyz.z);
-        direction.normalize();
-
-        tempMatrix = new THREE.Matrix4();
-        if (model.joint[j].axis2.use_parent_model_frame)
-        {
-          tempMatrix.extractRotation(jointVisual.matrix);
-          tempMatrix.getInverse(tempMatrix);
-          direction.applyMatrix4(tempMatrix);
-          tempMatrix.extractRotation(child.matrix);
-          tempMatrix.getInverse(tempMatrix);
-          direction.applyMatrix4(tempMatrix);
-        }
-
-        secondAxis.position =  direction.multiplyScalar(0.3);
-        rotMatrix = new THREE.Matrix4();
-        rotMatrix.lookAt(direction, new THREE.Vector3(0, 0, 0), secondAxis.up);
-        secondAxis.quaternion.setFromRotationMatrix(rotMatrix);
-      }
     }
   }
 };
@@ -8417,6 +8324,18 @@ GZ3D.SdfParser.prototype.createLink = function(link)
   var linkPose, visualObj;
   var linkObj = new THREE.Object3D();
   linkObj.name = link['@name'];
+
+  if (link.inertial)
+  {
+    if (link.inertial.mass)
+    {
+      linkObj.userData.inertial.mass = link.inertial.mass;
+    }
+    if (link.inertial.pose)
+    {
+      linkObj.userData.inertial.pose = link.inertial.pose;
+    }
+  }
 
   if (link.pose)
   {

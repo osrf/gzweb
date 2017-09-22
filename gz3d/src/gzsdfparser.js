@@ -699,6 +699,18 @@ GZ3D.SdfParser.prototype.createLink = function(link)
   var linkObj = new THREE.Object3D();
   linkObj.name = link['@name'];
 
+  if (link.inertial)
+  {
+    if (link.inertial.mass)
+    {
+      linkObj.userData.inertial.mass = link.inertial.mass;
+    }
+    if (link.inertial.pose)
+    {
+      linkObj.userData.inertial.pose = link.inertial.pose;
+    }
+  }
+
   if (link.pose)
   {
     linkPose = this.parsePose(link.pose);
