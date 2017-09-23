@@ -5586,6 +5586,19 @@ GZ3D.Scene.prototype.init = function()
   ballVisual.add(mesh);
 
   this.jointAxis['ballVisual'] = ballVisual;
+
+  // COM
+  this.COMvisual = new THREE.Object3D();
+
+  geometry = new THREE.SphereGeometry(1, 32, 32);
+
+  mesh = new THREE.Mesh(geometry, material);
+  this.setMaterial(mesh, {'ambient':[0.5,0.5,0.5,1.000000],'texture':'assets/media/materials/textures/com.png'});
+  mesh.material.transparent = false;
+  mesh.position.x = 0.15;
+  mesh.rotation.z = -Math.PI/2;
+  mesh.name = 'COM_VISUAL';
+  this.COMvisual.add(mesh);
 };
 
 GZ3D.Scene.prototype.initScene = function()
@@ -7485,7 +7498,7 @@ GZ3D.Scene.prototype.viewCOM = function(model)
   if (model.COMVisuals)
   {
     // Hide = remove from parent
-    if (model.COMVisuals[0].parent !== undefined)
+    if (model.COMVisuals[0].parent !== undefined && model.COMVisuals[0].parent !== null)
     {
       for (var v = 0; v < model.COMVisuals.length; ++v)
       {
@@ -7495,11 +7508,11 @@ GZ3D.Scene.prototype.viewCOM = function(model)
     // Show: attach to parent
     else
     {
-      for (var s = 0; s < model.link.length; ++s)
+      for (var s = 0; s < model.children.length; ++s)
       {
-        child = model.getObjectByName(model.link[s].child);
+        child = model.getObjectByName(model.children[s].name);
 
-        if (!child)
+        if (!child || child.name === 'boundingBox')
         {
           continue;
         }
@@ -7511,10 +7524,15 @@ GZ3D.Scene.prototype.viewCOM = function(model)
   // Create visuals
   else
   {
-    model.userData.COMVisuals = true;
+    model.COMVisuals = [];
     for (var j = 0; j < model.children.length; ++j)
     {
       child = model.getObjectByName(model.children[j].name);
+
+      if (!child)
+      {
+        continue;
+      }
 
       if (child.userData.inertial)
       {
@@ -7532,32 +7550,17 @@ GZ3D.Scene.prototype.viewCOM = function(model)
         }
         else
         {
-          inertialPose = {position: {x:0,y:0,z:0}, orientation:{_w:1, _x:0, _y:0, _z:0}};
+          // does this ever happen.
+          continue;
         }
 
         inertialMass = child.userData.inertial.mass;
         radius = Math.cbrt((0.75 * inertialMass ) / (Math.PI * 11340));
 
-        var COMVisual = new THREE.Object3D();
-
-        // Set up the material.
-        var spawnedShapeMaterial = new THREE.MeshPhongMaterial(
-          {color:0xffffff, shading: THREE.SmoothShading} );
-        spawnedShapeMaterial.transparent = true;
-        spawnedShapeMaterial.opacity = 0.5;
-        var comMaterial = {'Gazebo/CoM':{'ambient':[0.5,0.5,0.5,1.000000],'texture':'com.png'}};
-
-        mesh = this.createSphere(radius);
-        this.setMaterial(mesh, comMaterial);
-        COMVisual.name = linkName + '_' + j.toString() + '_COM_VISUAL';
-        COMVisual.add(mesh);
-        this.setPose(COMVisual, inertialPose.position, inertialPose.orientation);
-
-        model.add(COMVisual);
-        if (!child)
-        {
-          continue;
-        }
+        var COMVisual = this.COMvisual.clone();
+        child.add(COMVisual);
+        model.COMVisuals.push(COMVisual);
+        COMVisual.scale.set(radius, radius, radius);
       }
 
     }
