@@ -5592,9 +5592,11 @@ GZ3D.Scene.prototype.init = function()
 
   geometry = new THREE.SphereGeometry(1, 32, 32);
 
-  mesh = new THREE.Mesh(geometry, material);
+  mesh = new THREE.Mesh(geometry);
   this.setMaterial(mesh, {'ambient':[0.5,0.5,0.5,1.000000],'texture':'assets/media/materials/textures/com.png'});
   mesh.material.transparent = false;
+  mesh.material.needsUpdate = false;
+  mesh.material.opacity = 1;
   mesh.position.x = 0.15;
   mesh.rotation.z = -Math.PI/2;
   mesh.name = 'COM_VISUAL';
@@ -7550,7 +7552,7 @@ GZ3D.Scene.prototype.viewCOM = function(model)
         }
         else
         {
-          // does this ever happen.
+          console.log('Link pose not found');
           continue;
         }
 
