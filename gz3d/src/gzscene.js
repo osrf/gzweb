@@ -2247,6 +2247,8 @@ GZ3D.Scene.prototype.viewCOM = function(model)
   else
   {
     model.COMVisuals = [];
+    var p1 ,p2 ,p3 ,p4 ,p5 ,p6 ,box , line1, line2, line3, helperGeometry1,
+    helperGeometry2, helperGeometry3, helperMaterial;
     for (var j = 0; j < model.children.length; ++j)
     {
       child = model.getObjectByName(model.children[j].name);
@@ -2261,14 +2263,14 @@ GZ3D.Scene.prototype.viewCOM = function(model)
         var mesh, radius, inertialMass, inertialPose = {};
         var inertial = child.userData.inertial;
 
-        if (child.position)
+        if (child.userData.inertial.pose)
+        {
+          inertialPose = child.userData.inertial.pose;
+        }
+        else if (child.position)
         {
           inertialPose.position = child.position;
           inertialPose.orientation = child.quaternion;
-        }
-        else if (child.userData.inertial.pose)
-        {
-          inertialPose = child.userData.inertial.pose;
         }
         else
         {
@@ -2280,10 +2282,46 @@ GZ3D.Scene.prototype.viewCOM = function(model)
         radius = Math.cbrt((0.75 * inertialMass ) / (Math.PI * 11340));
 
         var COMVisual = this.COMvisual.clone();
+        COMVisual.crossLines = [];
         child.add(COMVisual);
         model.COMVisuals.push(COMVisual);
         COMVisual.scale.set(radius, radius, radius);
-      }
+
+        // // show lines
+        // box = new THREE.Box3();
+        // // w.r.t. world
+        // box.setFromObject(child);
+        // p1 = new THREE.Vector3(inertialPose.position.x, inertialPose.position.y, box.min.z );
+        // p2 = new THREE.Vector3(inertialPose.position.x, inertialPose.position.y, box.max.z );
+        // p3 = new THREE.Vector3(inertialPose.position.x, box.min.y , inertialPose.position.z);
+        // p4 = new THREE.Vector3(inertialPose.position.x, box.max.y , inertialPose.position.z);
+        // p5 = new THREE.Vector3(box.min.x , inertialPose.position.y, inertialPose.position.z);
+        // p6 = new THREE.Vector3(box.max.x , inertialPose.position.y, inertialPose.position.z);
+
+        // helperGeometry1 = new THREE.Geometry();
+        // helperGeometry1.vertices.push(p1);
+        // helperGeometry1.vertices.push(p2);
+
+        // helperGeometry2 = new THREE.Geometry();
+        // helperGeometry2.vertices.push(p3);
+        // helperGeometry2.vertices.push(p4);
+
+        // helperGeometry3 = new THREE.Geometry();
+        // helperGeometry3.vertices.push(p5);
+        // helperGeometry3.vertices.push(p6);
+
+        // helperMaterial = new THREE.LineBasicMaterial({color: 0x00ff00});
+        // line1 = new THREE.Line(helperGeometry1, helperMaterial,
+        //     THREE.LineSegments);
+        // line2 = new THREE.Line(helperGeometry2, helperMaterial,
+        //   THREE.LineSegments);
+        // line3 = new THREE.Line(helperGeometry3, helperMaterial,
+        //   THREE.LineSegments);
+
+        // COMVisual.crossLines.push(line1);
+        // COMVisual.crossLines.push(line2);
+        // COMVisual.crossLines.push(line3);
+       }
 
     }
   }
