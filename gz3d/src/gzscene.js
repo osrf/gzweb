@@ -309,6 +309,34 @@ GZ3D.Scene.prototype.init = function()
   ballVisual.add(mesh);
 
   this.jointAxis['ballVisual'] = ballVisual;
+
+  // link frames visual
+  var linkaxes = new THREE.Object3D();
+  // this.jointAxis.name = 'JOINT_VISUAL';
+
+  geometry = new THREE.CylinderGeometry(0.01, 0.01, 0.3, 10, 1, false);
+
+  material = new THREE.MeshBasicMaterial({color: new THREE.Color(0xff0000)});
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.position.x = 0.15;
+  mesh.rotation.z = -Math.PI/2;
+  mesh.name = 'JOINT_VISUAL';
+  linkaxes.add(mesh);
+
+  material = new THREE.MeshBasicMaterial({color: new THREE.Color(0x00ff00)});
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.position.y = 0.15;
+  mesh.name = 'JOINT_VISUAL';
+  linkaxes.add(mesh);
+
+  material = new THREE.MeshBasicMaterial({color: new THREE.Color(0x0000ff)});
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.position.z = 0.15;
+  mesh.rotation.x = Math.PI/2;
+  mesh.name = 'JOINT_VISUAL';
+  linkaxes.add(mesh);
+
+  this.linkFramesAxis = linkaxes;
 };
 
 GZ3D.Scene.prototype.initScene = function()
@@ -2186,6 +2214,81 @@ GZ3D.Scene.prototype.viewJoints = function(model)
         rotMatrix.lookAt(direction, new THREE.Vector3(0, 0, 0), secondAxis.up);
         secondAxis.quaternion.setFromRotationMatrix(rotMatrix);
       }
+    }
+  }
+};
+
+/**
+ * View link frames
+ * Toggle: if there are links, hide, otherwise, show.
+ * @param {} model
+ */
+GZ3D.Scene.prototype.viewLinkframes = function(model)
+{
+  if (model.children === undefined || model.children.length === 0)
+  {
+    return;
+  }
+
+  var child;
+
+  // Visuals already exist
+  if (model.linkframesVisuals)
+  {
+    // Hide = remove from parent
+    if (model.linkframesVisuals[0].parent !== undefined && model.linkframesVisuals[0].parent !== null)
+    {
+      for (var v = 0; v < model.linkframesVisuals.length; ++v)
+      {
+        model.linkframesVisuals[v].parent.remove(model.linkframesVisuals[v]);
+      }
+    }
+    // Show: attach to parent
+    else
+    {
+      for (var s = 0; s < model.children.length; ++s)
+      {
+        child = model.getObjectByName(model.children[s].name);
+
+        if (!child)
+        {
+          continue;
+        }
+
+        child.add(model.linkframesVisuals[s]);
+      }
+    }
+  }
+  // Create visuals
+  else
+  {
+    model.linkframesVisuals = [];
+    for (var j = 0; j < model.children.length; ++j)
+    {
+      child = model.getObjectByName(model.children[j].name);
+
+      if (!child || child.name === 'boundingBox')
+      {
+        continue;
+      }
+      var box = new THREE.Box3();
+      // w.r.t. world
+      box.setFromObject(child);
+      // center vertices with object
+      box.min.x = box.min.x - child.position.x;
+      box.min.y = box.min.y - child.position.y;
+      box.min.z = box.min.z - child.position.z;
+      box.max.x = box.max.x - child.position.x;
+      box.max.y = box.max.y - child.position.y;
+      box.max.z = box.max.z - child.position.z;
+      console.log(box);
+      // calculate link size from the box
+      var linkSize = 0.5;
+      // link frames expressed w.r.t. child
+      var linkframesVisual = this.linkFramesAxis.clone();
+      child.add(linkframesVisual);
+      model.linkframesVisuals.push(linkframesVisual);
+      linkframesVisual.scale.set(linkSize * 0.7, linkSize * 0.7, linkSize * 0.7);
     }
   }
 };
