@@ -617,6 +617,14 @@ $(function()
     }
   });
 
+  $( '#view-inertia' ).click(function() {
+    if ($('#view-inertia a').css('color') === 'rgb(255, 255, 255)')
+    {
+      $('#model-popup').popup('close');
+      guiEvents.emit('view_inertia');
+    }
+  });
+
   $( '#delete-entity' ).click(function() {
     guiEvents.emit('delete_entity');
   });
@@ -1209,6 +1217,12 @@ GZ3D.Gui.prototype.init = function()
   guiEvents.on('view_joints', function ()
       {
         that.scene.viewJoints(that.scene.selectedEntity);
+      }
+  );
+
+  guiEvents.on('view_inertia', function ()
+      {
+        that.scene.viewInertia(that.scene.selectedEntity);
       }
   );
 
@@ -1927,6 +1941,7 @@ GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
     $('#view-transparent').css('visibility','collapse');
     $('#view-wireframe').css('visibility','collapse');
     $('#view-joints').css('visibility','collapse');
+    $('#view-inertia').css('visibility','collapse');
     $('#model-popup').popup('open',
       {x: event.clientX + emUnits(6),
        y: event.clientY + emUnits(-8)});
@@ -1951,6 +1966,23 @@ GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
       $('#view-wireframe').buttonMarkup({icon: 'false'});
     }
 
+    if (entity.children.length === 0)
+    {
+      $('#view-inertia a').css('color', '#888888');
+      $('#view-inertia').buttonMarkup({icon: 'false'});
+    }
+    else
+    {
+      $('#view-inertia a').css('color', '#ffffff');
+      if (entity.getObjectByName('INERTIA_VISUAL', true))
+      {
+        $('#view-inertia').buttonMarkup({icon: 'check'});
+      }
+      else
+      {
+        $('#view-inertia').buttonMarkup({icon: 'false'});
+      }
+    }
     if (entity.joint === undefined || entity.joint.length === 0)
     {
       $('#view-joints a').css('color', '#888888');
@@ -2638,7 +2670,7 @@ GZ3D.GZIface.prototype.onConnected = function()
     var entityMsg =
     {
       name : entity.name,
-      id : entity.userData,
+      id : entity.userData.id,
       createEntity : 0,
       position :
       {
@@ -2697,11 +2729,11 @@ GZ3D.GZIface.prototype.onConnected = function()
     var modelMsg =
     {
       name : entity.parent.name,
-      id : entity.parent.userData,
+      id : entity.parent.userData.id,
       link:
       {
         name: entity.name,
-        id: entity.userData,
+        id: entity.userData.id,
         self_collide: entity.serverProperties.self_collide,
         gravity: entity.serverProperties.gravity,
         kinematic: entity.serverProperties.kinematic
@@ -2910,7 +2942,7 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
 {
   var modelObj = new THREE.Object3D();
   modelObj.name = model.name;
-  modelObj.userData = model.id;
+  modelObj.userData.id = model.id;
   if (model.pose)
   {
     this.scene.setPose(modelObj, model.pose.position, model.pose.orientation);
@@ -2920,13 +2952,36 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
     var link = model.link[j];
     var linkObj = new THREE.Object3D();
     linkObj.name = link.name;
-    linkObj.userData = link.id;
+    linkObj.userData.id = link.id;
     linkObj.serverProperties =
         {
           self_collide: link.self_collide,
           gravity: link.gravity,
           kinematic: link.kinematic
         };
+
+    if (link.inertial)
+    {
+      var inertialPose, inertialMass, inertia = {};
+      linkObj.userData.inertial = {};
+      inertialPose = link.inertial.pose;
+      inertialMass = link.inertial.mass;
+      inertia.ixx = link.inertial.ixx;
+      inertia.ixy = link.inertial.ixy;
+      inertia.ixz = link.inertial.ixz;
+      inertia.iyy = link.inertial.iyy;
+      inertia.iyz = link.inertial.iyz;
+      inertia.izz = link.inertial.izz;
+      linkObj.userData.inertial.inertia = inertia;
+      if (inertialMass)
+      {
+        linkObj.userData.inertial.mass = inertialMass;
+      }
+      if (inertialPose)
+      {
+        linkObj.userData.inertial.pose = inertialPose;
+      }
+    }
 
     if (link.pose)
     {
@@ -7438,6 +7493,163 @@ GZ3D.Scene.prototype.viewJoints = function(model)
 };
 
 /**
+ * View inertia
+ * Toggle: if there are COM visuals, hide, otherwise, show.
+ * @param {} model
+ */
+GZ3D.Scene.prototype.viewInertia = function(model)
+{
+  if (model.children.length === 0)
+  {
+    return;
+  }
+
+  var child;
+
+  // Visuals already exist
+  if (model.inertiaVisuals)
+  {
+    // Hide = remove from parent
+    if (model.inertiaVisuals[0].parent !== undefined && model.inertiaVisuals[0].parent !== null)
+    {
+      for (var v = 0; v < model.inertiaVisuals.length; ++v)
+      {
+        model.inertiaVisuals[v].parent.remove(model.inertiaVisuals[v]);
+      }
+    }
+    // Show: attach to parent
+    else
+    {
+      for (var s = 0; s < model.children.length; ++s)
+      {
+        child = model.getObjectByName(model.children[s].name);
+
+        if (!child || child.name === 'boundingBox')
+        {
+          continue;
+        }
+
+        child.add(model.inertiaVisuals[s]);
+      }
+    }
+  }
+  // Create visuals
+  else
+  {
+    model.inertiaVisuals = [];
+    var p1 ,p2 ,p3 ,p4 ,p5 ,p6 ,box , line1, line2, line3, helperGeometry1,
+    helperGeometry2, helperGeometry3, helperMaterial, inertial, inertiabox;
+    for (var j = 0; j < model.children.length; ++j)
+    {
+      child = model.getObjectByName(model.children[j].name);
+
+      if (!child)
+      {
+        continue;
+      }
+
+      inertial = child.userData.inertial;
+      if (inertial)
+      {
+        var mesh, boxScale, Ixx, Iyy, Izz, mass, inertia, material, inertialPose = {};
+
+        if (inertial.pose)
+        {
+          inertialPose = child.userData.inertial.pose;
+        }
+        else if (child.position)
+        {
+          inertialPose.position = child.position;
+          inertialPose.orientation = child.quaternion;
+        }
+        else
+        {
+          console.log('Link pose not found');
+          continue;
+        }
+
+        mass = inertial.mass;
+        inertia = inertial.inertia;
+        Ixx = inertia.ixx;
+        Iyy = inertia.iyy;
+        Izz = inertia.izz;
+        boxScale = new THREE.Vector3();
+
+        if (mass < 0 || Ixx < 0 || Iyy < 0 || Izz < 0 ||
+          Ixx + Iyy < Izz || Iyy + Izz < Ixx || Izz + Ixx < Iyy)
+        {
+          // Unrealistic inertia, load with default scale
+          console.log('The link ' + child.name + ' has unrealistic inertia, '
+                +'unable to visualize box of equivalent inertia.');
+          // this->Load(math::Pose(xyz, q));
+        }
+        else
+        {
+          // Compute dimensions of box with uniform density and equivalent inertia.
+          boxScale.x = Math.sqrt(6*(Izz +  Iyy - Ixx) / mass);
+          boxScale.y = Math.sqrt(6*(Izz +  Ixx - Iyy) / mass);
+          boxScale.z = Math.sqrt(6*(Ixx  + Iyy - Izz) / mass);
+
+          inertiabox = new THREE.Object3D();
+          // material = new THREE.MeshBasicMaterial({color: new THREE.Color(0xff00ff), opacity: 0.5});
+
+          // Inertia indicator: equivalent box of uniform density
+          mesh = this.createBox(1, 1, 1);
+          material = {'ambient':[0.6,0.0,0.6,1],'diffuse':[0.6,0.0,0.6,1],'depth_write':false,'opacity':0.5};
+          this.setMaterial(mesh, material);
+          inertiabox.add(mesh);
+          inertiabox.name = 'INERTIA_VISUAL';
+          child.add(inertiabox);
+          model.inertiaVisuals.push(inertiabox);
+          inertiabox.scale.set(boxScale.x, boxScale.y, boxScale.z);
+
+          this.setPose(inertiabox, inertialPose.position, inertialPose.orientation);
+          // show lines
+          box = new THREE.Box3();
+          // w.r.t. world
+          box.setFromObject(child);
+          p1 = new THREE.Vector3(inertialPose.position.x, inertialPose.position.y, -2 * boxScale.z + inertialPose.position.z);
+          p2 = new THREE.Vector3(inertialPose.position.x, inertialPose.position.y, 2 * boxScale.z + inertialPose.position.z);
+          p3 = new THREE.Vector3(inertialPose.position.x, -2 * boxScale.y + inertialPose.position.y , inertialPose.position.z);
+          p4 = new THREE.Vector3(inertialPose.position.x, 2 * boxScale.y + inertialPose.position.y , inertialPose.position.z);
+          p5 = new THREE.Vector3(-2 * boxScale.x + inertialPose.position.x, inertialPose.position.y, inertialPose.position.z);
+          p6 = new THREE.Vector3(2 * boxScale.x + inertialPose.position.x , inertialPose.position.y, inertialPose.position.z);
+
+          helperGeometry1 = new THREE.Geometry();
+          helperGeometry1.vertices.push(p1);
+          helperGeometry1.vertices.push(p2);
+
+          helperGeometry2 = new THREE.Geometry();
+          helperGeometry2.vertices.push(p3);
+          helperGeometry2.vertices.push(p4);
+
+          helperGeometry3 = new THREE.Geometry();
+          helperGeometry3.vertices.push(p5);
+          helperGeometry3.vertices.push(p6);
+
+          helperMaterial = new THREE.LineBasicMaterial({color: 0x00ff00});
+          line1 = new THREE.Line(helperGeometry1, helperMaterial,
+              THREE.LineSegments);
+          line2 = new THREE.Line(helperGeometry2, helperMaterial,
+            THREE.LineSegments);
+          line3 = new THREE.Line(helperGeometry3, helperMaterial,
+            THREE.LineSegments);
+
+          var crossLines = [];
+          crossLines.push(line1);
+          crossLines.push(line2);
+          crossLines.push(line3);
+          child.crossLines = crossLines;
+          child.add(line1);
+          child.add(line2);
+          child.add(line3);
+        }
+       }
+    }
+  }
+};
+
+/**
  * Update a light entity from a message
  * @param {} entity
  * @param {} msg
@@ -8230,6 +8442,29 @@ GZ3D.SdfParser.prototype.createLink = function(link)
   var linkPose, visualObj;
   var linkObj = new THREE.Object3D();
   linkObj.name = link['@name'];
+
+  if (link.inertial)
+  {
+    var inertialPose, inertialMass, inertia = {};
+    link.userData.inertial = {};
+    inertialPose = link.inertial.pose;
+    inertialMass = link.inertial.mass;
+    inertia.ixx = link.inertial.ixx;
+    inertia.ixy = link.inertial.ixy;
+    inertia.ixz = link.inertial.ixz;
+    inertia.iyy = link.inertial.iyy;
+    inertia.iyz = link.inertial.iyz;
+    inertia.izz = link.inertial.izz;
+    link.userData.inertial.inertia = inertia;
+    if (link.inertial.mass)
+    {
+      linkObj.userData.inertial.mass = link.inertial.mass;
+    }
+    if (link.inertial.pose)
+    {
+      linkObj.userData.inertial.pose = link.inertial.pose;
+    }
+  }
 
   if (link.pose)
   {

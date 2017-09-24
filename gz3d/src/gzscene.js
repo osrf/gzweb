@@ -2191,6 +2191,163 @@ GZ3D.Scene.prototype.viewJoints = function(model)
 };
 
 /**
+ * View inertia
+ * Toggle: if there are COM visuals, hide, otherwise, show.
+ * @param {} model
+ */
+GZ3D.Scene.prototype.viewInertia = function(model)
+{
+  if (model.children.length === 0)
+  {
+    return;
+  }
+
+  var child;
+
+  // Visuals already exist
+  if (model.inertiaVisuals)
+  {
+    // Hide = remove from parent
+    if (model.inertiaVisuals[0].parent !== undefined && model.inertiaVisuals[0].parent !== null)
+    {
+      for (var v = 0; v < model.inertiaVisuals.length; ++v)
+      {
+        model.inertiaVisuals[v].parent.remove(model.inertiaVisuals[v]);
+      }
+    }
+    // Show: attach to parent
+    else
+    {
+      for (var s = 0; s < model.children.length; ++s)
+      {
+        child = model.getObjectByName(model.children[s].name);
+
+        if (!child || child.name === 'boundingBox')
+        {
+          continue;
+        }
+
+        child.add(model.inertiaVisuals[s]);
+      }
+    }
+  }
+  // Create visuals
+  else
+  {
+    model.inertiaVisuals = [];
+    var p1 ,p2 ,p3 ,p4 ,p5 ,p6 ,box , line1, line2, line3, helperGeometry1,
+    helperGeometry2, helperGeometry3, helperMaterial, inertial, inertiabox;
+    for (var j = 0; j < model.children.length; ++j)
+    {
+      child = model.getObjectByName(model.children[j].name);
+
+      if (!child)
+      {
+        continue;
+      }
+
+      inertial = child.userData.inertial;
+      if (inertial)
+      {
+        var mesh, boxScale, Ixx, Iyy, Izz, mass, inertia, material, inertialPose = {};
+
+        if (inertial.pose)
+        {
+          inertialPose = child.userData.inertial.pose;
+        }
+        else if (child.position)
+        {
+          inertialPose.position = child.position;
+          inertialPose.orientation = child.quaternion;
+        }
+        else
+        {
+          console.log('Link pose not found');
+          continue;
+        }
+
+        mass = inertial.mass;
+        inertia = inertial.inertia;
+        Ixx = inertia.ixx;
+        Iyy = inertia.iyy;
+        Izz = inertia.izz;
+        boxScale = new THREE.Vector3();
+
+        if (mass < 0 || Ixx < 0 || Iyy < 0 || Izz < 0 ||
+          Ixx + Iyy < Izz || Iyy + Izz < Ixx || Izz + Ixx < Iyy)
+        {
+          // Unrealistic inertia, load with default scale
+          console.log('The link ' + child.name + ' has unrealistic inertia, '
+                +'unable to visualize box of equivalent inertia.');
+          // this->Load(math::Pose(xyz, q));
+        }
+        else
+        {
+          // Compute dimensions of box with uniform density and equivalent inertia.
+          boxScale.x = Math.sqrt(6*(Izz +  Iyy - Ixx) / mass);
+          boxScale.y = Math.sqrt(6*(Izz +  Ixx - Iyy) / mass);
+          boxScale.z = Math.sqrt(6*(Ixx  + Iyy - Izz) / mass);
+
+          inertiabox = new THREE.Object3D();
+          // material = new THREE.MeshBasicMaterial({color: new THREE.Color(0xff00ff), opacity: 0.5});
+
+          // Inertia indicator: equivalent box of uniform density
+          mesh = this.createBox(1, 1, 1);
+          material = {'ambient':[0.6,0.0,0.6,1],'diffuse':[0.6,0.0,0.6,1],'depth_write':false,'opacity':0.5};
+          this.setMaterial(mesh, material);
+          inertiabox.add(mesh);
+          inertiabox.name = 'INERTIA_VISUAL';
+          child.add(inertiabox);
+          model.inertiaVisuals.push(inertiabox);
+          inertiabox.scale.set(boxScale.x, boxScale.y, boxScale.z);
+
+          this.setPose(inertiabox, inertialPose.position, inertialPose.orientation);
+          // show lines
+          box = new THREE.Box3();
+          // w.r.t. world
+          box.setFromObject(child);
+          p1 = new THREE.Vector3(inertialPose.position.x, inertialPose.position.y, -2 * boxScale.z + inertialPose.position.z);
+          p2 = new THREE.Vector3(inertialPose.position.x, inertialPose.position.y, 2 * boxScale.z + inertialPose.position.z);
+          p3 = new THREE.Vector3(inertialPose.position.x, -2 * boxScale.y + inertialPose.position.y , inertialPose.position.z);
+          p4 = new THREE.Vector3(inertialPose.position.x, 2 * boxScale.y + inertialPose.position.y , inertialPose.position.z);
+          p5 = new THREE.Vector3(-2 * boxScale.x + inertialPose.position.x, inertialPose.position.y, inertialPose.position.z);
+          p6 = new THREE.Vector3(2 * boxScale.x + inertialPose.position.x , inertialPose.position.y, inertialPose.position.z);
+
+          helperGeometry1 = new THREE.Geometry();
+          helperGeometry1.vertices.push(p1);
+          helperGeometry1.vertices.push(p2);
+
+          helperGeometry2 = new THREE.Geometry();
+          helperGeometry2.vertices.push(p3);
+          helperGeometry2.vertices.push(p4);
+
+          helperGeometry3 = new THREE.Geometry();
+          helperGeometry3.vertices.push(p5);
+          helperGeometry3.vertices.push(p6);
+
+          helperMaterial = new THREE.LineBasicMaterial({color: 0x00ff00});
+          line1 = new THREE.Line(helperGeometry1, helperMaterial,
+              THREE.LineSegments);
+          line2 = new THREE.Line(helperGeometry2, helperMaterial,
+            THREE.LineSegments);
+          line3 = new THREE.Line(helperGeometry3, helperMaterial,
+            THREE.LineSegments);
+
+          var crossLines = [];
+          crossLines.push(line1);
+          crossLines.push(line2);
+          crossLines.push(line3);
+          child.crossLines = crossLines;
+          child.add(line1);
+          child.add(line2);
+          child.add(line3);
+        }
+       }
+    }
+  }
+};
+
+/**
  * Update a light entity from a message
  * @param {} entity
  * @param {} msg
