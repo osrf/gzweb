@@ -286,6 +286,7 @@ $(function()
   $('#view-transparent').buttonMarkup({icon: 'false'});
   $('#view-wireframe').buttonMarkup({icon: 'false'});
   $('#view-joints').buttonMarkup({icon: 'false'});
+  $('#view-com').buttonMarkup({icon: 'false'});
   guiEvents.emit('toggle_notifications');
   guiEvents.emit('show_orbit_indicator');
 
@@ -1966,6 +1967,24 @@ GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
       $('#view-wireframe').buttonMarkup({icon: 'false'});
     }
 
+    if (entity.children.length === 0)
+    {
+      $('#view-com a').css('color', '#888888');
+      $('#view-com').buttonMarkup({icon: 'false'});
+    }
+    else
+    {
+      $('#view-com a').css('color', '#ffffff');
+      if (entity.getObjectByName('COM_VISUAL', true))
+      {
+        $('#view-com').buttonMarkup({icon: 'check'});
+      }
+      else
+      {
+        $('#view-com').buttonMarkup({icon: 'false'});
+      }
+    }
+
     if (entity.joint === undefined || entity.joint.length === 0)
     {
       $('#view-joints a').css('color', '#888888');
@@ -1987,6 +2006,7 @@ GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
     $('#view-transparent').css('visibility','visible');
     $('#view-wireframe').css('visibility','visible');
     $('#view-joints').css('visibility','visible');
+    $('#view-com').css('visibility','visible');
     $('#model-popup').popup('open',
       {x: event.clientX + emUnits(6),
        y: event.clientY + emUnits(0)});
