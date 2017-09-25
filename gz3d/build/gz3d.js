@@ -5607,7 +5607,7 @@ GZ3D.Scene.prototype.init = function()
 
   this.jointAxis['ballVisual'] = ballVisual;
 
-  // COM
+  // center of mass visual
   this.COMvisual = new THREE.Object3D();
 
   geometry = new THREE.SphereGeometry(1, 32, 32);
