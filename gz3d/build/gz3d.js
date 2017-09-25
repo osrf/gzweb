@@ -7521,6 +7521,10 @@ GZ3D.Scene.prototype.viewCOM = function(model)
     {
       for (var v = 0; v < model.COMVisuals.length; ++v)
       {
+        for (var k = 0; k < 3; k++)
+        {
+          model.COMVisuals[v].parent.remove(model.COMVisuals[v].crossLines[k]);
+        }
         model.COMVisuals[v].parent.remove(model.COMVisuals[v]);
       }
     }
@@ -7537,6 +7541,9 @@ GZ3D.Scene.prototype.viewCOM = function(model)
         }
 
         child.add(model.COMVisuals[s]);
+        child.add(model.COMVisuals[s].crossLines[0]);
+        child.add(model.COMVisuals[s].crossLines[1]);
+        child.add(model.COMVisuals[s].crossLines[2]);
       }
     }
   }
@@ -7544,8 +7551,8 @@ GZ3D.Scene.prototype.viewCOM = function(model)
   else
   {
     model.COMVisuals = [];
-    var p1 ,p2 ,p3 ,p4 ,p5 ,p6 ,box , line1, line2, line3, helperGeometry1,
-    helperGeometry2, helperGeometry3, helperMaterial;
+    var box, line_1, line_2, line_3, helperGeometry_1,
+    helperGeometry_2, helperGeometry_3, helperMaterial, points = new Array(6);
     for (var j = 0; j < model.children.length; ++j)
     {
       child = model.getObjectByName(model.children[j].name);
@@ -7568,6 +7575,8 @@ GZ3D.Scene.prototype.viewCOM = function(model)
         }
 
         inertialMass = child.userData.inertial.mass;
+
+        // calculate the radius using lead density
         radius = Math.cbrt((0.75 * inertialMass ) / (Math.PI * 11340));
 
         var COMVisual = this.COMvisual.clone();
@@ -7576,7 +7585,6 @@ GZ3D.Scene.prototype.viewCOM = function(model)
         COMVisual.scale.set(radius, radius, radius);
 
         COMVisual.crossLines = [];
-        // show lines
         box = new THREE.Box3();
         // w.r.t. world
         box.setFromObject(child);
@@ -7587,39 +7595,42 @@ GZ3D.Scene.prototype.viewCOM = function(model)
         box.max.x = box.max.x - model.position.x;
         box.max.y = box.max.y - model.position.y;
         box.max.z = box.max.z - model.position.z;
-        p1 = new THREE.Vector3(inertialPose.position.x, inertialPose.position.y, box.min.z);
-        p2 = new THREE.Vector3(inertialPose.position.x, inertialPose.position.y, box.max.z);
-        p3 = new THREE.Vector3(inertialPose.position.x, box.min.y, inertialPose.position.z);
-        p4 = new THREE.Vector3(inertialPose.position.x, box.max.y , inertialPose.position.z);
-        p5 = new THREE.Vector3(box.min.x, inertialPose.position.y, inertialPose.position.z);
-        p6 = new THREE.Vector3(box.max.x, inertialPose.position.y, inertialPose.position.z);
 
-        helperGeometry1 = new THREE.Geometry();
-        helperGeometry1.vertices.push(p1);
-        helperGeometry1.vertices.push(p2);
+        points[0] = new THREE.Vector3(inertialPose.position.x, inertialPose.position.y, box.min.z);
+        points[1] = new THREE.Vector3(inertialPose.position.x, inertialPose.position.y, box.max.z);
+        points[2] = new THREE.Vector3(inertialPose.position.x, box.min.y, inertialPose.position.z);
+        points[3] = new THREE.Vector3(inertialPose.position.x, box.max.y, inertialPose.position.z);
+        points[4] = new THREE.Vector3(box.min.x, inertialPose.position.y, inertialPose.position.z);
+        points[5] = new THREE.Vector3(box.max.x, inertialPose.position.y, inertialPose.position.z);
 
-        helperGeometry2 = new THREE.Geometry();
-        helperGeometry2.vertices.push(p3);
-        helperGeometry2.vertices.push(p4);
+        helperGeometry_1 = new THREE.Geometry();
+        helperGeometry_1.vertices.push(points[0]);
+        helperGeometry_1.vertices.push(points[1]);
 
-        helperGeometry3 = new THREE.Geometry();
-        helperGeometry3.vertices.push(p5);
-        helperGeometry3.vertices.push(p6);
+        helperGeometry_2 = new THREE.Geometry();
+        helperGeometry_2.vertices.push(points[2]);
+        helperGeometry_2.vertices.push(points[3]);
+
+        helperGeometry_3 = new THREE.Geometry();
+        helperGeometry_3.vertices.push(points[4]);
+        helperGeometry_3.vertices.push(points[5]);
 
         helperMaterial = new THREE.LineBasicMaterial({color: 0x00ff00});
-        line1 = new THREE.Line(helperGeometry1, helperMaterial,
+        line_1 = new THREE.Line(helperGeometry_1, helperMaterial,
             THREE.LineSegments);
-        line2 = new THREE.Line(helperGeometry2, helperMaterial,
-          THREE.LineSegments);
-        line3 = new THREE.Line(helperGeometry3, helperMaterial,
-          THREE.LineSegments);
+        line_2 = new THREE.Line(helperGeometry_2, helperMaterial,
+            THREE.LineSegments);
+        line_3 = new THREE.Line(helperGeometry_3, helperMaterial,
+            THREE.LineSegments);
 
-        COMVisual.crossLines.push(line1);
-        COMVisual.crossLines.push(line2);
-        COMVisual.crossLines.push(line3);
-        COMVisual.add(line1);
-        COMVisual.add(line2);
-        COMVisual.add(line3);
+        COMVisual.crossLines.push(line_1);
+        COMVisual.crossLines.push(line_2);
+        COMVisual.crossLines.push(line_3);
+
+        // show lines
+        child.add(line_1);
+        child.add(line_2);
+        child.add(line_3);
        }
     }
   }
