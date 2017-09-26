@@ -88,7 +88,8 @@ function sendToInterface (gazebo, send, filter) {
   },{'latch': true});
   gazebo.subscribe('gazebo.msgs.PosesStamped', "~/pose/info", function(e,d) {
     const filtered =  filter.addPosesStamped(d)
-    if (filtered.length!==0){
+    if (filtered.length !== 0){
+      console.log('Received Pose message');
       for (var j = 0; j < filtered.length; j++) {
         strMsg = JSON.stringify(filtered[j]);
         out = "{\"op\":\"publish\",\"topic\":\"" + "~/pose/info" +

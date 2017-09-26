@@ -20,9 +20,9 @@ var sendPubMsgs = require("./sendPubMsgs.js")
 // TODO: should gzserver spawn object when moving to production?
 isGzConnected = true;
 
-const filter = new gazebojs.PosesFilter({timeElapsed : 0.02,
-    distance: 0.0002,
-    quaternion: 0.0002})
+const filter = new gazebojs.PosesFilter({timeElapsed : 0.1,
+    distance: 0.2,
+    quaternion: 0.2})
 
 
 // if (isGzConnected)
