@@ -1,0 +1,19 @@
+image: gazebo:libgazebo8
+
+pipelines:
+  default:
+    - step:
+        script:
+          - apt update
+          - # Node 6
+          - apt install -y curl
+          - curl -sL https://deb.nodesource.com/setup_6.x | bash -
+          - # Dependencies
+          - apt install -y libjansson-dev nodejs libboost-dev imagemagick libtinyxml-dev mercurial cmake build-essential wget
+          - # Chrome
+          - wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+          - dpkg -i google-chrome-stable_current_amd64.deb; apt-get -fy install
+          - # Install
+          - npm run deploy
+          - # Test
+          - npm test

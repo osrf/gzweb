@@ -54,6 +54,7 @@ input[type=number]::-webkit-inner-spin-button
 {
   margin: 0;
   margin-right: 0.25em;
+  font-size:0.95em;
   text-align: right;
 }
 /* tabs */
