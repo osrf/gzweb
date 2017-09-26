@@ -2250,7 +2250,7 @@ GZ3D.Scene.prototype.viewLinkframes = function(model)
       {
         child = model.getObjectByName(model.children[s].name);
 
-        if (!child)
+        if (!child || child.name === 'boundingBox')
         {
           continue;
         }
@@ -2262,7 +2262,7 @@ GZ3D.Scene.prototype.viewLinkframes = function(model)
   // Create visuals
   else
   {
-    var boxlength, box, linkframesVisual;
+    var boxlength, box, linkframesVisual, linkSize;
     model.linkframesVisuals = [];
     for (var j = 0; j < model.children.length; ++j)
     {
@@ -2273,13 +2273,12 @@ GZ3D.Scene.prototype.viewLinkframes = function(model)
         continue;
       }
       box = new THREE.Box3();
-      // w.r.t. world
       box.setFromObject(child.parent);
-      // calculate link size from the box
 
-      boxlength = box.min.x - box.max.x;
-      linksize = Math.max(boxlength, 0.1);
-      linksize = Math.min(linksize, 1);
+      // calculate link size from the box length
+      boxlength = box.max.x - box.min.x;
+      linkSize = Math.max(boxlength, 0.1);
+      linkSize = Math.min(linkSize, 1);
       // link frames expressed w.r.t. child
       linkframesVisual = this.linkFramesAxis.clone();
       child.add(linkframesVisual);
