@@ -105,21 +105,22 @@ wsServer.on('request', function(request) {
 
     console.log((new Date()) + ' Connection accepted.');
     connection.on('message', function(message) {
-        if (message.type === 'utf8') {
+        if (message.type === 'utf8')
+        {
             console.log('Received Message: ' + message.utf8Data + ' from ' +
                 request.origin + ' ' + connection.remoteAddress);
 
             const msg = JSON.parse(message.utf8Data)
-            //Splitting the publishing part.
+            // splitting the publishing part
             sendPubMsgs.pubToServer(gazebo, msg, send);
-            
-            }
-          else if (message.type === 'binary') {
-            console.log('Received Binary Message of ' +
-              message.binaryData.length + ' bytes');
-            connection.sendBytes(message.binaryData);
-          }
-        });
+        }
+        else if (message.type === 'binary')
+        {
+          console.log('Received Binary Message of ' +
+            message.binaryData.length + ' bytes');
+          connection.sendBytes(message.binaryData);
+        }
+      });
 
     connection.on('close', function(reasonCode, description) {
       console.log((new Date()) + ' Peer ' + connection.remoteAddress +
@@ -130,7 +131,8 @@ wsServer.on('request', function(request) {
           connections.splice(conIndex, 1);
 
           // if there is no connection notify server that there is no connected client
-          if (connections.length == 0) {
+          if (connections.length == 0)
+          {
             isConnected = false;
           }
     });
