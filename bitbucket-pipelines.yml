@@ -11,9 +11,9 @@ pipelines:
           - # Dependencies
           - apt install -y libjansson-dev nodejs libboost-dev imagemagick libtinyxml-dev mercurial cmake build-essential wget
           - # Chrome
-          - wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-          - dpkg -i google-chrome-stable_current_amd64.deb; apt-get -fy install
+          - # wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+          - # dpkg -i google-chrome-stable_current_amd64.deb; apt-get -fy install
           - # Install
           - npm run deploy
           - # Test
-          - npm test
+          - # npm test
