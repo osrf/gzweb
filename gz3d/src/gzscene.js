@@ -2262,6 +2262,7 @@ GZ3D.Scene.prototype.viewLinkframes = function(model)
   // Create visuals
   else
   {
+    var boxlength, box, linkframesVisual;
     model.linkframesVisuals = [];
     for (var j = 0; j < model.children.length; ++j)
     {
@@ -2271,21 +2272,16 @@ GZ3D.Scene.prototype.viewLinkframes = function(model)
       {
         continue;
       }
-      var box = new THREE.Box3();
+      box = new THREE.Box3();
       // w.r.t. world
-      box.setFromObject(child);
-      // center vertices with object
-      box.min.x = box.min.x - child.position.x;
-      box.min.y = box.min.y - child.position.y;
-      box.min.z = box.min.z - child.position.z;
-      box.max.x = box.max.x - child.position.x;
-      box.max.y = box.max.y - child.position.y;
-      box.max.z = box.max.z - child.position.z;
-      console.log(box);
+      box.setFromObject(child.parent);
       // calculate link size from the box
-      var linkSize = 0.5;
+
+      boxlength = box.min.x - box.max.x;
+      linksize = Math.max(boxlength, 0.1);
+      linksize = Math.min(linksize, 1);
       // link frames expressed w.r.t. child
-      var linkframesVisual = this.linkFramesAxis.clone();
+      linkframesVisual = this.linkFramesAxis.clone();
       child.add(linkframesVisual);
       model.linkframesVisuals.push(linkframesVisual);
       linkframesVisual.scale.set(linkSize * 0.7, linkSize * 0.7, linkSize * 0.7);
