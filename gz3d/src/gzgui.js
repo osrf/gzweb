@@ -8,7 +8,8 @@ var emUnits = function(value)
       return value*parseFloat($('body').css('font-size'));
     };
 
-var isTouchDevice = 'ontouchstart' in window || 'onmsgesturechange' in window;
+// Assuming all mobile devices are touch devices.
+var isTouchDevice = /Mobi/.test(navigator.userAgent);
 
 var isWideScreen = function()
     {
