@@ -62,6 +62,9 @@ GetOpts $*
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $DIR
 
+# Install node modules
+npm install
+
 #
 # build the c++ server component
 #
@@ -82,6 +85,9 @@ fi
 # continue building if cmake is happy
 make -j 8
 
+cd ../gzbridge
+$DIR/node_modules/.bin/node-gyp configure
+$DIR/node_modules/.bin/node-gyp build -d
 
 RETVAL=$?
 if [ $RETVAL -ne 0 ]; then
@@ -123,6 +129,7 @@ then
 
   echo "Gather all models on the local machine"
 
+  mkdir -p $DIR/http/client/assets
   ./get_local_models.py $DIR/http/client/assets
   ./webify_models_v2.py $DIR/http/client/assets
 
@@ -142,7 +149,5 @@ then
   ./coarse_meshes.sh 50 http/client/assets/
 fi
 
-# Install node modules
-npm install
-
 echo "Done"
+
