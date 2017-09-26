@@ -2,15 +2,6 @@
 
 ulimit -c unlimited
 
-PORT=8080
-while getopts "p:" opt; do
-  case "$opt" in
-  p)
-    PORT=$OPTARG
-    ;;
-  esac
-done
-
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $DIR
 
@@ -23,7 +14,6 @@ then
 fi
 
 
-./node_modules/.bin/http-server -p $PORT http/client &
+./node_modules/.bin/http-server http/client &
 
-cd gzbridge
-./ws_server.js &
+./gzbridge/gzbridge.js &
