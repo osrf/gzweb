@@ -7555,15 +7555,17 @@ GZ3D.Scene.prototype.viewLinkframes = function(model)
       {
         continue;
       }
+
       box = new THREE.Box3();
       box.setFromObject(child.parent);
-
       // calculate link size from the box length
       boxlength = box.max.x - box.min.x;
       linkSize = Math.max(boxlength, 0.1);
       linkSize = Math.min(linkSize, 1);
+
       // link frames expressed w.r.t. child
       linkframesVisual = this.linkFramesAxis.clone();
+      linkframesVisual.name = 'LINKFRAMES_VISUAL';
       child.add(linkframesVisual);
       model.linkframesVisuals.push(linkframesVisual);
       linkframesVisual.scale.set(linkSize * 0.7, linkSize * 0.7, linkSize * 0.7);
