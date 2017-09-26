@@ -6,13 +6,26 @@
     "type": "mercurial",
     "url": "https://bitbucket.org/osrf/gzweb"
   },
+  "config" : { "port" : "8080", "deploy_op": "" },
   "scripts": {
-    "test": "./node_modules/karma/bin/karma start --singleRun"
+    "test": "./node_modules/karma/bin/karma start --singleRun",
+    "update": "cd gz3d/utils && grunt build && cd ../../build && cmake ..",
+    "start": "if [ $npm_config_port ]; then port=$npm_config_port; else port=8080; fi; ./node_modules/.bin/http-server -p $port http/client & cd gzbridge && ./ws_server.js",
+    "deploy": "if [ $npm_config_deploy_op ]; then ./deploy.sh -$npm_config_deploy_op; else ./deploy.sh; fi;",
+    "docs": "cd gz3d/utils && grunt doc"
   },
   "dependencies": {
-    "websocket": "",
+    "bytebuffer": "^5.0.1",
+    "gazebojs": "^7.0.1",
+    "heapdump": "^0.3.7",
     "http-server": "",
-    "node-gyp": ""
+    "node-gyp": "",
+    "path": "^0.12.7",
+    "protobufjs": "5.0.1",
+    "random-js": "^1.0.8",
+    "stream-to-buffer": "^0.1.0",
+    "websocket": "",
+    "yargs": "^4.7.1"
   },
   "devDependencies": {
     "istanbul": "^0.4.5",
