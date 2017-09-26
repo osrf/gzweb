@@ -7546,7 +7546,6 @@ GZ3D.Scene.prototype.viewCOM = function(model)
           continue;
         }
 
-        child.add(model.COMVisuals[s]);
         child.add(model.COMVisuals[s].crossLines[0]);
         child.add(model.COMVisuals[s].crossLines[1]);
         child.add(model.COMVisuals[s].crossLines[2]);
@@ -7557,7 +7556,7 @@ GZ3D.Scene.prototype.viewCOM = function(model)
   else
   {
     model.COMVisuals = [];
-    var box, line_1, line_2, line_3, helperGeometry_1,
+    var box, COMVisual, line_1, line_2, line_3, helperGeometry_1,
     helperGeometry_2, helperGeometry_3, helperMaterial, points = new Array(6);
     for (var j = 0; j < model.children.length; ++j)
     {
@@ -7585,7 +7584,7 @@ GZ3D.Scene.prototype.viewCOM = function(model)
         // calculate the radius using lead density
         radius = Math.cbrt((0.75 * inertialMass ) / (Math.PI * 11340));
 
-        var COMVisual = this.COMvisual.clone();
+        COMVisual = this.COMvisual.clone();
         child.add(COMVisual);
         model.COMVisuals.push(COMVisual);
         COMVisual.scale.set(radius, radius, radius);
