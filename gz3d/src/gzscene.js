@@ -29,7 +29,6 @@ GZ3D.Scene.prototype.init = function()
   this.textureLoader = new THREE.TextureLoader();
   this.colladaLoader = new THREE.ColladaLoader();
   this.objLoader = new THREE.OBJLoader();
-  this.mtlLoader = new THREE.MTLLoader();
 
   this.renderer = new THREE.WebGLRenderer({antialias: true });
   this.renderer.setPixelRatio(window.devicePixelRatio);
@@ -1653,10 +1652,10 @@ GZ3D.Scene.prototype.loadOBJ = function(uri, submesh, centerSubmesh,
 {
   var obj = null;
   var baseUrl = uri.substr(0, uri.lastIndexOf('/') + 1);
-
+  var mtlLoader = new THREE.MTLLoader();
   this.objLoader.load(uri, function(container)
   {
-    this.scene.mtlLoader.setPath(baseUrl);
+    mtlLoader.setPath(baseUrl);
 
     // callback to signal mesh loading is complete
     var loadComplete = function()
@@ -1705,7 +1704,7 @@ GZ3D.Scene.prototype.loadOBJ = function(uri, submesh, centerSubmesh,
     for (var i=0; i < container.materialLibraries.length; ++i)
     {
       var mtlPath = container.materialLibraries[i];
-      this.scene.mtlLoader.load(mtlPath, applyMaterial);
+      mtlLoader.load(mtlPath, applyMaterial);
     }
   });
 };
