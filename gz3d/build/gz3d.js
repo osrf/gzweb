@@ -1619,81 +1619,87 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
       var newModel = modelStats[modelStats.length-1];
 
       // links
-      for (var l = 0; l < stats.link.length; ++l)
+      if (stats.link)
       {
-        var shortName = stats.link[l].name.substring(
-            stats.link[l].name.lastIndexOf('::')+2);
+        for (var l = 0; l < stats.link.length; ++l)
+        {
+          var shortName = stats.link[l].name.substring(
+              stats.link[l].name.lastIndexOf('::')+2);
 
-        formatted = this.formatStats(stats.link[l]);
+          formatted = this.formatStats(stats.link[l]);
 
-        newModel.links.push(
-            {
-              name: stats.link[l].name,
-              shortName: shortName,
-              self_collide: this.trueOrFalse(stats.link[l].self_collide),
-              gravity: this.trueOrFalse(stats.link[l].gravity),
-              kinematic: this.trueOrFalse(stats.link[l].kinematic),
-              canonical: this.trueOrFalse(stats.link[l].canonical),
-              position: formatted.pose.position,
-              orientation: formatted.pose.orientation,
-              inertial: formatted.inertial
-            });
+          newModel.links.push(
+              {
+                name: stats.link[l].name,
+                shortName: shortName,
+                self_collide: this.trueOrFalse(stats.link[l].self_collide),
+                gravity: this.trueOrFalse(stats.link[l].gravity),
+                kinematic: this.trueOrFalse(stats.link[l].kinematic),
+                canonical: this.trueOrFalse(stats.link[l].canonical),
+                position: formatted.pose.position,
+                orientation: formatted.pose.orientation,
+                inertial: formatted.inertial
+              });
+        }
       }
 
       // joints
-      for (var j = 0; j < stats.joint.length; ++j)
+      if (stats.joint)
       {
-        var jointShortName = stats.joint[j].name.substring(
-            stats.joint[j].name.lastIndexOf('::')+2);
-        var parentShortName = stats.joint[j].parent.substring(
-            stats.joint[j].parent.lastIndexOf('::')+2);
-        var childShortName = stats.joint[j].child.substring(
-            stats.joint[j].child.lastIndexOf('::')+2);
-
-        var type;
-        switch (stats.joint[j].type)
+        for (var j = 0; j < stats.joint.length; ++j)
         {
-          case 1:
-              type = 'Revolute';
-              break;
-          case 2:
-              type = 'Revolute2';
-              break;
-          case 3:
-              type = 'Prismatic';
-              break;
-          case 4:
-              type = 'Universal';
-              break;
-          case 5:
-              type = 'Ball';
-              break;
-          case 6:
-              type = 'Screw';
-              break;
-          case 7:
-              type = 'Gearbox';
-              break;
-          default:
-              type = 'Unknown';
+          var jointShortName = stats.joint[j].name.substring(
+              stats.joint[j].name.lastIndexOf('::')+2);
+          var parentShortName = stats.joint[j].parent.substring(
+              stats.joint[j].parent.lastIndexOf('::')+2);
+          var childShortName = stats.joint[j].child.substring(
+              stats.joint[j].child.lastIndexOf('::')+2);
+
+          var type;
+          switch (stats.joint[j].type)
+          {
+            case 1:
+                type = 'Revolute';
+                break;
+            case 2:
+                type = 'Revolute2';
+                break;
+            case 3:
+                type = 'Prismatic';
+                break;
+            case 4:
+                type = 'Universal';
+                break;
+            case 5:
+                type = 'Ball';
+                break;
+            case 6:
+                type = 'Screw';
+                break;
+            case 7:
+                type = 'Gearbox';
+                break;
+            default:
+                type = 'Unknown';
+          }
+
+          formatted = this.formatStats(stats.joint[j]);
+
+          newModel.joints.push(
+              {
+                name: stats.joint[j].name,
+                shortName: jointShortName,
+                type: type,
+                parent: stats.joint[j].parent,
+                parentShortName: parentShortName,
+                child: stats.joint[j].child,
+                childShortName: childShortName,
+                position: formatted.pose.position,
+                orientation: formatted.pose.orientation,
+                axis1: formatted.axis1,
+                axis2: formatted.axis2
+              });
         }
-
-        formatted = this.formatStats(stats.joint[j]);
-
-        newModel.joints.push(
-            {
-              name: stats.joint[j].name,
-              shortName: jointShortName,
-              type: type,
-              parent: stats.joint[j].parent,
-              parentShortName: parentShortName,
-              child: stats.joint[j].child,
-              childShortName: childShortName,
-              position: formatted.pose.position,
-              orientation: formatted.pose.orientation,
-              axis1: formatted.axis1,
-              axis2: formatted.axis2
-            });
       }
       this.updateStats();
     }
@@ -4410,7 +4416,7 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
         worldRotationMatrix.extractRotation(scope.object.matrixWorld);
 
         parentRotationMatrix.extractRotation(scope.object.parent.matrixWorld);
-        parentScale.getScaleFromMatrix(tempMatrix.getInverse(
+        parentScale.setFromMatrixScale(tempMatrix.getInverse(
             scope.object.parent.matrixWorld));
 
         offset.copy(planeIntersect.point);
@@ -4550,7 +4556,7 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
 
           parentRotationMatrix.extractRotation(
               scope.object.parent.matrixWorld);
-          parentScale.getScaleFromMatrix(tempMatrix.getInverse(
+          parentScale.setFromMatrixScale(tempMatrix.getInverse(
               scope.object.parent.matrixWorld));
 
           offset.copy(planeIntersect.point);
@@ -7385,7 +7391,7 @@ GZ3D.Scene.prototype.viewJoints = function(model)
   if (model.jointVisuals)
   {
     // Hide = remove from parent
-    if (model.jointVisuals[0].parent !== undefined)
+    if (model.jointVisuals[0].parent !== undefined && model.jointVisuals[0].parent !== null)
     {
       for (var v = 0; v < model.jointVisuals.length; ++v)
       {
@@ -7637,8 +7643,9 @@ GZ3D.Scene.prototype.updateLight = function(entity, msg)
  * and defines a DOM parser function to parse SDF XML files
  * @param {object} scene - the gz3d scene object
  * @param {object} gui - the gz3d gui object
- * @param {object} gziface - the gz3d gziface object
- */
+ * @param {object} gziface [optional] - the gz3d gziface object, if not gziface
+ * object was provided, sdfParser wont try to connect to gzserver.
+ **/
 GZ3D.SdfParser = function(scene, gui, gziface)
 {
   // set the sdf version
@@ -7663,30 +7670,39 @@ GZ3D.SdfParser = function(scene, gui, gziface)
 };
 
 /**
- * Initializes SDF parser by connecting relevant events from gziface
+ * Initializes SDF parser by connecting relevant events from gziface,
+ * if gziface was not provided, just initialize the scene and don't listen
+ * on gziface events.
  */
 GZ3D.SdfParser.prototype.init = function()
 {
-  var that = this;
-  this.gziface.emitter.on('error', function() {
-    that.gui.guiEvents.emit('notification_popup', 'GzWeb is currently running' +
-            'without a server, and materials could not be loaded.' +
-            'When connected scene will be reinitialized', 5000);
-    that.onConnectionError();
-  });
-
-  this.gziface.emitter.on('material', function(mat) {
-    that.materials = mat;
-  });
-
-  this.gziface.emitter.on('gzstatus', function(gzstatus) {
-    if (gzstatus === 'error')
-    {
-      that.gui.guiEvents.emit('notification_popup', 'GzWeb is currently ' +
-              'running without a GzServer, and Scene is reinitialized.', 5000);
+  if(this.gziface)
+  {
+    var that = this;
+    this.gziface.emitter.on('error', function() {
+      that.gui.guiEvents.emit('notification_popup', 'GzWeb is currently running' +
+              'without a server, and materials could not be loaded.' +
+              'When connected scene will be reinitialized', 5000);
       that.onConnectionError();
-    }
-  });
+    });
+
+    this.gziface.emitter.on('material', function(mat) {
+      that.materials = mat;
+    });
+
+    this.gziface.emitter.on('gzstatus', function(gzstatus) {
+      if (gzstatus === 'error')
+      {
+        that.gui.guiEvents.emit('notification_popup', 'GzWeb is currently ' +
+                'running without a GzServer, and Scene is reinitialized.', 5000);
+        that.onConnectionError();
+      }
+    });
+  }
+  else
+  {
+    this.scene.initScene();
+  }
 };
 
 /**

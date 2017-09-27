@@ -62,6 +62,7 @@ module.exports = function(grunt) {
           '../src/*.js',
           '../src/**/*.js'
         ],
+        jsdoc: './node_modules/.bin/jsdoc',
         options: {
           destination: '../doc'
         }
