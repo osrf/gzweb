@@ -5685,9 +5685,7 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
 GZ3D.Scene.prototype.onPointerUp = function(event)
 {
   event.preventDefault();
-  // if(this.selectedEntity){
-  //   this.setViewAs(this.selectedEntity, 'normal');
-  // }
+
   // Clicks (<150ms) outside any models trigger view mode
   var millisecs = new Date().getTime();
   if (millisecs - this.timeDown < 150)
@@ -7272,7 +7270,6 @@ GZ3D.Scene.prototype.selectEntity = function(object)
   {
     if (this.modelManipulator.object)
     {
-      // this.setViewAs(this.modelManipulator.object, 'normal');
       this.modelManipulator.detach();
       this.scene.remove(this.modelManipulator.gizmo);
     }
