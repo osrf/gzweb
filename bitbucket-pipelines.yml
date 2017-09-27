@@ -21,3 +21,4 @@ pipelines:
           - npm run deploy
           - # Test
           - npm test
+          - npm run coverage
