@@ -6,8 +6,13 @@
     "type": "mercurial",
     "url": "https://bitbucket.org/osrf/gzweb"
   },
+  "config" : { "port" : "8080", "deploy_op": "" },
   "scripts": {
-    "test": "./node_modules/karma/bin/karma start --singleRun"
+    "test": "./node_modules/karma/bin/karma start --singleRun",
+    "update": "cd gz3d/utils && grunt build && cd ../../build && cmake ..",
+    "start": "if [ $npm_config_port ]; then port=$npm_config_port; else port=8080; fi; ./node_modules/.bin/http-server -p $port http/client & cd gzbridge && ./ws_server.js",
+    "deploy": "if [ $npm_config_deploy_op ]; then ./deploy.sh -$npm_config_deploy_op; else ./deploy.sh; fi;",
+    "docs": "cd gz3d/utils && grunt doc"
   },
   "dependencies": {
     "websocket": "",
@@ -15,9 +20,11 @@
     "node-gyp": ""
   },
   "devDependencies": {
+    "istanbul": "^0.4.5",
     "jasmine-core": "^2.8.0",
     "karma": "^1.7.0",
     "karma-chrome-launcher": "^2.2.0",
+    "karma-coverage": "^1.1.1",
     "karma-jasmine": "^1.1.0"
   }
 }

@@ -1619,81 +1619,87 @@ GZ3D.Gui.prototype.setModelStats = function(stats, action)
       var newModel = modelStats[modelStats.length-1];
 
       // links
-      for (var l = 0; l < stats.link.length; ++l)
+      if (stats.link)
       {
-        var shortName = stats.link[l].name.substring(
-            stats.link[l].name.lastIndexOf('::')+2);
+        for (var l = 0; l < stats.link.length; ++l)
+        {
+          var shortName = stats.link[l].name.substring(
+              stats.link[l].name.lastIndexOf('::')+2);
 
-        formatted = this.formatStats(stats.link[l]);
+          formatted = this.formatStats(stats.link[l]);
 
-        newModel.links.push(
-            {
-              name: stats.link[l].name,
-              shortName: shortName,
-              self_collide: this.trueOrFalse(stats.link[l].self_collide),
-              gravity: this.trueOrFalse(stats.link[l].gravity),
-              kinematic: this.trueOrFalse(stats.link[l].kinematic),
-              canonical: this.trueOrFalse(stats.link[l].canonical),
-              position: formatted.pose.position,
-              orientation: formatted.pose.orientation,
-              inertial: formatted.inertial
-            });
+          newModel.links.push(
+              {
+                name: stats.link[l].name,
+                shortName: shortName,
+                self_collide: this.trueOrFalse(stats.link[l].self_collide),
+                gravity: this.trueOrFalse(stats.link[l].gravity),
+                kinematic: this.trueOrFalse(stats.link[l].kinematic),
+                canonical: this.trueOrFalse(stats.link[l].canonical),
+                position: formatted.pose.position,
+                orientation: formatted.pose.orientation,
+                inertial: formatted.inertial
+              });
+        }
       }
 
       // joints
-      for (var j = 0; j < stats.joint.length; ++j)
+      if (stats.joint)
       {
-        var jointShortName = stats.joint[j].name.substring(
-            stats.joint[j].name.lastIndexOf('::')+2);
-        var parentShortName = stats.joint[j].parent.substring(
-            stats.joint[j].parent.lastIndexOf('::')+2);
-        var childShortName = stats.joint[j].child.substring(
-            stats.joint[j].child.lastIndexOf('::')+2);
-
-        var type;
-        switch (stats.joint[j].type)
+        for (var j = 0; j < stats.joint.length; ++j)
         {
-          case 1:
-              type = 'Revolute';
-              break;
-          case 2:
-              type = 'Revolute2';
-              break;
-          case 3:
-              type = 'Prismatic';
-              break;
-          case 4:
-              type = 'Universal';
-              break;
-          case 5:
-              type = 'Ball';
-              break;
-          case 6:
-              type = 'Screw';
-              break;
-          case 7:
-              type = 'Gearbox';
-              break;
-          default:
-              type = 'Unknown';
+          var jointShortName = stats.joint[j].name.substring(
+              stats.joint[j].name.lastIndexOf('::')+2);
+          var parentShortName = stats.joint[j].parent.substring(
+              stats.joint[j].parent.lastIndexOf('::')+2);
+          var childShortName = stats.joint[j].child.substring(
+              stats.joint[j].child.lastIndexOf('::')+2);
+
+          var type;
+          switch (stats.joint[j].type)
+          {
+            case 1:
+                type = 'Revolute';
+                break;
+            case 2:
+                type = 'Revolute2';
+                break;
+            case 3:
+                type = 'Prismatic';
+                break;
+            case 4:
+                type = 'Universal';
+                break;
+            case 5:
+                type = 'Ball';
+                break;
+            case 6:
+                type = 'Screw';
+                break;
+            case 7:
+                type = 'Gearbox';
+                break;
+            default:
+                type = 'Unknown';
+          }
+
+          formatted = this.formatStats(stats.joint[j]);
+
+          newModel.joints.push(
+              {
+                name: stats.joint[j].name,
+                shortName: jointShortName,
+                type: type,
+                parent: stats.joint[j].parent,
+                parentShortName: parentShortName,
+                child: stats.joint[j].child,
+                childShortName: childShortName,
+                position: formatted.pose.position,
+                orientation: formatted.pose.orientation,
+                axis1: formatted.axis1,
+                axis2: formatted.axis2
+              });
         }
-
-        formatted = this.formatStats(stats.joint[j]);
-
-        newModel.joints.push(
-            {
-              name: stats.joint[j].name,
-              shortName: jointShortName,
-              type: type,
-              parent: stats.joint[j].parent,
-              parentShortName: parentShortName,
-              child: stats.joint[j].child,
-              childShortName: childShortName,
-              position: formatted.pose.position,
-              orientation: formatted.pose.orientation,
-              axis1: formatted.axis1,
-              axis2: formatted.axis2
-            });
       }
       this.updateStats();
     }
@@ -4410,7 +4416,7 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
         worldRotationMatrix.extractRotation(scope.object.matrixWorld);
 
         parentRotationMatrix.extractRotation(scope.object.parent.matrixWorld);
-        parentScale.getScaleFromMatrix(tempMatrix.getInverse(
+        parentScale.setFromMatrixScale(tempMatrix.getInverse(
             scope.object.parent.matrixWorld));
 
         offset.copy(planeIntersect.point);
@@ -4550,7 +4556,7 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
 
           parentRotationMatrix.extractRotation(
               scope.object.parent.matrixWorld);
-          parentScale.getScaleFromMatrix(tempMatrix.getInverse(
+          parentScale.setFromMatrixScale(tempMatrix.getInverse(
               scope.object.parent.matrixWorld));
 
           offset.copy(planeIntersect.point);
@@ -6838,13 +6844,11 @@ GZ3D.Scene.prototype.useColladaSubMesh = function(dae, submesh, centerSubmesh)
               vertices[k].z -= center.z;
             }
             allChildren[i].geometry.verticesNeedUpdate = true;
-            if (allChildren[i].parent)
+            var p = allChildren[i].parent;
+            while (p)
             {
-              allChildren[i].parent.position.set(0, 0, 0);
-              if (allChildren[i].parent.parent)
-              {
-                allChildren[i].parent.parent.position.set(0, 0, 0);
-              }
+              p.position.set(0, 0, 0);
+              p = p.parent;
             }
           }
           mesh = allChildren[i];
@@ -6937,7 +6941,7 @@ GZ3D.Scene.prototype.setManipulationMode = function(mode)
   {
     if (this.modelManipulator.object)
     {
-      this.setViewAs(this.modelManipulator.object, 'normal');      
+      this.setViewAs(this.modelManipulator.object, 'normal');
       this.emitter.emit('entityChanged', this.modelManipulator.object);
     }
     this.selectEntity(null);
