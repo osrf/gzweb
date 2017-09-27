@@ -6948,9 +6948,6 @@ GZ3D.Scene.prototype.setManipulationMode = function(mode)
   }
   else
   {
-    if(this.modelManipulator.object){
-      this.setViewAs(this.modelManipulator.object, 'transparent');
-    }
     // Toggle manipulaion space (world / local)
     if (this.modelManipulator.mode === this.manipulationMode)
     {
@@ -7015,10 +7012,18 @@ GZ3D.Scene.prototype.attachManipulator = function(model,mode)
 
   if (mode !== 'view')
   {
+    if (this.modelManipulator.object)
+    {
+      if (model.name !== this.modelManipulator.object)
+      {
+        this.setViewAs(this.modelManipulator.object, 'transparent');
+      }
+    }
     this.modelManipulator.attach(model);
     this.modelManipulator.mode = mode;
     this.modelManipulator.setMode( this.modelManipulator.mode );
     this.scene.add(this.modelManipulator.gizmo);
+    this.setViewAs(this.modelManipulator.object, 'transparent');
   }
 };
 
