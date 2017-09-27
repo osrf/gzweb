@@ -7541,8 +7541,9 @@ GZ3D.Scene.prototype.updateLight = function(entity, msg)
  * and defines a DOM parser function to parse SDF XML files
  * @param {object} scene - the gz3d scene object
  * @param {object} gui - the gz3d gui object
- * @param {object} gziface - the gz3d gziface object
- */
+ * @param {object} gziface [optional] - the gz3d gziface object, if not gziface
+ * object was provided, sdfParser wont try to connect to gzserver.
+ **/
 GZ3D.SdfParser = function(scene, gui, gziface)
 {
   // set the sdf version
@@ -7567,30 +7568,39 @@ GZ3D.SdfParser = function(scene, gui, gziface)
 };
 
 /**
- * Initializes SDF parser by connecting relevant events from gziface
+ * Initializes SDF parser by connecting relevant events from gziface,
+ * if gziface was not provided, just initialize the scene and don't listen
+ * on gziface events.
  */
 GZ3D.SdfParser.prototype.init = function()
 {
-  var that = this;
-  this.gziface.emitter.on('error', function() {
-    that.gui.guiEvents.emit('notification_popup', 'GzWeb is currently running' +
-            'without a server, and materials could not be loaded.' +
-            'When connected scene will be reinitialized', 5000);
-    that.onConnectionError();
-  });
-
-  this.gziface.emitter.on('material', function(mat) {
-    that.materials = mat;
-  });
-
-  this.gziface.emitter.on('gzstatus', function(gzstatus) {
-    if (gzstatus === 'error')
-    {
-      that.gui.guiEvents.emit('notification_popup', 'GzWeb is currently ' +
-              'running without a GzServer, and Scene is reinitialized.', 5000);
+  if(this.gziface)
+  {
+    var that = this;
+    this.gziface.emitter.on('error', function() {
+      that.gui.guiEvents.emit('notification_popup', 'GzWeb is currently running' +
+              'without a server, and materials could not be loaded.' +
+              'When connected scene will be reinitialized', 5000);
       that.onConnectionError();
-    }
-  });
+    });
+
+    this.gziface.emitter.on('material', function(mat) {
+      that.materials = mat;
+    });
+
+    this.gziface.emitter.on('gzstatus', function(gzstatus) {
+      if (gzstatus === 'error')
+      {
+        that.gui.guiEvents.emit('notification_popup', 'GzWeb is currently ' +
+                'running without a GzServer, and Scene is reinitialized.', 5000);
+        that.onConnectionError();
+      }
+    });
+  }
+  else
+  {
+    this.scene.initScene();
+  }
 };
 
 /**
