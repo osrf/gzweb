@@ -10,6 +10,7 @@ pipelines:
           - curl -sL https://deb.nodesource.com/setup_6.x | bash -
           # Dependencies
           - apt install -y libjansson-dev nodejs libboost-dev imagemagick libtinyxml-dev mercurial cmake build-essential wget
+          - npm install -g grunt
           # Chrome
           - echo 'deb http://dl.google.com/linux/chrome/deb/ stable main' > /etc/apt/sources.list.d/chrome.list
           - wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
