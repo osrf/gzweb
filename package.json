@@ -9,10 +9,10 @@
   "config" : { "port" : "8080", "deploy_op": "" },
   "scripts": {
     "test": "./node_modules/karma/bin/karma start --singleRun",
-    "update": "cd gz3d/utils && grunt build && cd ../../build && cmake ..",
+    "update": "grunt build && cd build && cmake ..",
     "start": "if [ $npm_config_port ]; then port=$npm_config_port; else port=8080; fi; ./node_modules/.bin/http-server -p $port http/client & cd gzbridge && ./ws_server.js",
     "deploy": "if [ $npm_config_deploy_op ]; then ./deploy.sh -$npm_config_deploy_op; else ./deploy.sh; fi;",
-    "docs": "cd gz3d/utils && grunt doc"
+    "docs": "grunt doc"
   },
   "dependencies": {
     "websocket": "",
@@ -26,7 +26,7 @@
     "grunt-contrib-watch": "~0.3.1",
     "grunt-contrib-uglify": "~0.2.0",
     "grunt-contrib-clean": "~0.4.0",
-    "grunt-jsdoc": "~0.3.0",    
+    "grunt-jsdoc": "~0.3.0",
     "istanbul": "^0.4.5",
     "jasmine-core": "^2.8.0",
     "karma": "^1.7.0",
