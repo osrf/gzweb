@@ -3228,9 +3228,26 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
       var centerSubmesh = geom.mesh.center_submesh;
 
       var uriType = meshUri.substring(0, meshUri.indexOf('://'));
+      var modelName = '';
+      // file:// or model://
       if (uriType === 'file' || uriType === 'model')
       {
-        var modelName = meshUri.substring(meshUri.indexOf('://') + 3);
+        modelName = meshUri.substring(meshUri.indexOf('://') + 3);
+      }
+      // absolute path - currently happens when playing back a log file
+      // that contains an urdf model
+      else if (meshUri.length > 0 && meshUri[0] === '/')
+      {
+        // hacky but try to guess the model name from uri based on the
+        // meshes directory string
+        var idx = meshUri.indexOf('/meshes/');
+        if (idx > 1)
+        {
+          modelName = meshUri.substring(meshUri.lastIndexOf('/', idx-1));
+        }
+      }
+      if (modelName.length > 0)
+      {
         if (geom.mesh.scale)
         {
           parent.scale.x = geom.mesh.scale.x;
@@ -5577,7 +5594,6 @@ GZ3D.Scene.prototype.init = function()
   this.textureLoader = new THREE.TextureLoader();
   this.colladaLoader = new THREE.ColladaLoader();
   this.objLoader = new THREE.OBJLoader();
-//  this.mtlLoader = new THREE.MTLLoader();
 
   this.renderer = new THREE.WebGLRenderer({antialias: true });
   this.renderer.setPixelRatio(window.devicePixelRatio);
