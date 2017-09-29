@@ -3,13 +3,14 @@
  * and defines a DOM parser function to parse SDF XML files
  * @param {object} scene - the gz3d scene object
  * @param {object} gui - the gz3d gui object
- * @param {object} gziface - the gz3d gziface object
- */
+ * @param {object} gziface [optional] - the gz3d gziface object, if not gziface
+ * object was provided, sdfParser wont try to connect to gzserver.
+ **/
 GZ3D.SdfParser = function(scene, gui, gziface)
 {
   // set the sdf version
   this.SDF_VERSION = 1.5;
-  this.MATERIAL_ROOT = 'assets/';
+  this.MATERIAL_ROOT = 'assets';
 
   // set the xml parser function
   this.parseXML = function(xmlStr) {
@@ -29,30 +30,39 @@ GZ3D.SdfParser = function(scene, gui, gziface)
 };
 
 /**
- * Initializes SDF parser by connecting relevant events from gziface
+ * Initializes SDF parser by connecting relevant events from gziface,
+ * if gziface was not provided, just initialize the scene and don't listen
+ * on gziface events.
  */
 GZ3D.SdfParser.prototype.init = function()
 {
-  var that = this;
-  this.gziface.emitter.on('error', function() {
-    that.gui.guiEvents.emit('notification_popup', 'GzWeb is currently running' +
-            'without a server, and materials could not be loaded.' +
-            'When connected scene will be reinitialized', 5000);
-    that.onConnectionError();
-  });
-  
-  this.gziface.emitter.on('material', function(mat) {
-    that.materials = mat;
-  });
-  
-  this.gziface.emitter.on('gzstatus', function(gzstatus) {
-    if (gzstatus === 'error')
-    {
-      that.gui.guiEvents.emit('notification_popup', 'GzWeb is currently ' +
-              'running without a GzServer, and Scene is reinitialized.', 5000);
+  if(this.gziface)
+  {
+    var that = this;
+    this.gziface.emitter.on('error', function() {
+      that.gui.guiEvents.emit('notification_popup', 'GzWeb is currently running' +
+              'without a server, and materials could not be loaded.' +
+              'When connected scene will be reinitialized', 5000);
       that.onConnectionError();
-    }
-  });
+    });
+
+    this.gziface.emitter.on('material', function(mat) {
+      that.materials = mat;
+    });
+
+    this.gziface.emitter.on('gzstatus', function(gzstatus) {
+      if (gzstatus === 'error')
+      {
+        that.gui.guiEvents.emit('notification_popup', 'GzWeb is currently ' +
+                'running without a GzServer, and Scene is reinitialized.', 5000);
+        that.onConnectionError();
+      }
+    });
+  }
+  else
+  {
+    this.scene.initScene();
+  }
 };
 
 /**
@@ -65,7 +75,7 @@ GZ3D.SdfParser.prototype.init = function()
 GZ3D.SdfParser.prototype.onConnectionError = function()
 {
   this.scene.initScene();
-  
+
   var that = this;
   var entityCreated = function(model, type)
   {
@@ -75,7 +85,7 @@ GZ3D.SdfParser.prototype.onConnectionError = function()
     }
   };
   this.gui.emitter.on('entityCreated', entityCreated);
-  
+
   var deleteEntity = function(entity)
   {
     var name = entity.name;
@@ -105,7 +115,7 @@ GZ3D.SdfParser.prototype.onConnectionError = function()
 GZ3D.SdfParser.prototype.parseColor = function(colorStr)
 {
   var color = {};
-  var values = colorStr.split(' ');
+  var values = colorStr.split(/\s+/);
 
   color.r = parseFloat(values[0]);
   color.g = parseFloat(values[1]);
@@ -124,7 +134,7 @@ GZ3D.SdfParser.prototype.parseColor = function(colorStr)
 GZ3D.SdfParser.prototype.parse3DVector = function(vectorStr)
 {
   var vector3D = {};
-  var values = vectorStr.split(' ');
+  var values = vectorStr.split(/\s+/);
   vector3D.x = parseFloat(values[0]);
   vector3D.y = parseFloat(values[1]);
   vector3D.z = parseFloat(values[2]);
@@ -181,23 +191,21 @@ GZ3D.SdfParser.prototype.spawnLightFromSDF = function(sdfObj)
     target.z -= pose.position.z;
 
     lightObj.target.position = target;
-    lightObj.shadowCameraNear = 1;
-    lightObj.shadowCameraFar = 50;
-    lightObj.shadowMapWidth = 4094;
-    lightObj.shadowMapHeight = 4094;
-    lightObj.shadowCameraVisible = false;
-    lightObj.shadowCameraBottom = -100;
-    lightObj.shadowCameraLeft = -100;
-    lightObj.shadowCameraRight = 100;
-    lightObj.shadowCameraTop = 100;
-    lightObj.shadowBias = 0.0001;
+    lightObj.shadow.camera.near = 1;
+    lightObj.shadow.camera.far = 50;
+    lightObj.shadow.mapSize.width = 4094;
+    lightObj.shadow.mapSize.height = 4094;
+    lightObj.shadow.camera.bottom = -100;
+    lightObj.shadow.camera.left = -100;
+    lightObj.shadow.camera.right = 100;
+    lightObj.shadow.cameraTop = 100;
+    lightObj.shadow.bias = 0.0001;
 
     lightObj.position.set(negDir.x, negDir.y, negDir.z);
     this.scene.setPose(lightObj, pose.position, pose.orientation);
   }
   lightObj.intensity = parseFloat(light.attenuation.constant);
-  lightObj.castShadow = light.cast_shadows;
-  lightObj.shadowDarkness = 0.3;
+  lightObj.castShadow = this.parseBool(light.cast_shadows);
   lightObj.name = light['@name'];
 
   return lightObj;
@@ -213,7 +221,7 @@ GZ3D.SdfParser.prototype.spawnLightFromSDF = function(sdfObj)
  */
 GZ3D.SdfParser.prototype.parsePose = function(poseStr)
 {
-  var values = poseStr.split(' ');
+  var values = poseStr.split(/\s+/);
 
   var position = new THREE.Vector3(parseFloat(values[0]),
           parseFloat(values[1]), parseFloat(values[2]));
@@ -230,7 +238,6 @@ GZ3D.SdfParser.prototype.parsePose = function(poseStr)
   };
 
   return pose;
-
 };
 
 /**
@@ -242,10 +249,21 @@ GZ3D.SdfParser.prototype.parsePose = function(poseStr)
  */
 GZ3D.SdfParser.prototype.parseScale = function(scaleStr)
 {
-  var values = scaleStr.split(' ');
+  var values = scaleStr.split(/\s+/);
   var scale = new THREE.Vector3(parseFloat(values[0]), parseFloat(values[1]),
           parseFloat(values[2]));
   return scale;
+};
+
+/**
+ * Parses a string which is a boolean
+ * @param {string} boolStr - string which denotes a boolean value
+ * where the values can be true, false, 1, or 0.
+ * @returns {bool} bool - bool value
+ */
+GZ3D.SdfParser.prototype.parseBool = function(boolStr)
+{
+  return JSON.parse(boolStr);
 };
 
 /**
@@ -259,68 +277,71 @@ GZ3D.SdfParser.prototype.parseScale = function(scaleStr)
 GZ3D.SdfParser.prototype.createMaterial = function(material)
 {
   var textureUri, texture, mat;
-  var ambient, diffuse, specular, opacity, normalMap;
+  var ambient, diffuse, specular, opacity, normalMap, scale;
 
   if (!material) { return null; }
 
   var script = material.script;
   if (script)
   {
-    if (script.uri)
+    // if there is just one uri convert it to array
+    if (!script.uri)
     {
-      // if there is just one uri convert it to array
-      if (!(script.uri instanceof Array))
-      {
-        script.uri = [script.uri];
-      }
+      script.uri = ['file://media/materials/scripts/gazebo.material'];
+    }
 
-      if (script.name)
+    if (!(script.uri instanceof Array))
+    {
+      script.uri = [script.uri];
+    }
+
+    if (script.name)
+    {
+      mat = this.materials[script.name];
+      // if we already cached the materials
+      if (mat)
       {
-        mat = this.materials[script.name];
-        // if we already cached the materials
-        if (mat)
+        ambient = mat.ambient;
+        diffuse = mat.diffuse;
+        specular = mat.specular;
+        opacity = mat.opacity;
+        scale = mat.scale;
+
+        if (mat.texture)
         {
-          ambient = mat.ambient;
-          diffuse = mat.diffuse;
-          specular = mat.specular;
-          opacity = mat.opacity;
-
-          if (mat.texture)
+          for (var i = 0; i < script.uri.length; ++i)
           {
-            for (var i = 0; i < script.uri.length; ++i)
+            var uriType = script.uri[i].substring(0, script.uri[i]
+                    .indexOf('://'));
+            if (uriType === 'model')
             {
-              var uriType = script.uri[i].substring(0, script.uri[i]
-                      .indexOf('://'));
-              if (uriType === 'model')
+              // if texture uri
+              if (script.uri[i].indexOf('textures') > 0)
               {
-                // if texture uri
-                if (script.uri[i].indexOf('textures') > 0)
-                {
-                  textureUri = script.uri[i].substring(script.uri[i]
-                          .indexOf('://') + 3);
-                  break;
-                }
-              }
-              else if (uriType === 'file')
-              {
-                if (script.uri[i].indexOf('materials') > 0)
-                {
-                  textureUri = script.uri[i].substring(script.uri[i]
-                          .indexOf('://') + 3, script.uri[i]
-                          .indexOf('materials') + 9)
-                          + '/textures';
-                  break;
-                }
+                textureUri = script.uri[i].substring(script.uri[i]
+                        .indexOf('://') + 3);
+                break;
               }
             }
-            texture = this.MATERIAL_ROOT + textureUri + '/' + mat.texture;
+            else if (uriType === 'file')
+            {
+              if (script.uri[i].indexOf('materials') > 0)
+              {
+                textureUri = script.uri[i].substring(script.uri[i]
+                        .indexOf('://') + 3, script.uri[i]
+                        .indexOf('materials') + 9)
+                        + '/textures';
+                break;
+              }
+            }
           }
+          texture = this.MATERIAL_ROOT + '/' + textureUri + '/' + mat.texture;
         }
-        else
-        {
-          //TODO: how to handle if material is not cached
-          console.log(script.name + ' is not cached!!!');
-        }
+      }
+      else
+      {
+        //TODO: how to handle if material is not cached
+        console.log(script.name + ' is not cached!!!');
       }
     }
   }
@@ -348,7 +369,8 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
       }
       var normalMapName = material.normal_map.substr(startIndex,
               material.normal_map.lastIndexOf('.') - startIndex);
-      normalMap = this.MATERIAL_ROOT + mapUri + '/' + normalMapName + '.png';
+      normalMap = this.MATERIAL_ROOT + '/' + mapUri + '/' +
+          normalMapName + '.png';
     }
   }
 
@@ -358,7 +380,8 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
     ambient: ambient,
     diffuse: diffuse,
     specular: specular,
-    opacity: opacity
+    opacity: opacity,
+    scale: scale
   };
 
 };
@@ -373,7 +396,7 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
 GZ3D.SdfParser.prototype.parseSize = function(sizeStr)
 {
   var sizeObj;
-  var values = sizeStr.split(' ');
+  var values = sizeStr.split(/\s+/);
   var x = parseFloat(values[0]);
   var y = parseFloat(values[1]);
   var z = parseFloat(values[2]);
@@ -427,8 +450,13 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
   {
     {
       var meshUri = geom.mesh.uri;
-      var submesh = geom.mesh.submesh;
-      var centerSubmesh = geom.mesh.center_submesh;
+      var submesh;
+      var centerSubmesh;
+      if (geom.mesh.submesh)
+      {
+        submesh = geom.mesh.submesh.name;
+        centerSubmesh = this.parseBool(geom.mesh.submesh.center);
+      }
 
       var uriType = meshUri.substring(0, meshUri.indexOf('://'));
       if (uriType === 'file' || uriType === 'model')
@@ -789,9 +817,9 @@ GZ3D.SdfParser.prototype.addModelByType = function(model, type)
     modelObj.name = model.name;
     this.scene.setPose(modelObj, translation, quaternion);
   }
-  
+
   var that = this;
-  
+
   var addModelFunc;
   addModelFunc = function()
   {
@@ -807,7 +835,7 @@ GZ3D.SdfParser.prototype.addModelByType = function(model, type)
       setTimeout(addModelFunc, 100);
     }
   };
-  
+
   setTimeout(addModelFunc , 100);
 
 //  this.scene.add(modelObj);
@@ -896,7 +924,7 @@ GZ3D.SdfParser.prototype.createCylinderSDF = function(translation, euler)
  */
 GZ3D.SdfParser.prototype.loadModel = function(modelName)
 {
-  var modelFile = this.MATERIAL_ROOT + modelName + '/model.sdf';
+  var modelFile = this.MATERIAL_ROOT + '/' + modelName + '/model.sdf';
 
   var xhttp = new XMLHttpRequest();
   xhttp.overrideMimeType('text/xml');
