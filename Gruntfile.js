@@ -54,7 +54,7 @@ module.exports = function(grunt) {
       options: {
         force: true
       },
-      doc: ['gz3d/doc']
+      doc: ['doc']
     },
     jsdoc: {
       doc: {
@@ -63,7 +63,7 @@ module.exports = function(grunt) {
           'gz3d/src/**/*.js'
         ],
         options: {
-          destination: 'gz3d/doc'
+          destination: 'doc'
         }
       }
     },
