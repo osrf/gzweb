@@ -57,6 +57,7 @@ module.exports = function(grunt) {
       doc: ['doc']
     },
     jsdoc: {
+      jsdoc: './node_modules/.bin/jsdoc',
       doc: {
         src: [
           'gz3d/src/*.js',
