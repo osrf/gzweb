@@ -4,8 +4,8 @@ module.exports = function(grunt) {
     pkg: grunt.file.readJSON('package.json'),
     concat: {
       build: {
-        src  : ['../src/*.js', '../src/**/*.js'],
-        dest : '../build/gz3d.js'
+        src  : ['gz3d/src/*.js', 'gz3d/src/**/*.js'],
+        dest : 'gz3d/build/gz3d.js'
       }
     },
     jshint: {
@@ -14,7 +14,7 @@ module.exports = function(grunt) {
       },
       files: [
         'Gruntfile.js',
-        '../build/gz3d.js'
+        'gz3d/build/gz3d.js'
       ]
     },
     uglify: {
@@ -22,8 +22,8 @@ module.exports = function(grunt) {
         report: 'min'
       },
       build: {
-        src: '../build/gz3d.js',
-        dest: '../build/gz3d.min.js'
+        src: 'gz3d/build/gz3d.js',
+        dest: 'gz3d/build/gz3d.min.js'
       }
     },
     watch: {
@@ -32,8 +32,8 @@ module.exports = function(grunt) {
           interrupt: true
         },
         files: [
-          '../src/*.js',
-          '../src/**/*.js'
+          'gz3d/src/*.js',
+          'gz3d/src/**/*.js'
         ],
         tasks: ['concat']
       },
@@ -44,8 +44,8 @@ module.exports = function(grunt) {
         files: [
           'Gruntfile.js',
           '.jshintrc',
-          '../src/*.js',
-          '../src/**/*.js'
+          'gz3d/src/*.js',
+          'gz3d/src/**/*.js'
         ],
         tasks: ['build']
       }
@@ -54,16 +54,17 @@ module.exports = function(grunt) {
       options: {
         force: true
       },
-      doc: ['../doc']
+      doc: ['doc']
     },
     jsdoc: {
+      jsdoc: './node_modules/.bin/jsdoc',
       doc: {
         src: [
-          '../src/*.js',
-          '../src/**/*.js'
+          'gz3d/src/*.js',
+          'gz3d/src/**/*.js'
         ],
         options: {
-          destination: '../doc'
+          destination: 'doc'
         }
       }
     },
