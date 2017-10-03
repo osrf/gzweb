@@ -5332,7 +5332,6 @@ GZ3D.Scene.prototype.init = function()
   this.textureLoader = new THREE.TextureLoader();
   this.colladaLoader = new THREE.ColladaLoader();
   this.objLoader = new THREE.OBJLoader();
-//  this.mtlLoader = new THREE.MTLLoader();
 
   this.renderer = new THREE.WebGLRenderer({antialias: true });
   this.renderer.setPixelRatio(window.devicePixelRatio);
@@ -7651,6 +7650,7 @@ GZ3D.Scene.prototype.viewCOM = function(model)
         child.add(model.COMVisuals[s].crossLines[0]);
         child.add(model.COMVisuals[s].crossLines[1]);
         child.add(model.COMVisuals[s].crossLines[2]);
+        child.add(model.COMVisuals[s]);
       }
     }
   }

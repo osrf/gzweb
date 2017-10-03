@@ -2347,6 +2347,7 @@ GZ3D.Scene.prototype.viewCOM = function(model)
         child.add(model.COMVisuals[s].crossLines[0]);
         child.add(model.COMVisuals[s].crossLines[1]);
         child.add(model.COMVisuals[s].crossLines[2]);
+        child.add(model.COMVisuals[s]);
       }
     }
   }
