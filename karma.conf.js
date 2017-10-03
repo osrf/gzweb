@@ -26,6 +26,8 @@ module.exports = function(config) {
       "gz3d/client/js/include/eventemitter2.js",
       "gz3d/client/js/include/roslib.js",
       "gz3d/client/js/include/ColladaLoader.js",
+      "gz3d/client/js/include/OBJLoader.js",
+      "gz3d/client/js/include/MTLLoader.js",
       "gz3d/client/js/include/CopyShader.js",
       "gz3d/client/js/include/SSAOShader.js",
       "gz3d/client/js/include/EffectComposer.js",
@@ -57,8 +59,15 @@ module.exports = function(config) {
 
     // optionally, configure the reporter
     coverageReporter: {
-      type : 'html',
-      dir : 'coverage/'
+      reporters: [
+        {
+          type : 'html',
+          dir : 'coverage/'
+        },
+        {
+          type : 'lcov'
+        },
+      ]
     },
 
     // web server port
