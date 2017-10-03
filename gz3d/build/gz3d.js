@@ -5312,7 +5312,6 @@ GZ3D.Scene.prototype.init = function()
   this.textureLoader = new THREE.TextureLoader();
   this.colladaLoader = new THREE.ColladaLoader();
   this.objLoader = new THREE.OBJLoader();
-//  this.mtlLoader = new THREE.MTLLoader();
 
   this.renderer = new THREE.WebGLRenderer({antialias: true });
   this.renderer.setPixelRatio(window.devicePixelRatio);
