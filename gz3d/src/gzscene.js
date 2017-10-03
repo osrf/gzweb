@@ -2313,6 +2313,10 @@ GZ3D.Scene.prototype.viewInertia = function(model)
     {
       for (var v = 0; v < model.inertiaVisuals.length; ++v)
       {
+        for (var k = 0; k < 3; k++)
+        {
+          model.inertiaVisuals[v].parent.remove(model.inertiaVisuals[v].crossLines[k]);
+        }
         model.inertiaVisuals[v].parent.remove(model.inertiaVisuals[v]);
       }
     }
@@ -2327,7 +2331,9 @@ GZ3D.Scene.prototype.viewInertia = function(model)
         {
           continue;
         }
-
+        child.add(model.inertiaVisuals[s].crossLines[0]);
+        child.add(model.inertiaVisuals[s].crossLines[1]);
+        child.add(model.inertiaVisuals[s].crossLines[2]);
         child.add(model.inertiaVisuals[s]);
       }
     }
@@ -2401,6 +2407,7 @@ GZ3D.Scene.prototype.viewInertia = function(model)
           child.add(inertiabox);
           model.inertiaVisuals.push(inertiabox);
           inertiabox.scale.set(boxScale.x, boxScale.y, boxScale.z);
+          inertiabox.crossLines = [];
 
           this.setPose(inertiabox, inertialPose.position, inertialPose.orientation);
           // show lines
@@ -2434,11 +2441,11 @@ GZ3D.Scene.prototype.viewInertia = function(model)
           line3 = new THREE.Line(helperGeometry3, helperMaterial,
             THREE.LineSegments);
 
-          var crossLines = [];
-          crossLines.push(line1);
-          crossLines.push(line2);
-          crossLines.push(line3);
-          child.crossLines = crossLines;
+          inertiabox.crossLines.push(line1);
+          inertiabox.crossLines.push(line2);
+          inertiabox.crossLines.push(line3);
+
+          // attach lines
           child.add(line1);
           child.add(line2);
           child.add(line3);
