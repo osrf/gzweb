@@ -3234,8 +3234,8 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
       {
         modelName = meshUri.substring(meshUri.indexOf('://') + 3);
       }
-      // absolute path - currently happens when playing back a log file
-      // that contains an urdf model
+      // absolute path - happens when an urdf model is spawned
+      // into gazebo through gazebo_ros_pkgs
       else if (meshUri.length > 0 && meshUri[0] === '/')
       {
         // hacky but try to guess the model name from uri based on the
