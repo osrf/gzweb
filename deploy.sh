@@ -85,16 +85,6 @@ fi
 # continue building if cmake is happy
 make -j 8
 
-cd ../gzbridge
-$DIR/node_modules/.bin/node-gyp configure
-$DIR/node_modules/.bin/node-gyp build -d
-
-RETVAL=$?
-if [ $RETVAL -ne 0 ]; then
-  echo There are node-gyp build errors, exiting.
-  exit 1
-fi
-
 cd $DIR
 
 # build a local model database
