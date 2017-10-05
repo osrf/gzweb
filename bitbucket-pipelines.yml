@@ -7,8 +7,8 @@ pipelines:
           - apt update
           # Node 0.1
           - apt install -y curl rlwrap
-          - curl -s -O https://deb.nodesource.com/node_0.12/pool/main/n/nodejs/nodejs_0.12.13-1nodesource1~xenial1_amd64.deb
-          - dpkg -i nodejs_0.12.13-1nodesource1~xenial1_amd64.deb
+          - curl -s -O https://deb.nodesource.com/node_0.10/pool/main/n/nodejs/nodejs_0.10.45-1nodesource1~xenial1_amd64.deb
+          - dpkg -i nodejs_0.10.45-1nodesource1~xenial1_amd64.deb
           # Dependencies
           - apt install -y libjansson-dev libboost-dev imagemagick libtinyxml-dev mercurial cmake build-essential wget
           - npm install -g grunt
