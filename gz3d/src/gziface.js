@@ -620,87 +620,40 @@ GZ3D.GZIface.prototype.onConnected = function()
         publishWorldControl(paused, null);
       }
   );
+
+  // Log play control messages
+  this.playbackControlTopic = new ROSLIB.Topic({
+    ros : this.webSocket,
+    name : '~/playback_control',
+    messageType : 'playback_control',
+  });
+
+  var publishPlaybackControl = function(playbackControl)
+  {
+    that.playbackControlTopic.publish(playbackControl);
+  };
+
+  this.gui.emitter.on('logPlayChanged', publishPlaybackControl);
 };
 
 GZ3D.GZIface.prototype.updateStatsGuiFromMsg = function(stats)
 {
   this.gui.setPaused(stats.paused);
 
-  var simSec = stats.sim_time.sec;
-  var simNSec = stats.sim_time.nsec;
-
-  var simDay = Math.floor(simSec / 86400);
-  simSec -= simDay * 86400;
-
-  var simHour = Math.floor(simSec / 3600);
-  simSec -= simHour * 3600;
-
-  var simMin = Math.floor(simSec / 60);
-  simSec -= simMin * 60;
-
-  var simMsec = Math.floor(simNSec * 1e-6);
-
-  var realSec = stats.real_time.sec;
-  var realNSec = stats.real_time.nsec;
-
-  var realDay = Math.floor(realSec / 86400);
-  realSec -= realDay * 86400;
-
-  var realHour = Math.floor(realSec / 3600);
-  realSec -= realHour * 3600;
-
-  var realMin = Math.floor(realSec / 60);
-  realSec -= realMin * 60;
-
-  var realMsec = Math.floor(realNSec * 1e-6);
-
-  var simTimeValue = '';
-  var realTimeValue = '';
-
-  if (realDay < 10)
+  if (stats.log_playback_stats)
   {
-    realTimeValue += '0';
+    this.gui.setLogPlayVisible(true);
+    this.gui.setLogPlayStats(stats.sim_time,
+        stats.log_playback_stats.start_time,
+        stats.log_playback_stats.end_time);
   }
-  realTimeValue += realDay.toFixed(0) + ' ';
-  if (realHour < 10)
+  else
   {
-    realTimeValue += '0';
+    this.gui.setLogPlayVisible(false);
+    this.gui.setRealTime(stats.real_time);
   }
-  realTimeValue += realHour.toFixed(0) + ':';
-  if (realMin < 10)
-  {
-    realTimeValue += '0';
-  }
-  realTimeValue += realMin.toFixed(0)  + ':';
-  if (realSec < 10)
-  {
-    realTimeValue += '0';
-  }
-  realTimeValue += realSec.toFixed(0);
 
-  if (simDay < 10)
-  {
-    simTimeValue += '0';
-  }
-  simTimeValue += simDay.toFixed(0)  + ' ';
-  if (simHour < 10)
-  {
-    simTimeValue += '0';
-  }
-  simTimeValue += simHour.toFixed(0) + ':';
-  if (simMin < 10)
-  {
-    simTimeValue += '0';
-  }
-  simTimeValue += simMin.toFixed(0) + ':';
-  if (simSec < 10)
-  {
-    simTimeValue += '0';
-  }
-  simTimeValue += simSec.toFixed(0);
-
-  this.gui.setRealTime(realTimeValue);
-  this.gui.setSimTime(simTimeValue);
+  this.gui.setSimTime(stats.sim_time);
 };
 
 GZ3D.GZIface.prototype.createModelFromMsg = function(model)
@@ -919,9 +872,26 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
       var centerSubmesh = geom.mesh.center_submesh;
 
       var uriType = meshUri.substring(0, meshUri.indexOf('://'));
+      var modelName = '';
+      // file:// or model://
       if (uriType === 'file' || uriType === 'model')
       {
-        var modelName = meshUri.substring(meshUri.indexOf('://') + 3);
+        modelName = meshUri.substring(meshUri.indexOf('://') + 3);
+      }
+      // absolute path - happens when an urdf model is spawned
+      // into gazebo through gazebo_ros_pkgs
+      else if (meshUri.length > 0 && meshUri[0] === '/')
+      {
+        // hacky but try to guess the model name from uri based on the
+        // meshes directory string
+        var idx = meshUri.indexOf('/meshes/');
+        if (idx > 1)
+        {
+          modelName = meshUri.substring(meshUri.lastIndexOf('/', idx-1));
+        }
+      }
+      if (modelName.length > 0)
+      {
         if (geom.mesh.scale)
         {
           parent.scale.x = geom.mesh.scale.x;
@@ -1169,7 +1139,6 @@ GZ3D.GZIface.prototype.parseMaterial = function(material)
       scale: scale
   };
 };
-
 
 /*GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
 {
