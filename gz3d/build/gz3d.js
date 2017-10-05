@@ -1978,7 +1978,7 @@ GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
     else
     {
       $('#view-linkframes a').css('color', '#ffffff');
-      if (entity.getObjectByName('LINKFRAMES_VISUAL', true))
+      if (entity.getObjectByName('LINKFRAME_VISUAL', true))
       {
         $('#view-linkframes').buttonMarkup({icon: 'check'});
       }
@@ -5597,7 +5597,6 @@ GZ3D.Scene.prototype.init = function()
 
   // link frames visual
   var linkaxes = new THREE.Object3D();
-  // this.jointAxis.name = 'JOINT_VISUAL';
 
   geometry = new THREE.CylinderGeometry(0.01, 0.01, 0.3, 10, 1, false);
 
@@ -5605,20 +5604,20 @@ GZ3D.Scene.prototype.init = function()
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.x = 0.15;
   mesh.rotation.z = -Math.PI/2;
-  mesh.name = 'JOINT_VISUAL';
+  mesh.name = 'LINKFRAME_VISUAL';
   linkaxes.add(mesh);
 
   material = new THREE.MeshBasicMaterial({color: new THREE.Color(0x00ff00)});
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.y = 0.15;
-  mesh.name = 'JOINT_VISUAL';
+  mesh.name = 'LINKFRAME_VISUAL';
   linkaxes.add(mesh);
 
   material = new THREE.MeshBasicMaterial({color: new THREE.Color(0x0000ff)});
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.z = 0.15;
   mesh.rotation.x = Math.PI/2;
-  mesh.name = 'JOINT_VISUAL';
+  mesh.name = 'LINKFRAME_VISUAL';
   linkaxes.add(mesh);
 
   this.linkFramesAxis = linkaxes;

@@ -1973,7 +1973,7 @@ GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
     else
     {
       $('#view-linkframes a').css('color', '#ffffff');
-      if (entity.getObjectByName('LINKFRAMES_VISUAL', true))
+      if (entity.getObjectByName('LINKFRAME_VISUAL', true))
       {
         $('#view-linkframes').buttonMarkup({icon: 'check'});
       }
