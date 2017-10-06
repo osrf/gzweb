@@ -7691,24 +7691,25 @@ GZ3D.Scene.prototype.viewCOM = function(model)
         model.COMVisuals.push(COMVisual);
         COMVisual.scale.set(radius, radius, radius);
 
+        this.setPose(COMVisual, inertialPose.position, inertialPose.orientation);
         COMVisual.crossLines = [];
         box = new THREE.Box3();
         // w.r.t. world
         box.setFromObject(child);
         // center vertices with object
-        box.min.x = box.min.x - model.position.x;
-        box.min.y = box.min.y - model.position.y;
-        box.min.z = box.min.z - model.position.z;
-        box.max.x = box.max.x - model.position.x;
-        box.max.y = box.max.y - model.position.y;
-        box.max.z = box.max.z - model.position.z;
+        box.min.x = box.min.x - model.position.x - child.position.x;
+        box.min.y = box.min.y - model.position.y - child.position.y;
+        box.min.z = box.min.z - model.position.z - child.position.z;
+        box.max.x = box.max.x - model.position.x - child.position.x;
+        box.max.y = box.max.y - model.position.y - child.position.y;
+        box.max.z = box.max.z - model.position.z - child.position.z;
 
-        points[0] = new THREE.Vector3(inertialPose.position.x, inertialPose.position.y, box.min.z);
-        points[1] = new THREE.Vector3(inertialPose.position.x, inertialPose.position.y, box.max.z);
-        points[2] = new THREE.Vector3(inertialPose.position.x, box.min.y, inertialPose.position.z);
-        points[3] = new THREE.Vector3(inertialPose.position.x, box.max.y, inertialPose.position.z);
-        points[4] = new THREE.Vector3(box.min.x, inertialPose.position.y, inertialPose.position.z);
-        points[5] = new THREE.Vector3(box.max.x, inertialPose.position.y, inertialPose.position.z);
+        points[0] = new THREE.Vector3(inertialPose.position.x, box.min.y, inertialPose.position.z);
+        points[1] = new THREE.Vector3(inertialPose.position.x, box.max.y, inertialPose.position.z);
+        points[2] = new THREE.Vector3(box.min.x, inertialPose.position.y, inertialPose.position.z);
+        points[3] = new THREE.Vector3(box.max.x, inertialPose.position.y, inertialPose.position.z);
+        points[4] = new THREE.Vector3(inertialPose.position.x, inertialPose.position.y, box.min.z);
+        points[5] = new THREE.Vector3(inertialPose.position.x, inertialPose.position.y, box.max.z);
 
         helperGeometry_1 = new THREE.Geometry();
         helperGeometry_1.vertices.push(points[0]);
