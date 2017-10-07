@@ -826,6 +826,44 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
     obj = this.scene.createPlane(geom.plane.normal.x, geom.plane.normal.y,
         geom.plane.normal.z, geom.plane.size.x, geom.plane.size.y);
   }
+  else if (geom.polyline)
+  {
+    // if (!meshManager->IsValidFilename(polyLineName))
+    // is this check of any use
+    var helperGeometry_1, helperGeometry_2;
+    // use the hight of the polyline to conclude the z cordinatej.
+    var len = geom.polyline.length;
+    for (var i = 0; i < len; i++) {
+      var polyline = geom.polyline[i];
+      var points = polyline.point;
+      var height = polyline.height;
+      var point_0 = points[0];
+      for (var m = 1, v = points.length; m < v; ++m) {
+        var point_1 = points[m];
+        helperGeometry_1 = new THREE.Geometry();
+        helperGeometry_2 = new THREE.Geometry();
+        helperGeometry_1.vertices.push(new THREE.Vector3(point_0.x, point_0.y,
+          0));
+        helperGeometry_1.vertices.push(new THREE.Vector3(point_1.x, point_1.y,
+          0));
+        helperGeometry_2.vertices.push(new THREE.Vector3(point_0.x, point_0.y,
+          0.1));
+        helperGeometry_2.vertices.push(new THREE.Vector3(point_1.x, point_1.y,
+          0.1));
+        var helperMaterial = new THREE.LineBasicMaterial({color: 0x00ff00});
+        var line_1 = new THREE.Line(helperGeometry_1, helperMaterial,
+            THREE.LineSegments);
+        var line_2 = new THREE.Line(helperGeometry_2, helperMaterial,
+          THREE.LineSegments);
+        parent.add(line_1);
+        parent.add(line_2);
+        point_0 = point_1;
+      }
+    }
+
+    // var polylines = new Array();
+    console.log(geom.polylines);
+  }
   else if (geom.mesh)
   {
     // get model name which the mesh is in

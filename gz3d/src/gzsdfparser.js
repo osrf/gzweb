@@ -446,6 +446,11 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
     size = this.parseSize(geom.plane.size);
     obj = this.scene.createPlane(normal.x, normal.y, normal.z, size.x, size.y);
   }
+
+  else if (geom.polyline)
+  {
+    console.log(geom.polyline);
+  }
   else if (geom.mesh)
   {
     {
