@@ -2343,8 +2343,9 @@ GZ3D.Scene.prototype.viewInertia = function(model)
   else
   {
     model.inertiaVisuals = [];
-    var p1 ,p2 ,p3 ,p4 ,p5 ,p6 ,box , line1, line2, line3, helperGeometry1,
-    helperGeometry2, helperGeometry3, helperMaterial, inertial, inertiabox;
+    var box , line_1, line_2, line_3, helperGeometry_1, helperGeometry_2,
+    helperGeometry_3, helperMaterial, inertial, inertiabox,
+    points = new Array(6);
     for (var j = 0; j < model.children.length; ++j)
     {
       child = model.getObjectByName(model.children[j].name);
@@ -2357,7 +2358,8 @@ GZ3D.Scene.prototype.viewInertia = function(model)
       inertial = child.userData.inertial;
       if (inertial)
       {
-        var mesh, boxScale, Ixx, Iyy, Izz, mass, inertia, material, inertialPose = {};
+        var mesh, boxScale, Ixx, Iyy, Izz, mass, inertia, material,
+          inertialPose = {};
 
         if (inertial.pose)
         {
@@ -2370,7 +2372,7 @@ GZ3D.Scene.prototype.viewInertia = function(model)
         }
         else
         {
-          console.log('Link pose not found');
+          console.log('Link pose not found!');
           continue;
         }
 
@@ -2417,43 +2419,46 @@ GZ3D.Scene.prototype.viewInertia = function(model)
           box = new THREE.Box3();
           // w.r.t. world
           box.setFromObject(child);
-          p1 = new THREE.Vector3(inertialPose.position.x, inertialPose.position.y, -2 * boxScale.z + inertialPose.position.z);
-          p2 = new THREE.Vector3(inertialPose.position.x, inertialPose.position.y, 2 * boxScale.z + inertialPose.position.z);
-          p3 = new THREE.Vector3(inertialPose.position.x, -2 * boxScale.y + inertialPose.position.y , inertialPose.position.z);
-          p4 = new THREE.Vector3(inertialPose.position.x, 2 * boxScale.y + inertialPose.position.y , inertialPose.position.z);
-          p5 = new THREE.Vector3(-2 * boxScale.x + inertialPose.position.x, inertialPose.position.y, inertialPose.position.z);
-          p6 = new THREE.Vector3(2 * boxScale.x + inertialPose.position.x , inertialPose.position.y, inertialPose.position.z);
+          points[0] = new THREE.Vector3(inertialPose.position.x, inertialPose.position.y, -2 * boxScale.z + inertialPose.position.z);
+          points[1] = new THREE.Vector3(inertialPose.position.x, inertialPose.position.y, 2 * boxScale.z + inertialPose.position.z);
+          points[2] = new THREE.Vector3(inertialPose.position.x, -2 * boxScale.y + inertialPose.position.y , inertialPose.position.z);
+          points[3] = new THREE.Vector3(inertialPose.position.x, 2 * boxScale.y + inertialPose.position.y , inertialPose.position.z);
+          points[4] = new THREE.Vector3(-2 * boxScale.x + inertialPose.position.x, inertialPose.position.y, inertialPose.position.z);
+          points[5] = new THREE.Vector3(2 * boxScale.x + inertialPose.position.x , inertialPose.position.y, inertialPose.position.z);
 
-          helperGeometry1 = new THREE.Geometry();
-          helperGeometry1.vertices.push(p1);
-          helperGeometry1.vertices.push(p2);
+          helperGeometry_1 = new THREE.Geometry();
+          helperGeometry_1.vertices.push(points[0]);
+          helperGeometry_1.vertices.push(points[1]);
 
-          helperGeometry2 = new THREE.Geometry();
-          helperGeometry2.vertices.push(p3);
-          helperGeometry2.vertices.push(p4);
+          helperGeometry_2 = new THREE.Geometry();
+          helperGeometry_2.vertices.push(points[2]);
+          helperGeometry_2.vertices.push(points[3]);
 
-          helperGeometry3 = new THREE.Geometry();
-          helperGeometry3.vertices.push(p5);
-          helperGeometry3.vertices.push(p6);
+          helperGeometry_3 = new THREE.Geometry();
+          helperGeometry_3.vertices.push(points[4]);
+          helperGeometry_3.vertices.push(points[5]);
 
           helperMaterial = new THREE.LineBasicMaterial({color: 0x00ff00});
-          line1 = new THREE.Line(helperGeometry1, helperMaterial,
+          line_1 = new THREE.Line(helperGeometry_1, helperMaterial,
               THREE.LineSegments);
-          line2 = new THREE.Line(helperGeometry2, helperMaterial,
+          line_2 = new THREE.Line(helperGeometry_2, helperMaterial,
             THREE.LineSegments);
-          line3 = new THREE.Line(helperGeometry3, helperMaterial,
+          line_3 = new THREE.Line(helperGeometry_3, helperMaterial,
             THREE.LineSegments);
 
-          inertiabox.crossLines.push(line1);
-          inertiabox.crossLines.push(line2);
-          inertiabox.crossLines.push(line3);
+          line_1.name = 'INERTIA_VISUAL';
+          line_2.name = 'INERTIA_VISUAL';
+          line_3.name = 'INERTIA_VISUAL';
+          inertiabox.crossLines.push(line_1);
+          inertiabox.crossLines.push(line_2);
+          inertiabox.crossLines.push(line_3);
 
           // attach lines
-          child.add(line1);
-          child.add(line2);
-          child.add(line3);
+          child.add(line_1);
+          child.add(line_2);
+          child.add(line_3);
         }
-       }
+      }
     }
   }
 };
