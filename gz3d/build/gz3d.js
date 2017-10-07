@@ -7359,7 +7359,8 @@ GZ3D.Scene.prototype.setViewAs = function(model, viewAs)
         descendants[i].name.indexOf('COLLISION_VISUAL') === -1 &&
         !this.getParentByPartialName(descendants[i], 'COLLISION_VISUAL') &&
         descendants[i].name.indexOf('wireframe') === -1 &&
-        descendants[i].name.indexOf('JOINT_VISUAL') === -1)
+        descendants[i].name.indexOf('JOINT_VISUAL') === -1 &&
+        descendants[i].name.indexOf('COM_VISUAL') === -1)
     {
       // Note: multi-material is being deprecated and will be removed soon
       if (descendants[i].material instanceof THREE.MultiMaterial)
@@ -7730,7 +7731,10 @@ GZ3D.Scene.prototype.viewCOM = function(model)
             THREE.LineSegments);
         line_3 = new THREE.Line(helperGeometry_3, helperMaterial,
             THREE.LineSegments);
-
+  
+        line_1.name = 'COM_VISUAL';
+        line_2.name = 'COM_VISUAL';
+        line_3.name = 'COM_VISUAL';
         COMVisual.crossLines.push(line_1);
         COMVisual.crossLines.push(line_2);
         COMVisual.crossLines.push(line_3);
