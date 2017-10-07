@@ -2044,7 +2044,8 @@ GZ3D.Scene.prototype.setViewAs = function(model, viewAs)
         descendants[i].name.indexOf('COLLISION_VISUAL') === -1 &&
         !this.getParentByPartialName(descendants[i], 'COLLISION_VISUAL') &&
         descendants[i].name.indexOf('wireframe') === -1 &&
-        descendants[i].name.indexOf('JOINT_VISUAL') === -1)
+        descendants[i].name.indexOf('JOINT_VISUAL') === -1 &&
+        descendants[i].name.indexOf('INERTIA_VISUAL') === -1)
     {
       // Note: multi-material is being deprecated and will be removed soon
       if (descendants[i].material instanceof THREE.MultiMaterial)
@@ -2386,25 +2387,27 @@ GZ3D.Scene.prototype.viewInertia = function(model)
           // Unrealistic inertia, load with default scale
           console.log('The link ' + child.name + ' has unrealistic inertia, '
                 +'unable to visualize box of equivalent inertia.');
-          // this->Load(math::Pose(xyz, q));
         }
         else
         {
-          // Compute dimensions of box with uniform density and equivalent inertia.
+          // Compute dimensions of box with uniform density
+          // and equivalent inertia.
           boxScale.x = Math.sqrt(6*(Izz +  Iyy - Ixx) / mass);
           boxScale.y = Math.sqrt(6*(Izz +  Ixx - Iyy) / mass);
           boxScale.z = Math.sqrt(6*(Ixx  + Iyy - Izz) / mass);
 
           inertiabox = new THREE.Object3D();
-          // material = new THREE.MeshBasicMaterial({color: new THREE.Color(0xff00ff), opacity: 0.5});
 
           // Inertia indicator: equivalent box of uniform density
           mesh = this.createBox(1, 1, 1);
-          material = {'ambient':[0.6,0.0,0.6,1],'diffuse':[0.6,0.0,0.6,1],'depth_write':false,'opacity':0.5};
+          mesh.name = 'INERTIA_VISUAL';
+          material = {'ambient':[1,0.0,1,1],'diffuse':[1,0.0,1,1],
+            'depth_write':false,'opacity':0.5};
           this.setMaterial(mesh, material);
           inertiabox.add(mesh);
           inertiabox.name = 'INERTIA_VISUAL';
           child.add(inertiabox);
+
           model.inertiaVisuals.push(inertiabox);
           inertiabox.scale.set(boxScale.x, boxScale.y, boxScale.z);
           inertiabox.crossLines = [];

@@ -722,13 +722,13 @@ GZ3D.SdfParser.prototype.createLink = function(link)
     inertia.iyz = link.inertial.iyz;
     inertia.izz = link.inertial.izz;
     link.userData.inertial.inertia = inertia;
-    if (link.inertial.mass)
+    if (inertialMass)
     {
-      linkObj.userData.inertial.mass = link.inertial.mass;
+      linkObj.userData.inertial.mass = inertialMass;
     }
-    if (link.inertial.pose)
+    if (inertialPose)
     {
-      linkObj.userData.inertial.pose = link.inertial.pose;
+      linkObj.userData.inertial.pose = inertialPose;
     }
   }
 
