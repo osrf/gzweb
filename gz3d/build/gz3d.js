@@ -7354,7 +7354,8 @@ GZ3D.Scene.prototype.setViewAs = function(model, viewAs)
         descendants[i].name.indexOf('COLLISION_VISUAL') === -1 &&
         !this.getParentByPartialName(descendants[i], 'COLLISION_VISUAL') &&
         descendants[i].name.indexOf('wireframe') === -1 &&
-        descendants[i].name.indexOf('JOINT_VISUAL') === -1)
+        descendants[i].name.indexOf('JOINT_VISUAL') === -1 &&
+        descendants[i].name.indexOf('LINKFRAME_VISUAL') === -1)
     {
       // Note: multi-material is being deprecated and will be removed soon
       if (descendants[i].material instanceof THREE.MultiMaterial)
@@ -7414,7 +7415,7 @@ GZ3D.Scene.prototype.selectEntity = function(object)
       this.selectedEntity = object;
     }
     this.attachManipulator(object, this.manipulationMode);
-    guiEvents.emit('setTreeSelected', object.name);
+    guiEvents.emit('setTreeSelected ', object.name);
   }
   else
   {
