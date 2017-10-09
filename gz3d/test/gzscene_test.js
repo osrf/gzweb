@@ -1,6 +1,6 @@
 jasmine.getFixtures().fixturesPath = 'base/gz3d/test/fixture';
 
-describe('Gscene tests', function() {
+describe('Gzscene tests', function() {
 
       beforeEach(function(){
           loadFixtures('myfixture.html');
@@ -21,7 +21,7 @@ describe('Gscene tests', function() {
             jointMainAxisMeshes, mesh, rot, pos, mainAxisLen,
             jointRotMeshes, jointTransMeshes, jointScrewMeshes;
             var vec3 = new THREE.Vector3(0,0,0);
-
+            scene.init();
             expect(scene.manipulationMode).toEqual('view');
             expect(scene.name).toEqual('default');
 
