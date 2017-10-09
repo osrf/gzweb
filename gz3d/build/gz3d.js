@@ -7618,13 +7618,15 @@ GZ3D.Scene.prototype.viewInertia = function(model)
   if (model.inertiaVisuals)
   {
     // Hide = remove from parent
-    if (model.inertiaVisuals[0].parent !== undefined && model.inertiaVisuals[0].parent !== null)
+    if (model.inertiaVisuals[0].parent !== undefined &&
+      model.inertiaVisuals[0].parent !== null)
     {
       for (var v = 0; v < model.inertiaVisuals.length; ++v)
       {
         for (var k = 0; k < 3; k++)
         {
-          model.inertiaVisuals[v].parent.remove(model.inertiaVisuals[v].crossLines[k]);
+          model.inertiaVisuals[v].parent.remove(
+            model.inertiaVisuals[v].crossLines[k]);
         }
         model.inertiaVisuals[v].parent.remove(model.inertiaVisuals[v]);
       }
@@ -7680,7 +7682,7 @@ GZ3D.Scene.prototype.viewInertia = function(model)
         }
         else
         {
-          console.log('Link pose not found');
+          console.log('Link pose not found!');
           continue;
         }
 
@@ -7722,17 +7724,28 @@ GZ3D.Scene.prototype.viewInertia = function(model)
           inertiabox.scale.set(boxScale.x, boxScale.y, boxScale.z);
           inertiabox.crossLines = [];
 
-          this.setPose(inertiabox, inertialPose.position, inertialPose.orientation);
+          this.setPose(inertiabox, inertialPose.position,
+            inertialPose.orientation);
           // show lines
           box = new THREE.Box3();
           // w.r.t. world
           box.setFromObject(child);
-          points[0] = new THREE.Vector3(inertialPose.position.x, inertialPose.position.y, -2 * boxScale.z + inertialPose.position.z);
-          points[1] = new THREE.Vector3(inertialPose.position.x, inertialPose.position.y, 2 * boxScale.z + inertialPose.position.z);
-          points[2] = new THREE.Vector3(inertialPose.position.x, -2 * boxScale.y + inertialPose.position.y , inertialPose.position.z);
-          points[3] = new THREE.Vector3(inertialPose.position.x, 2 * boxScale.y + inertialPose.position.y , inertialPose.position.z);
-          points[4] = new THREE.Vector3(-2 * boxScale.x + inertialPose.position.x, inertialPose.position.y, inertialPose.position.z);
-          points[5] = new THREE.Vector3(2 * boxScale.x + inertialPose.position.x , inertialPose.position.y, inertialPose.position.z);
+          points[0] = new THREE.Vector3(inertialPose.position.x,
+            inertialPose.position.y,
+            -2 * boxScale.z + inertialPose.position.z);
+          points[1] = new THREE.Vector3(inertialPose.position.x,
+            inertialPose.position.y, 2 * boxScale.z + inertialPose.position.z);
+          points[2] = new THREE.Vector3(inertialPose.position.x,
+            -2 * boxScale.y + inertialPose.position.y ,
+            inertialPose.position.z);
+          points[3] = new THREE.Vector3(inertialPose.position.x,
+            2 * boxScale.y + inertialPose.position.y, inertialPose.position.z);
+          points[4] = new THREE.Vector3(
+            -2 * boxScale.x + inertialPose.position.x,
+            inertialPose.position.y, inertialPose.position.z);
+          points[5] = new THREE.Vector3(
+            2 * boxScale.x + inertialPose.position.x,
+            inertialPose.position.y, inertialPose.position.z);
 
           helperGeometry_1 = new THREE.Geometry();
           helperGeometry_1.vertices.push(points[0]);
