@@ -17,9 +17,6 @@ describe('Gui tests', function() {
       // Initializing object used in the test.
       scene = new GZ3D.Scene();
       gui = new GZ3D.Gui(scene);
-      iface = new GZ3D.GZIface(scene, gui);
-      sdfparser = new GZ3D.SdfParser(scene, gui, iface);
-
 
       // Initialize test
       describe('Test gzgui init', function() {
