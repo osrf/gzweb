@@ -308,6 +308,9 @@ $(function()
   // Touch devices
   if (isTouchDevice)
   {
+    $('#logplay-slider')
+        .css('width','100%');
+
     $('.mouse-only')
         .css('display','none');
 
@@ -403,7 +406,7 @@ $(function()
         .css('right', '29.0em')
         .css('top', '0.5em')
         .css('z-index', '100')
-        .css('width', '11em')
+        .css('width', '11.5em')
         .css('height', '2.5em')
         .css('background-color', '#333333')
         .css('padding', '3px')
@@ -625,6 +628,42 @@ $(function()
   {
     guiEvents.emit('resizePanel');
   });
+
+  $('#logplay-slider-input').on('slidestop', function(event, ui)
+  {
+    guiEvents.emit('logPlaySlideStop', $('#logplay-slider-input').val());
+  });
+  $('#logplay-slider-input').on('slidestart', function(event, ui)
+  {
+    guiEvents.emit('logPlaySlideStart');
+  });
+  $('#logplay-rewind').click(function()
+      {
+        guiEvents.emit('logPlayRewind');
+      });
+  $('#logplay-stepback').click(function()
+      {
+        guiEvents.emit('logPlayStepback');
+      });
+  $('#logplay-play').click(function()
+      {
+        if ( $('#logplay-playText').html().indexOf('Play') !== -1 )
+        {
+          guiEvents.emit('pause', false);
+        }
+        else
+        {
+          guiEvents.emit('pause', true);
+        }
+      });
+  $('#logplay-stepforward').click(function()
+      {
+        guiEvents.emit('logPlayStepforward');
+      });
+  $('#logplay-forward').click(function()
+      {
+        guiEvents.emit('logPlayForward');
+      });
 });
 
 function getNameFromPath(path)
@@ -843,6 +882,9 @@ GZ3D.Gui.prototype.init = function()
   this.showNotifications = false;
   this.openTreeWhenSelected = false;
   this.modelStatsDirty = false;
+
+  this.logPlay = new GZ3D.LogPlay(
+      this, guiEvents);
 
   var that = this;
 
@@ -1510,6 +1552,10 @@ GZ3D.Gui.prototype.setPaused = function(paused)
         '<img style="height:1.2em" src="style/images/pause.png" title="Pause">'
         );
   }
+  // pause'd' event to inidicate simulation pause state has changed
+  // this is different from the 'pause' event which indicates user has pressed
+  // the play/pause button.
+  guiEvents.emit('paused', paused);
 };
 
 /**
@@ -1518,7 +1564,7 @@ GZ3D.Gui.prototype.setPaused = function(paused)
  */
 GZ3D.Gui.prototype.setRealTime = function(realTime)
 {
-  $('.real-time-value').text(realTime);
+  $('.real-time-value').text(formatTime(realTime));
 };
 
 /**
@@ -1527,7 +1573,7 @@ GZ3D.Gui.prototype.setRealTime = function(realTime)
  */
 GZ3D.Gui.prototype.setSimTime = function(simTime)
 {
-  $('.sim-time-value').text(simTime);
+  $('.sim-time-value').text(formatTime(simTime));
 };
 
 var sceneStats = {};
@@ -2191,6 +2237,57 @@ GZ3D.Gui.prototype.deleteFromStats = function(type, name)
 };
 
 /**
+ * Set the visibility of the log play back widget
+ * @param {} visible
+ */
+GZ3D.Gui.prototype.setLogPlayVisible = function(visible)
+{
+  if (visible === this.logPlay.isVisible())
+  {
+    return;
+  }
+
+  this.logPlay.setVisible(visible);
+
+  // update UI to be in log playback mode
+  if (visible)
+  {
+    $('#editMenu').hide();
+    $('#insertMenuTab').hide();
+    $('#manipulatorModeFieldset').hide();
+    $('#simpleShapesFieldset').hide();
+    $('#lightsFieldset').hide();
+    $('#clock-mouse').hide();
+    $('#clock-header-fieldset').hide();
+    $('#play-header-fieldset').hide();
+  }
+  else
+  {
+    $('#editMenu').show();
+    $('#insertMenuTab').show();
+    $('#manipulatorModeFieldset').show();
+    $('#simpleShapesFieldset').show();
+    $('#lightsFieldset').show();
+    $('#clock-mouse').show();
+    $('#clock-header-fieldset').show();
+    $('#play-header-fieldset').show();
+  }
+};
+
+/**
+ * Set the log play back stats
+ * @param {} simTime
+ * @param {} startTime
+ * @param {} endTime
+ */
+GZ3D.Gui.prototype.setLogPlayStats = function(simTime, startTime, endTime)
+{
+  this.logPlay.setStats(simTime, startTime, endTime);
+  $('.end-time-value').text(formatTime(endTime));
+};
+
+
+/**
  * Convert name to id and vice versa
  * @param {} name Entity Name
  * @param {} reverse convert id to name
@@ -2205,6 +2302,56 @@ var convertNameId = function(name, reverse)
   {
     return name.replace(new RegExp(' ', 'g'), '_gzspace_');
   }
+};
+
+/**
+ * Format time string
+ * @param {} time object
+ */
+var formatTime = function(time)
+{
+  var timeSec = time.sec;
+  var timeNSec = time.nsec;
+
+  var timeDay = Math.floor(timeSec / 86400);
+  timeSec -= timeDay * 86400;
+
+  var timeHour = Math.floor(timeSec / 3600);
+  timeSec -= timeHour * 3600;
+
+  var timeMin = Math.floor(timeSec / 60);
+  timeSec -= timeMin * 60;
+
+  var timeMsec = Math.floor(timeNSec * 1e-6);
+
+  var timeValue = '';
+
+/*
+  if (timeDay < 10)
+  {
+    timeValue += '0';
+  }
+  timeValue += timeDay.toFixed(0)  + ' ';
+*/
+  if (timeHour < 10)
+  {
+    timeValue += '0';
+  }
+  timeValue += timeHour.toFixed(0) + ':';
+  if (timeMin < 10)
+  {
+    timeValue += '0';
+  }
+  timeValue += timeMin.toFixed(0) + ':';
+  if (timeSec < 10)
+  {
+    timeValue += '0';
+  }
+  timeValue += timeSec.toFixed(0) + '.';
+
+  timeValue += ('00' + timeMsec.toFixed(0)).slice(-3);
+
+  return timeValue;
 };
 
 //var GAZEBO_MODEL_DATABASE_URI='http://gazebosim.org/models';
@@ -2829,87 +2976,40 @@ GZ3D.GZIface.prototype.onConnected = function()
         publishWorldControl(paused, null);
       }
   );
+
+  // Log play control messages
+  this.playbackControlTopic = new ROSLIB.Topic({
+    ros : this.webSocket,
+    name : '~/playback_control',
+    messageType : 'playback_control',
+  });
+
+  var publishPlaybackControl = function(playbackControl)
+  {
+    that.playbackControlTopic.publish(playbackControl);
+  };
+
+  this.gui.emitter.on('logPlayChanged', publishPlaybackControl);
 };
 
 GZ3D.GZIface.prototype.updateStatsGuiFromMsg = function(stats)
 {
   this.gui.setPaused(stats.paused);
 
-  var simSec = stats.sim_time.sec;
-  var simNSec = stats.sim_time.nsec;
-
-  var simDay = Math.floor(simSec / 86400);
-  simSec -= simDay * 86400;
-
-  var simHour = Math.floor(simSec / 3600);
-  simSec -= simHour * 3600;
-
-  var simMin = Math.floor(simSec / 60);
-  simSec -= simMin * 60;
-
-  var simMsec = Math.floor(simNSec * 1e-6);
-
-  var realSec = stats.real_time.sec;
-  var realNSec = stats.real_time.nsec;
-
-  var realDay = Math.floor(realSec / 86400);
-  realSec -= realDay * 86400;
-
-  var realHour = Math.floor(realSec / 3600);
-  realSec -= realHour * 3600;
-
-  var realMin = Math.floor(realSec / 60);
-  realSec -= realMin * 60;
-
-  var realMsec = Math.floor(realNSec * 1e-6);
-
-  var simTimeValue = '';
-  var realTimeValue = '';
-
-  if (realDay < 10)
+  if (stats.log_playback_stats)
   {
-    realTimeValue += '0';
+    this.gui.setLogPlayVisible(true);
+    this.gui.setLogPlayStats(stats.sim_time,
+        stats.log_playback_stats.start_time,
+        stats.log_playback_stats.end_time);
   }
-  realTimeValue += realDay.toFixed(0) + ' ';
-  if (realHour < 10)
+  else
   {
-    realTimeValue += '0';
+    this.gui.setLogPlayVisible(false);
+    this.gui.setRealTime(stats.real_time);
   }
-  realTimeValue += realHour.toFixed(0) + ':';
-  if (realMin < 10)
-  {
-    realTimeValue += '0';
-  }
-  realTimeValue += realMin.toFixed(0)  + ':';
-  if (realSec < 10)
-  {
-    realTimeValue += '0';
-  }
-  realTimeValue += realSec.toFixed(0);
 
-  if (simDay < 10)
-  {
-    simTimeValue += '0';
-  }
-  simTimeValue += simDay.toFixed(0)  + ' ';
-  if (simHour < 10)
-  {
-    simTimeValue += '0';
-  }
-  simTimeValue += simHour.toFixed(0) + ':';
-  if (simMin < 10)
-  {
-    simTimeValue += '0';
-  }
-  simTimeValue += simMin.toFixed(0) + ':';
-  if (simSec < 10)
-  {
-    simTimeValue += '0';
-  }
-  simTimeValue += simSec.toFixed(0);
-
-  this.gui.setRealTime(realTimeValue);
-  this.gui.setSimTime(simTimeValue);
+  this.gui.setSimTime(stats.sim_time);
 };
 
 GZ3D.GZIface.prototype.createModelFromMsg = function(model)
@@ -3128,9 +3228,26 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
       var centerSubmesh = geom.mesh.center_submesh;
 
       var uriType = meshUri.substring(0, meshUri.indexOf('://'));
+      var modelName = '';
+      // file:// or model://
       if (uriType === 'file' || uriType === 'model')
       {
-        var modelName = meshUri.substring(meshUri.indexOf('://') + 3);
+        modelName = meshUri.substring(meshUri.indexOf('://') + 3);
+      }
+      // absolute path - happens when an urdf model is spawned
+      // into gazebo through gazebo_ros_pkgs
+      else if (meshUri.length > 0 && meshUri[0] === '/')
+      {
+        // hacky but try to guess the model name from uri based on the
+        // meshes directory string
+        var idx = meshUri.indexOf('/meshes/');
+        if (idx > 1)
+        {
+          modelName = meshUri.substring(meshUri.lastIndexOf('/', idx-1));
+        }
+      }
+      if (modelName.length > 0)
+      {
         if (geom.mesh.scale)
         {
           parent.scale.x = geom.mesh.scale.x;
@@ -3379,7 +3496,6 @@ GZ3D.GZIface.prototype.parseMaterial = function(material)
   };
 };
 
-
 /*GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
 {
   var obj;
@@ -3605,6 +3721,202 @@ GZ3D.GZIface.prototype.parseMaterial = function(material)
   }
 };
 */
+
+var nsInSec = 1000000000;
+
+/**
+ * Correct the time so that small additions/substractions
+ * preserve the internal seconds and nanoseconds separation
+ * @param {} time - Time to be corrected
+ */
+var correctTime = function(time)
+{
+  var n = 0;
+  // In the case sec and nsec have different signs, normalize
+  if (time.sec > 0 && time.nsec < 0)
+  {
+    n = Math.floor(Math.abs(time.nsec / nsInSec) + 1);
+    time.sec -= n;
+    time.nsec += n * nsInSec;
+  }
+  if (time.sec < 0 && time.nsec > 0)
+  {
+    n = Math.floor(Math.abs(time.nsec / nsInSec) + 1);
+    time.sec += n;
+    time.nsec -= n * nsInSec;
+  }
+
+  // Make any corrections
+  time.sec += Math.floor(time.nsec / nsInSec);
+  time.nsec = Math.floor(time.nsec % nsInSec);
+};
+
+
+/*
+ * Subtract time and preseve seconds and nanonsecods separation
+ * @param {} timeA - Time being subtracted
+ * @param {} timeB - Time to subtract
+ */
+var subtractTime = function(timeA, timeB)
+{
+  var result = {};
+  result.sec = timeA.sec - timeB.sec;
+  result.nsec = timeA.nsec - timeB.nsec;
+  correctTime(result);
+  return result;
+};
+
+/**
+ * log playback
+ * @constructor
+ */
+GZ3D.LogPlay = function(gui, guiEvents)
+{
+  this.gui = gui;
+  this.visible = null;
+  this.startTime = null;
+  this.endTime = null;
+  this.active = false;
+  this.sliderRange = 100;
+  this.visible = false;
+
+  var that = this;
+
+  // when slide pos changes
+  guiEvents.on('logPlaySlideStop', function (value)
+    {
+      if (!that.startTime || !that.endTime)
+      {
+        return;
+      }
+
+      var rel = value / that.sliderRange;
+      var seek = (that.startTime.sec + that.startTime.nsec * 1e-9) +
+        rel * (that.totalTime.sec + that.totalTime.nsec * 1e-9);
+
+      var playback = {};
+      playback.seek = {};
+      playback.seek.sec = Math.floor(seek);
+      playback.seek.nsec = Math.round((seek - playback.seek.sec) * nsInSec);
+
+      // publich playback control command msg
+      that.gui.emitter.emit('logPlayChanged', playback);
+      that.active = false;
+    }
+  );
+
+  guiEvents.on('logPlaySlideStart', function ()
+    {
+      that.active = true;
+    }
+  );
+
+  guiEvents.on('logPlayRewind', function ()
+    {
+      var playback = {};
+      playback.rewind = true;
+      that.gui.emitter.emit('logPlayChanged', playback);
+    }
+  );
+  guiEvents.on('logPlayForward', function ()
+    {
+      var playback = {};
+      playback.forward = true;
+      that.gui.emitter.emit('logPlayChanged', playback);
+    }
+  );
+  guiEvents.on('logPlayStepforward', function ()
+    {
+      var playback = {};
+      playback.multi_step = 1;
+      that.gui.emitter.emit('logPlayChanged', playback);
+    }
+  );
+  guiEvents.on('logPlayStepback', function ()
+    {
+      var playback = {};
+      playback.multi_step = -1;
+      that.gui.emitter.emit('logPlayChanged', playback);
+    }
+  );
+  guiEvents.on('paused', function (paused)
+    {
+      if (paused)
+      {
+        $('#logplay-playText').html(
+            '<img style="height:1.2em" src="style/images/play.png" ' +
+            'title="Play">');
+      }
+      else
+      {
+        $('#logplay-playText').html(
+            '<img style="height:1.2em" src="style/images/pause.png" ' +
+            'title="Pause">');
+      }
+    }
+  );
+};
+
+/**
+ * get log playback widget visibility
+ */
+GZ3D.LogPlay.prototype.isVisible = function()
+{
+  return this.visible;
+};
+
+/**
+ * Set log playback widget visibility
+ */
+GZ3D.LogPlay.prototype.setVisible = function(visible)
+{
+  if (visible === this.visible)
+  {
+    return;
+  }
+  this.visible = visible;
+
+  if (this.visible)
+  {
+    $('#logplay').show();
+  }
+  else
+  {
+    $('#logplay').hide();
+  }
+};
+
+/**
+ * Set log playback stats based on data received
+ */
+GZ3D.LogPlay.prototype.setStats = function(simTime, startTime, endTime)
+{
+  this.simTime = simTime;
+
+  if (!this.startTime || !this.endTime || !this.totalTime ||
+      this.startTime.sec !== startTime.sec ||
+      this.startTime.nsec !== startTime.nsec ||
+      this.endTime.sec !== endTime.sec ||
+      this.endTime.nsec !== endTime.nsec)
+  {
+    this.startTime = startTime;
+    this.endTime = endTime;
+    this.totalTime = subtractTime(endTime, startTime);
+  }
+
+  if (!this.active)
+  {
+    // work out new slider value to set to
+    var relTime = subtractTime(this.simTime, this.startTime);
+    var newVal = (relTime.sec + relTime.nsec * 1e-9) /
+        (this.totalTime.sec + this.totalTime.nsec * 1e-9);
+    newVal = Math.max(newVal, 0);
+
+    // slider range: 0 - 100
+    $('#logplay-slider-input').val(newVal*this.sliderRange).slider('refresh');
+    $('#logplay-slider-input').text(newVal*this.sliderRange).slider('refresh');
+  }
+};
 
 // Based on TransformControls.js
 // original author: arodic / https://github.com/arodic
@@ -5282,7 +5594,6 @@ GZ3D.Scene.prototype.init = function()
   this.textureLoader = new THREE.TextureLoader();
   this.colladaLoader = new THREE.ColladaLoader();
   this.objLoader = new THREE.OBJLoader();
-//  this.mtlLoader = new THREE.MTLLoader();
 
   this.renderer = new THREE.WebGLRenderer({antialias: true });
   this.renderer.setPixelRatio(window.devicePixelRatio);
