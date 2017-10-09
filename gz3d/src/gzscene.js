@@ -2337,7 +2337,8 @@ GZ3D.Scene.prototype.viewLinkframes = function(model)
   if (model.linkframesVisuals)
   {
     // Hide = remove from parent
-    if (model.linkframesVisuals[0].parent !== undefined && model.linkframesVisuals[0].parent !== null)
+    if (model.linkframesVisuals[0].parent !== undefined &&
+         model.linkframesVisuals[0].parent !== null)
     {
       for (var v = 0; v < model.linkframesVisuals.length; ++v)
       {
@@ -2386,7 +2387,8 @@ GZ3D.Scene.prototype.viewLinkframes = function(model)
       linkframesVisual.name = 'LINKFRAMES_VISUAL';
       child.add(linkframesVisual);
       model.linkframesVisuals.push(linkframesVisual);
-      linkframesVisual.scale.set(linkSize * 0.2, linkSize * 0.2, linkSize * 0.2);
+      linkframesVisual.scale.set(linkSize * 0.2, linkSize * 0.2,
+        linkSize * 0.2);
     }
   }
 };
