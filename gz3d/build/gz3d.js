@@ -8903,7 +8903,7 @@ GZ3D.SdfParser.prototype.createLink = function(link)
   if (link.inertial)
   {
     var inertialPose, inertialMass, inertia = {};
-    link.userData.inertial = {};
+    linkObj.userData.inertial = {};
     inertialPose = link.inertial.pose;
     inertialMass = link.inertial.mass;
     inertia.ixx = link.inertial.ixx;
@@ -8912,7 +8912,7 @@ GZ3D.SdfParser.prototype.createLink = function(link)
     inertia.iyy = link.inertial.iyy;
     inertia.iyz = link.inertial.iyz;
     inertia.izz = link.inertial.izz;
-    link.userData.inertial.inertia = inertia;
+    linkObj.userData.inertial.inertia = inertia;
     if (inertialMass)
     {
       linkObj.userData.inertial.mass = inertialMass;
