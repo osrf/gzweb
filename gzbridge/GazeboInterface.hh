@@ -242,6 +242,9 @@ namespace gzweb
     /// \brief Subscribe to reponses.
     private: gazebo::transport::SubscriberPtr responseSub;
 
+    /// \brief Publish playback control messages
+    private: gazebo::transport::PublisherPtr playbackControlPub;
+
     /// \brief Request message for getting initial scene info.
     private: std::map<int, gazebo::msgs::Request *> requests;
 
@@ -422,11 +425,19 @@ namespace gzweb
     /// \brief Name of delete topic.
     private: std::string deleteTopic;
 
+    /// \brief Name of playback control topic.
+    private: std::string playbackControlTopic;
+
     /// \brief Ogre material parser.
     private: OgreMaterialParser *materialParser = nullptr;
 
-    /// \brief Last world stats time received
-    private: gazebo::common::Time lastStatsTime;
+    /// \brief Last world stats msg received
+    private: boost::shared_ptr<gazebo::msgs::WorldStatistics const>
+        lastStatsMsg;
+
+    /// \brief Most recent world stats msg received
+    private: boost::shared_ptr<gazebo::msgs::WorldStatistics const>
+        statsMsg;
 
     /// \brief Last world state received, play or paused.
     private: bool lastPausedState;
