@@ -761,8 +761,8 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
   }
 
   // equation taken from
-  // http://wiki.blender.org/index.php/Doc:2.6/Manual-
-  // /Lighting/Lights/Light_Attenuation
+  // eslint-disable-next-line
+  // https://docs.blender.org/manual/en/dev/render/blender_render/lighting/lights/light_attenuation.html
   var E = 1;
   var D = 1;
   var r = 1;
