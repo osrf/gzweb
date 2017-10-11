@@ -468,9 +468,11 @@ GZ3D.GZIface.prototype.onConnected = function()
       };
       entityMsg.direction = entity.direction;
       entityMsg.range = entity.children[0].distance;
-      entityMsg.attenuation_constant = entity.serverProperties.attenuation_constant;
+      entityMsg.attenuation_constant =
+        entity.serverProperties.attenuation_constant;
       entityMsg.attenuation_linear = entity.serverProperties.attenuation_linear;
-      entityMsg.attenuation_quadratic = entity.serverProperties.attenuation_quadratic;
+      entityMsg.attenuation_quadratic =
+        entity.serverProperties.attenuation_quadratic;
 
       that.lightModifyTopic.publish(entityMsg);
     }
@@ -759,7 +761,8 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
   }
 
   // equation taken from
-  // http://wiki.blender.org/index.php/Doc:2.6/Manual/Lighting/Lights/Light_Attenuation
+  // http://wiki.blender.org/index.php/Doc:2.6/Manual-
+  // /Lighting/Lights/Light_Attenuation
   var E = 1;
   var D = 1;
   var r = 1;

@@ -150,7 +150,8 @@ GZ3D.SpawnModel.prototype.onMouseDown = function(event)
 {
   // Does this ever get called?
   // Change like this:
-  // https://bitbucket.org/osrf/gzweb/pull-request/14/switch-to-arrow-mode-when-spawning-models/diff
+  // https://bitbucket.org/osrf/gzweb/pull-request/14/-
+  // switch-to-arrow-mode-when-spawning-models/diff
   event.preventDefault();
   event.stopImmediatePropagation();
 };
