@@ -336,6 +336,10 @@ describe('Gzscene tests', function() {
           modelName = scene.getByName('beer').name;
           expect(modelName).toEqual('beer');
           expect(modelName).not.toEqual('house_2');
+          scene.remove(model);
+          model = scene.getByName('beer');
+          console.log(model);
+          expect(model).toEqual(undefined);
         });
       });
 
