@@ -8,8 +8,7 @@ describe('Gzscene tests', function() {
           jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000;
           scene = new GZ3D.Scene();
           gui = new GZ3D.Gui(scene);
-          iface = new GZ3D.GZIface(scene, gui);
-          sdfparser = new GZ3D.SdfParser(scene, gui, iface);
+          sdfparser = new GZ3D.SdfParser(scene, gui);
         });
 
 
@@ -323,4 +322,21 @@ describe('Gzscene tests', function() {
           expect(scene.manipulationMode).toEqual('translate');
         });
       });
+
+      describe('Spawn a model', function() {
+        it('should spawn and add a model to the scene', function() {
+          var sdf, model, modelName;
+          var xhttp = new XMLHttpRequest();
+          xhttp.overrideMimeType('text/xml');
+          xhttp.open('GET', 'http://localhost:9876/base/gz3d/test/utils/beer/model.sdf', false);
+          xhttp.send();
+          sdf = xhttp.responseXML;
+          model = sdfparser.spawnFromSDF(sdf);
+          scene.add(model);
+          modelName = scene.getByName('beer').name;
+          expect(modelName).toEqual('beer');
+          expect(modelName).not.toEqual('house_2');
+        });
+      });
+
 });

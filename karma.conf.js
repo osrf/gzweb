@@ -39,7 +39,8 @@ module.exports = function(config) {
       'gz3d/build/gz3d.js',
       "gz3d/test/utils/angular-mocks.min.js",
       'gz3d/test/fixture/*.html',
-      'gz3d/test/*.js'
+      'gz3d/test/*.js',
+      {pattern: 'gz3d/test/utils/beer/model.sdf', included: false, served: true, watched: false, nocache: true}
     ],
 
 
