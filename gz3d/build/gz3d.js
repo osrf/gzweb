@@ -32,7 +32,8 @@ var tabColors = {selected: 'rgb(34, 170, 221)', unselected: 'rgb(42, 42, 42)'};
 var modelList =
   [
     {path:'buildings', title:'Buildings',
-    examplePath1:'fast_food', examplePath2:'kitchen_dining', examplePath3:'house_1', models:
+    examplePath1:'fast_food', examplePath2:'kitchen_dining',
+      examplePath3:'house_1', models:
     [
       {modelPath:'fast_food', modelTitle:'Fast Food'},
       {modelPath:'gas_station', modelTitle:'Gas Station'},
@@ -54,7 +55,8 @@ var modelList =
     ]},
 
     {path:'furniture', title:'Furniture',
-    examplePath1:'hinged_door', examplePath2:'bookshelf', examplePath3:'table', models:
+    examplePath1:'hinged_door', examplePath2:'bookshelf', examplePath3:'table',
+      models:
     [
       {modelPath:'bookshelf', modelTitle:'Book Shelf'},
       {modelPath:'cabinet', modelTitle:'Cabinet'},
@@ -66,31 +68,42 @@ var modelList =
       {modelPath:'cafe_table', modelTitle:'Cafe table'},
 
       {modelPath:'drc_practice_ball_valve', modelTitle:'Ball Valve'},
-      {modelPath:'drc_practice_handle_wheel_valve', modelTitle:'Handle Wheel Valve'},
-      {modelPath:'drc_practice_hand_wheel_valve', modelTitle:'Hand Wheel Valve'},
-      {modelPath:'drc_practice_wheel_valve', modelTitle:'Wheel Valve'},
-      {modelPath:'drc_practice_wheel_valve_large', modelTitle:'Wheel Valve Large'},
+      {modelPath:'drc_practice_handle_wheel_valve',
+        modelTitle:'Handle Wheel Valve'},
+      {modelPath:'drc_practice_hand_wheel_valve',
+        modelTitle:'Hand Wheel Valve'},
+      {modelPath:'drc_practice_wheel_valve',
+        modelTitle:'Wheel Valve'},
+      {modelPath:'drc_practice_wheel_valve_large',
+        modelTitle:'Wheel Valve Large'},
       {modelPath:'door_handle', modelTitle:'Door Handle'},
 
-      {modelPath:'drc_practice_ball_valve_wall', modelTitle:'Wall (Ball Valve)'},
-      {modelPath:'drc_practice_handle_wheel_valve_wall', modelTitle:'Wall (Handle Wheel Valve)'},
-      {modelPath:'drc_practice_hand_wheel_valve_wall', modelTitle:'Wall (Hand Wheel Valve)'},
+      {modelPath:'drc_practice_ball_valve_wall',
+        modelTitle:'Wall (Ball Valve)'},
+      {modelPath:'drc_practice_handle_wheel_valve_wall',
+        modelTitle:'Wall (Handle Wheel Valve)'},
+      {modelPath:'drc_practice_hand_wheel_valve_wall',
+        modelTitle:'Wall (Hand Wheel Valve)'},
       {modelPath:'drc_practice_valve_wall', modelTitle:'Wall (Valve)'},
-      {modelPath:'drc_practice_wheel_valve_wall', modelTitle:'Wall (Wheel Valve)'},
-      {modelPath:'drc_practice_wheel_valve_large_wall', modelTitle:'Wall (Wheel Valve Large)'},
+      {modelPath:'drc_practice_wheel_valve_wall',
+        modelTitle:'Wall (Wheel Valve)'},
+      {modelPath:'drc_practice_wheel_valve_large_wall',
+        modelTitle:'Wall (Wheel Valve Large)'},
       {modelPath:'grey_wall', modelTitle:'Grey Wall'},
       {modelPath:'asphalt_plane', modelTitle:'Asphalt Plane'},
       {modelPath:'drc_practice_base_4x8', modelTitle:'Debris base'},
       {modelPath:'ground_plane', modelTitle:'Ground Plane'},
       {modelPath:'nist_maze_wall_120', modelTitle:'120 Maze Wall'},
       {modelPath:'nist_maze_wall_240', modelTitle:'240 Maze Wall'},
-      {modelPath:'nist_maze_wall_triple_holes_120', modelTitle:'120 Maze Wall Triple Holes'},
+      {modelPath:'nist_maze_wall_triple_holes_120',
+        modelTitle:'120 Maze Wall Triple Holes'},
       {modelPath:'nist_simple_ramp_120', modelTitle:'Simple Ramp'},
       {modelPath:'nist_stairs_120', modelTitle:'Stairs'}
     ]},
 
     {path:'kitchen', title:'Kitchen',
-    examplePath1:'saucepan',  examplePath2:'beer',  examplePath3:'bowl', models:
+    examplePath1:'saucepan',  examplePath2:'beer',  examplePath3:'bowl',
+      models:
     [
       {modelPath:'beer', modelTitle:'Beer'},
       {modelPath:'bowl', modelTitle:'Bowl'},
@@ -100,7 +113,8 @@ var modelList =
     ]},
 
     {path:'robocup', title:'Robocup', examplePath1:'robocup_3Dsim_ball',
-    examplePath2:'robocup14_spl_goal', examplePath3:'robocup09_spl_field', models:
+    examplePath2:'robocup14_spl_goal', examplePath3:'robocup09_spl_field',
+      models:
     [
       {modelPath:'robocup09_spl_field', modelTitle:'2009 SPL Field'},
       {modelPath:'robocup14_spl_field', modelTitle:'2014 SPL Field'},
@@ -112,7 +126,8 @@ var modelList =
     ]},
 
     {path:'first', title:'FIRST', examplePath1:'frc2016_field',
-    examplePath2:'frc2016_chevaldefrise', examplePath3:'frc_field_2015', models:
+    examplePath2:'frc2016_chevaldefrise', examplePath3:'frc_field_2015',
+      models:
     [
       {modelPath:'frc2016_chevaldefrise', modelTitle:'Cheval de Frise'},
       {modelPath:'frc2016_drawbridge', modelTitle:'Draw Bridge'},
@@ -128,7 +143,8 @@ var modelList =
     ]},
 
     {path:'robots', title:'Robots',
-    examplePath1:'pioneer3at', examplePath2:'turtlebot', examplePath3:'pr2', models:
+    examplePath1:'pioneer3at', examplePath2:'turtlebot', examplePath3:'pr2',
+      models:
     [
       {modelPath:'create', modelTitle:'Create'},
       {modelPath:'husky', modelTitle:'Husky'},
@@ -147,7 +163,8 @@ var modelList =
       {modelPath:'cessna', modelTitle:'Cessna'},
       {modelPath:'follower_vehicle', modelTitle:'Follower Vehicle'},
       {modelPath:'iris_with_standoffs', modelTitle:'Iris with Standoffs'},
-      {modelPath:'iris_with_standoffs_demo', modelTitle:'Iris with Standoffs (demo)'},
+      {modelPath:'iris_with_standoffs_demo',
+        modelTitle:'Iris with Standoffs (demo)'},
       {modelPath:'mpl_right_arm', modelTitle:'MPL right arm'},
       {modelPath:'mpl_right_forearm', modelTitle:'MPL right forearm'},
       {modelPath:'parrot_bebop_2', modelTitle:'Parrot Bebop 2'},
@@ -160,7 +177,8 @@ var modelList =
     ]},
 
     {path:'sensors', title:'Sensors',
-    examplePath1:'camera', examplePath2:'hokuyo', examplePath3:'kinect', models:
+    examplePath1:'camera', examplePath2:'hokuyo', examplePath3:'kinect',
+      models:
     [
       {modelPath:'camera', modelTitle:'Camera'},
       {modelPath:'stereo_camera', modelTitle:'Stereo Camera'},
@@ -172,20 +190,26 @@ var modelList =
     ]},
 
     {path:'street', title:'Street', examplePath1:'dumpster',
-    examplePath2:'drc_practice_angled_barrier_45', examplePath3:'fire_hydrant', models:
+    examplePath2:'drc_practice_angled_barrier_45', examplePath3:'fire_hydrant',
+      models:
     [
       {modelPath:'cinder_block', modelTitle:'Cinder Block'},
       {modelPath:'cinder_block_2', modelTitle:'Cinder Block 2'},
       {modelPath:'cinder_block_wide', modelTitle:'Cinder Block Wide'},
       {modelPath:'construction_barrel', modelTitle:'Construction Barrel'},
       {modelPath:'construction_cone', modelTitle:'Construction Cone'},
-      {modelPath:'drc_practice_angled_barrier_45', modelTitle:'Angled Barrier 45'},
-      {modelPath:'drc_practice_angled_barrier_135', modelTitle:'Angled Barrier 135'},
+      {modelPath:'drc_practice_angled_barrier_45',
+        modelTitle:'Angled Barrier 45'},
+      {modelPath:'drc_practice_angled_barrier_135',
+        modelTitle:'Angled Barrier 135'},
       {modelPath:'drc_practice_block_wall', modelTitle:'Block Wall'},
-      {modelPath:'drc_practice_orange_jersey_barrier', modelTitle:'Jersey Barrier (Orange)'},
-      {modelPath:'drc_practice_white_jersey_barrier', modelTitle:'Jersey Barrier (White)'},
+      {modelPath:'drc_practice_orange_jersey_barrier',
+        modelTitle:'Jersey Barrier (Orange)'},
+      {modelPath:'drc_practice_white_jersey_barrier',
+        modelTitle:'Jersey Barrier (White)'},
       {modelPath:'drc_practice_truss', modelTitle:'Truss'},
-      {modelPath:'drc_practice_yellow_parking_block', modelTitle:'Parking Block'},
+      {modelPath:'drc_practice_yellow_parking_block',
+        modelTitle:'Parking Block'},
       {modelPath:'dumpster', modelTitle:'Dumpster'},
       {modelPath:'fire_hydrant', modelTitle:'Fire Hydrant'},
       {modelPath:'jersey_barrier', modelTitle:'Jersey Barrier'},
@@ -210,7 +234,8 @@ var modelList =
       {modelPath:'monkey_wrench', modelTitle:'Monkey Wrench'},
       {modelPath:'polaris_ranger_ev', modelTitle:'Polaris Ranger EV'},
       {modelPath:'polaris_ranger_xp900', modelTitle:'Polaris Ranger XP900'},
-      {modelPath:'polaris_ranger_xp900_no_roll_cage', modelTitle:'Polaris Ranger without roll cage'},
+      {modelPath:'polaris_ranger_xp900_no_roll_cage',
+        modelTitle:'Polaris Ranger without roll cage'},
       {modelPath:'utility_cart', modelTitle:'Utility Cart'},
       {modelPath:'car_wheel', modelTitle:'Car Wheel'},
       {modelPath:'arm_part', modelTitle:'Arm Part'},
@@ -224,9 +249,11 @@ var modelList =
     ]},
 
     {path:'misc', title:'Misc.', examplePath1:'brick_box_3x1x3',
-    examplePath2:'drc_practice_4x4x20', examplePath3:'double_pendulum_with_base', models:
+    examplePath2:'drc_practice_4x4x20',
+      examplePath3:'double_pendulum_with_base', models:
     [
-      {modelPath:'double_pendulum_with_base', modelTitle:'Double Pendulum With Base'},
+      {modelPath:'double_pendulum_with_base',
+        modelTitle:'Double Pendulum With Base'},
       {modelPath:'breakable_test', modelTitle:'Breakable_test'},
       {modelPath:'brick_box_3x1x3', modelTitle:'Brick Box 3x1x3'},
       {modelPath:'cardboard_box', modelTitle:'Cardboard Box'},
@@ -778,7 +805,8 @@ gzangular.controller('treeControl', ['$scope', function($scope)
     }
   };
 
-  $scope.expandProperty = function (prop, modelName, subPropShortName, subPropName, parentProp)
+  $scope.expandProperty = function (prop, modelName, subPropShortName,
+    subPropName, parentProp)
   {
     var modelId = convertNameId(modelName);
     var idContent = 'expandable-' + prop + '-' + modelId;
@@ -2033,7 +2061,8 @@ GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
 /**
  * Format stats message for proper display
  * @param {} stats
- * @returns {Object.<position, orientation, inertial, diffuse, specular, attenuation>}
+ * @returns {Object.<position, orientation, inertial,-
+ *  diffuse, specular, attenuation>}
  */
 GZ3D.Gui.prototype.formatStats = function(stats)
 {
@@ -2824,9 +2853,11 @@ GZ3D.GZIface.prototype.onConnected = function()
       };
       entityMsg.direction = entity.direction;
       entityMsg.range = entity.children[0].distance;
-      entityMsg.attenuation_constant = entity.serverProperties.attenuation_constant;
+      entityMsg.attenuation_constant =
+        entity.serverProperties.attenuation_constant;
       entityMsg.attenuation_linear = entity.serverProperties.attenuation_linear;
-      entityMsg.attenuation_quadratic = entity.serverProperties.attenuation_quadratic;
+      entityMsg.attenuation_quadratic =
+        entity.serverProperties.attenuation_quadratic;
 
       that.lightModifyTopic.publish(entityMsg);
     }
@@ -3115,7 +3146,8 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
   }
 
   // equation taken from
-  // http://wiki.blender.org/index.php/Doc:2.6/Manual/Lighting/Lights/Light_Attenuation
+  // eslint-disable-next-line
+  // https://docs.blender.org/manual/en/dev/render/blender_render/lighting/lights/light_attenuation.html
   var E = 1;
   var D = 1;
   var r = 1;
@@ -4892,6 +4924,7 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
 
     event.preventDefault();
 
+    
     var planeIntersect = intersectObjects(event,
         [intersectionPlanes[currentPlane]]);
 
@@ -4988,7 +5021,8 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
                              Math.atan2(tempVector.x, tempVector.z),
                              Math.atan2(tempVector.y, tempVector.x));
 
-          tempQuaternion.setFromRotationMatrix(tempMatrix.getInverse(parentRotationMatrix));
+          tempQuaternion.setFromRotationMatrix(
+            tempMatrix.getInverse(parentRotationMatrix));
 
           quaternionE.setFromAxisAngle(eye, rotation.z - offsetRotation.z);
           quaternionXYZ.setFromRotationMatrix(worldRotationMatrix);
@@ -5000,10 +5034,14 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
         }
         else if(scope.selected === 'RXYZE')
         {
-          quaternionE.setFromEuler(point.clone().cross(tempVector).normalize()); // has this ever worked?
+          // has this ever worked?
+          quaternionE.setFromEuler(
+            point.clone().cross(tempVector).normalize());
 
-          tempQuaternion.setFromRotationMatrix(tempMatrix.getInverse(parentRotationMatrix));
-          quaternionX.setFromAxisAngle(quaternionE, - point.clone().angleTo(tempVector));
+          tempQuaternion.setFromRotationMatrix(
+            tempMatrix.getInverse(parentRotationMatrix));
+          quaternionX.setFromAxisAngle(
+            quaternionE, - point.clone().angleTo(tempVector));
           quaternionXYZ.setFromRotationMatrix(worldRotationMatrix);
 
           tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionX);
@@ -5019,10 +5057,11 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
 
             tempVector.applyMatrix4(tempMatrix.getInverse(worldRotationMatrix));
 
-            rotation.set(Math.atan2(point.z, point.y), Math.atan2(point.x, point.z),
-                Math.atan2(point.y, point.x));
-            offsetRotation.set(Math.atan2(tempVector.z, tempVector.y), Math.atan2(
-                tempVector.x, tempVector.z), Math.atan2(tempVector.y, tempVector.x));
+            rotation.set(Math.atan2(point.z, point.y),
+              Math.atan2(point.x, point.z), Math.atan2(point.y, point.x));
+            offsetRotation.set(Math.atan2(tempVector.z, tempVector.y),
+              Math.atan2(tempVector.x, tempVector.z),
+                Math.atan2(tempVector.y, tempVector.x));
 
             quaternionXYZ.setFromRotationMatrix(oldRotationMatrix);
             quaternionX.setFromAxisAngle(unitX, rotation.x - offsetRotation.x);
@@ -5046,10 +5085,11 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
           }
           else if (scope.space === 'world')
           {
-            rotation.set(Math.atan2(point.z, point.y), Math.atan2(point.x, point.z),
-                Math.atan2(point.y, point.x));
-            offsetRotation.set(Math.atan2(tempVector.z, tempVector.y), Math.atan2(
-              tempVector.x, tempVector.z), Math.atan2(tempVector.y, tempVector.x));
+            rotation.set(Math.atan2(point.z, point.y),
+              Math.atan2(point.x, point.z), Math.atan2(point.y, point.x));
+            offsetRotation.set(Math.atan2(tempVector.z, tempVector.y),
+              Math.atan2(tempVector.x, tempVector.z),
+                Math.atan2(tempVector.y, tempVector.x));
 
             tempQuaternion.setFromRotationMatrix(tempMatrix.getInverse(
               parentRotationMatrix));
@@ -7702,7 +7742,8 @@ GZ3D.Scene.prototype.viewJoints = function(model)
   if (model.jointVisuals)
   {
     // Hide = remove from parent
-    if (model.jointVisuals[0].parent !== undefined && model.jointVisuals[0].parent !== null)
+    if (model.jointVisuals[0].parent !== undefined &&
+      model.jointVisuals[0].parent !== null)
     {
       for (var v = 0; v < model.jointVisuals.length; ++v)
       {
@@ -7991,7 +8032,8 @@ GZ3D.SdfParser.prototype.init = function()
   {
     var that = this;
     this.gziface.emitter.on('error', function() {
-      that.gui.guiEvents.emit('notification_popup', 'GzWeb is currently running' +
+      that.gui.guiEvents.emit('notification_popup',
+              'GzWeb is currently running' +
               'without a server, and materials could not be loaded.' +
               'When connected scene will be reinitialized', 5000);
       that.onConnectionError();
@@ -8005,7 +8047,8 @@ GZ3D.SdfParser.prototype.init = function()
       if (gzstatus === 'error')
       {
         that.gui.guiEvents.emit('notification_popup', 'GzWeb is currently ' +
-                'running without a GzServer, and Scene is reinitialized.', 5000);
+                'running without a GzServer,'
+                + 'and Scene is reinitialized.', 5000);
         that.onConnectionError();
       }
     });
@@ -8021,7 +8064,8 @@ GZ3D.SdfParser.prototype.init = function()
  * when gziface cannot connect to gzbridge websocket
  * this is due to 2 reasons:
  * 1 - gzbridge websocket might not be run yet
- * 2 - gzbridge websocket is trying to connect to gzserver which is not running currenly
+ * 2 - gzbridge websocket is trying to connect to
+ *       gzserver which is not running currenly
  */
 GZ3D.SdfParser.prototype.onConnectionError = function()
 {
@@ -8165,8 +8209,9 @@ GZ3D.SdfParser.prototype.spawnLightFromSDF = function(sdfObj)
 /**
  * Parses a string which is a 3D vector
  * @param {string} poseStr - string which denotes the pose of the object
- * where every value should be separated with single white space and first three denotes
- * x,y,z and values of the pose, and following three denotes euler rotation around x,y,z
+ * where every value should be separated with single white space and
+ * first three denotes x,y,z and values of the pose,
+ * and following three denotes euler rotation around x,y,z
  * @returns {object} pose - pose object having position (x,y,z)(THREE.Vector3)
  * and orientation (THREE.Quaternion) properties
  */
@@ -9036,7 +9081,7 @@ GZ3D.SpawnModel.prototype.onMouseDown = function(event)
 {
   // Does this ever get called?
   // Change like this:
-  // https://bitbucket.org/osrf/gzweb/pull-request/14/switch-to-arrow-mode-when-spawning-models/diff
+  // https://bitbucket.org/osrf/gzweb/pull-request/14
   event.preventDefault();
   event.stopImmediatePropagation();
 };
