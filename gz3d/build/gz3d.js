@@ -6196,7 +6196,7 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
       }
 
       if (model.name === 'grid' || model.name === 'boundingBox' ||
-          model.name === 'JOINT_VISUAL')
+          model.name === 'JOINT_VISUAL' || model.name === 'INERTIA_VISUAL')
       {
         point = objects[i].point;
         model = null;
@@ -7719,6 +7719,10 @@ GZ3D.Scene.prototype.selectEntity = function(object)
 {
   if (object)
   {
+    if (object.name === 'INERTIA_VISUAL')
+    {
+      return;
+    }
     if (object !== this.selectedEntity)
     {
       this.showBoundingBox(object);
@@ -8021,6 +8025,7 @@ GZ3D.Scene.prototype.viewInertia = function(model)
           boxScale.z = Math.sqrt(6*(Ixx  + Iyy - Izz) / mass);
 
           inertiabox = new THREE.Object3D();
+          inertiabox.name = 'INERTIA_VISUAL';
 
           // Inertia indicator: equivalent box of uniform density
           mesh = this.createBox(1, 1, 1);
