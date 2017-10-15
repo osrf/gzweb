@@ -7100,8 +7100,8 @@ GZ3D.Scene.prototype.loadMesh = function(files, uri, submesh, centerSubmesh,
  * @param {} centerSubmesh
  * @param {function} callback
  */
-GZ3D.Scene.prototype.loadCollada = function(filestring, uri, submesh, centerSubmesh,
-    callback)
+GZ3D.Scene.prototype.loadCollada = function(filestring, uri, submesh,
+  centerSubmesh, callback)
 {
   var dae;
   var mesh = null;
@@ -8593,10 +8593,12 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
                 return function(evt)
                 {
                   var fileString = evt.target.result;
-                  that.scene.loadMesh([fileString, mtlFileString], modelUri, submesh, centerSubmesh, function(obj){
-                    parent.add(obj);
-                    loadGeom(parent);
-                  });
+                  that.scene.loadMesh([fileString, mtlFileString], modelUri,
+                    submesh, centerSubmesh, function(obj)
+                    {
+                      parent.add(obj);
+                      loadGeom(parent);
+                    });
                 };
               })(mtlFileString);
               objFileReader.readAsText(meshFile, 'UTF-8');
@@ -8613,24 +8615,26 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
       }
       else
       {
-        this.scene.loadMesh(undefined, modelUri, submesh, centerSubmesh, function(dae){
-          if (that.entityMaterial[materialName])
+        this.scene.loadMesh(undefined, modelUri, submesh,
+          centerSubmesh, function(dae)
           {
-            var allChildren = [];
-            dae.getDescendants(allChildren);
-            for (var c = 0; c < allChildren.length; ++c)
+            if (that.entityMaterial[materialName])
             {
-              if (allChildren[c] instanceof THREE.Mesh)
+              var allChildren = [];
+              dae.getDescendants(allChildren);
+              for (var c = 0; c < allChildren.length; ++c)
               {
-                that.scene.setMaterial(allChildren[c],
-                        that.entityMaterial[materialName]);
-                break;
+                if (allChildren[c] instanceof THREE.Mesh)
+                {
+                  that.scene.setMaterial(allChildren[c],
+                          that.entityMaterial[materialName]);
+                  break;
+                }
               }
             }
-          }
           parent.add(dae);
           loadGeom(parent);
-        });
+          });
       }
     }
   }
@@ -8716,24 +8720,26 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
   function loadedColladaMesh(evt)
   {
     var fileString = evt.target.result;
-    that.scene.loadMesh([fileString], modelUri, submesh, centerSubmesh, function(dae){
-      if (that.entityMaterial[materialName])
+    that.scene.loadMesh([fileString], modelUri, submesh,
+      centerSubmesh, function(dae)
       {
-        var allChildren = [];
-        dae.getDescendants(allChildren);
-        for (var c = 0; c < allChildren.length; ++c)
+        if (that.entityMaterial[materialName])
         {
-          if (allChildren[c] instanceof THREE.Mesh)
+          var allChildren = [];
+          dae.getDescendants(allChildren);
+          for (var c = 0; c < allChildren.length; ++c)
           {
-            that.scene.setMaterial(allChildren[c],
-                    that.entityMaterial[materialName]);
-            break;
+            if (allChildren[c] instanceof THREE.Mesh)
+            {
+              that.scene.setMaterial(allChildren[c],
+                      that.entityMaterial[materialName]);
+              break;
+            }
           }
         }
-      }
-      parent.add(dae);
-      loadGeom(parent);
-    });
+        parent.add(dae);
+        loadGeom(parent);
+      });
   }
 };
 
@@ -9411,11 +9417,16 @@ GZ3D.SpawnModel.prototype.generateUniqueName = function(entity)
 GZ3D.SpawnModel.prototype.spawnFromSdf = function(fileString)
 {
   var obj = new THREE.Object3D();
-  var sdfXml = this.sdfParser.parseXML(fileString);
+  // var sdfXml = this.sdfParser.parseXML(fileString);
+  var parser = new window.DOMParser();
+  var sdfXml = parser.parseFromString(fileString, 'text/xml');
+  console.log(fileString);
+  console.log('after the string');
+  console.log(sdfXml);
 
   var myjson = xml2json(sdfXml, '\t');
   var sdfObj = JSON.parse(myjson).sdf;
-
+  console.log(sdfObj);
   var mesh = this.sdfParser.spawnFromSDF(sdfXml);
 
   obj.name = sdfXml.getElementsByTagName('model')[0].getAttribute('name');

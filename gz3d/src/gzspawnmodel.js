@@ -314,11 +314,16 @@ GZ3D.SpawnModel.prototype.generateUniqueName = function(entity)
 GZ3D.SpawnModel.prototype.spawnFromSdf = function(fileString)
 {
   var obj = new THREE.Object3D();
-  var sdfXml = this.sdfParser.parseXML(fileString);
+  // var sdfXml = this.sdfParser.parseXML(fileString);
+  var parser = new window.DOMParser();
+  var sdfXml = parser.parseFromString(fileString, 'text/xml');
+  console.log(fileString);
+  console.log('after the string');
+  console.log(sdfXml);
 
   var myjson = xml2json(sdfXml, '\t');
   var sdfObj = JSON.parse(myjson).sdf;
-
+  console.log(sdfObj);
   var mesh = this.sdfParser.spawnFromSDF(sdfXml);
 
   obj.name = sdfXml.getElementsByTagName('model')[0].getAttribute('name');
