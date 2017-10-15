@@ -323,8 +323,8 @@ describe('Gzscene tests', function() {
         });
       });
 
-      describe('Spawn a model', function() {
-        it('should spawn and add a model to the scene', function() {
+      describe('Spawn a model with a collada mesh', function() {
+        it('should add a model to the scene and then removes it', function() {
           var sdf, model, modelName;
           var xhttp = new XMLHttpRequest();
           xhttp.overrideMimeType('text/xml');
@@ -338,6 +338,25 @@ describe('Gzscene tests', function() {
           expect(modelName).not.toEqual('house_2');
           scene.remove(model);
           model = scene.getByName('beer');
+          expect(model).toEqual(undefined);
+        });
+      });
+
+      describe('Spawn a model with object mesh', function() {
+        it('should add a model to the scene and then removes it', function() {
+          var sdf, model, modelName;
+          var xhttp = new XMLHttpRequest();
+          xhttp.overrideMimeType('text/xml');
+          xhttp.open('GET', 'http://localhost:9876/base/gz3d/test/utils/walkway_metal_straight/model.sdf', false);
+          xhttp.send();
+          sdf = xhttp.responseXML;
+          model = sdfparser.spawnFromSDF(sdf);
+          scene.add(model);
+          modelName = scene.getByName('walkway_metal_straight').name;
+          expect(modelName).toEqual('walkway_metal_straight');
+          expect(modelName).not.toEqual('beer');
+          scene.remove(model);
+          model = scene.getByName('walkway_metal_straight');
           expect(model).toEqual(undefined);
         });
       });
