@@ -523,10 +523,12 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
                 return function(evt)
                 {
                   var fileString = evt.target.result;
-                  that.scene.loadMesh([fileString, mtlFileString], modelUri, submesh, centerSubmesh, function(obj){
-                    parent.add(obj);
-                    loadGeom(parent);
-                  });
+                  that.scene.loadMesh([fileString, mtlFileString], modelUri,
+                    submesh, centerSubmesh, function(obj)
+                    {
+                      parent.add(obj);
+                      loadGeom(parent);
+                    });
                 };
               })(mtlFileString);
               objFileReader.readAsText(meshFile, 'UTF-8');
@@ -543,24 +545,26 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
       }
       else
       {
-        this.scene.loadMesh(undefined, modelUri, submesh, centerSubmesh, function(dae){
-          if (that.entityMaterial[materialName])
+        this.scene.loadMesh(undefined, modelUri, submesh,
+          centerSubmesh, function(dae)
           {
-            var allChildren = [];
-            dae.getDescendants(allChildren);
-            for (var c = 0; c < allChildren.length; ++c)
+            if (that.entityMaterial[materialName])
             {
-              if (allChildren[c] instanceof THREE.Mesh)
+              var allChildren = [];
+              dae.getDescendants(allChildren);
+              for (var c = 0; c < allChildren.length; ++c)
               {
-                that.scene.setMaterial(allChildren[c],
-                        that.entityMaterial[materialName]);
-                break;
+                if (allChildren[c] instanceof THREE.Mesh)
+                {
+                  that.scene.setMaterial(allChildren[c],
+                          that.entityMaterial[materialName]);
+                  break;
+                }
               }
             }
-          }
           parent.add(dae);
           loadGeom(parent);
-        });
+          });
       }
     }
   }
@@ -646,24 +650,26 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
   function loadedColladaMesh(evt)
   {
     var fileString = evt.target.result;
-    that.scene.loadMesh([fileString], modelUri, submesh, centerSubmesh, function(dae){
-      if (that.entityMaterial[materialName])
+    that.scene.loadMesh([fileString], modelUri, submesh,
+      centerSubmesh, function(dae)
       {
-        var allChildren = [];
-        dae.getDescendants(allChildren);
-        for (var c = 0; c < allChildren.length; ++c)
+        if (that.entityMaterial[materialName])
         {
-          if (allChildren[c] instanceof THREE.Mesh)
+          var allChildren = [];
+          dae.getDescendants(allChildren);
+          for (var c = 0; c < allChildren.length; ++c)
           {
-            that.scene.setMaterial(allChildren[c],
-                    that.entityMaterial[materialName]);
-            break;
+            if (allChildren[c] instanceof THREE.Mesh)
+            {
+              that.scene.setMaterial(allChildren[c],
+                      that.entityMaterial[materialName]);
+              break;
+            }
           }
         }
-      }
-      parent.add(dae);
-      loadGeom(parent);
-    });
+        parent.add(dae);
+        loadGeom(parent);
+      });
   }
 };
 

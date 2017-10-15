@@ -1495,8 +1495,8 @@ GZ3D.Scene.prototype.loadMesh = function(files, uri, submesh, centerSubmesh,
  * @param {} centerSubmesh
  * @param {function} callback
  */
-GZ3D.Scene.prototype.loadCollada = function(filestring, uri, submesh, centerSubmesh,
-    callback)
+GZ3D.Scene.prototype.loadCollada = function(filestring, uri, submesh,
+  centerSubmesh, callback)
 {
   var dae;
   var mesh = null;
