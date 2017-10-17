@@ -505,48 +505,47 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
 
       if (!this.usingfilesUrls)
       {
-        var fileReader = new FileReader();
-        var meshFileName = modelName.substring(modelName.lastIndexOf('/') + 1);
+        var meshFileName = meshUri.substring(meshUri.lastIndexOf('/')+1);
         var ext = meshFileName.substring(meshFileName.indexOf('.') + 1);
         var meshFile = this.meshes[meshFileName];
         if (ext === 'obj')
         {
           var mtlFile = this.mtls[meshFileName.split('.')[0]+'.mtl'];
-          fileReader.onload = (function(meshFile)
-          {
-            return function(evt)
+          that.scene.loadMesh([meshFile, mtlFile], modelUri, submesh,
+            centerSubmesh, function(obj)
             {
-              var mtlFileString = evt.target.result;
-              var objFileReader = new FileReader();
-              objFileReader.onload = (function(mtlFileString)
-              {
-                return function(evt)
-                {
-                  var fileString = evt.target.result;
-                  that.scene.loadMesh([fileString, mtlFileString], modelUri,
-                    submesh, centerSubmesh, function(obj)
-                    {
-                      parent.add(obj);
-                      loadGeom(parent);
-                    });
-                };
-              })(mtlFileString);
-              objFileReader.readAsText(meshFile, 'UTF-8');
-            };
-          })(meshFile);
-
-          fileReader.readAsText(mtlFile, 'UTF-8');
+              parent.add(obj);
+              loadGeom(parent);
+            });
         }
         else if (ext === 'dae')
         {
-          fileReader.onload = loadedColladaMesh;
-          fileReader.readAsText(meshFile, 'UTF-8');
+            that.scene.loadMesh([meshFile], modelUri, submesh, centerSubmesh,
+              function(dae)
+              {
+                if (that.entityMaterial[materialName])
+                {
+                  var allChildren = [];
+                  dae.getDescendants(allChildren);
+                  for (var c = 0; c < allChildren.length; ++c)
+                  {
+                    if (allChildren[c] instanceof THREE.Mesh)
+                    {
+                      that.scene.setMaterial(allChildren[c],
+                              that.entityMaterial[materialName]);
+                      break;
+                    }
+                  }
+                }
+                parent.add(dae);
+                loadGeom(parent);
+              });
         }
       }
       else
       {
-        this.scene.loadMesh(undefined, modelUri, submesh,
-          centerSubmesh, function(dae)
+        this.scene.loadMesh(undefined, modelUri, submesh, centerSubmesh,
+          function (dae)
           {
             if (that.entityMaterial[materialName])
             {
@@ -562,8 +561,8 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
                 }
               }
             }
-          parent.add(dae);
-          loadGeom(parent);
+            parent.add(dae);
+            loadGeom(parent);
           });
       }
     }
@@ -647,30 +646,24 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
     }
   }
 
-  function loadedColladaMesh(evt)
-  {
-    var fileString = evt.target.result;
-    that.scene.loadMesh([fileString], modelUri, submesh,
-      centerSubmesh, function(dae)
-      {
-        if (that.entityMaterial[materialName])
-        {
-          var allChildren = [];
-          dae.getDescendants(allChildren);
-          for (var c = 0; c < allChildren.length; ++c)
-          {
-            if (allChildren[c] instanceof THREE.Mesh)
-            {
-              that.scene.setMaterial(allChildren[c],
-                      that.entityMaterial[materialName]);
-              break;
-            }
-          }
-        }
-        parent.add(dae);
-        loadGeom(parent);
-      });
-  }
+  // function loadedObjMesh(mtlFileString, evt)
+  // {
+  //   var fileString = evt.target.result;
+  //   that.scene.loadMesh(fileString, modelUri, submesh, centerSubmesh,
+  //    function(obj)
+  //    {
+  //     parent.add(obj);
+  //     loadGeom(parent);
+  //    });
+  // }
+
+  // function loadedmtl(meshFile, evt)
+  // {
+  //   var fileString = evt.target.result;
+  //   var objFileReader = new FileReader();
+  //   objFileReader.onload = loadedObjMesh(fileString);
+  //   objFileReader.readAsText(meshFile, 'UTF-8');
+  // }
 };
 
 /**

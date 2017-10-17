@@ -1762,7 +1762,7 @@ GZ3D.Scene.prototype.loadOBJ = function(files, uri, submesh, centerSubmesh,
     }
   };
 
-  if (!files)
+  if (!files[0])
   {
     this.objLoader.load(uri, function(_container)
     {
@@ -1770,7 +1770,7 @@ GZ3D.Scene.prototype.loadOBJ = function(files, uri, submesh, centerSubmesh,
       containerLoaded(_container);
     });
   }
-  else
+  else if (files[0])
   {
     var _container = this.objLoader.parse(files[0]);
     // mtlLoader.parse(files[1]);

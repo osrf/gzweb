@@ -7367,7 +7367,7 @@ GZ3D.Scene.prototype.loadOBJ = function(files, uri, submesh, centerSubmesh,
     }
   };
 
-  if (!files)
+  if (!files[0])
   {
     this.objLoader.load(uri, function(_container)
     {
@@ -7375,7 +7375,7 @@ GZ3D.Scene.prototype.loadOBJ = function(files, uri, submesh, centerSubmesh,
       containerLoaded(_container);
     });
   }
-  else
+  else if (files[0])
   {
     var _container = this.objLoader.parse(files[0]);
     // mtlLoader.parse(files[1]);
@@ -8575,48 +8575,47 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
 
       if (!this.usingfilesUrls)
       {
-        var fileReader = new FileReader();
-        var meshFileName = modelName.substring(modelName.lastIndexOf('/') + 1);
+        var meshFileName = meshUri.substring(meshUri.lastIndexOf('/')+1);
         var ext = meshFileName.substring(meshFileName.indexOf('.') + 1);
         var meshFile = this.meshes[meshFileName];
         if (ext === 'obj')
         {
           var mtlFile = this.mtls[meshFileName.split('.')[0]+'.mtl'];
-          fileReader.onload = (function(meshFile)
-          {
-            return function(evt)
+          that.scene.loadMesh([meshFile, mtlFile], modelUri, submesh,
+            centerSubmesh, function(obj)
             {
-              var mtlFileString = evt.target.result;
-              var objFileReader = new FileReader();
-              objFileReader.onload = (function(mtlFileString)
-              {
-                return function(evt)
-                {
-                  var fileString = evt.target.result;
-                  that.scene.loadMesh([fileString, mtlFileString], modelUri,
-                    submesh, centerSubmesh, function(obj)
-                    {
-                      parent.add(obj);
-                      loadGeom(parent);
-                    });
-                };
-              })(mtlFileString);
-              objFileReader.readAsText(meshFile, 'UTF-8');
-            };
-          })(meshFile);
-
-          fileReader.readAsText(mtlFile, 'UTF-8');
+              parent.add(obj);
+              loadGeom(parent);
+            });
         }
         else if (ext === 'dae')
         {
-          fileReader.onload = loadedColladaMesh;
-          fileReader.readAsText(meshFile, 'UTF-8');
+            that.scene.loadMesh([meshFile], modelUri, submesh, centerSubmesh,
+              function(dae)
+              {
+                if (that.entityMaterial[materialName])
+                {
+                  var allChildren = [];
+                  dae.getDescendants(allChildren);
+                  for (var c = 0; c < allChildren.length; ++c)
+                  {
+                    if (allChildren[c] instanceof THREE.Mesh)
+                    {
+                      that.scene.setMaterial(allChildren[c],
+                              that.entityMaterial[materialName]);
+                      break;
+                    }
+                  }
+                }
+                parent.add(dae);
+                loadGeom(parent);
+              });
         }
       }
       else
       {
-        this.scene.loadMesh(undefined, modelUri, submesh,
-          centerSubmesh, function(dae)
+        this.scene.loadMesh(undefined, modelUri, submesh, centerSubmesh,
+          function (dae)
           {
             if (that.entityMaterial[materialName])
             {
@@ -8632,8 +8631,8 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
                 }
               }
             }
-          parent.add(dae);
-          loadGeom(parent);
+            parent.add(dae);
+            loadGeom(parent);
           });
       }
     }
@@ -8717,30 +8716,24 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
     }
   }
 
-  function loadedColladaMesh(evt)
-  {
-    var fileString = evt.target.result;
-    that.scene.loadMesh([fileString], modelUri, submesh,
-      centerSubmesh, function(dae)
-      {
-        if (that.entityMaterial[materialName])
-        {
-          var allChildren = [];
-          dae.getDescendants(allChildren);
-          for (var c = 0; c < allChildren.length; ++c)
-          {
-            if (allChildren[c] instanceof THREE.Mesh)
-            {
-              that.scene.setMaterial(allChildren[c],
-                      that.entityMaterial[materialName]);
-              break;
-            }
-          }
-        }
-        parent.add(dae);
-        loadGeom(parent);
-      });
-  }
+  // function loadedObjMesh(mtlFileString, evt)
+  // {
+  //   var fileString = evt.target.result;
+  //   that.scene.loadMesh(fileString, modelUri, submesh, centerSubmesh,
+  //    function(obj)
+  //    {
+  //     parent.add(obj);
+  //     loadGeom(parent);
+  //    });
+  // }
+
+  // function loadedmtl(meshFile, evt)
+  // {
+  //   var fileString = evt.target.result;
+  //   var objFileReader = new FileReader();
+  //   objFileReader.onload = loadedObjMesh(fileString);
+  //   objFileReader.readAsText(meshFile, 'UTF-8');
+  // }
 };
 
 /**
@@ -9417,19 +9410,16 @@ GZ3D.SpawnModel.prototype.generateUniqueName = function(entity)
 GZ3D.SpawnModel.prototype.spawnFromSdf = function(fileString)
 {
   var obj = new THREE.Object3D();
-  // var sdfXml = this.sdfParser.parseXML(fileString);
-  var parser = new window.DOMParser();
-  var sdfXml = parser.parseFromString(fileString, 'text/xml');
-  console.log(fileString);
-  console.log('after the string');
-  console.log(sdfXml);
 
+  var sdfXml = this.sdfParser.parseXML(fileString);
+  // sdfXML is always undefined, the XML parser doesn't work while testing
+  // while it does work during normal usage.
   var myjson = xml2json(sdfXml, '\t');
   var sdfObj = JSON.parse(myjson).sdf;
-  console.log(sdfObj);
-  var mesh = this.sdfParser.spawnFromSDF(sdfXml);
 
-  obj.name = sdfXml.getElementsByTagName('model')[0].getAttribute('name');
+  var mesh = this.sdfParser.spawnFromSDF(fileString);
+
+  obj.name = mesh.name;
 
   var joints = [];
 
@@ -9445,59 +9435,59 @@ GZ3D.SpawnModel.prototype.spawnFromSdf = function(fileString)
     }
   };
 
-  // this to enable joint visuals in sdfviewer mode
-  if (sdfObj.model.joint)
-  {
-    var joint_id = 99;
-    for (var i = 0, l = sdfObj.model.joint.length; i < l; i++) {
-      var joint = sdfObj.model.joint[i];
-      if (joint.pose !== undefined && joint.axis.xyz !== undefined)
-      {
-        var pose = joint.pose.split(/\s+/);
-        var xyz = joint.axis.xyz.split(/\s+/);
-        var modelJoint =
-        {
-          name: joint['@name'],
-          id: joint_id++,
-          angle: 0,
-          type: joint['@type'],
-          parent: joint.parent,
-          parent_id: getIdFromName(joint.parent),
-          child: joint.child,
-          child_id: getIdFromName(joint.child),
-          pose : {
-            position : {
-              x: parseFloat(pose[0]),
-              y: parseFloat(pose[1]),
-              z: parseFloat(pose[2])
-            },
-            orientation : {
-              x: parseFloat(pose[3]),
-              y: parseFloat(pose[4]),
-              z: parseFloat(pose[5]),
-              w: 1
-            }
-          },
-          axis1 : {
-            xyz : {
-              x: parseFloat(xyz[0]),
-              y: parseFloat(xyz[1]),
-              z: parseFloat(xyz[2])
-            },
-            limit_lower: -1e+16,
-            limit_upper: 1e+16,
-            limit_effort: -1,
-            limit_velocity: -1,
-            damping: 0,
-            friction: 0,
-            use_parent_model_frame: joint.axis.use_parent_model_frame
-          }
-        };
-        joints.push(modelJoint);
-      }
-      obj.joint = joints;
-    }
-  }
+  // // this to enable joint visuals in sdfviewer mode
+  // if (sdfObj.model.joint)
+  // {
+  //   var joint_id = 99;
+  //   for (var i = 0, l = sdfObj.model.joint.length; i < l; i++) {
+  //     var joint = sdfObj.model.joint[i];
+  //     if (joint.pose !== undefined && joint.axis.xyz !== undefined)
+  //     {
+  //       var pose = joint.pose.split(/\s+/);
+  //       var xyz = joint.axis.xyz.split(/\s+/);
+  //       var modelJoint =
+  //       {
+  //         name: joint['@name'],
+  //         id: joint_id++,
+  //         angle: 0,
+  //         type: joint['@type'],
+  //         parent: joint.parent,
+  //         parent_id: getIdFromName(joint.parent),
+  //         child: joint.child,
+  //         child_id: getIdFromName(joint.child),
+  //         pose : {
+  //           position : {
+  //             x: parseFloat(pose[0]),
+  //             y: parseFloat(pose[1]),
+  //             z: parseFloat(pose[2])
+  //           },
+  //           orientation : {
+  //             x: parseFloat(pose[3]),
+  //             y: parseFloat(pose[4]),
+  //             z: parseFloat(pose[5]),
+  //             w: 1
+  //           }
+  //         },
+  //         axis1 : {
+  //           xyz : {
+  //             x: parseFloat(xyz[0]),
+  //             y: parseFloat(xyz[1]),
+  //             z: parseFloat(xyz[2])
+  //           },
+  //           limit_lower: -1e+16,
+  //           limit_upper: 1e+16,
+  //           limit_effort: -1,
+  //           limit_velocity: -1,
+  //           damping: 0,
+  //           friction: 0,
+  //           use_parent_model_frame: joint.axis.use_parent_model_frame
+  //         }
+  //       };
+  //       joints.push(modelJoint);
+  //     }
+  //     obj.joint = joints;
+  //   }
+  // }
 
   // the model appears at the origin
   obj.position.x = 0;
