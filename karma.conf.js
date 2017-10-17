@@ -41,7 +41,8 @@ module.exports = function(config) {
       'gz3d/test/fixture/*.html',
       'gz3d/test/*.js',
       {pattern: 'gz3d/test/utils/beer/model.sdf', included: false, served: true, watched: false, nocache: true},
-      {pattern: 'gz3d/test/utils/walkway_metal_straight/model.sdf', included: false, served: true, watched: false, nocache: true}      
+      {pattern: 'gz3d/test/utils/walkway_metal_straight/model.sdf', included: false, served: true, watched: false, nocache: true},
+      {pattern: 'gz3d/test/utils/house_2/model.sdf', included: false, served: true, watched: false, nocache: true}
     ],
 
 
