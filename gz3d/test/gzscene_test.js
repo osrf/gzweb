@@ -348,7 +348,7 @@ describe('Gzscene tests', function() {
           var sdf, obj, mtl, model, modelName, xhttp_1, xhttp_2, xhttp_3;
           xhttp_1 = new XMLHttpRequest();
           xhttp_1.overrideMimeType('text/xml');
-          xhttp_1.open('GET', 'http://localhost:9876/base/gz3d/test/utils/walkway_metal_straight/meshes/model.sdf', false);
+          xhttp_1.open('GET', 'http://localhost:9876/base/gz3d/test/utils/walkway_metal_straight/model.sdf', false);
           xhttp_1.send();
           sdf = xhttp_1.responseXML;
 
