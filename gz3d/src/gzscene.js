@@ -337,7 +337,7 @@ GZ3D.Scene.prototype.init = function()
   mesh.name = 'LINKFRAME_VISUAL';
   linkaxes.add(mesh);
 
-  this.linkFramesAxis = linkaxes;
+  this.linkFrameAxis = linkaxes;
 };
 
 GZ3D.Scene.prototype.initScene = function()
@@ -2325,7 +2325,7 @@ GZ3D.Scene.prototype.viewJoints = function(model)
  * Toggle: if there are link frames visuals, hide, otherwise, show.
  * @param {} model
  */
-GZ3D.Scene.prototype.viewLinkframes = function(model)
+GZ3D.Scene.prototype.viewLinkframe = function(model)
 {
   if (model === undefined || model === null)
   {
@@ -2340,15 +2340,15 @@ GZ3D.Scene.prototype.viewLinkframes = function(model)
   var child;
 
   // Visuals already exist
-  if (model.linkframesVisuals)
+  if (model.linkframeVisuals)
   {
     // Hide = remove from parent
-    if (model.linkframesVisuals[0].parent !== undefined &&
-         model.linkframesVisuals[0].parent !== null)
+    if (model.linkframeVisuals[0].parent !== undefined &&
+         model.linkframeVisuals[0].parent !== null)
     {
-      for (var v = 0; v < model.linkframesVisuals.length; ++v)
+      for (var v = 0; v < model.linkframeVisuals.length; ++v)
       {
-        model.linkframesVisuals[v].parent.remove(model.linkframesVisuals[v]);
+        model.linkframeVisuals[v].parent.remove(model.linkframeVisuals[v]);
       }
     }
     // Show: attach to parent
@@ -2363,15 +2363,15 @@ GZ3D.Scene.prototype.viewLinkframes = function(model)
           continue;
         }
 
-        child.add(model.linkframesVisuals[s]);
+        child.add(model.linkframeVisuals[s]);
       }
     }
   }
   // Create visuals
   else
   {
-    var boxlength, box, linkframesVisual, linkSize;
-    model.linkframesVisuals = [];
+    var boxlength, box, linkframeVisual, linkSize;
+    model.linkframeVisuals = [];
     for (var j = 0; j < model.children.length; ++j)
     {
       child = model.getObjectByName(model.children[j].name);
@@ -2389,11 +2389,11 @@ GZ3D.Scene.prototype.viewLinkframes = function(model)
       linkSize = Math.min(linkSize, 1.4);
 
       // link frames expressed w.r.t. child
-      linkframesVisual = this.linkFramesAxis.clone();
-      linkframesVisual.name = 'LINKFRAMES_VISUAL';
-      child.add(linkframesVisual);
-      model.linkframesVisuals.push(linkframesVisual);
-      linkframesVisual.scale.set(linkSize * 0.2, linkSize * 0.2,
+      linkframeVisual = this.linkFrameAxis.clone();
+      linkframeVisual.name = 'LINKFRAME_VISUAL';
+      child.add(linkframeVisual);
+      model.linkframeVisuals.push(linkframeVisual);
+      linkframeVisual.scale.set(linkSize * 0.2, linkSize * 0.2,
         linkSize * 0.2);
     }
   }

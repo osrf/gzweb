@@ -329,23 +329,23 @@ describe('Gzscene tests', function() {
           scene.add(model);
 
           // no visuals intially
-          visual = model.getObjectByName('LINKFRAMES_VISUAL');
+          visual = model.getObjectByName('LINKFRAME_VISUAL');
           expect(visual).toEqual(undefined);
 
           // if there was no selected entity it shouldn't break
-          guiEvents.emit('view_linkframes');
-          visual = model.getObjectByName('LINKFRAMES_VISUAL');
+          guiEvents.emit('view_linkframe');
+          visual = model.getObjectByName('LINKFRAME_VISUAL');
           expect(visual).toEqual(undefined);
 
           // select and then view the visuals
           scene.selectEntity(model);
-          guiEvents.emit('view_linkframes');
-          visual = model.getObjectByName('LINKFRAMES_VISUAL');
+          guiEvents.emit('view_linkframe');
+          visual = model.getObjectByName('LINKFRAME_VISUAL');
           expect(visual).not.toEqual(undefined);
 
           // hide the visuals
-          guiEvents.emit('view_linkframes');
-          visual = model.getObjectByName('LINKFRAMES_VISUAL');
+          guiEvents.emit('view_linkframe');
+          visual = model.getObjectByName('LINKFRAME_VISUAL');
           expect(visual).toEqual(undefined);
         });
       });

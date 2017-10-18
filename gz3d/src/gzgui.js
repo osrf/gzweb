@@ -642,11 +642,11 @@ $(function()
     }
   });
 
-  $( '#view-linkframes' ).click(function() {
-    if ($('#view-linkframes a').css('color') === 'rgb(255, 255, 255)')
+  $( '#view-linkframe' ).click(function() {
+    if ($('#view-linkframe a').css('color') === 'rgb(255, 255, 255)')
     {
       $('#model-popup').popup('close');
-      guiEvents.emit('view_linkframes');
+      guiEvents.emit('view_linkframe');
     }
   });
 
@@ -1284,9 +1284,9 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('view_linkframes', function ()
+  guiEvents.on('view_linkframe', function ()
     {
-      that.scene.viewLinkframes(that.scene.selectedEntity);
+      that.scene.viewLinkframe(that.scene.selectedEntity);
     }
   );
   guiEvents.on('delete_entity', function ()
@@ -2014,7 +2014,7 @@ GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
     $('#view-transparent').css('visibility','collapse');
     $('#view-wireframe').css('visibility','collapse');
     $('#view-joints').css('visibility','collapse');
-    $('#view-linkframes').css('visibility','collapse');
+    $('#view-linkframe').css('visibility','collapse');
     $('#model-popup').popup('open',
       {x: event.clientX + emUnits(6),
        y: event.clientY + emUnits(-8)});
@@ -2041,19 +2041,19 @@ GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
 
     if (entity.children === undefined || entity.children.length === 0)
     {
-      $('#view-linkframes a').css('color', '#888888');
-      $('#view-linkframes').buttonMarkup({icon: 'false'});
+      $('#view-linkframe a').css('color', '#888888');
+      $('#view-linkframe').buttonMarkup({icon: 'false'});
     }
     else
     {
-      $('#view-linkframes a').css('color', '#ffffff');
+      $('#view-linkframe a').css('color', '#ffffff');
       if (entity.getObjectByName('LINKFRAME_VISUAL', true))
       {
-        $('#view-linkframes').buttonMarkup({icon: 'check'});
+        $('#view-linkframe').buttonMarkup({icon: 'check'});
       }
       else
       {
-        $('#view-linkframes').buttonMarkup({icon: 'false'});
+        $('#view-linkframe').buttonMarkup({icon: 'false'});
       }
     }
     if (entity.joint === undefined || entity.joint.length === 0)
