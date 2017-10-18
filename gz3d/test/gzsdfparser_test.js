@@ -2,7 +2,6 @@ describe('Sdf Parser tests', function() {
 
   // Initializing object used in the test.
   beforeAll(function(){
-
     scene = new GZ3D.Scene();
     gui = new GZ3D.Gui(scene);
     iface = new GZ3D.GZIface(scene, gui);

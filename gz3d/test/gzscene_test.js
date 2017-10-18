@@ -1,19 +1,8 @@
-jasmine.getFixtures().fixturesPath = 'base/gz3d/test/fixture';
-
 describe('Gzscene tests', function() {
 
-      // beforeAll(function(){
-      //     loadFixtures('myfixture.html');
-      //     originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
-      //     jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000;
-          var scene = new GZ3D.Scene();
-          var gui = new GZ3D.Gui(scene);
-          var sdfparser = new GZ3D.SdfParser(scene, gui);
-
-      //     var gui = new GZ3D.Gui(scene);
-      //     var sdfparser = new GZ3D.SdfParser(scene, gui);
-      //   });
-
+      var scene = new GZ3D.Scene();
+      var gui = new GZ3D.Gui(scene);
+      var sdfparser = new GZ3D.SdfParser(scene, gui);
 
       describe('Test gzscene Initialize', function() {
         it('Intial values should match', function() {
@@ -358,7 +347,6 @@ describe('Gzscene tests', function() {
           guiEvents.emit('view_linkframes');
           visual = model.getObjectByName('LINKFRAMES_VISUAL');
           expect(visual).toEqual(undefined);
-
         });
       });
 });
