@@ -27,7 +27,8 @@ var tabColors = {selected: 'rgb(34, 170, 221)', unselected: 'rgb(42, 42, 42)'};
 var modelList =
   [
     {path:'buildings', title:'Buildings',
-    examplePath1:'fast_food', examplePath2:'kitchen_dining', examplePath3:'house_1', models:
+    examplePath1:'fast_food', examplePath2:'kitchen_dining',
+      examplePath3:'house_1', models:
     [
       {modelPath:'fast_food', modelTitle:'Fast Food'},
       {modelPath:'gas_station', modelTitle:'Gas Station'},
@@ -49,7 +50,8 @@ var modelList =
     ]},
 
     {path:'furniture', title:'Furniture',
-    examplePath1:'hinged_door', examplePath2:'bookshelf', examplePath3:'table', models:
+    examplePath1:'hinged_door', examplePath2:'bookshelf', examplePath3:'table',
+      models:
     [
       {modelPath:'bookshelf', modelTitle:'Book Shelf'},
       {modelPath:'cabinet', modelTitle:'Cabinet'},
@@ -61,31 +63,42 @@ var modelList =
       {modelPath:'cafe_table', modelTitle:'Cafe table'},
 
       {modelPath:'drc_practice_ball_valve', modelTitle:'Ball Valve'},
-      {modelPath:'drc_practice_handle_wheel_valve', modelTitle:'Handle Wheel Valve'},
-      {modelPath:'drc_practice_hand_wheel_valve', modelTitle:'Hand Wheel Valve'},
-      {modelPath:'drc_practice_wheel_valve', modelTitle:'Wheel Valve'},
-      {modelPath:'drc_practice_wheel_valve_large', modelTitle:'Wheel Valve Large'},
+      {modelPath:'drc_practice_handle_wheel_valve',
+        modelTitle:'Handle Wheel Valve'},
+      {modelPath:'drc_practice_hand_wheel_valve',
+        modelTitle:'Hand Wheel Valve'},
+      {modelPath:'drc_practice_wheel_valve',
+        modelTitle:'Wheel Valve'},
+      {modelPath:'drc_practice_wheel_valve_large',
+        modelTitle:'Wheel Valve Large'},
       {modelPath:'door_handle', modelTitle:'Door Handle'},
 
-      {modelPath:'drc_practice_ball_valve_wall', modelTitle:'Wall (Ball Valve)'},
-      {modelPath:'drc_practice_handle_wheel_valve_wall', modelTitle:'Wall (Handle Wheel Valve)'},
-      {modelPath:'drc_practice_hand_wheel_valve_wall', modelTitle:'Wall (Hand Wheel Valve)'},
+      {modelPath:'drc_practice_ball_valve_wall',
+        modelTitle:'Wall (Ball Valve)'},
+      {modelPath:'drc_practice_handle_wheel_valve_wall',
+        modelTitle:'Wall (Handle Wheel Valve)'},
+      {modelPath:'drc_practice_hand_wheel_valve_wall',
+        modelTitle:'Wall (Hand Wheel Valve)'},
       {modelPath:'drc_practice_valve_wall', modelTitle:'Wall (Valve)'},
-      {modelPath:'drc_practice_wheel_valve_wall', modelTitle:'Wall (Wheel Valve)'},
-      {modelPath:'drc_practice_wheel_valve_large_wall', modelTitle:'Wall (Wheel Valve Large)'},
+      {modelPath:'drc_practice_wheel_valve_wall',
+        modelTitle:'Wall (Wheel Valve)'},
+      {modelPath:'drc_practice_wheel_valve_large_wall',
+        modelTitle:'Wall (Wheel Valve Large)'},
       {modelPath:'grey_wall', modelTitle:'Grey Wall'},
       {modelPath:'asphalt_plane', modelTitle:'Asphalt Plane'},
       {modelPath:'drc_practice_base_4x8', modelTitle:'Debris base'},
       {modelPath:'ground_plane', modelTitle:'Ground Plane'},
       {modelPath:'nist_maze_wall_120', modelTitle:'120 Maze Wall'},
       {modelPath:'nist_maze_wall_240', modelTitle:'240 Maze Wall'},
-      {modelPath:'nist_maze_wall_triple_holes_120', modelTitle:'120 Maze Wall Triple Holes'},
+      {modelPath:'nist_maze_wall_triple_holes_120',
+        modelTitle:'120 Maze Wall Triple Holes'},
       {modelPath:'nist_simple_ramp_120', modelTitle:'Simple Ramp'},
       {modelPath:'nist_stairs_120', modelTitle:'Stairs'}
     ]},
 
     {path:'kitchen', title:'Kitchen',
-    examplePath1:'saucepan',  examplePath2:'beer',  examplePath3:'bowl', models:
+    examplePath1:'saucepan',  examplePath2:'beer',  examplePath3:'bowl',
+      models:
     [
       {modelPath:'beer', modelTitle:'Beer'},
       {modelPath:'bowl', modelTitle:'Bowl'},
@@ -95,7 +108,8 @@ var modelList =
     ]},
 
     {path:'robocup', title:'Robocup', examplePath1:'robocup_3Dsim_ball',
-    examplePath2:'robocup14_spl_goal', examplePath3:'robocup09_spl_field', models:
+    examplePath2:'robocup14_spl_goal', examplePath3:'robocup09_spl_field',
+      models:
     [
       {modelPath:'robocup09_spl_field', modelTitle:'2009 SPL Field'},
       {modelPath:'robocup14_spl_field', modelTitle:'2014 SPL Field'},
@@ -107,7 +121,8 @@ var modelList =
     ]},
 
     {path:'first', title:'FIRST', examplePath1:'frc2016_field',
-    examplePath2:'frc2016_chevaldefrise', examplePath3:'frc_field_2015', models:
+    examplePath2:'frc2016_chevaldefrise', examplePath3:'frc_field_2015',
+      models:
     [
       {modelPath:'frc2016_chevaldefrise', modelTitle:'Cheval de Frise'},
       {modelPath:'frc2016_drawbridge', modelTitle:'Draw Bridge'},
@@ -123,7 +138,8 @@ var modelList =
     ]},
 
     {path:'robots', title:'Robots',
-    examplePath1:'pioneer3at', examplePath2:'turtlebot', examplePath3:'pr2', models:
+    examplePath1:'pioneer3at', examplePath2:'turtlebot', examplePath3:'pr2',
+      models:
     [
       {modelPath:'create', modelTitle:'Create'},
       {modelPath:'husky', modelTitle:'Husky'},
@@ -142,7 +158,8 @@ var modelList =
       {modelPath:'cessna', modelTitle:'Cessna'},
       {modelPath:'follower_vehicle', modelTitle:'Follower Vehicle'},
       {modelPath:'iris_with_standoffs', modelTitle:'Iris with Standoffs'},
-      {modelPath:'iris_with_standoffs_demo', modelTitle:'Iris with Standoffs (demo)'},
+      {modelPath:'iris_with_standoffs_demo',
+        modelTitle:'Iris with Standoffs (demo)'},
       {modelPath:'mpl_right_arm', modelTitle:'MPL right arm'},
       {modelPath:'mpl_right_forearm', modelTitle:'MPL right forearm'},
       {modelPath:'parrot_bebop_2', modelTitle:'Parrot Bebop 2'},
@@ -155,7 +172,8 @@ var modelList =
     ]},
 
     {path:'sensors', title:'Sensors',
-    examplePath1:'camera', examplePath2:'hokuyo', examplePath3:'kinect', models:
+    examplePath1:'camera', examplePath2:'hokuyo', examplePath3:'kinect',
+      models:
     [
       {modelPath:'camera', modelTitle:'Camera'},
       {modelPath:'stereo_camera', modelTitle:'Stereo Camera'},
@@ -167,20 +185,26 @@ var modelList =
     ]},
 
     {path:'street', title:'Street', examplePath1:'dumpster',
-    examplePath2:'drc_practice_angled_barrier_45', examplePath3:'fire_hydrant', models:
+    examplePath2:'drc_practice_angled_barrier_45', examplePath3:'fire_hydrant',
+      models:
     [
       {modelPath:'cinder_block', modelTitle:'Cinder Block'},
       {modelPath:'cinder_block_2', modelTitle:'Cinder Block 2'},
       {modelPath:'cinder_block_wide', modelTitle:'Cinder Block Wide'},
       {modelPath:'construction_barrel', modelTitle:'Construction Barrel'},
       {modelPath:'construction_cone', modelTitle:'Construction Cone'},
-      {modelPath:'drc_practice_angled_barrier_45', modelTitle:'Angled Barrier 45'},
-      {modelPath:'drc_practice_angled_barrier_135', modelTitle:'Angled Barrier 135'},
+      {modelPath:'drc_practice_angled_barrier_45',
+        modelTitle:'Angled Barrier 45'},
+      {modelPath:'drc_practice_angled_barrier_135',
+        modelTitle:'Angled Barrier 135'},
       {modelPath:'drc_practice_block_wall', modelTitle:'Block Wall'},
-      {modelPath:'drc_practice_orange_jersey_barrier', modelTitle:'Jersey Barrier (Orange)'},
-      {modelPath:'drc_practice_white_jersey_barrier', modelTitle:'Jersey Barrier (White)'},
+      {modelPath:'drc_practice_orange_jersey_barrier',
+        modelTitle:'Jersey Barrier (Orange)'},
+      {modelPath:'drc_practice_white_jersey_barrier',
+        modelTitle:'Jersey Barrier (White)'},
       {modelPath:'drc_practice_truss', modelTitle:'Truss'},
-      {modelPath:'drc_practice_yellow_parking_block', modelTitle:'Parking Block'},
+      {modelPath:'drc_practice_yellow_parking_block',
+        modelTitle:'Parking Block'},
       {modelPath:'dumpster', modelTitle:'Dumpster'},
       {modelPath:'fire_hydrant', modelTitle:'Fire Hydrant'},
       {modelPath:'jersey_barrier', modelTitle:'Jersey Barrier'},
@@ -205,7 +229,8 @@ var modelList =
       {modelPath:'monkey_wrench', modelTitle:'Monkey Wrench'},
       {modelPath:'polaris_ranger_ev', modelTitle:'Polaris Ranger EV'},
       {modelPath:'polaris_ranger_xp900', modelTitle:'Polaris Ranger XP900'},
-      {modelPath:'polaris_ranger_xp900_no_roll_cage', modelTitle:'Polaris Ranger without roll cage'},
+      {modelPath:'polaris_ranger_xp900_no_roll_cage',
+        modelTitle:'Polaris Ranger without roll cage'},
       {modelPath:'utility_cart', modelTitle:'Utility Cart'},
       {modelPath:'car_wheel', modelTitle:'Car Wheel'},
       {modelPath:'arm_part', modelTitle:'Arm Part'},
@@ -219,9 +244,11 @@ var modelList =
     ]},
 
     {path:'misc', title:'Misc.', examplePath1:'brick_box_3x1x3',
-    examplePath2:'drc_practice_4x4x20', examplePath3:'double_pendulum_with_base', models:
+    examplePath2:'drc_practice_4x4x20',
+      examplePath3:'double_pendulum_with_base', models:
     [
-      {modelPath:'double_pendulum_with_base', modelTitle:'Double Pendulum With Base'},
+      {modelPath:'double_pendulum_with_base',
+        modelTitle:'Double Pendulum With Base'},
       {modelPath:'breakable_test', modelTitle:'Breakable_test'},
       {modelPath:'brick_box_3x1x3', modelTitle:'Brick Box 3x1x3'},
       {modelPath:'cardboard_box', modelTitle:'Cardboard Box'},
@@ -304,6 +331,9 @@ $(function()
   // Touch devices
   if (isTouchDevice)
   {
+    $('#logplay-slider')
+        .css('width','100%');
+
     $('.mouse-only')
         .css('display','none');
 
@@ -399,7 +429,7 @@ $(function()
         .css('right', '29.0em')
         .css('top', '0.5em')
         .css('z-index', '100')
-        .css('width', '11em')
+        .css('width', '11.5em')
         .css('height', '2.5em')
         .css('background-color', '#333333')
         .css('padding', '3px')
@@ -629,6 +659,42 @@ $(function()
   {
     guiEvents.emit('resizePanel');
   });
+
+  $('#logplay-slider-input').on('slidestop', function(event, ui)
+  {
+    guiEvents.emit('logPlaySlideStop', $('#logplay-slider-input').val());
+  });
+  $('#logplay-slider-input').on('slidestart', function(event, ui)
+  {
+    guiEvents.emit('logPlaySlideStart');
+  });
+  $('#logplay-rewind').click(function()
+      {
+        guiEvents.emit('logPlayRewind');
+      });
+  $('#logplay-stepback').click(function()
+      {
+        guiEvents.emit('logPlayStepback');
+      });
+  $('#logplay-play').click(function()
+      {
+        if ( $('#logplay-playText').html().indexOf('Play') !== -1 )
+        {
+          guiEvents.emit('pause', false);
+        }
+        else
+        {
+          guiEvents.emit('pause', true);
+        }
+      });
+  $('#logplay-stepforward').click(function()
+      {
+        guiEvents.emit('logPlayStepforward');
+      });
+  $('#logplay-forward').click(function()
+      {
+        guiEvents.emit('logPlayForward');
+      });
 });
 
 function getNameFromPath(path)
@@ -743,7 +809,8 @@ gzangular.controller('treeControl', ['$scope', function($scope)
     }
   };
 
-  $scope.expandProperty = function (prop, modelName, subPropShortName, subPropName, parentProp)
+  $scope.expandProperty = function (prop, modelName, subPropShortName,
+    subPropName, parentProp)
   {
     var modelId = convertNameId(modelName);
     var idContent = 'expandable-' + prop + '-' + modelId;
@@ -847,6 +914,9 @@ GZ3D.Gui.prototype.init = function()
   this.showNotifications = false;
   this.openTreeWhenSelected = false;
   this.modelStatsDirty = false;
+
+  this.logPlay = new GZ3D.LogPlay(
+      this, guiEvents);
 
   var that = this;
 
@@ -1520,6 +1590,10 @@ GZ3D.Gui.prototype.setPaused = function(paused)
         '<img style="height:1.2em" src="style/images/pause.png" title="Pause">'
         );
   }
+  // pause'd' event to inidicate simulation pause state has changed
+  // this is different from the 'pause' event which indicates user has pressed
+  // the play/pause button.
+  guiEvents.emit('paused', paused);
 };
 
 /**
@@ -1528,7 +1602,7 @@ GZ3D.Gui.prototype.setPaused = function(paused)
  */
 GZ3D.Gui.prototype.setRealTime = function(realTime)
 {
-  $('.real-time-value').text(realTime);
+  $('.real-time-value').text(formatTime(realTime));
 };
 
 /**
@@ -1537,7 +1611,7 @@ GZ3D.Gui.prototype.setRealTime = function(realTime)
  */
 GZ3D.Gui.prototype.setSimTime = function(simTime)
 {
-  $('.sim-time-value').text(simTime);
+  $('.sim-time-value').text(formatTime(simTime));
 };
 
 var sceneStats = {};
@@ -2017,7 +2091,8 @@ GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
 /**
  * Format stats message for proper display
  * @param {} stats
- * @returns {Object.<position, orientation, inertial, diffuse, specular, attenuation>}
+ * @returns {Object.<position, orientation, inertial,-
+ *  diffuse, specular, attenuation>}
  */
 GZ3D.Gui.prototype.formatStats = function(stats)
 {
@@ -2221,6 +2296,57 @@ GZ3D.Gui.prototype.deleteFromStats = function(type, name)
 };
 
 /**
+ * Set the visibility of the log play back widget
+ * @param {} visible
+ */
+GZ3D.Gui.prototype.setLogPlayVisible = function(visible)
+{
+  if (visible === this.logPlay.isVisible())
+  {
+    return;
+  }
+
+  this.logPlay.setVisible(visible);
+
+  // update UI to be in log playback mode
+  if (visible)
+  {
+    $('#editMenu').hide();
+    $('#insertMenuTab').hide();
+    $('#manipulatorModeFieldset').hide();
+    $('#simpleShapesFieldset').hide();
+    $('#lightsFieldset').hide();
+    $('#clock-mouse').hide();
+    $('#clock-header-fieldset').hide();
+    $('#play-header-fieldset').hide();
+  }
+  else
+  {
+    $('#editMenu').show();
+    $('#insertMenuTab').show();
+    $('#manipulatorModeFieldset').show();
+    $('#simpleShapesFieldset').show();
+    $('#lightsFieldset').show();
+    $('#clock-mouse').show();
+    $('#clock-header-fieldset').show();
+    $('#play-header-fieldset').show();
+  }
+};
+
+/**
+ * Set the log play back stats
+ * @param {} simTime
+ * @param {} startTime
+ * @param {} endTime
+ */
+GZ3D.Gui.prototype.setLogPlayStats = function(simTime, startTime, endTime)
+{
+  this.logPlay.setStats(simTime, startTime, endTime);
+  $('.end-time-value').text(formatTime(endTime));
+};
+
+
+/**
  * Convert name to id and vice versa
  * @param {} name Entity Name
  * @param {} reverse convert id to name
@@ -2235,4 +2361,54 @@ var convertNameId = function(name, reverse)
   {
     return name.replace(new RegExp(' ', 'g'), '_gzspace_');
   }
+};
+
+/**
+ * Format time string
+ * @param {} time object
+ */
+var formatTime = function(time)
+{
+  var timeSec = time.sec;
+  var timeNSec = time.nsec;
+
+  var timeDay = Math.floor(timeSec / 86400);
+  timeSec -= timeDay * 86400;
+
+  var timeHour = Math.floor(timeSec / 3600);
+  timeSec -= timeHour * 3600;
+
+  var timeMin = Math.floor(timeSec / 60);
+  timeSec -= timeMin * 60;
+
+  var timeMsec = Math.floor(timeNSec * 1e-6);
+
+  var timeValue = '';
+
+/*
+  if (timeDay < 10)
+  {
+    timeValue += '0';
+  }
+  timeValue += timeDay.toFixed(0)  + ' ';
+*/
+  if (timeHour < 10)
+  {
+    timeValue += '0';
+  }
+  timeValue += timeHour.toFixed(0) + ':';
+  if (timeMin < 10)
+  {
+    timeValue += '0';
+  }
+  timeValue += timeMin.toFixed(0) + ':';
+  if (timeSec < 10)
+  {
+    timeValue += '0';
+  }
+  timeValue += timeSec.toFixed(0) + '.';
+
+  timeValue += ('00' + timeMsec.toFixed(0)).slice(-3);
+
+  return timeValue;
 };

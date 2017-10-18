@@ -49,6 +49,7 @@ GazeboInterface::GazeboInterface()
   this->roadTopic = "~/roads";
   this->heightmapService = "~/heightmap_data";
   this->deleteTopic = "~/entity_delete";
+  this->playbackControlTopic = "~/playback_control";
 
   // material topic
   this->materialTopic = "~/material";
@@ -112,17 +113,22 @@ GazeboInterface::GazeboInterface()
   this->lightFactoryPub =
       this->node->Advertise<gazebo::msgs::Light>(this->lightFactoryTopic);
 
-  // For controling world
+  // For controlling world
   this->worldControlPub =
       this->node->Advertise<gazebo::msgs::WorldControl>(
       this->worldControlTopic);
+
+  // For controlling playback
+  this->playbackControlPub =
+      this->node->Advertise<gazebo::msgs::LogPlaybackControl>(
+      this->playbackControlTopic);
+
 
   this->responseSub = this->node->Subscribe("~/response",
       &GazeboInterface::OnResponse, this);
 
   this->materialParser = new OgreMaterialParser();
 
-  this->lastStatsTime = gazebo::common::Time::Zero;
   this->lastPausedState = true;
 
   // message filtering apparatus
@@ -217,18 +223,6 @@ void GazeboInterface::Fini()
 /////////////////////////////////////////////////
 void GazeboInterface::ProcessMessages()
 {
-  static RequestMsgs_L::iterator rIter;
-  static SceneMsgs_L::iterator sIter;
-  static PhysicsMsgs_L::iterator physicsIter;
-  static WorldStatsMsgs_L::iterator wIter;
-  static ModelMsgs_L::iterator modelIter;
-  static VisualMsgs_L::iterator visualIter;
-  static LightMsgs_L::iterator lightIter;
-  static PoseMsgs_L::iterator pIter;
-  // static SkeletonPoseMsgs_L::iterator spIter;
-  static JointMsgs_L::iterator jointIter;
-  static SensorMsgs_L::iterator sensorIter;
-
   {
     std::lock_guard<std::recursive_mutex> lock(this->receiveMutex);
 
@@ -552,7 +546,6 @@ void GazeboInterface::ProcessMessages()
             else if (reset == "world")
             {
               worldControlMsg.mutable_reset()->set_all(true);
-
             }
           }
           if (!pause.empty() || !reset.empty())
@@ -574,6 +567,51 @@ void GazeboInterface::ProcessMessages()
           std::string name = get_value(msg, "msg:name");
           gazebo::transport::requestNoReply(this->node, "entity_delete", name);
         }
+        else if (topic == this->playbackControlTopic)
+        {
+          gazebo::msgs::LogPlaybackControl playbackControlMsg;
+          std::string pause = get_value(msg, "msg:pause");
+          std::string multiStep = get_value(msg, "msg:multi_step");
+          std::string rewind = get_value(msg, "msg:rewind");
+          std::string forward = get_value(msg, "msg:forward");
+          std::string seekSec = get_value(msg, "msg:seek:sec");
+          std::string seekNSec = get_value(msg, "msg:seek:nsec");
+          if (!pause.empty())
+          {
+            int pauseValue = atoi(pause.c_str());
+            playbackControlMsg.set_pause(pauseValue);
+          }
+          if (!multiStep.empty())
+          {
+            int multiStepValue = atoi(multiStep.c_str());
+            playbackControlMsg.set_multi_step(multiStepValue);
+          }
+          if (!rewind.empty())
+          {
+            int rewindValue = atoi(rewind.c_str());
+            playbackControlMsg.set_rewind(rewindValue);
+          }
+          if (!forward.empty())
+          {
+            int forwardValue = atoi(forward.c_str());
+            playbackControlMsg.set_forward(forwardValue);
+          }
+          if (!seekSec.empty() && !seekNSec.empty())
+          {
+            auto seek = playbackControlMsg.mutable_seek();
+            seek->set_sec(atof(seekSec.c_str()));
+            seek->set_nsec(atof(seekNSec.c_str()));
+          }
+          this->playbackControlPub->Publish(playbackControlMsg);
+        }
+        else if (topic == this->statsTopic)
+        {
+          // simulate latching stats topic
+          if (this->statsMsgs.empty())
+          {
+            this->statsMsgs.push_back(this->statsMsg);
+          }
+        }
       }
       else
       {
@@ -589,7 +627,7 @@ void GazeboInterface::ProcessMessages()
 
     std::string msg;
     // Forward the scene messages.
-    for (sIter = this->sceneMsgs.begin(); sIter != this->sceneMsgs.end();
+    for (auto sIter = this->sceneMsgs.begin(); sIter != this->sceneMsgs.end();
         ++sIter)
     {
       msg = this->PackOutgoingTopicMsg(this->sceneTopic,
@@ -599,7 +637,7 @@ void GazeboInterface::ProcessMessages()
     this->sceneMsgs.clear();
 
     // Forward the physics messages.
-    for (physicsIter = this->physicsMsgs.begin();
+    for (auto physicsIter = this->physicsMsgs.begin();
         physicsIter != this->physicsMsgs.end(); ++physicsIter)
     {
       msg = this->PackOutgoingTopicMsg(this->physicsTopic,
@@ -609,7 +647,7 @@ void GazeboInterface::ProcessMessages()
     this->physicsMsgs.clear();
 
     // Forward the model messages.
-    for (modelIter = this->modelMsgs.begin();
+    for (auto modelIter = this->modelMsgs.begin();
         modelIter != this->modelMsgs.end(); ++modelIter)
     {
       msg = this->PackOutgoingTopicMsg(this->modelTopic,
@@ -619,7 +657,7 @@ void GazeboInterface::ProcessMessages()
     this->modelMsgs.clear();
 
     // Forward the sensor messages.
-    for (sensorIter = this->sensorMsgs.begin();
+    for (auto sensorIter = this->sensorMsgs.begin();
         sensorIter != this->sensorMsgs.end(); ++sensorIter)
     {
       msg = this->PackOutgoingTopicMsg(this->sensorTopic,
@@ -629,7 +667,7 @@ void GazeboInterface::ProcessMessages()
     this->sensorMsgs.clear();
 
     // Forward the light factory messages.
-    for (lightIter = this->lightFactoryMsgs.begin();
+    for (auto lightIter = this->lightFactoryMsgs.begin();
         lightIter != this->lightFactoryMsgs.end(); ++lightIter)
     {
       msg = this->PackOutgoingTopicMsg(this->lightFactoryTopic,
@@ -639,7 +677,7 @@ void GazeboInterface::ProcessMessages()
     this->lightFactoryMsgs.clear();
 
     // Forward the light modify messages.
-    for (lightIter = this->lightModifyMsgs.begin();
+    for (auto lightIter = this->lightModifyMsgs.begin();
         lightIter != this->lightModifyMsgs.end(); ++lightIter)
     {
       msg = this->PackOutgoingTopicMsg(this->lightModifyTopic,
@@ -649,7 +687,7 @@ void GazeboInterface::ProcessMessages()
     this->lightModifyMsgs.clear();
 
     // Forward the visual messages.
-    for (visualIter = this->visualMsgs.begin();
+    for (auto visualIter = this->visualMsgs.begin();
         visualIter != this->visualMsgs.end(); ++visualIter)
     {
       msg = this->PackOutgoingTopicMsg(this->visualTopic,
@@ -659,7 +697,7 @@ void GazeboInterface::ProcessMessages()
     this->visualMsgs.clear();
 
     // Forward the joint messages.
-    for (jointIter = this->jointMsgs.begin();
+    for (auto jointIter = this->jointMsgs.begin();
         jointIter != this->jointMsgs.end(); ++jointIter)
     {
       msg = this->PackOutgoingTopicMsg(this->jointTopic,
@@ -669,8 +707,8 @@ void GazeboInterface::ProcessMessages()
     this->jointMsgs.clear();
 
     // Forward the request messages
-    for (rIter =  this->requestMsgs.begin(); rIter != this->requestMsgs.end();
-        ++rIter)
+    for (auto rIter =  this->requestMsgs.begin();
+        rIter != this->requestMsgs.end(); ++rIter)
     {
       msg = this->PackOutgoingTopicMsg(this->requestTopic,
           pb2json(*(*rIter).get()));
@@ -679,7 +717,7 @@ void GazeboInterface::ProcessMessages()
     this->requestMsgs.clear();
 
     // Forward the stats messages.
-    for (wIter = this->statsMsgs.begin(); wIter != this->statsMsgs.end();
+    for (auto wIter = this->statsMsgs.begin(); wIter != this->statsMsgs.end();
         ++wIter)
     {
       msg = this->PackOutgoingTopicMsg(this->statsTopic,
@@ -689,7 +727,7 @@ void GazeboInterface::ProcessMessages()
     this->statsMsgs.clear();
 
     // Forward all the pose messages.
-    pIter = this->poseMsgs.begin();
+    auto pIter = this->poseMsgs.begin();
     while (pIter != this->poseMsgs.end())
     {
       msg = this->PackOutgoingTopicMsg(this->poseTopic,
@@ -950,20 +988,29 @@ void GazeboInterface::OnPhysicsMsg(ConstPhysicsPtr &_msg)
 /////////////////////////////////////////////////
 void GazeboInterface::OnStats(ConstWorldStatisticsPtr &_msg)
 {
+  // store stats msg. This is sent to all clients when they first connect to
+  // the bridge to determine if gazebo is in sim or playback mode
+  this->statsMsg = _msg;
+
   if (!this->IsConnected())
     return;
 
   gazebo::common::Time wallTime;
   wallTime = gazebo::msgs::Convert(_msg->real_time());
+
+  gazebo::common::Time lastStatsTime;
+  if (this->lastStatsMsg)
+    lastStatsTime = gazebo::msgs::Convert(this->lastStatsMsg->real_time());
+  // bool playback = this->lastStatsMsg->has_log_playback_stats();
+  double timeDelta = (wallTime - lastStatsTime).Double();
   bool paused = _msg->paused();
 
   // pub at 1Hz, but force pub if world state changes
-  if (((wallTime - this->lastStatsTime).Double() >= 1.0) ||
-      wallTime < this->lastStatsTime ||
+  if (timeDelta >= 1.0 || wallTime < lastStatsTime ||
       this->lastPausedState != paused)
   {
-    this->lastStatsTime = wallTime;
     this->lastPausedState = paused;
+    this->lastStatsMsg = _msg;
 
     std::lock_guard<std::recursive_mutex> lock(this->receiveMutex);
     this->statsMsgs.push_back(_msg);

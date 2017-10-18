@@ -972,6 +972,7 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
 
     event.preventDefault();
 
+    
     var planeIntersect = intersectObjects(event,
         [intersectionPlanes[currentPlane]]);
 
@@ -1068,7 +1069,8 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
                              Math.atan2(tempVector.x, tempVector.z),
                              Math.atan2(tempVector.y, tempVector.x));
 
-          tempQuaternion.setFromRotationMatrix(tempMatrix.getInverse(parentRotationMatrix));
+          tempQuaternion.setFromRotationMatrix(
+            tempMatrix.getInverse(parentRotationMatrix));
 
           quaternionE.setFromAxisAngle(eye, rotation.z - offsetRotation.z);
           quaternionXYZ.setFromRotationMatrix(worldRotationMatrix);
@@ -1080,10 +1082,14 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
         }
         else if(scope.selected === 'RXYZE')
         {
-          quaternionE.setFromEuler(point.clone().cross(tempVector).normalize()); // has this ever worked?
+          // has this ever worked?
+          quaternionE.setFromEuler(
+            point.clone().cross(tempVector).normalize());
 
-          tempQuaternion.setFromRotationMatrix(tempMatrix.getInverse(parentRotationMatrix));
-          quaternionX.setFromAxisAngle(quaternionE, - point.clone().angleTo(tempVector));
+          tempQuaternion.setFromRotationMatrix(
+            tempMatrix.getInverse(parentRotationMatrix));
+          quaternionX.setFromAxisAngle(
+            quaternionE, - point.clone().angleTo(tempVector));
           quaternionXYZ.setFromRotationMatrix(worldRotationMatrix);
 
           tempQuaternion.multiplyQuaternions(tempQuaternion, quaternionX);
@@ -1099,10 +1105,11 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
 
             tempVector.applyMatrix4(tempMatrix.getInverse(worldRotationMatrix));
 
-            rotation.set(Math.atan2(point.z, point.y), Math.atan2(point.x, point.z),
-                Math.atan2(point.y, point.x));
-            offsetRotation.set(Math.atan2(tempVector.z, tempVector.y), Math.atan2(
-                tempVector.x, tempVector.z), Math.atan2(tempVector.y, tempVector.x));
+            rotation.set(Math.atan2(point.z, point.y),
+              Math.atan2(point.x, point.z), Math.atan2(point.y, point.x));
+            offsetRotation.set(Math.atan2(tempVector.z, tempVector.y),
+              Math.atan2(tempVector.x, tempVector.z),
+                Math.atan2(tempVector.y, tempVector.x));
 
             quaternionXYZ.setFromRotationMatrix(oldRotationMatrix);
             quaternionX.setFromAxisAngle(unitX, rotation.x - offsetRotation.x);
@@ -1126,10 +1133,11 @@ GZ3D.Manipulator = function(camera, mobile, domElement, doc)
           }
           else if (scope.space === 'world')
           {
-            rotation.set(Math.atan2(point.z, point.y), Math.atan2(point.x, point.z),
-                Math.atan2(point.y, point.x));
-            offsetRotation.set(Math.atan2(tempVector.z, tempVector.y), Math.atan2(
-              tempVector.x, tempVector.z), Math.atan2(tempVector.y, tempVector.x));
+            rotation.set(Math.atan2(point.z, point.y),
+              Math.atan2(point.x, point.z), Math.atan2(point.y, point.x));
+            offsetRotation.set(Math.atan2(tempVector.z, tempVector.y),
+              Math.atan2(tempVector.x, tempVector.z),
+                Math.atan2(tempVector.y, tempVector.x));
 
             tempQuaternion.setFromRotationMatrix(tempMatrix.getInverse(
               parentRotationMatrix));
