@@ -11,7 +11,7 @@
     "deploy_op": ""
   },
   "scripts": {
-    "test": "./node_modules/karma/bin/karma start --singleRun",
+    "test": "./node_modules/.bin/eslint gz3d/src/*.js && ./node_modules/karma/bin/karma start --singleRun",
     "update": "grunt build && cd build && cmake ..",
     "start": "if [ $npm_config_port ]; then port=$npm_config_port; else port=8080; fi; ./node_modules/.bin/http-server -p $port http/client & cd gzbridge && ./ws_server.js",
     "deploy": "if [ $npm_config_deploy_op ]; then ./deploy.sh -$npm_config_deploy_op; else ./deploy.sh; fi;",
@@ -26,6 +26,7 @@
   "devDependencies": {
     "catharsis": "^0.8.9",
     "codecov": "^2.3.0",
+    "eslint": "^4.8.0",
     "grunt": "~0.4.1",
     "grunt-contrib-clean": "^1.1.0",
     "grunt-contrib-concat": "^1.0.1",

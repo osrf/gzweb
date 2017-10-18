@@ -40,7 +40,8 @@ GZ3D.SdfParser.prototype.init = function()
   {
     var that = this;
     this.gziface.emitter.on('error', function() {
-      that.gui.guiEvents.emit('notification_popup', 'GzWeb is currently running' +
+      that.gui.guiEvents.emit('notification_popup',
+              'GzWeb is currently running' +
               'without a server, and materials could not be loaded.' +
               'When connected scene will be reinitialized', 5000);
       that.onConnectionError();
@@ -54,7 +55,8 @@ GZ3D.SdfParser.prototype.init = function()
       if (gzstatus === 'error')
       {
         that.gui.guiEvents.emit('notification_popup', 'GzWeb is currently ' +
-                'running without a GzServer, and Scene is reinitialized.', 5000);
+                'running without a GzServer,'
+                + 'and Scene is reinitialized.', 5000);
         that.onConnectionError();
       }
     });
@@ -70,7 +72,8 @@ GZ3D.SdfParser.prototype.init = function()
  * when gziface cannot connect to gzbridge websocket
  * this is due to 2 reasons:
  * 1 - gzbridge websocket might not be run yet
- * 2 - gzbridge websocket is trying to connect to gzserver which is not running currenly
+ * 2 - gzbridge websocket is trying to connect to
+ *       gzserver which is not running currenly
  */
 GZ3D.SdfParser.prototype.onConnectionError = function()
 {
@@ -214,8 +217,9 @@ GZ3D.SdfParser.prototype.spawnLightFromSDF = function(sdfObj)
 /**
  * Parses a string which is a 3D vector
  * @param {string} poseStr - string which denotes the pose of the object
- * where every value should be separated with single white space and first three denotes
- * x,y,z and values of the pose, and following three denotes euler rotation around x,y,z
+ * where every value should be separated with single white space and
+ * first three denotes x,y,z and values of the pose,
+ * and following three denotes euler rotation around x,y,z
  * @returns {object} pose - pose object having position (x,y,z)(THREE.Vector3)
  * and orientation (THREE.Quaternion) properties
  */

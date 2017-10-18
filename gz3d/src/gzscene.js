@@ -2137,7 +2137,8 @@ GZ3D.Scene.prototype.viewJoints = function(model)
   if (model.jointVisuals)
   {
     // Hide = remove from parent
-    if (model.jointVisuals[0].parent !== undefined && model.jointVisuals[0].parent !== null)
+    if (model.jointVisuals[0].parent !== undefined &&
+      model.jointVisuals[0].parent !== null)
     {
       for (var v = 0; v < model.jointVisuals.length; ++v)
       {
