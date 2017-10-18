@@ -316,8 +316,8 @@ describe('Gzscene tests', function() {
       });
 
       // Test linkframes visualizations
-      describe('Test manipulation mode', function() {
-        it('Should change manipulation mode to translate', function() {
+      describe('Test link frame visuals', function() {
+        it('Should toggle link frame visualizations', function() {
           var sdf, object, visual, model, xhttp;
 
           xhttp = new XMLHttpRequest();
@@ -338,7 +338,7 @@ describe('Gzscene tests', function() {
           expect(visual).toEqual(undefined);
 
           // select a model and then view the visuals
-          scene.selectEntity(model);
+          scene.selectedEntity = model;
           guiEvents.emit('view_linkframe');
           visual = model.getObjectByName('LINKFRAME_VISUAL');
           expect(visual).not.toEqual(undefined);

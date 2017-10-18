@@ -7767,7 +7767,7 @@ GZ3D.Scene.prototype.selectEntity = function(object)
       this.selectedEntity = object;
     }
     this.attachManipulator(object, this.manipulationMode);
-    guiEvents.emit('setTreeSelected ', object.name);
+    guiEvents.emit('setTreeSelected', object.name);
   }
   else
   {
