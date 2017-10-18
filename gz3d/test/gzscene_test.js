@@ -337,8 +337,18 @@ describe('Gzscene tests', function() {
           visual = model.getObjectByName('LINKFRAME_VISUAL');
           expect(visual).toEqual(undefined);
 
-          // select and then view the visuals
+          // select a model and then view the visuals
           scene.selectEntity(model);
+          guiEvents.emit('view_linkframe');
+          visual = model.getObjectByName('LINKFRAME_VISUAL');
+          expect(visual).not.toEqual(undefined);
+
+          // hide the visuals
+          guiEvents.emit('view_linkframe');
+          visual = model.getObjectByName('LINKFRAME_VISUAL');
+          expect(visual).toEqual(undefined);
+
+          // view the link frame visuals again
           guiEvents.emit('view_linkframe');
           visual = model.getObjectByName('LINKFRAME_VISUAL');
           expect(visual).not.toEqual(undefined);
