@@ -1,17 +1,8 @@
-jasmine.getFixtures().fixturesPath = 'base/gz3d/test/fixture';
-
 describe('Gzscene tests', function() {
 
-      beforeEach(function(){
-          loadFixtures('myfixture.html');
-          originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
-          jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000;
-          scene = new GZ3D.Scene();
-          gui = new GZ3D.Gui(scene);
-          iface = new GZ3D.GZIface(scene, gui);
-          sdfparser = new GZ3D.SdfParser(scene, gui, iface);
-        });
-
+          var scene = new GZ3D.Scene();
+          var gui = new GZ3D.Gui(scene);
+          var sdfparser = new GZ3D.SdfParser(scene, gui);
 
       describe('Test gzscene Initialize', function() {
         it('Intial values should match', function() {
@@ -321,6 +312,51 @@ describe('Gzscene tests', function() {
           guiEvents.emit('manipulation_mode', 'translate');
           expect(scene.manipulationMode).not.toEqual('view');
           expect(scene.manipulationMode).toEqual('translate');
+        });
+      });
+
+      // Test center of mass visualizations visualizations
+      describe('Test center of mass visual', function() {
+        it('spawn a model and toggle center of mass visuals', function() {
+          var sdf, object, visual, model, xhttp;
+
+          xhttp = new XMLHttpRequest();
+          xhttp.overrideMimeType('text/xml');
+          xhttp.open('GET', 'http://localhost:9876/base/gz3d/test/utils/beer/model.sdf', false);
+          xhttp.send();
+          sdf = xhttp.responseXML;
+          model = sdfparser.spawnFromSDF(sdf);
+          scene.add(model);
+
+          // no visuals intially
+          visual = model.getObjectByName('COM_VISUAL');
+          expect(visual).toEqual(undefined);
+
+          // if there was no selected entity it shouldn't break
+          guiEvents.emit('view_com');
+          visual = model.getObjectByName('COM_VISUAL');
+          expect(visual).toEqual(undefined);
+
+          // select a model and then view the visuals
+          // scene.selectEntity(model);
+          // guiEvents.emit('view_com');
+          // visual = model.getObjectByName('COM_VISUAL');
+          // expect(visual).not.toEqual(undefined);
+
+          // // hide the visuals
+          // guiEvents.emit('view_com');
+          // visual = model.getObjectByName('COM_VISUAL');
+          // expect(visual).toEqual(undefined);
+
+          // // test to view the visuals when they already exist
+          // guiEvents.emit('view_com');
+          // visual = model.getObjectByName('COM_VISUAL');
+          // expect(visual).not.toEqual(undefined);
+
+          // // hide the visuals
+          // guiEvents.emit('view_com');
+          // visual = model.getObjectByName('COM_VISUAL');
+          // expect(visual).toEqual(undefined);
         });
       });
 });

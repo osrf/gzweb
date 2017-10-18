@@ -5973,7 +5973,8 @@ GZ3D.Scene.prototype.init = function()
   geometry = new THREE.SphereGeometry(1, 32, 32);
 
   mesh = new THREE.Mesh(geometry);
-  this.setMaterial(mesh, {'ambient':[0.5,0.5,0.5,1.000000],'texture':'assets/media/materials/textures/com.png'});
+  this.setMaterial(mesh, {'ambient':[0.5,0.5,0.5,1.000000],
+    'texture':'assets/media/materials/textures/com.png'});
   mesh.position.x = 0.15;
   mesh.rotation.z = -Math.PI/2;
   mesh.name = 'COM_VISUAL';
@@ -6243,7 +6244,7 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
       }
 
       if (model.name === 'grid' || model.name === 'boundingBox' ||
-          model.name === 'JOINT_VISUAL')
+          model.name === 'JOINT_VISUAL' || model.name === 'COM_VISUAL')
       {
         point = objects[i].point;
         model = null;
@@ -7967,6 +7968,10 @@ GZ3D.Scene.prototype.viewJoints = function(model)
  */
 GZ3D.Scene.prototype.viewCOM = function(model)
 {
+  if (model === undefined || model === null)
+  {
+    return;
+  }
   if (model.children.length === 0)
   {
     return;
