@@ -1405,7 +1405,7 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
 
 /**
  * Load mesh
- * @param {array} files
+ * @param {array} files - the files need for the loaders[obj, mtl, dae] as text
  * @param {string} uri
  * @param {} submesh
  * @param {} centerSubmesh
