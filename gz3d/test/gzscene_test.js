@@ -348,7 +348,7 @@ describe('Gzscene tests', function() {
           visual = model.getObjectByName('LINKFRAME_VISUAL');
           expect(visual).toEqual(undefined);
 
-          // view the link frame visuals again
+          // test to view the visuals when they already exist
           guiEvents.emit('view_linkframe');
           visual = model.getObjectByName('LINKFRAME_VISUAL');
           expect(visual).not.toEqual(undefined);
