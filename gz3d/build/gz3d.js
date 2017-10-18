@@ -2061,8 +2061,8 @@ GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
 /**
  * Format stats message for proper display
  * @param {} stats
- * @returns {Object.<position, orientation, inertial,-
- *  diffuse, specular, attenuation>}
+   eslint-disable-next-line no-use-before-define
+ * @returns {Object.<position, orientation, inertial,diffuse, specular, attenuation>}
  */
 GZ3D.Gui.prototype.formatStats = function(stats)
 {
