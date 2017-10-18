@@ -2376,20 +2376,21 @@ GZ3D.Scene.prototype.viewCOM = function(model)
 
       if (child.userData.inertial)
       {
-        var mesh, radius, inertialMass, inertialPose = {};
+        var mesh, radius, inertialMass, userdatapose, inertialPose = {};
         var inertial = child.userData.inertial;
 
-        if (child.userData.inertial.pose === undefined)
+        userdatapose = child.userData.inertial.pose;
+        if (userdatapose === undefined)
         {
           inertialPose.position = child.position;
           inertialPose.orientation = child.quaternion;
         }
         else
         {
-          inertialPose = child.userData.inertial.pose;
+          inertialPose = userdatapose;
         }
 
-        inertialMass = child.userData.inertial.mass;
+        inertialMass = inertial.mass;
 
         // calculate the radius using lead density
         radius = Math.cbrt((0.75 * inertialMass ) / (Math.PI * 11340));
