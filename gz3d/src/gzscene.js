@@ -2165,7 +2165,8 @@ GZ3D.Scene.prototype.viewJoints = function(model)
   if (model.jointVisuals)
   {
     // Hide = remove from parent
-    if (model.jointVisuals[0].parent !== undefined && model.jointVisuals[0].parent !== null)
+    if (model.jointVisuals[0].parent !== undefined &&
+      model.jointVisuals[0].parent !== null)
     {
       for (var v = 0; v < model.jointVisuals.length; ++v)
       {
@@ -2321,11 +2322,16 @@ GZ3D.Scene.prototype.viewJoints = function(model)
 
 /**
  * View link frames
- * Toggle: if there are links, hide, otherwise, show.
+ * Toggle: if there are link frames visuals, hide, otherwise, show.
  * @param {} model
  */
 GZ3D.Scene.prototype.viewLinkframes = function(model)
 {
+  if (model === undefined || model === null)
+  {
+    return;
+  }
+
   if (model.children === undefined || model.children.length === 0)
   {
     return;
