@@ -1,10 +1,13 @@
 describe('Sdf Parser tests', function() {
 
-  // Initializing object used in the test.
-  scene = new GZ3D.Scene();
-  gui = new GZ3D.Gui(scene);
-  iface = new GZ3D.GZIface(scene, gui);
-  sdfparser = new GZ3D.SdfParser(scene, gui, iface);
+  beforeAll(function(){
+
+    // Initializing object used in the test.
+    scene = new GZ3D.Scene();
+    gui = new GZ3D.Gui(scene);
+    iface = new GZ3D.GZIface(scene, gui);
+    sdfparser = new GZ3D.SdfParser(scene, gui, iface);
+  });
 
   describe('Parse color test, string to json', function() {
     it('should return a json color', function() {

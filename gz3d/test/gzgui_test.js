@@ -15,8 +15,10 @@ describe('Gui tests', function() {
       }));
 
       // Initializing object used in the test.
-      scene = new GZ3D.Scene();
-      gui = new GZ3D.Gui(scene);
+      var scene = new GZ3D.Scene();
+      var gui = new GZ3D.Gui(scene);
+      var sdfparser = new GZ3D.SdfParser(scene, gui);
+
 
       // Initialize test
       describe('Test gzgui init', function() {
@@ -50,24 +52,15 @@ describe('Gui tests', function() {
           guiEvents.emit('snap_to_grid');
           expect(scene.modelManipulator.snapDist).toEqual(null);
 
-          expect(gui.openTreeWhenSelected).toEqual(false);
-          guiEvents.emit('openTreeWhenSelected');
-          // Why does it fail at this?
-          // @gzgui line: 1020.
-          // expect(gui.openTreeWhenSelected).toEqual(true);
-
           expect(gui.showNotifications).toEqual(false);
           guiEvents.emit('toggle_notifications');
-          // Why does it fail at this?
-          // @gzgui line: 1034.
-          // expect(gui.showNotifications).toEqual(false);
+          expect(gui.showNotifications).toEqual(false);
 
           // TODO: test set_view_as after finishing model spawning test.
 
           // TODO: test delete_entity after finishing model spawning test.
         });
       });
-
 
       // Intialize test
       describe('Test getNameFromPath()', function() {
