@@ -603,7 +603,7 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
       }
 
       if (model.name === 'grid' || model.name === 'boundingBox' ||
-          model.name === 'JOINT_VISUAL')
+          model.name === 'JOINT_VISUAL'|| model.name === 'LINKFRAME_VISUAL')
       {
         point = objects[i].point;
         model = null;
