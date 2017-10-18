@@ -325,18 +325,20 @@ describe('Gzscene tests', function() {
 
       describe('Spawn a model with no mesh using the file api', function() {
         it('should add a model to the scene using the model files and then removes it', function() {
-          var sdf, model, modelName;
+          var sdf, model;
           var xhttp = new XMLHttpRequest();
           xhttp.overrideMimeType('text/xml');
           xhttp.open('GET', 'http://localhost:9876/base/gz3d/test/utils/beer/model.sdf', false);
           xhttp.send();
           sdf = xhttp.responseXML;
 
+          model = scene.getByName('beer');
+          expect(model).toEqual(undefined);
+
           scene.spawnModel.spawnFromSdf(sdf);
           model = scene.getByName('beer');
-          modelName  = model.name;
-          expect(modelName).toEqual('beer');
-          expect(modelName).not.toEqual('walkway_metal_straight');
+
+          expect(model).not.toEqual(undefined);
           scene.remove(model);
           model = scene.getByName('beer');
           expect(model).toEqual(undefined);
@@ -366,11 +368,13 @@ describe('Gzscene tests', function() {
           mtl = xhttp_3.responseText;
           sdfparser.meshes['mesh.mtl'] = mtl;
 
+          model = scene.getByName('walkway_metal_straight');
+          expect(model).toEqual(undefined);
+
           scene.spawnModel.spawnFromSdf(sdf);
           model = scene.getByName('walkway_metal_straight');
-          modelName  = model.name;
-          expect(modelName).toEqual('walkway_metal_straight');
-          expect(modelName).not.toEqual('beer');
+
+          expect(model).not.toEqual(undefined);
           scene.remove(model);
           model = scene.getByName('walkway_metal_straight');
           expect(model).toEqual(undefined);
@@ -379,7 +383,7 @@ describe('Gzscene tests', function() {
 
       describe('Spawn a model with a collada mesh using the file api', function() {
         it('should add a model to the scene using the model files and then removes it', function() {
-          var sdf, dae, model, modelName, xhttp_1, xhttp_2;
+          var sdf, dae, model, xhttp_1, xhttp_2;
           xhttp_1 = new XMLHttpRequest();
           xhttp_1.overrideMimeType('text/xml');
           xhttp_1.open('GET', 'http://localhost:9876/base/gz3d/test/utils/house_2/model.sdf', false);
@@ -394,12 +398,13 @@ describe('Gzscene tests', function() {
           // mesh = xhttp_2.responseText;
           // sdfparser.meshes['house_2.dae'] = mesh;
 
+          model = scene.getByName('House 2');
+          expect(model).toEqual(undefined);
+
           scene.spawnModel.spawnFromSdf(sdf);
           model = scene.getByName('House 2');
+          expect(model).not.toEqual(undefined);
 
-          modelName  = model.name;
-          expect(modelName).toEqual('House 2');
-          expect(modelName).not.toEqual('beer');
           scene.remove(model);
           model = scene.getByName('House 2');
           expect(model).toEqual(undefined);

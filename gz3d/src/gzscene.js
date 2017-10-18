@@ -1426,12 +1426,12 @@ GZ3D.Scene.prototype.loadMesh = function(files, uri, submesh, centerSubmesh,
     return;
   }
 
-  if (!files)
+  if (!files[0])
   {
     // load urdf model
     if (uriFile.substr(-4).toLowerCase() === '.dae')
     {
-      return this.loadCollada(uri, submesh, centerSubmesh, callback);
+      return this.loadCollada(undefined ,uri, submesh, centerSubmesh, callback);
     }
     else if (uriFile.substr(-4).toLowerCase() === '.obj')
     {
@@ -1472,7 +1472,7 @@ GZ3D.Scene.prototype.loadMesh = function(files, uri, submesh, centerSubmesh,
       }*/
     }
   }
-  else if (files)
+  else
   {
     // load urdf model
     if (uriFile.substr(-4).toLowerCase() === '.dae')
@@ -1489,7 +1489,7 @@ GZ3D.Scene.prototype.loadMesh = function(files, uri, submesh, centerSubmesh,
 
 /**
  * Load collada file
- * @param {string} file
+ * @param {string} filestring - the dae mesh as a string to be parsed.
  * @param {string} uri
  * @param {} submesh
  * @param {} centerSubmesh

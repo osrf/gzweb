@@ -7031,12 +7031,12 @@ GZ3D.Scene.prototype.loadMesh = function(files, uri, submesh, centerSubmesh,
     return;
   }
 
-  if (!files)
+  if (!files[0])
   {
     // load urdf model
     if (uriFile.substr(-4).toLowerCase() === '.dae')
     {
-      return this.loadCollada(uri, submesh, centerSubmesh, callback);
+      return this.loadCollada(undefined ,uri, submesh, centerSubmesh, callback);
     }
     else if (uriFile.substr(-4).toLowerCase() === '.obj')
     {
@@ -7077,7 +7077,7 @@ GZ3D.Scene.prototype.loadMesh = function(files, uri, submesh, centerSubmesh,
       }*/
     }
   }
-  else if (files)
+  else
   {
     // load urdf model
     if (uriFile.substr(-4).toLowerCase() === '.dae')
@@ -7094,7 +7094,7 @@ GZ3D.Scene.prototype.loadMesh = function(files, uri, submesh, centerSubmesh,
 
 /**
  * Load collada file
- * @param {string} file
+ * @param {string} filestring - the dae mesh as a string to be parsed.
  * @param {string} uri
  * @param {} submesh
  * @param {} centerSubmesh
@@ -8102,6 +8102,7 @@ GZ3D.SdfParser = function(scene, gui, gziface)
   // store meshes when loading meshes from memory.
   this.meshes = {};
   this.mtls = {};
+  this.textures = {};
 };
 
 /**
@@ -8139,7 +8140,6 @@ GZ3D.SdfParser.prototype.init = function()
   }
   else
   {
-    this.textures = [];
     this.scene.initScene();
   }
 };
@@ -8457,7 +8457,7 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
         startIndex = 0;
       }
       var normalMapName = material.normal_map.substr(startIndex,
-              material.normal_map.lastIndexOf('.') - startIndex);
+        material.normal_map.lastIndexOf('.') - startIndex);
       // Map texture name to the corresponding texture.
       if (!this.usingfilesUrls)
       {
@@ -8466,7 +8466,7 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
       else
       {
         normalMap = this.MATERIAL_ROOT + '/' + mapUri + '/' +
-            normalMapName + '.png';
+          normalMapName + '.png';
       }
 
     }
@@ -8575,7 +8575,7 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
 
       if (!this.usingfilesUrls)
       {
-        var meshFileName = meshUri.substring(meshUri.lastIndexOf('/')+1);
+        var meshFileName = meshUri.substring(meshUri.lastIndexOf('/') + 1);
         var ext = meshFileName.substring(meshFileName.indexOf('.') + 1);
         var meshFile = this.meshes[meshFileName];
         if (ext === 'obj')
@@ -8715,25 +8715,6 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
       }
     }
   }
-
-  // function loadedObjMesh(mtlFileString, evt)
-  // {
-  //   var fileString = evt.target.result;
-  //   that.scene.loadMesh(fileString, modelUri, submesh, centerSubmesh,
-  //    function(obj)
-  //    {
-  //     parent.add(obj);
-  //     loadGeom(parent);
-  //    });
-  // }
-
-  // function loadedmtl(meshFile, evt)
-  // {
-  //   var fileString = evt.target.result;
-  //   var objFileReader = new FileReader();
-  //   objFileReader.onload = loadedObjMesh(fileString);
-  //   objFileReader.readAsText(meshFile, 'UTF-8');
-  // }
 };
 
 /**
@@ -9405,7 +9386,7 @@ GZ3D.SpawnModel.prototype.generateUniqueName = function(entity)
 /**
  * Start spawning an entity.
  * Adds an object to the scene.
- * @param {string} fileString - The model sdf file as text
+ * @param {string} fileString - The model sdf file as a string
  */
 GZ3D.SpawnModel.prototype.spawnFromSdf = function(fileString)
 {
@@ -9435,6 +9416,8 @@ GZ3D.SpawnModel.prototype.spawnFromSdf = function(fileString)
     }
   };
 
+  // // sdfObj is always undefined, the XML parser doesn't work while testing
+  // // while it does work during normal usage.
   // // this to enable joint visuals in sdfviewer mode
   // if (sdfObj.model.joint)
   // {

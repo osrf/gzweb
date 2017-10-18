@@ -309,7 +309,7 @@ GZ3D.SpawnModel.prototype.generateUniqueName = function(entity)
 /**
  * Start spawning an entity.
  * Adds an object to the scene.
- * @param {string} fileString - The model sdf file as text
+ * @param {string} fileString - The model sdf file as a string
  */
 GZ3D.SpawnModel.prototype.spawnFromSdf = function(fileString)
 {
@@ -339,6 +339,8 @@ GZ3D.SpawnModel.prototype.spawnFromSdf = function(fileString)
     }
   };
 
+  // // sdfObj is always undefined, the XML parser doesn't work while testing
+  // // while it does work during normal usage.
   // // this to enable joint visuals in sdfviewer mode
   // if (sdfObj.model.joint)
   // {
