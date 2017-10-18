@@ -338,25 +338,25 @@ describe('Gzscene tests', function() {
           expect(visual).toEqual(undefined);
 
           // select a model and then view the visuals
-          // scene.selectEntity(model);
-          // guiEvents.emit('view_com');
-          // visual = model.getObjectByName('COM_VISUAL');
-          // expect(visual).not.toEqual(undefined);
+          scene.selectedEntity = model;
+          guiEvents.emit('view_com');
+          visual = model.getObjectByName('COM_VISUAL');
+          expect(visual).not.toEqual(undefined);
 
-          // // hide the visuals
-          // guiEvents.emit('view_com');
-          // visual = model.getObjectByName('COM_VISUAL');
-          // expect(visual).toEqual(undefined);
+          // hide the visuals
+          guiEvents.emit('view_com');
+          visual = model.getObjectByName('COM_VISUAL');
+          expect(visual).toEqual(undefined);
 
-          // // test to view the visuals when they already exist
-          // guiEvents.emit('view_com');
-          // visual = model.getObjectByName('COM_VISUAL');
-          // expect(visual).not.toEqual(undefined);
+          // test to view the visuals when they already exist
+          guiEvents.emit('view_com');
+          visual = model.getObjectByName('COM_VISUAL');
+          expect(visual).not.toEqual(undefined);
 
-          // // hide the visuals
-          // guiEvents.emit('view_com');
-          // visual = model.getObjectByName('COM_VISUAL');
-          // expect(visual).toEqual(undefined);
+          // hide the visuals
+          guiEvents.emit('view_com');
+          visual = model.getObjectByName('COM_VISUAL');
+          expect(visual).toEqual(undefined);
         });
       });
 });

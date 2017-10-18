@@ -2379,11 +2379,14 @@ GZ3D.Scene.prototype.viewCOM = function(model)
         var mesh, radius, inertialMass, inertialPose = {};
         var inertial = child.userData.inertial;
 
-        inertialPose = child.userData.inertial.pose;
-        if (inertialPose === undefined)
+        if (child.userData.inertial.pose === undefined)
         {
           inertialPose.position = child.position;
           inertialPose.orientation = child.quaternion;
+        }
+        else
+        {
+          inertialPose = child.userData.inertial.pose;
         }
 
         inertialMass = child.userData.inertial.mass;
