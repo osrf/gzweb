@@ -922,27 +922,34 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
         }
 
         var materialName = parent.name + '::' + modelUri;
+        var ext = modelUri.substr(-4).toLowerCase();
         this.entityMaterial[materialName] = mat;
 
-        this.scene.loadMesh(modelUri, submesh,
-            centerSubmesh, function(dae) {
-              if (that.entityMaterial[materialName])
+        this.scene.loadMesh(modelUri, submesh, centerSubmesh, function(dae) {
+          if (that.entityMaterial[materialName])
+          {
+            if (ext !== '.stl')
+            {
+              var allChildren = [];
+              dae.getDescendants(allChildren);
+              for (var c = 0; c < allChildren.length; ++c)
               {
-                var allChildren = [];
-                dae.getDescendants(allChildren);
-                for (var c = 0; c < allChildren.length; ++c)
+                if (allChildren[c] instanceof THREE.Mesh)
                 {
-                  if (allChildren[c] instanceof THREE.Mesh)
-                  {
-                    that.scene.setMaterial(allChildren[c],
-                        that.entityMaterial[materialName]);
-                    break;
-                  }
+                  that.scene.setMaterial(allChildren[c],
+                      that.entityMaterial[materialName]);
+                  break;
                 }
               }
-              parent.add(dae);
-              loadGeom(parent);
-            });
+            }
+            else
+            {
+              that.scene.setMaterial(dae, that.entityMaterial[materialName]);
+            }
+          }
+          parent.add(dae);
+          loadGeom(parent);
+        });
       }
     }
   }

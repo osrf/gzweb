@@ -476,21 +476,29 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
 
         var modelUri = this.MATERIAL_ROOT + '/' + modelName;
         var materialName = parent.name + '::' + modelUri;
+        var ext = modelUri.substr(-4).toLowerCase();
         this.entityMaterial[materialName] = material;
 
-        this.scene.loadMesh(modelUri, submesh, centerSubmesh, function(dae){
+        this.scene.loadMesh(modelUri, submesh, centerSubmesh, function(dae) {
           if (that.entityMaterial[materialName])
           {
-            var allChildren = [];
-            dae.getDescendants(allChildren);
-            for (var c = 0; c < allChildren.length; ++c)
+            if (ext !== '.stl')
             {
-              if (allChildren[c] instanceof THREE.Mesh)
+              var allChildren = [];
+              dae.getDescendants(allChildren);
+              for (var c = 0; c < allChildren.length; ++c)
               {
-                that.scene.setMaterial(allChildren[c],
-                        that.entityMaterial[materialName]);
-                break;
+                if (allChildren[c] instanceof THREE.Mesh)
+                {
+                  that.scene.setMaterial(allChildren[c],
+                      that.entityMaterial[materialName]);
+                  break;
+                }
               }
+            }
+            else
+            {
+              that.scene.setMaterial(dae, that.entityMaterial[materialName]);
             }
           }
           parent.add(dae);

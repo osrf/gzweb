@@ -3307,27 +3307,34 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
         }
 
         var materialName = parent.name + '::' + modelUri;
+        var ext = modelUri.substr(-4).toLowerCase();
         this.entityMaterial[materialName] = mat;
 
-        this.scene.loadMesh(modelUri, submesh,
-            centerSubmesh, function(dae) {
-              if (that.entityMaterial[materialName])
+        this.scene.loadMesh(modelUri, submesh, centerSubmesh, function(dae) {
+          if (that.entityMaterial[materialName])
+          {
+            if (ext !== '.stl')
+            {
+              var allChildren = [];
+              dae.getDescendants(allChildren);
+              for (var c = 0; c < allChildren.length; ++c)
               {
-                var allChildren = [];
-                dae.getDescendants(allChildren);
-                for (var c = 0; c < allChildren.length; ++c)
+                if (allChildren[c] instanceof THREE.Mesh)
                 {
-                  if (allChildren[c] instanceof THREE.Mesh)
-                  {
-                    that.scene.setMaterial(allChildren[c],
-                        that.entityMaterial[materialName]);
-                    break;
-                  }
+                  that.scene.setMaterial(allChildren[c],
+                      that.entityMaterial[materialName]);
+                  break;
                 }
               }
-              parent.add(dae);
-              loadGeom(parent);
-            });
+            }
+            else
+            {
+              that.scene.setMaterial(dae, that.entityMaterial[materialName]);
+            }
+          }
+          parent.add(dae);
+          loadGeom(parent);
+        });
       }
     }
   }
@@ -5630,12 +5637,11 @@ GZ3D.Scene.prototype.init = function()
   this.manipulationMode = 'view';
   this.pointerOnMenu = false;
 
-  var manager = new THREE.LoadingManager();
   // loaders
   this.textureLoader = new THREE.TextureLoader();
   this.colladaLoader = new THREE.ColladaLoader();
   this.objLoader = new THREE.OBJLoader();
-  this.stlLoader = new THREE.STLLoader(manager);
+  this.stlLoader = new THREE.STLLoader();
 
   this.renderer = new THREE.WebGLRenderer({antialias: true });
   this.renderer.setPixelRatio(window.devicePixelRatio);
@@ -7334,13 +7340,11 @@ GZ3D.Scene.prototype.loadSTL = function(uri, submesh, centerSubmesh,
   var baseUrl = uri.substr(0, uri.lastIndexOf('/') + 1);
   var material = new THREE.MeshPhongMaterial( { color: 0xAAAAAA,
     specular: 0x111111, shininess: 200 } );
+  var mtlLoader = new THREE.MTLLoader();
   this.stlLoader.load(uri, function(geometry)
   {
 
-    var mesh = new THREE.Mesh( geometry, material );
-    mesh.position.set( 0, - 0.37, - 0.6 );
-    mesh.rotation.set( - Math.PI / 2, 0, 0 );
-    mesh.scale.set( 2, 2, 2 );
+    var mesh = new THREE.Mesh( geometry );
     mesh.castShadow = true;
     mesh.receiveShadow = true;
 
@@ -7350,7 +7354,6 @@ GZ3D.Scene.prototype.loadSTL = function(uri, submesh, centerSubmesh,
 
     mesh.name = uri;
     callback(mesh);
-
   });
 };
 
@@ -8508,21 +8511,29 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
 
         var modelUri = this.MATERIAL_ROOT + '/' + modelName;
         var materialName = parent.name + '::' + modelUri;
+        var ext = modelUri.substr(-4).toLowerCase();
         this.entityMaterial[materialName] = material;
 
-        this.scene.loadMesh(modelUri, submesh, centerSubmesh, function(dae){
+        this.scene.loadMesh(modelUri, submesh, centerSubmesh, function(dae) {
           if (that.entityMaterial[materialName])
           {
-            var allChildren = [];
-            dae.getDescendants(allChildren);
-            for (var c = 0; c < allChildren.length; ++c)
+            if (ext !== '.stl')
             {
-              if (allChildren[c] instanceof THREE.Mesh)
+              var allChildren = [];
+              dae.getDescendants(allChildren);
+              for (var c = 0; c < allChildren.length; ++c)
               {
-                that.scene.setMaterial(allChildren[c],
-                        that.entityMaterial[materialName]);
-                break;
+                if (allChildren[c] instanceof THREE.Mesh)
+                {
+                  that.scene.setMaterial(allChildren[c],
+                      that.entityMaterial[materialName]);
+                  break;
+                }
               }
+            }
+            else
+            {
+              that.scene.setMaterial(dae, that.entityMaterial[materialName]);
             }
           }
           parent.add(dae);

@@ -29,6 +29,7 @@ module.exports = function(config) {
       "gz3d/client/js/include/ColladaLoader.js",
       "gz3d/client/js/include/OBJLoader.js",
       "gz3d/client/js/include/MTLLoader.js",
+      "gz3d/client/js/include/STLLoader.js",      
       "gz3d/client/js/include/CopyShader.js",
       "gz3d/client/js/include/SSAOShader.js",
       "gz3d/client/js/include/EffectComposer.js",

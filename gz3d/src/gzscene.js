@@ -1728,13 +1728,11 @@ GZ3D.Scene.prototype.loadSTL = function(uri, submesh, centerSubmesh,
   var baseUrl = uri.substr(0, uri.lastIndexOf('/') + 1);
   var material = new THREE.MeshPhongMaterial( { color: 0xAAAAAA,
     specular: 0x111111, shininess: 200 } );
+  var mtlLoader = new THREE.MTLLoader();
   this.stlLoader.load(uri, function(geometry)
   {
 
-    var mesh = new THREE.Mesh( geometry, material );
-    mesh.position.set( 0, - 0.37, - 0.6 );
-    mesh.rotation.set( - Math.PI / 2, 0, 0 );
-    mesh.scale.set( 2, 2, 2 );
+    var mesh = new THREE.Mesh( geometry );
     mesh.castShadow = true;
     mesh.receiveShadow = true;
 
@@ -1744,7 +1742,6 @@ GZ3D.Scene.prototype.loadSTL = function(uri, submesh, centerSubmesh,
 
     mesh.name = uri;
     callback(mesh);
-
   });
 };
 
