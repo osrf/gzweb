@@ -5630,10 +5630,12 @@ GZ3D.Scene.prototype.init = function()
   this.manipulationMode = 'view';
   this.pointerOnMenu = false;
 
+  var manager = new THREE.LoadingManager();
   // loaders
   this.textureLoader = new THREE.TextureLoader();
   this.colladaLoader = new THREE.ColladaLoader();
   this.objLoader = new THREE.OBJLoader();
+  this.stlLoader = new THREE.STLLoader(manager);
 
   this.renderer = new THREE.WebGLRenderer({antialias: true });
   this.renderer.setPixelRatio(window.devicePixelRatio);
@@ -7039,6 +7041,10 @@ GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh,
   {
     return this.loadOBJ(uri, submesh, centerSubmesh, callback);
   }
+  else if (uriFile.substr(-4).toLowerCase() === '.stl')
+  {
+    return this.loadSTL(uri, submesh, centerSubmesh, callback);
+  }
   else if (uriFile.substr(-5).toLowerCase() === '.urdf')
   {
     /*var urdfModel = new ROSLIB.UrdfModel({
@@ -7311,6 +7317,40 @@ GZ3D.Scene.prototype.loadOBJ = function(uri, submesh, centerSubmesh,
       var mtlPath = container.materialLibraries[i];
       mtlLoader.load(mtlPath, applyMaterial);
     }
+  });
+};
+
+/**
+ * Load stl file
+ * @param {string} uri
+ * @param {} submesh
+ * @param {} centerSubmesh
+ * @param {function} callback
+ */
+GZ3D.Scene.prototype.loadSTL = function(uri, submesh, centerSubmesh,
+  callback)
+{
+  var stl = null;
+  var baseUrl = uri.substr(0, uri.lastIndexOf('/') + 1);
+  var material = new THREE.MeshPhongMaterial( { color: 0xAAAAAA,
+    specular: 0x111111, shininess: 200 } );
+  this.stlLoader.load(uri, function(geometry)
+  {
+
+    var mesh = new THREE.Mesh( geometry, material );
+    mesh.position.set( 0, - 0.37, - 0.6 );
+    mesh.rotation.set( - Math.PI / 2, 0, 0 );
+    mesh.scale.set( 2, 2, 2 );
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+
+    this.scene.meshes[uri] = mesh;
+    mesh = mesh.clone();
+    this.scene.useSubMesh(mesh, submesh, centerSubmesh);
+
+    mesh.name = uri;
+    callback(mesh);
+
   });
 };
 
