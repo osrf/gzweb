@@ -315,7 +315,7 @@ describe('Gzscene tests', function() {
       });
     });
 
-    describe('Spawn a model with a collada mesh', function() {
+    describe('Spawn a model', function() {
       it('should add a model to the scene and then removes it', function() {
         var sdf, model;
         var xhttp = new XMLHttpRequest();
@@ -335,7 +335,7 @@ describe('Gzscene tests', function() {
       });
     });
 
-    describe('Spawn a model with object mesh', function() {
+    describe('Spawn a model with an object mesh', function() {
       it('should add a model to the scene and then removes it', function() {
         var sdf, model;
         var xhttp = new XMLHttpRequest();
