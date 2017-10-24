@@ -323,4 +323,28 @@ describe('Gzscene tests', function() {
           expect(scene.manipulationMode).toEqual('translate');
         });
       });
+
+      describe('Spawn a model with stl mesh', function() {
+        it('should add a model to the scene and then removes it', function() {
+          var sdf, model;
+          var xhttp = new XMLHttpRequest();
+          xhttp.overrideMimeType('text/xml');
+          xhttp.open('GET', 'http://localhost:9876/base/gz3d/test/utils/husky/model.sdf', false);
+          xhttp.send();
+          sdf = xhttp.responseXML;
+
+          model = scene.getByName('husky');
+          expect(model).toEqual(undefined);
+
+          model = sdfparser.spawnFromSDF(sdf);
+          scene.add(model);
+
+          model = scene.getByName('husky');
+          expect(model).not.toEqual(undefined);
+
+          scene.remove(model);
+          model = scene.getByName('husky');
+          expect(model).toEqual(undefined);
+        });
+      });
 });

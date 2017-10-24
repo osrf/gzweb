@@ -29,7 +29,7 @@ module.exports = function(config) {
       "gz3d/client/js/include/ColladaLoader.js",
       "gz3d/client/js/include/OBJLoader.js",
       "gz3d/client/js/include/MTLLoader.js",
-      "gz3d/client/js/include/STLLoader.js",      
+      "gz3d/client/js/include/STLLoader.js",
       "gz3d/client/js/include/CopyShader.js",
       "gz3d/client/js/include/SSAOShader.js",
       "gz3d/client/js/include/EffectComposer.js",
@@ -40,7 +40,8 @@ module.exports = function(config) {
       'gz3d/build/gz3d.js',
       "gz3d/test/utils/angular-mocks.min.js",
       'gz3d/test/fixture/*.html',
-      'gz3d/test/*.js'
+      'gz3d/test/*.js',
+      {pattern: 'gz3d/test/utils/husky/model.sdf', included: false, served: true, watched: false, nocache: true}
     ],
 
 
