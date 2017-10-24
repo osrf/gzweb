@@ -7336,15 +7336,11 @@ GZ3D.Scene.prototype.loadOBJ = function(uri, submesh, centerSubmesh,
 GZ3D.Scene.prototype.loadSTL = function(uri, submesh, centerSubmesh,
   callback)
 {
-  var stl = null;
-  var baseUrl = uri.substr(0, uri.lastIndexOf('/') + 1);
-  var material = new THREE.MeshPhongMaterial( { color: 0xAAAAAA,
-    specular: 0x111111, shininess: 200 } );
-  var mtlLoader = new THREE.MTLLoader();
+  var mesh = null;
   this.stlLoader.load(uri, function(geometry)
   {
 
-    var mesh = new THREE.Mesh( geometry );
+    mesh = new THREE.Mesh( geometry );
     mesh.castShadow = true;
     mesh.receiveShadow = true;
 
