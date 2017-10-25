@@ -13,7 +13,7 @@ GZ3D.SdfParser = function(scene, gui, gziface)
   this.MATERIAL_ROOT = 'assets';
   // true for using URLs to load files.
   // false for using the files loaded in the memory.
-  this.usingfilesUrls = false;
+  this.usingFilesUrls = false;
 
   // set the xml parser function
   this.parseXML = function(xmlStr) {
@@ -44,7 +44,7 @@ GZ3D.SdfParser.prototype.init = function()
 {
   if (this.gziface)
   {
-    this.usingfilesUrls = true;
+    this.usingFilesUrls = true;
     var that = this;
     this.gziface.emitter.on('error', function() {
       that.gui.guiEvents.emit('notification_popup',
@@ -347,7 +347,7 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
             }
           }
           // Map texture name to the corresponding texture.
-          if (!this.usingfilesUrls)
+          if (!this.usingFilesUrls)
           {
             texture = this.textures[mat.texture];
           }
@@ -389,7 +389,7 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
       var normalMapName = material.normal_map.substr(startIndex,
         material.normal_map.lastIndexOf('.') - startIndex);
       // Map texture name to the corresponding texture.
-      if (!this.usingfilesUrls)
+      if (!this.usingFilesUrls)
       {
         normalMap = this.textures[normalMapName + '.png'];
       }
@@ -503,7 +503,7 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
       var materialName = parent.name + '::' + modelUri;
       this.entityMaterial[materialName] = material;
 
-      if (!this.usingfilesUrls)
+      if (!this.usingFilesUrls)
       {
         var meshFileName = meshUri.substring(meshUri.lastIndexOf('/') + 1);
         var ext = meshFileName.substring(meshFileName.indexOf('.') + 1);
