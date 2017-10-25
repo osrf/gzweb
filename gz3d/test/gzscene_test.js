@@ -391,6 +391,7 @@ describe('Gzscene tests', function() {
           sdf = xhttp_1.responseXML;
 
           // // This should work after upgrading to the new ColladaLoader
+          // https://bitbucket.org/osrf/gzweb/issues/123/test-spawning-a-model-with-a-collada-mesh
           // xhttp_2 = new XMLHttpRequest();
           // xhttp_2.overrideMimeType('text/plain');
           // xhttp_2.open('GET', 'http://localhost:9876/base/gz3d/test/utils/house_2/meshes/house_2.dae', false);
