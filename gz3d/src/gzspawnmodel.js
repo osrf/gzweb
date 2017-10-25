@@ -309,19 +309,19 @@ GZ3D.SpawnModel.prototype.generateUniqueName = function(entity)
 /**
  * Start spawning an entity.
  * Adds an object to the scene.
- * @param {string} fileString - The model sdf file as a string
+ * @param {object} sdf - It is either SDF XML string or SDF XML DOM object
  */
-GZ3D.SpawnModel.prototype.spawnFromSdf = function(fileString)
+GZ3D.SpawnModel.prototype.spawnFromSdf = function(sdf)
 {
   var obj = new THREE.Object3D();
 
-  var sdfXml = this.sdfParser.parseXML(fileString);
+  var sdfXml = this.sdfParser.parseXML(sdf);
   // sdfXML is always undefined, the XML parser doesn't work while testing
   // while it does work during normal usage.
   var myjson = xml2json(sdfXml, '\t');
   var sdfObj = JSON.parse(myjson).sdf;
 
-  var mesh = this.sdfParser.spawnFromSDF(fileString);
+  var mesh = this.sdfParser.spawnFromSDF(sdf);
 
   obj.name = mesh.name;
 

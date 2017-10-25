@@ -924,7 +924,7 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
         var materialName = parent.name + '::' + modelUri;
         this.entityMaterial[materialName] = mat;
 
-        this.scene.loadMesh(undefined, modelUri, submesh,
+        this.scene.loadMesh(modelUri, submesh,
             centerSubmesh, function(dae) {
               if (that.entityMaterial[materialName])
               {
@@ -942,7 +942,7 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
               }
               parent.add(dae);
               loadGeom(parent);
-            });
+            }, [undefined]);
       }
     }
   }

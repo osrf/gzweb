@@ -3309,7 +3309,7 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
         var materialName = parent.name + '::' + modelUri;
         this.entityMaterial[materialName] = mat;
 
-        this.scene.loadMesh(undefined, modelUri, submesh,
+        this.scene.loadMesh(modelUri, submesh,
             centerSubmesh, function(dae) {
               if (that.entityMaterial[materialName])
               {
@@ -3327,7 +3327,7 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
               }
               parent.add(dae);
               loadGeom(parent);
-            });
+            }, [undefined]);
       }
     }
   }
@@ -7010,14 +7010,14 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
 
 /**
  * Load mesh
- * @param {array} files
  * @param {string} uri
  * @param {} submesh
  * @param {} centerSubmesh
  * @param {function} callback
+ * @param {array} files - files needed by the loaders[obj, mtl, dae] as strings
  */
-GZ3D.Scene.prototype.loadMesh = function(files, uri, submesh, centerSubmesh,
-    callback)
+GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh, callback,
+  files)
 {
   var uriPath = uri.substring(0, uri.lastIndexOf('/'));
   var uriFile = uri.substring(uri.lastIndexOf('/') + 1);
@@ -7036,11 +7036,11 @@ GZ3D.Scene.prototype.loadMesh = function(files, uri, submesh, centerSubmesh,
     // load urdf model
     if (uriFile.substr(-4).toLowerCase() === '.dae')
     {
-      return this.loadCollada(undefined ,uri, submesh, centerSubmesh, callback);
+      return this.loadCollada(uri, submesh, centerSubmesh, callback, undefined);
     }
     else if (uriFile.substr(-4).toLowerCase() === '.obj')
     {
-      return this.loadOBJ(undefined, uri, submesh, centerSubmesh, callback);
+      return this.loadOBJ(uri, submesh, centerSubmesh, callback, undefined);
     }
     else if (uriFile.substr(-5).toLowerCase() === '.urdf')
     {
@@ -7082,11 +7082,11 @@ GZ3D.Scene.prototype.loadMesh = function(files, uri, submesh, centerSubmesh,
     // load urdf model
     if (uriFile.substr(-4).toLowerCase() === '.dae')
     {
-      return this.loadCollada(files[0], uri, submesh, centerSubmesh, callback);
+      return this.loadCollada(uri, submesh, centerSubmesh, callback, files[0]);
     }
     else if (uriFile.substr(-4).toLowerCase() === '.obj')
     {
-      var obj = this.loadOBJ(files, uri, submesh, centerSubmesh, callback);
+      var obj = this.loadOBJ(uri, submesh, centerSubmesh, callback, files);
       return obj;
     }
   }
@@ -7094,14 +7094,14 @@ GZ3D.Scene.prototype.loadMesh = function(files, uri, submesh, centerSubmesh,
 
 /**
  * Load collada file
- * @param {string} filestring - the dae mesh as a string to be parsed.
  * @param {string} uri
  * @param {} submesh
  * @param {} centerSubmesh
  * @param {function} callback
+ * @param {string} filestring - the dae mesh as a string to be parsed.
  */
-GZ3D.Scene.prototype.loadCollada = function(filestring, uri, submesh,
-  centerSubmesh, callback)
+GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
+  callback, filestring)
 {
   var dae;
   var mesh = null;
@@ -7302,13 +7302,13 @@ GZ3D.Scene.prototype.useSubMesh = function(mesh, submesh, centerSubmesh)
 
 /**
  * Load Obj file
- * @param {array} files
  * @param {} submesh
  * @param {} centerSubmesh
  * @param {function} callback
+ * @param {array} files - the [obj, mtl] files as strings
  */
-GZ3D.Scene.prototype.loadOBJ = function(files, uri, submesh, centerSubmesh,
-    callback)
+GZ3D.Scene.prototype.loadOBJ = function(uri, submesh, centerSubmesh, callback,
+  files)
 {
   var obj = null;
   var baseUrl = uri.substr(0, uri.lastIndexOf('/') + 1);
@@ -8081,8 +8081,8 @@ GZ3D.SdfParser = function(scene, gui, gziface)
   // set the sdf version
   this.SDF_VERSION = 1.5;
   this.MATERIAL_ROOT = 'assets';
-  // true for using the files loaded in the memory.
-  // false for using the files URLs to load them.
+  // true for using URLs to load files.
+  // false for using the files loaded in the memory.
   this.usingfilesUrls = false;
 
   // set the xml parser function
@@ -8581,16 +8581,16 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
         if (ext === 'obj')
         {
           var mtlFile = this.mtls[meshFileName.split('.')[0]+'.mtl'];
-          that.scene.loadMesh([meshFile, mtlFile], modelUri, submesh,
-            centerSubmesh, function(obj)
+          that.scene.loadMesh(modelUri, submesh,centerSubmesh,
+            function(obj)
             {
               parent.add(obj);
               loadGeom(parent);
-            });
+            }, [meshFile, mtlFile]);
         }
         else if (ext === 'dae')
         {
-            that.scene.loadMesh([meshFile], modelUri, submesh, centerSubmesh,
+            that.scene.loadMesh(modelUri, submesh, centerSubmesh,
               function(dae)
               {
                 if (that.entityMaterial[materialName])
@@ -8609,12 +8609,12 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
                 }
                 parent.add(dae);
                 loadGeom(parent);
-              });
+              }, [meshFile]);
         }
       }
       else
       {
-        this.scene.loadMesh(undefined, modelUri, submesh, centerSubmesh,
+        this.scene.loadMesh(modelUri, submesh, centerSubmesh,
           function (dae)
           {
             if (that.entityMaterial[materialName])
@@ -8633,7 +8633,7 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
             }
             parent.add(dae);
             loadGeom(parent);
-          });
+          }, [undefined]);
       }
     }
   }
@@ -9386,19 +9386,19 @@ GZ3D.SpawnModel.prototype.generateUniqueName = function(entity)
 /**
  * Start spawning an entity.
  * Adds an object to the scene.
- * @param {string} fileString - The model sdf file as a string
+ * @param {object} sdf - It is either SDF XML string or SDF XML DOM object
  */
-GZ3D.SpawnModel.prototype.spawnFromSdf = function(fileString)
+GZ3D.SpawnModel.prototype.spawnFromSdf = function(sdf)
 {
   var obj = new THREE.Object3D();
 
-  var sdfXml = this.sdfParser.parseXML(fileString);
+  var sdfXml = this.sdfParser.parseXML(sdf);
   // sdfXML is always undefined, the XML parser doesn't work while testing
   // while it does work during normal usage.
   var myjson = xml2json(sdfXml, '\t');
   var sdfObj = JSON.parse(myjson).sdf;
 
-  var mesh = this.sdfParser.spawnFromSDF(fileString);
+  var mesh = this.sdfParser.spawnFromSDF(sdf);
 
   obj.name = mesh.name;
 

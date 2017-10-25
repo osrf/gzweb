@@ -11,8 +11,8 @@ GZ3D.SdfParser = function(scene, gui, gziface)
   // set the sdf version
   this.SDF_VERSION = 1.5;
   this.MATERIAL_ROOT = 'assets';
-  // true for using the files loaded in the memory.
-  // false for using the files URLs to load them.
+  // true for using URLs to load files.
+  // false for using the files loaded in the memory.
   this.usingfilesUrls = false;
 
   // set the xml parser function
@@ -511,16 +511,16 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
         if (ext === 'obj')
         {
           var mtlFile = this.mtls[meshFileName.split('.')[0]+'.mtl'];
-          that.scene.loadMesh([meshFile, mtlFile], modelUri, submesh,
-            centerSubmesh, function(obj)
+          that.scene.loadMesh(modelUri, submesh,centerSubmesh,
+            function(obj)
             {
               parent.add(obj);
               loadGeom(parent);
-            });
+            }, [meshFile, mtlFile]);
         }
         else if (ext === 'dae')
         {
-            that.scene.loadMesh([meshFile], modelUri, submesh, centerSubmesh,
+            that.scene.loadMesh(modelUri, submesh, centerSubmesh,
               function(dae)
               {
                 if (that.entityMaterial[materialName])
@@ -539,12 +539,12 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
                 }
                 parent.add(dae);
                 loadGeom(parent);
-              });
+              }, [meshFile]);
         }
       }
       else
       {
-        this.scene.loadMesh(undefined, modelUri, submesh, centerSubmesh,
+        this.scene.loadMesh(modelUri, submesh, centerSubmesh,
           function (dae)
           {
             if (that.entityMaterial[materialName])
@@ -563,7 +563,7 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
             }
             parent.add(dae);
             loadGeom(parent);
-          });
+          }, [undefined]);
       }
     }
   }

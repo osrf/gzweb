@@ -1405,14 +1405,14 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
 
 /**
  * Load mesh
- * @param {array} files - the files need for the loaders[obj, mtl, dae] as text
  * @param {string} uri
  * @param {} submesh
  * @param {} centerSubmesh
  * @param {function} callback
+ * @param {array} files - files needed by the loaders[obj, mtl, dae] as strings
  */
-GZ3D.Scene.prototype.loadMesh = function(files, uri, submesh, centerSubmesh,
-    callback)
+GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh, callback,
+  files)
 {
   var uriPath = uri.substring(0, uri.lastIndexOf('/'));
   var uriFile = uri.substring(uri.lastIndexOf('/') + 1);
@@ -1431,11 +1431,11 @@ GZ3D.Scene.prototype.loadMesh = function(files, uri, submesh, centerSubmesh,
     // load urdf model
     if (uriFile.substr(-4).toLowerCase() === '.dae')
     {
-      return this.loadCollada(undefined ,uri, submesh, centerSubmesh, callback);
+      return this.loadCollada(uri, submesh, centerSubmesh, callback, undefined);
     }
     else if (uriFile.substr(-4).toLowerCase() === '.obj')
     {
-      return this.loadOBJ(undefined, uri, submesh, centerSubmesh, callback);
+      return this.loadOBJ(uri, submesh, centerSubmesh, callback, undefined);
     }
     else if (uriFile.substr(-5).toLowerCase() === '.urdf')
     {
@@ -1477,11 +1477,11 @@ GZ3D.Scene.prototype.loadMesh = function(files, uri, submesh, centerSubmesh,
     // load urdf model
     if (uriFile.substr(-4).toLowerCase() === '.dae')
     {
-      return this.loadCollada(files[0], uri, submesh, centerSubmesh, callback);
+      return this.loadCollada(uri, submesh, centerSubmesh, callback, files[0]);
     }
     else if (uriFile.substr(-4).toLowerCase() === '.obj')
     {
-      var obj = this.loadOBJ(files, uri, submesh, centerSubmesh, callback);
+      var obj = this.loadOBJ(uri, submesh, centerSubmesh, callback, files);
       return obj;
     }
   }
@@ -1489,14 +1489,14 @@ GZ3D.Scene.prototype.loadMesh = function(files, uri, submesh, centerSubmesh,
 
 /**
  * Load collada file
- * @param {string} filestring - the dae mesh as a string to be parsed.
  * @param {string} uri
  * @param {} submesh
  * @param {} centerSubmesh
  * @param {function} callback
+ * @param {string} filestring - the dae mesh as a string to be parsed.
  */
-GZ3D.Scene.prototype.loadCollada = function(filestring, uri, submesh,
-  centerSubmesh, callback)
+GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
+  callback, filestring)
 {
   var dae;
   var mesh = null;
@@ -1697,13 +1697,13 @@ GZ3D.Scene.prototype.useSubMesh = function(mesh, submesh, centerSubmesh)
 
 /**
  * Load Obj file
- * @param {array} files
  * @param {} submesh
  * @param {} centerSubmesh
  * @param {function} callback
+ * @param {array} files - the [obj, mtl] files as strings
  */
-GZ3D.Scene.prototype.loadOBJ = function(files, uri, submesh, centerSubmesh,
-    callback)
+GZ3D.Scene.prototype.loadOBJ = function(uri, submesh, centerSubmesh, callback,
+  files)
 {
   var obj = null;
   var baseUrl = uri.substr(0, uri.lastIndexOf('/') + 1);
