@@ -2053,12 +2053,13 @@ GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
   }
 };
 
+/* eslint-disable */
 /**
  * Format stats message for proper display
  * @param {} stats
-   eslint-disable-next-line no-use-before-define
- * @returns {Object.<position, orientation, inertial,diffuse, specular, attenuation>}
+ * @returns {Object.<position, orientation, inertial,diffuse, specular, attenuation>} // eslint-disable-line
  */
+/* eslint-enable */
 GZ3D.Gui.prototype.formatStats = function(stats)
 {
   var position, orientation;
