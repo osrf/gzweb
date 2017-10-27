@@ -73,7 +73,7 @@ module.exports = function(config) {
       ]
     },
     htmlReporter: {
-      outputFile: 'performance/performance.html'
+      outputFile: 'test_results/test_results.html'
     },
 
     // web server port
