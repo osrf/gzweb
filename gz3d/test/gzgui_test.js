@@ -54,11 +54,12 @@ describe('Gui tests', function() {
 
           expect(gui.showNotifications).toEqual(false);
           guiEvents.emit('toggle_notifications');
-          expect(gui.showNotifications).toEqual(false);
+          expect(gui.showNotifications).toEqual(true);
 
-          // TODO: test set_view_as after finishing model spawning test.
+          expect(gui.openTreeWhenSelected).toEqual(false);
+          guiEvents.emit('openTreeWhenSelected');
+          expect(gui.openTreeWhenSelected).toEqual(true)
 
-          // TODO: test delete_entity after finishing model spawning test.
         });
       });
 
