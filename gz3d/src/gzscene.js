@@ -2380,16 +2380,6 @@ GZ3D.Scene.prototype.viewCOM = function(model)
         var inertial = child.userData.inertial;
 
         userdatapose = child.userData.inertial.pose;
-        if (userdatapose === undefined)
-        {
-          inertialPose.position = child.position;
-          inertialPose.orientation = child.quaternion;
-        }
-        else
-        {
-          inertialPose = userdatapose;
-        }
-
         inertialMass = inertial.mass;
 
         // calculate the radius using lead density
@@ -2400,8 +2390,29 @@ GZ3D.Scene.prototype.viewCOM = function(model)
         model.COMVisuals.push(COMVisual);
         COMVisual.scale.set(radius, radius, radius);
 
-        this.setPose(COMVisual, inertialPose.position,
-          inertialPose.orientation);
+
+        var position = new THREE.Vector3(0, 0, 0);
+
+        // get euler rotation and convert it to Quaternion
+        var quaternion = new THREE.Quaternion();
+        var euler = new THREE.Euler(0, 0, 0, 'XYZ');
+        quaternion.setFromEuler(euler);
+
+        inertialPose = {
+          'position': position,
+          'orientation': quaternion
+        };
+
+        console.log(inertialPose);
+
+        if (userdatapose !== undefined)
+        {
+          this.setPose(COMVisual, userdatapose.position,
+            userdatapose.orientation);
+            console.log(userdatapose);
+            inertialPose = userdatapose;
+        }
+
         COMVisual.crossLines = [];
         box = new THREE.Box3();
         // w.r.t. world
@@ -2415,17 +2426,17 @@ GZ3D.Scene.prototype.viewCOM = function(model)
         box.max.z = box.max.z - model.position.z - child.position.z;
 
         points[0] = new THREE.Vector3(inertialPose.position.x, box.min.y,
-          inertialPose.position.z);
+          inertialPose.position.y);
         points[1] = new THREE.Vector3(inertialPose.position.x, box.max.y,
-          inertialPose.position.z);
-        points[2] = new THREE.Vector3(box.min.x, inertialPose.position.y,
-          inertialPose.position.z);
-        points[3] = new THREE.Vector3(box.max.x, inertialPose.position.y,
-          inertialPose.position.z);
+          inertialPose.position.y);
+        points[2] = new THREE.Vector3(box.min.x, inertialPose.position.z,
+          inertialPose.position.y);
+        points[3] = new THREE.Vector3(box.max.x, inertialPose.position.z,
+          inertialPose.position.y);
         points[4] = new THREE.Vector3(inertialPose.position.x,
-          inertialPose.position.y, box.min.z);
+          inertialPose.position.z, box.min.z);
         points[5] = new THREE.Vector3(inertialPose.position.x,
-          inertialPose.position.y, box.max.z);
+          inertialPose.position.z, box.max.z);
 
         helperGeometry_1 = new THREE.Geometry();
         helperGeometry_1.vertices.push(points[0]);

@@ -1,8 +1,8 @@
 describe('Gzscene tests', function() {
 
-          var scene = new GZ3D.Scene();
-          var gui = new GZ3D.Gui(scene);
-          var sdfparser = new GZ3D.SdfParser(scene, gui);
+      var scene = new GZ3D.Scene();
+      var gui = new GZ3D.Gui(scene);
+      var sdfparser = new GZ3D.SdfParser(scene, gui);
 
       describe('Test gzscene Initialize', function() {
         it('Intial values should match', function() {
@@ -315,7 +315,7 @@ describe('Gzscene tests', function() {
         });
       });
 
-      // Test center of mass visualizations visualizations
+      // Test center of mass visualizations
       describe('Test center of mass visual', function() {
         it('spawn a model and toggle center of mass visuals', function() {
           var sdf, object, visual, model, xhttp;
@@ -327,6 +327,9 @@ describe('Gzscene tests', function() {
           sdf = xhttp.responseXML;
           model = sdfparser.spawnFromSDF(sdf);
           scene.add(model);
+
+          // var comPosition = new THREE.Vector3(0, 0, 0.115);
+          // var comQuaternion = new THREE.Vector3(0, 0, 0);
 
           // no visuals intially
           visual = model.getObjectByName('COM_VISUAL');
@@ -342,6 +345,15 @@ describe('Gzscene tests', function() {
           guiEvents.emit('view_com');
           visual = model.getObjectByName('COM_VISUAL');
           expect(visual).not.toEqual(undefined);
+
+          // console.log(visual.name);
+          // console.log(visual.position);
+          // console.log(visual.rotation);
+          // for (var i = 0; i < model.children.length; i++) {
+          //   console.log(model.children[i].name);
+          //   console.log(model.children[i].position);
+          //   console.log(model.children[i].rotation);
+          // }
 
           // hide the visuals
           guiEvents.emit('view_com');
