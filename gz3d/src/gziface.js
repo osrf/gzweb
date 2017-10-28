@@ -942,7 +942,7 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
               }
               parent.add(dae);
               loadGeom(parent);
-            }, [undefined]);
+            });
       }
     }
   }

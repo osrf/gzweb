@@ -313,6 +313,11 @@ GZ3D.SpawnModel.prototype.generateUniqueName = function(entity)
  */
 GZ3D.SpawnModel.prototype.spawnFromSdf = function(sdf)
 {
+  if (sdf === undefined)
+  {
+    return;
+  }
+
   var obj = new THREE.Object3D();
 
   var sdfXml = this.sdfParser.parseXML(sdf);
@@ -338,62 +343,6 @@ GZ3D.SpawnModel.prototype.spawnFromSdf = function(sdf)
       }
     }
   };
-
-  // // sdfObj is always undefined, the XML parser doesn't work while testing
-  // // while it does work during normal usage.
-  // // this to enable joint visuals in sdfviewer mode
-  // if (sdfObj.model.joint)
-  // {
-  //   var joint_id = 99;
-  //   for (var i = 0, l = sdfObj.model.joint.length; i < l; i++) {
-  //     var joint = sdfObj.model.joint[i];
-  //     if (joint.pose !== undefined && joint.axis.xyz !== undefined)
-  //     {
-  //       var pose = joint.pose.split(/\s+/);
-  //       var xyz = joint.axis.xyz.split(/\s+/);
-  //       var modelJoint =
-  //       {
-  //         name: joint['@name'],
-  //         id: joint_id++,
-  //         angle: 0,
-  //         type: joint['@type'],
-  //         parent: joint.parent,
-  //         parent_id: getIdFromName(joint.parent),
-  //         child: joint.child,
-  //         child_id: getIdFromName(joint.child),
-  //         pose : {
-  //           position : {
-  //             x: parseFloat(pose[0]),
-  //             y: parseFloat(pose[1]),
-  //             z: parseFloat(pose[2])
-  //           },
-  //           orientation : {
-  //             x: parseFloat(pose[3]),
-  //             y: parseFloat(pose[4]),
-  //             z: parseFloat(pose[5]),
-  //             w: 1
-  //           }
-  //         },
-  //         axis1 : {
-  //           xyz : {
-  //             x: parseFloat(xyz[0]),
-  //             y: parseFloat(xyz[1]),
-  //             z: parseFloat(xyz[2])
-  //           },
-  //           limit_lower: -1e+16,
-  //           limit_upper: 1e+16,
-  //           limit_effort: -1,
-  //           limit_velocity: -1,
-  //           damping: 0,
-  //           friction: 0,
-  //           use_parent_model_frame: joint.axis.use_parent_model_frame
-  //         }
-  //       };
-  //       joints.push(modelJoint);
-  //     }
-  //     obj.joint = joints;
-  //   }
-  // }
 
   // the model appears at the origin
   obj.position.x = 0;

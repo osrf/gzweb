@@ -1426,7 +1426,7 @@ GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh, callback,
     return;
   }
 
-  if (!files[0])
+  if (!files)
   {
     // load urdf model
     if (uriFile.substr(-4).toLowerCase() === '.dae')
@@ -1762,7 +1762,7 @@ GZ3D.Scene.prototype.loadOBJ = function(uri, submesh, centerSubmesh, callback,
     }
   };
 
-  if (!files[0])
+  if (!files)
   {
     this.objLoader.load(uri, function(_container)
     {

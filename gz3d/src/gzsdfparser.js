@@ -563,7 +563,7 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
             }
             parent.add(dae);
             loadGeom(parent);
-          }, [undefined]);
+          });
       }
     }
   }
