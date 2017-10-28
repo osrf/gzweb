@@ -2058,12 +2058,13 @@ GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
   }
 };
 
+/* eslint-disable */
 /**
  * Format stats message for proper display
  * @param {} stats
- * @returns {Object.<position, orientation, inertial,-
- *  diffuse, specular, attenuation>}
+ * @returns {Object.<position, orientation, inertial, diffuse, specular, attenuation>}
  */
+/* eslint-enable */
 GZ3D.Gui.prototype.formatStats = function(stats)
 {
   var position, orientation;
@@ -7010,6 +7011,25 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
 
 /**
  * Load mesh
+ * @example
+ * // loading using URI
+ * // callback(mesh)
+ * loadMesh('assets/house_1/meshes/house_1.dae', undefined, undefined, function(mesh)
+            {
+              // use the mesh
+            });
+ * @example
+ * // loading using file string
+ * // callback(mesh)
+ * loadMesh('assets/house_1/meshes/house_1.dae', undefined, undefined, function(mesh)
+            {
+              // use the mesh
+            }, ['<?xml version="1.0" encoding="utf-8"?>
+    <COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+      <asset>
+        <contributor>
+          <author>Cole</author>
+          <authoring_tool>OpenCOLLADA for 3ds Max;  Ver.....']);
  * @param {string} uri
  * @param {} submesh
  * @param {} centerSubmesh
