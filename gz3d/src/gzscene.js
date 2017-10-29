@@ -2390,7 +2390,6 @@ GZ3D.Scene.prototype.viewCOM = function(model)
         model.COMVisuals.push(COMVisual);
         COMVisual.scale.set(radius, radius, radius);
 
-
         var position = new THREE.Vector3(0, 0, 0);
 
         // get euler rotation and convert it to Quaternion
@@ -2403,13 +2402,10 @@ GZ3D.Scene.prototype.viewCOM = function(model)
           'orientation': quaternion
         };
 
-        console.log(inertialPose);
-
         if (userdatapose !== undefined)
         {
           this.setPose(COMVisual, userdatapose.position,
             userdatapose.orientation);
-            console.log(userdatapose);
             inertialPose = userdatapose;
         }
 
@@ -2417,6 +2413,15 @@ GZ3D.Scene.prototype.viewCOM = function(model)
         box = new THREE.Box3();
         // w.r.t. world
         box.setFromObject(child);
+
+        for (var m = 0, l = child.children.length; m < l; m++) {
+          var _child = child.children[m];
+          if (_child.name.indexOf('vis_') >= 0)
+          {
+            box.setFromObject(_child);
+            break;
+          }
+        }
         // center vertices with object
         box.min.x = box.min.x - model.position.x - child.position.x;
         box.min.y = box.min.y - model.position.y - child.position.y;
@@ -2426,17 +2431,17 @@ GZ3D.Scene.prototype.viewCOM = function(model)
         box.max.z = box.max.z - model.position.z - child.position.z;
 
         points[0] = new THREE.Vector3(inertialPose.position.x, box.min.y,
-          inertialPose.position.y);
+          inertialPose.position.z);
         points[1] = new THREE.Vector3(inertialPose.position.x, box.max.y,
-          inertialPose.position.y);
-        points[2] = new THREE.Vector3(box.min.x, inertialPose.position.z,
-          inertialPose.position.y);
-        points[3] = new THREE.Vector3(box.max.x, inertialPose.position.z,
-          inertialPose.position.y);
+          inertialPose.position.z);
+        points[2] = new THREE.Vector3(box.min.x, inertialPose.position.y,
+          inertialPose.position.z);
+        points[3] = new THREE.Vector3(box.max.x, inertialPose.position.y,
+          inertialPose.position.z);
         points[4] = new THREE.Vector3(inertialPose.position.x,
-          inertialPose.position.z, box.min.z);
+          inertialPose.position.y, box.min.z);
         points[5] = new THREE.Vector3(inertialPose.position.x,
-          inertialPose.position.z, box.max.z);
+          inertialPose.position.y, box.max.z);
 
         helperGeometry_1 = new THREE.Geometry();
         helperGeometry_1.vertices.push(points[0]);
@@ -2450,12 +2455,14 @@ GZ3D.Scene.prototype.viewCOM = function(model)
         helperGeometry_3.vertices.push(points[4]);
         helperGeometry_3.vertices.push(points[5]);
 
-        helperMaterial = new THREE.LineBasicMaterial({color: 0x00ff00});
-        line_1 = new THREE.Line(helperGeometry_1, helperMaterial,
+        var helperMaterial_1 = new THREE.LineBasicMaterial({color: 0x00ff00});
+        var helperMaterial_2 = new THREE.LineBasicMaterial({color: 0xff0000});
+        var helperMaterial_3 = new THREE.LineBasicMaterial({color: 0x0000ff});
+        line_1 = new THREE.Line(helperGeometry_1, helperMaterial_1,
             THREE.LineSegments);
-        line_2 = new THREE.Line(helperGeometry_2, helperMaterial,
+        line_2 = new THREE.Line(helperGeometry_2, helperMaterial_2,
             THREE.LineSegments);
-        line_3 = new THREE.Line(helperGeometry_3, helperMaterial,
+        line_3 = new THREE.Line(helperGeometry_3, helperMaterial_3,
             THREE.LineSegments);
 
         line_1.name = 'COM_VISUAL';
