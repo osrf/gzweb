@@ -1403,6 +1403,7 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
   this.heightmap = parent;
 };
 
+/* eslint-disable */
 /**
  * Load mesh
  * @example
@@ -1430,6 +1431,7 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
  * @param {function} callback
  * @param {array} files - files needed by the loaders[obj, mtl, dae] as strings
  */
+/* eslint-enable */
 GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh, callback,
   files)
 {
