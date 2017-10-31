@@ -383,7 +383,7 @@ describe('Gzscene tests', function() {
 
   describe('Spawn a model where the mesh files are undefined', function() {
     it('should add a model to the scene using the model files and then removes it', function() {
-      var sdf, obj, mtl, model, modelName, xhttp_1, xhttp_2, xhttp_3;
+      var sdf, model, xhttp_1;
       xhttp_1 = new XMLHttpRequest();
       xhttp_1.overrideMimeType('text/xml');
       xhttp_1.open('GET', 'http://localhost:9876/base/gz3d/test/utils/walkway_metal_straight/model.sdf', false);
@@ -427,7 +427,7 @@ describe('Gzscene tests', function() {
 
   describe('Spawn a model with a collada mesh using the file api', function() {
     it('should add a model to the scene using the model files and then removes it', function() {
-      var sdf, dae, model, xhttp_1, xhttp_2;
+      var sdf, model, xhttp_1;
       xhttp_1 = new XMLHttpRequest();
       xhttp_1.overrideMimeType('text/xml');
       xhttp_1.open('GET', 'http://localhost:9876/base/gz3d/test/utils/house_2/model.sdf', false);
