@@ -3310,7 +3310,7 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
         var materialName = parent.name + '::' + modelUri;
         this.entityMaterial[materialName] = mat;
 
-        this.scene.loadMesh(modelUri, submesh,
+        this.scene.loadMeshFromUri(modelUri, submesh,
             centerSubmesh, function(dae) {
               if (that.entityMaterial[materialName])
               {
@@ -7015,31 +7015,18 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
  * @example
  * // loading using URI
  * // callback(mesh)
- * loadMesh('assets/house_1/meshes/house_1.dae', undefined, undefined, function(mesh)
+ * loadMeshFromUri('assets/house_1/meshes/house_1.dae', undefined, undefined, function(mesh)
             {
               // use the mesh
             });
- * @example
- * // loading using file string
- * // callback(mesh)
- * loadMesh('assets/house_1/meshes/house_1.dae', undefined, undefined, function(mesh)
-            {
-              // use the mesh
-            }, ['<?xml version="1.0" encoding="utf-8"?>
-    <COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
-      <asset>
-        <contributor>
-          <author>Cole</author>
-          <authoring_tool>OpenCOLLADA for 3ds Max;  Ver.....']);
  * @param {string} uri
  * @param {} submesh
  * @param {} centerSubmesh
  * @param {function} callback
- * @param {array} files - files needed by the loaders[obj, mtl, dae] as strings
  */
 /* eslint-enable */
-GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh, callback,
-  files)
+GZ3D.Scene.prototype.loadMeshFromUri = function(uri, submesh, centerSubmesh,
+  callback)
 {
   var uriPath = uri.substring(0, uri.lastIndexOf('/'));
   var uriFile = uri.substring(uri.lastIndexOf('/') + 1);
@@ -7053,64 +7040,101 @@ GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh, callback,
     return;
   }
 
-  if (!files)
+  // load urdf model
+  if (uriFile.substr(-4).toLowerCase() === '.dae')
   {
-    // load urdf model
-    if (uriFile.substr(-4).toLowerCase() === '.dae')
-    {
-      return this.loadCollada(uri, submesh, centerSubmesh, callback, undefined);
-    }
-    else if (uriFile.substr(-4).toLowerCase() === '.obj')
-    {
-      return this.loadOBJ(uri, submesh, centerSubmesh, callback, undefined);
-    }
-    else if (uriFile.substr(-5).toLowerCase() === '.urdf')
-    {
-    /*var urdfModel = new ROSLIB.UrdfModel({
-      string : uri
-    });
+    return this.loadCollada(uri, submesh, centerSubmesh, callback, undefined);
+  }
+  else if (uriFile.substr(-4).toLowerCase() === '.obj')
+  {
+    return this.loadOBJ(uri, submesh, centerSubmesh, callback, undefined);
+  }
+  else if (uriFile.substr(-5).toLowerCase() === '.urdf')
+  {
+  /*var urdfModel = new ROSLIB.UrdfModel({
+    string : uri
+  });
 
-      // adapted from ros3djs
-      var links = urdfModel.links;
-      for ( var l in links) {
-        var link = links[l];
-        if (link.visual && link.visual.geometry) {
-          if (link.visual.geometry.type === ROSLIB.URDF_MESH) {
-            var frameID = '/' + link.name;
-            var filename = link.visual.geometry.filename;
-            var meshType = filename.substr(-4).toLowerCase();
-            var mesh = filename.substring(filename.indexOf('://') + 3);
-            // ignore mesh files which are not in Collada format
-            if (meshType === '.dae')
+    // adapted from ros3djs
+    var links = urdfModel.links;
+    for ( var l in links) {
+      var link = links[l];
+      if (link.visual && link.visual.geometry) {
+        if (link.visual.geometry.type === ROSLIB.URDF_MESH) {
+          var frameID = '/' + link.name;
+          var filename = link.visual.geometry.filename;
+          var meshType = filename.substr(-4).toLowerCase();
+          var mesh = filename.substring(filename.indexOf('://') + 3);
+          // ignore mesh files which are not in Collada format
+          if (meshType === '.dae')
+          {
+            var dae = this.loadCollada(uriPath + '/' + mesh, parent);
+            // check for a scale
+            if(link.visual.geometry.scale)
             {
-              var dae = this.loadCollada(uriPath + '/' + mesh, parent);
-              // check for a scale
-              if(link.visual.geometry.scale)
-              {
-                dae.scale = new THREE.Vector3(
-                    link.visual.geometry.scale.x,
-                    link.visual.geometry.scale.y,
-                    link.visual.geometry.scale.z
-                );
-              }
+              dae.scale = new THREE.Vector3(
+                  link.visual.geometry.scale.x,
+                  link.visual.geometry.scale.y,
+                  link.visual.geometry.scale.z
+              );
             }
           }
         }
-      }*/
-    }
+      }
+    }*/
   }
-  else
+};
+
+/* eslint-disable */
+/**
+ * Load mesh
+ * @example
+ * // loading using URI
+ * // callback(mesh)
+ * @example
+ * // loading using file string
+ * // callback(mesh)
+ * loadMeshFromString('assets/house_1/meshes/house_1.dae', undefined, undefined, function(mesh)
+            {
+              // use the mesh
+            }, ['<?xml version="1.0" encoding="utf-8"?>
+    <COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+      <asset>
+        <contributor>
+          <author>Cole</author>
+          <authoring_tool>OpenCOLLADA for 3ds Max;  Ver.....']);
+ * @param {string} uri
+ * @param {} submesh
+ * @param {} centerSubmesh
+ * @param {function} callback
+ * @param {array} files - files needed by the loaders[dae] in case of a collada
+ * mesh, [obj, mtl] in case of object mesh, all as strings
+ */
+/* eslint-enable */
+GZ3D.Scene.prototype.loadMeshFromString = function(uri, submesh, centerSubmesh,
+  callback, files)
+{
+  var uriPath = uri.substring(0, uri.lastIndexOf('/'));
+  var uriFile = uri.substring(uri.lastIndexOf('/') + 1);
+
+  if (this.meshes[uri])
   {
-    // load urdf model
-    if (uriFile.substr(-4).toLowerCase() === '.dae')
-    {
-      return this.loadCollada(uri, submesh, centerSubmesh, callback, files[0]);
-    }
-    else if (uriFile.substr(-4).toLowerCase() === '.obj')
-    {
-      var obj = this.loadOBJ(uri, submesh, centerSubmesh, callback, files);
-      return obj;
-    }
+    var mesh = this.meshes[uri];
+    mesh = mesh.clone();
+    this.useSubMesh(mesh, submesh, centerSubmesh);
+    callback(mesh);
+    return;
+  }
+
+  // load urdf model
+  if (uriFile.substr(-4).toLowerCase() === '.dae')
+  {
+    return this.loadCollada(uri, submesh, centerSubmesh, callback, files[0]);
+  }
+  else if (uriFile.substr(-4).toLowerCase() === '.obj')
+  {
+    var obj = this.loadOBJ(uri, submesh, centerSubmesh, callback, files);
+    return obj;
   }
 };
 
@@ -8603,7 +8627,7 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
         if (ext === 'obj')
         {
           var mtlFile = this.mtls[meshFileName.split('.')[0]+'.mtl'];
-          that.scene.loadMesh(modelUri, submesh,centerSubmesh,
+          that.scene.loadMeshFromString(modelUri, submesh,centerSubmesh,
             function(obj)
             {
               parent.add(obj);
@@ -8612,7 +8636,7 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
         }
         else if (ext === 'dae')
         {
-            that.scene.loadMesh(modelUri, submesh, centerSubmesh,
+            that.scene.loadMeshFromString(modelUri, submesh, centerSubmesh,
               function(dae)
               {
                 if (that.entityMaterial[materialName])
@@ -8636,7 +8660,7 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
       }
       else
       {
-        this.scene.loadMesh(modelUri, submesh, centerSubmesh,
+        this.scene.loadMeshFromUri(modelUri, submesh, centerSubmesh,
           function (dae)
           {
             if (that.entityMaterial[materialName])

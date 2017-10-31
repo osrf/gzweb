@@ -511,7 +511,7 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
         if (ext === 'obj')
         {
           var mtlFile = this.mtls[meshFileName.split('.')[0]+'.mtl'];
-          that.scene.loadMesh(modelUri, submesh,centerSubmesh,
+          that.scene.loadMeshFromString(modelUri, submesh,centerSubmesh,
             function(obj)
             {
               parent.add(obj);
@@ -520,7 +520,7 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
         }
         else if (ext === 'dae')
         {
-            that.scene.loadMesh(modelUri, submesh, centerSubmesh,
+            that.scene.loadMeshFromString(modelUri, submesh, centerSubmesh,
               function(dae)
               {
                 if (that.entityMaterial[materialName])
@@ -544,7 +544,7 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
       }
       else
       {
-        this.scene.loadMesh(modelUri, submesh, centerSubmesh,
+        this.scene.loadMeshFromUri(modelUri, submesh, centerSubmesh,
           function (dae)
           {
             if (that.entityMaterial[materialName])
