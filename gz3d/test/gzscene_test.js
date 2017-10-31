@@ -320,4 +320,64 @@ describe('Gzscene tests', function() {
       expect(scene.manipulationMode).toEqual('translate');
     });
   });
+
+  describe('Spawn a model', function() {
+    it('should add a model to the scene and then removes it', function() {
+      var sdf, model;
+      var xhttp = new XMLHttpRequest();
+      xhttp.overrideMimeType('text/xml');
+      xhttp.open('GET', 'http://localhost:9876/base/gz3d/test/utils/beer/model.sdf', false);
+      xhttp.send();
+      sdf = xhttp.responseXML;
+      model = sdfparser.spawnFromSDF(sdf);
+      scene.add(model);
+
+      model = scene.getByName('beer');
+      expect(model).not.toEqual(undefined);
+
+      scene.remove(model);
+      model = scene.getByName('beer');
+      expect(model).toEqual(undefined);
+    });
+  });
+
+  describe('Spawn a model with an object mesh', function() {
+    it('should add a model to the scene and then removes it', function() {
+      var sdf, model;
+      var xhttp = new XMLHttpRequest();
+      xhttp.overrideMimeType('text/xml');
+      xhttp.open('GET', 'http://localhost:9876/base/gz3d/test/utils/walkway_metal_straight/model.sdf', false);
+      xhttp.send();
+      sdf = xhttp.responseXML;
+      model = sdfparser.spawnFromSDF(sdf);
+      scene.add(model);
+
+      model = scene.getByName('walkway_metal_straight');
+      expect(model).not.toEqual(undefined);
+
+      scene.remove(model);
+      model = scene.getByName('walkway_metal_straight');
+      expect(model).toEqual(undefined);
+    });
+  });
+
+  describe('Spawn a model with a collada mesh', function() {
+    it('should add a model to the scene and then removes it', function() {
+      var sdf, model;
+      var xhttp = new XMLHttpRequest();
+      xhttp.overrideMimeType('text/xml');
+      xhttp.open('GET', 'http://localhost:9876/base/gz3d/test/utils/house_2/model.sdf', false);
+      xhttp.send();
+      sdf = xhttp.responseXML;
+      model = sdfparser.spawnFromSDF(sdf);
+      scene.add(model);
+
+      model = scene.getByName('House 2');
+      expect(model).not.toEqual(undefined);
+
+      scene.remove(model);
+      model = scene.getByName('House 2');
+      expect(model).toEqual(undefined);
+    });
+  });
 });
