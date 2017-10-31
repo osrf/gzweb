@@ -337,7 +337,7 @@ describe('Gzscene tests', function() {
     });
   });
 
-  describe('Spawn a model with an object mesh', function() {
+  describe('Spawn a model with an obj mesh', function() {
     it('should add a model to the scene and then removes it', function() {
       var sdf, model;
       var xhttp = new XMLHttpRequest();
@@ -399,7 +399,7 @@ describe('Gzscene tests', function() {
     });
   });
 
-  describe('Spawn a model with object mesh using the file api', function() {
+  describe('Spawn a model with obj mesh using the file api', function() {
     it('should add a model to the scene using the model files and then removes it', function() {
       var sdf, obj, mtl, model, modelName, xhttp_1, xhttp_2, xhttp_3;
       xhttp_1 = new XMLHttpRequest();
