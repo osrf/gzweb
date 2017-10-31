@@ -9,16 +9,22 @@ describe('Gui tests', function() {
 
       var $controller;
 
+
+      var scene;
+      var gui;
+      var sdfparser;
+
+      beforeAll(function(){
+        // Initializing object used in the test.
+        scene = new GZ3D.Scene();
+        gui = new GZ3D.Gui(scene);
+        sdfparser = new GZ3D.SdfParser(scene, gui);
+      });
+
       beforeEach(inject(function(_$controller_){
         // The injector unwraps the underscores (_) from around the parameter names when matching
         $controller = _$controller_;
       }));
-
-      // Initializing object used in the test.
-      var scene = new GZ3D.Scene();
-      var gui = new GZ3D.Gui(scene);
-      var sdfparser = new GZ3D.SdfParser(scene, gui);
-
 
       // Initialize test
       describe('Test gzgui init', function() {

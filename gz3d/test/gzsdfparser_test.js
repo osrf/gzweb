@@ -1,7 +1,10 @@
 describe('Sdf Parser tests', function() {
 
+  var scene;
+  var gui;
+  var sdfparser;
+  var iface;
   beforeAll(function(){
-
     // Initializing object used in the test.
     scene = new GZ3D.Scene();
     gui = new GZ3D.Gui(scene);
