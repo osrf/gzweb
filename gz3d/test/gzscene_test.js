@@ -1,15 +1,9 @@
-jasmine.getFixtures().fixturesPath = 'base/gz3d/test/fixture';
 
 describe('Gzscene tests', function() {
 
-  beforeEach(function(){
-      loadFixtures('myfixture.html');
-      originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
-      jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000;
-      scene = new GZ3D.Scene();
-      gui = new GZ3D.Gui(scene);
-      sdfparser = new GZ3D.SdfParser(scene, gui);
-    });
+    var scene = new GZ3D.Scene();
+    var gui = new GZ3D.Gui(scene);
+    var sdfparser = new GZ3D.SdfParser(scene, gui);
 
 
   describe('Test gzscene Initialize', function() {
@@ -323,6 +317,66 @@ describe('Gzscene tests', function() {
     });
   });
 
+  describe('Spawn a model', function() {
+    it('should add a model to the scene and then removes it', function() {
+      var sdf, model;
+      var xhttp = new XMLHttpRequest();
+      xhttp.overrideMimeType('text/xml');
+      xhttp.open('GET', 'http://localhost:9876/base/gz3d/test/utils/beer/model.sdf', false);
+      xhttp.send();
+      sdf = xhttp.responseXML;
+      model = sdfparser.spawnFromSDF(sdf);
+      scene.add(model);
+
+      model = scene.getByName('beer');
+      expect(model).not.toEqual(undefined);
+
+      scene.remove(model);
+      model = scene.getByName('beer');
+      expect(model).toEqual(undefined);
+    });
+  });
+
+  describe('Spawn a model with an object mesh', function() {
+    it('should add a model to the scene and then removes it', function() {
+      var sdf, model;
+      var xhttp = new XMLHttpRequest();
+      xhttp.overrideMimeType('text/xml');
+      xhttp.open('GET', 'http://localhost:9876/base/gz3d/test/utils/walkway_metal_straight/model.sdf', false);
+      xhttp.send();
+      sdf = xhttp.responseXML;
+      model = sdfparser.spawnFromSDF(sdf);
+      scene.add(model);
+
+      model = scene.getByName('walkway_metal_straight');
+      expect(model).not.toEqual(undefined);
+
+      scene.remove(model);
+      model = scene.getByName('walkway_metal_straight');
+      expect(model).toEqual(undefined);
+    });
+  });
+
+  describe('Spawn a model with a collada mesh', function() {
+    it('should add a model to the scene and then removes it', function() {
+      var sdf, model;
+      var xhttp = new XMLHttpRequest();
+      xhttp.overrideMimeType('text/xml');
+      xhttp.open('GET', 'http://localhost:9876/base/gz3d/test/utils/house_2/model.sdf', false);
+      xhttp.send();
+      sdf = xhttp.responseXML;
+      model = sdfparser.spawnFromSDF(sdf);
+      scene.add(model);
+
+      model = scene.getByName('House 2');
+      expect(model).not.toEqual(undefined);
+
+      scene.remove(model);
+      model = scene.getByName('House 2');
+      expect(model).toEqual(undefined);
+    });
+  });
+
   describe('Spawn a model with no mesh using the file api', function() {
     it('should add a model to the scene using the model files and then removes it', function() {
       var sdf, model;
@@ -425,34 +479,23 @@ describe('Gzscene tests', function() {
     });
   });
 
-  describe('Spawn a model with a collada mesh using the file api', function() {
-    it('should add a model to the scene using the model files and then removes it', function() {
-      var sdf, model, xhttp_1;
-      xhttp_1 = new XMLHttpRequest();
-      xhttp_1.overrideMimeType('text/xml');
-      xhttp_1.open('GET', 'http://localhost:9876/base/gz3d/test/utils/house_2/model.sdf', false);
-      xhttp_1.send();
-      sdf = xhttp_1.responseXML;
+    describe('Spawn a model with a collada mesh', function() {
+      it('should add a model to the scene and then removes it', function() {
+        var sdf, model;
+        var xhttp = new XMLHttpRequest();
+        xhttp.overrideMimeType('text/xml');
+        xhttp.open('GET', 'http://localhost:9876/base/gz3d/test/utils/house_2/model.sdf', false);
+        xhttp.send();
+        sdf = xhttp.responseXML;
+        model = sdfparser.spawnFromSDF(sdf);
+        scene.add(model);
 
-      // // This should work after upgrading to the new ColladaLoader
-      // https://bitbucket.org/osrf/gzweb/issues/123/test-spawning-a-model-with-a-collada-mesh
-      // xhttp_2 = new XMLHttpRequest();
-      // xhttp_2.overrideMimeType('text/plain');
-      // xhttp_2.open('GET', 'http://localhost:9876/base/gz3d/test/utils/house_2/meshes/house_2.dae', false);
-      // xhttp_2.send();
-      // mesh = xhttp_2.responseText;
-      // sdfparser.meshes['house_2.dae'] = mesh;
+        model = scene.getByName('House 2');
+        expect(model).not.toEqual(undefined);
 
-      model = scene.getByName('House 2');
-      expect(model).toEqual(undefined);
-
-      scene.spawnModel.spawnFromSdf(sdf);
-      model = scene.getByName('House 2');
-      expect(model).not.toEqual(undefined);
-
-      scene.remove(model);
-      model = scene.getByName('House 2');
-      expect(model).toEqual(undefined);
+        scene.remove(model);
+        model = scene.getByName('House 2');
+        expect(model).toEqual(undefined);
+      });
     });
-  });
 });
