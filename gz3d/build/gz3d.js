@@ -7043,17 +7043,17 @@ GZ3D.Scene.prototype.loadMeshFromUri = function(uri, submesh, centerSubmesh,
   // load urdf model
   if (uriFile.substr(-4).toLowerCase() === '.dae')
   {
-    return this.loadCollada(uri, submesh, centerSubmesh, callback, undefined);
+    return this.loadCollada(uri, submesh, centerSubmesh, callback);
   }
   else if (uriFile.substr(-4).toLowerCase() === '.obj')
   {
-    return this.loadOBJ(uri, submesh, centerSubmesh, callback, undefined);
+    return this.loadOBJ(uri, submesh, centerSubmesh, callback);
   }
   else if (uriFile.substr(-5).toLowerCase() === '.urdf')
   {
-  /*var urdfModel = new ROSLIB.UrdfModel({
-    string : uri
-  });
+    /*var urdfModel = new ROSLIB.UrdfModel({
+      string : uri
+    });
 
     // adapted from ros3djs
     var links = urdfModel.links;
@@ -7348,6 +7348,7 @@ GZ3D.Scene.prototype.useSubMesh = function(mesh, submesh, centerSubmesh)
 
 /**
  * Load Obj file
+ * @param {string} uri
  * @param {} submesh
  * @param {} centerSubmesh
  * @param {function} callback
