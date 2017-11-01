@@ -2414,14 +2414,6 @@ GZ3D.Scene.prototype.viewCOM = function(model)
         // w.r.t. world
         box.setFromObject(child);
 
-        for (var m = 0, l = child.children.length; m < l; m++) {
-          var _child = child.children[m];
-          if (_child.name.indexOf('vis_') >= 0)
-          {
-            box.setFromObject(_child);
-            break;
-          }
-        }
         // center vertices with object
         box.min.x = box.min.x - model.position.x - child.position.x;
         box.min.y = box.min.y - model.position.y - child.position.y;
