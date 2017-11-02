@@ -2304,6 +2304,11 @@ GZ3D.Scene.prototype.viewJoints = function(model)
  */
 GZ3D.Scene.prototype.viewInertia = function(model)
 {
+  if (model === undefined || model === null)
+  {
+    return;
+  }
+
   if (model.children.length === 0)
   {
     return;
