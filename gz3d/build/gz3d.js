@@ -7968,7 +7968,7 @@ GZ3D.Scene.prototype.viewLinkframe = function(model)
     return;
   }
 
-  if (model.children === undefined || model.children.length === 0)
+  if (model.children.length === 0)
   {
     return;
   }
