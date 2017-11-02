@@ -7884,43 +7884,46 @@
 
 				object.traverse( function ( node ) {
 
-					var i, l;
+					if ( node.name !== 'INERTIA_VISUAL' ){
 
-					var geometry = node.geometry;
+						var i, l;
 
-					if ( geometry !== undefined ) {
+						var geometry = node.geometry;
 
-						if ( geometry.isGeometry ) {
+						if ( geometry !== undefined ) {
 
-							var vertices = geometry.vertices;
+							if ( geometry.isGeometry ) {
 
-							for ( i = 0, l = vertices.length; i < l; i ++ ) {
+								var vertices = geometry.vertices;
 
-								v1.copy( vertices[ i ] );
-								v1.applyMatrix4( node.matrixWorld );
+								for ( i = 0, l = vertices.length; i < l; i ++ ) {
 
-								scope.expandByPoint( v1 );
-
-							}
-
-						} else if ( geometry.isBufferGeometry ) {
-
-							var attribute = geometry.attributes.position;
-
-							if ( attribute !== undefined ) {
-
-								for ( i = 0, l = attribute.count; i < l; i ++ ) {
-
-									v1.fromBufferAttribute( attribute, i ).applyMatrix4( node.matrixWorld );
+									v1.copy( vertices[ i ] );
+									v1.applyMatrix4( node.matrixWorld );
 
 									scope.expandByPoint( v1 );
+
+								}
+
+							} else if ( geometry.isBufferGeometry ) {
+
+								var attribute = geometry.attributes.position;
+
+								if ( attribute !== undefined ) {
+
+									for ( i = 0, l = attribute.count; i < l; i ++ ) {
+
+										v1.fromBufferAttribute( attribute, i ).applyMatrix4( node.matrixWorld );
+
+										scope.expandByPoint( v1 );
+
+									}
 
 								}
 
 							}
 
 						}
-
 					}
 
 				} );
