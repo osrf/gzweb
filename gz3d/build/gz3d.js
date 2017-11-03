@@ -7140,8 +7140,8 @@ GZ3D.Scene.prototype.loadMeshFromString = function(uri, submesh, centerSubmesh,
 
 /**
  * Load collada file
- * @param {string} uri - mesh uri which is also the mesh url which is used
- * by colldaloader to load the mesh file using an XMLHttpRequest.
+ * @param {string} uri - mesh uri which is used by colldaloader to load
+ * the mesh file using an XMLHttpRequest.
  * @param {} submesh
  * @param {} centerSubmesh
  * @param {function} callback
@@ -7167,12 +7167,6 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
   */
 
   var loader = new THREE.ColladaLoader();
-  // var loader = new ColladaLoader2();
-  // loader.options.convertUpAxis = true;
-
-  var thatURI = uri;
-  var thatSubmesh = submesh;
-  var thatCenterSubmesh = centerSubmesh;
 
   if (!filestring)
   {
@@ -7348,9 +7342,8 @@ GZ3D.Scene.prototype.useSubMesh = function(mesh, submesh, centerSubmesh)
 
 /**
  * Load Obj file
- * @param {string} uri - mesh uri which is also the mesh url which is used
- * by mtlloader and the objloader to load both the mesh file and the mtl
- * file using XMLHttpRequests.
+ * @param {string} uri - mesh uri which is used by mtlloader and the objloader
+ * to load both the mesh file and the mtl file using XMLHttpRequests.
  * @param {} submesh
  * @param {} centerSubmesh
  * @param {function} callback
