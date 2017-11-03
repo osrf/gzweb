@@ -1561,12 +1561,6 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
   */
 
   var loader = new THREE.ColladaLoader();
-  // var loader = new ColladaLoader2();
-  // loader.options.convertUpAxis = true;
-
-  var thatURI = uri;
-  var thatSubmesh = submesh;
-  var thatCenterSubmesh = centerSubmesh;
 
   if (!filestring)
   {
