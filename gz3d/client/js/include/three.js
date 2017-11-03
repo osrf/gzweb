@@ -7897,7 +7897,11 @@
 							for ( i = 0, l = vertices.length; i < l; i ++ ) {
 
 								v1.copy( vertices[ i ] );
-								v1.applyMatrix4( node.matrixWorld );
+								if ( node.name === 'COM_VISUAL'){
+									v1.applyMatrix4( node.matrixWorld );
+								}else{
+									v1.applyMatrix4( node.matrixWorld );
+								}
 
 								scope.expandByPoint( v1 );
 
