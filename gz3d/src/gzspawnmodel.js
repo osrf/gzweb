@@ -315,6 +315,7 @@ GZ3D.SpawnModel.prototype.spawnFromSdf = function(sdf)
 {
   if (sdf === undefined)
   {
+    console.log(' No argument provided ');
     return;
   }
 

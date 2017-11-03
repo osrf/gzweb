@@ -7129,22 +7129,25 @@ GZ3D.Scene.prototype.loadMeshFromString = function(uri, submesh, centerSubmesh,
   // load urdf model
   if (uriFile.substr(-4).toLowerCase() === '.dae')
   {
+    // loadCollada just accepts one file, which is the dae file as string
     return this.loadCollada(uri, submesh, centerSubmesh, callback, files[0]);
   }
   else if (uriFile.substr(-4).toLowerCase() === '.obj')
   {
-    var obj = this.loadOBJ(uri, submesh, centerSubmesh, callback, files);
-    return obj;
+    return this.loadOBJ(uri, submesh, centerSubmesh, callback, files);
   }
 };
 
 /**
  * Load collada file
- * @param {string} uri
+ * @param {string} uri - mesh uri which is also the mesh url which is used
+ * by colldaloader to load the mesh file using an XMLHttpRequest.
  * @param {} submesh
  * @param {} centerSubmesh
  * @param {function} callback
- * @param {string} filestring - the dae mesh as a string to be parsed.
+ * @param {string} filestring -optional- the mesh file as a string to be parsed
+ * if provided the uri will not be used just as a url, no XMLHttpRequest will
+ * be made.
  */
 GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
   callback, filestring)
@@ -7175,38 +7178,35 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
   {
     loader.load(uri, function(collada)
     {
-      // check for a scale factor
-      /*if(collada.dae.asset.unit)
-      {
-        var scale = collada.dae.asset.unit;
-        collada.scene.scale = new THREE.Vector3(scale, scale, scale);
-      }*/
-
-      dae = collada.scene;
-      dae.updateMatrix();
-      this.scene.prepareColladaMesh(dae);
-      this.scene.meshes[uri] = dae;
-      dae = dae.clone();
-      this.scene.useSubMesh(dae, submesh, centerSubmesh);
-
-      dae.name = uri;
-      callback(dae);
+      meshReady(collada);
     });
   }
   else
   {
     loader.parse(filestring, function(collada)
     {
-      dae = collada.scene;
-      dae.updateMatrix();
-      this.scene.prepareColladaMesh(dae);
-      this.scene.meshes[thatURI] = dae;
-      dae = dae.clone();
-      this.scene.useSubMesh(dae, thatSubmesh, centerSubmesh);
-
-      dae.name = thatURI;
-      callback(dae);
+      meshReady(collada);
     }, undefined);
+  }
+
+  function meshReady(collada)
+  {
+    // check for a scale factor
+    /*if(collada.dae.asset.unit)
+    {
+      var scale = collada.dae.asset.unit;
+      collada.scene.scale = new THREE.Vector3(scale, scale, scale);
+    }*/
+
+    dae = collada.scene;
+    dae.updateMatrix();
+    this.scene.prepareColladaMesh(dae);
+    this.scene.meshes[uri] = dae;
+    dae = dae.clone();
+    this.scene.useSubMesh(dae, submesh, centerSubmesh);
+
+    dae.name = uri;
+    callback(dae);
   }
 };
 
@@ -7348,11 +7348,15 @@ GZ3D.Scene.prototype.useSubMesh = function(mesh, submesh, centerSubmesh)
 
 /**
  * Load Obj file
- * @param {string} uri
+ * @param {string} uri - mesh uri which is also the mesh url which is used
+ * by mtlloader and the objloader to load both the mesh file and the mtl
+ * file using XMLHttpRequests.
  * @param {} submesh
  * @param {} centerSubmesh
  * @param {function} callback
- * @param {array} files - the [obj, mtl] files as strings
+ * @param {array} files -optional- the mesh and the mtl files as a strings
+ * to be parsed by the loaders, if provided the uri will not be used just
+ * as a url, no XMLHttpRequest will be made.
  */
 GZ3D.Scene.prototype.loadOBJ = function(uri, submesh, centerSubmesh, callback,
   files)
@@ -9439,6 +9443,7 @@ GZ3D.SpawnModel.prototype.spawnFromSdf = function(sdf)
 {
   if (sdf === undefined)
   {
+    console.log(' No argument provided ');
     return;
   }
 
