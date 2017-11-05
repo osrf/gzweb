@@ -449,7 +449,104 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
 
   else if (geom.polyline)
   {
-    console.log(geom.polyline);
+     // if (!meshManager->IsValidFilename(polyLineName))
+    // is this check of any use
+    var helperGeometry_1, helperGeometry_2;
+    // use the hight of the polyline to conclude the z cordinate.
+    var len = geom.polyline.length;
+    // for (var i = 0; i < len; i++) {
+    //   var polyline = geom.polyline[i];
+    //   var points = polyline.point;
+    //   var height = polyline.height;
+    //   var point_0 = points[0];
+    //   for (var m = 1, v = points.length; m < v; ++m) {
+    //     var point_1 = points[m];
+    //     helperGeometry_1 = new THREE.Geometry();
+    //     helperGeometry_2 = new THREE.Geometry();
+    //     helperGeometry_1.vertices.push(new THREE.Vector3(point_0.x, point_0.y,
+    //       0));
+    //     helperGeometry_1.vertices.push(new THREE.Vector3(point_1.x, point_1.y,
+    //       0));
+    //     helperGeometry_2.vertices.push(new THREE.Vector3(point_0.x, point_0.y,
+    //       0.1));
+    //     helperGeometry_2.vertices.push(new THREE.Vector3(point_1.x, point_1.y,
+    //       0.1));
+    //     var helperMaterial = new THREE.LineBasicMaterial({color: 0x00ff00});
+    //     var line_1 = new THREE.Line(helperGeometry_1, helperMaterial,
+    //         THREE.LineSegments);
+    //     var line_2 = new THREE.Line(helperGeometry_2, helperMaterial,
+    //       THREE.LineSegments);
+    //     parent.add(line_1);
+    //     parent.add(line_2);
+    //     point_0 = point_1;
+    //   }
+    // }
+
+    var geometry, polymaterial, mesh;
+
+    // for (var m = 0; m < len-1; m++) {
+    //   var polyline = geom.polyline[m];
+    //   var points = polyline.point;
+    //   var height = polyline.height;
+    //   var vectors = new Array(points.length);
+    //   for (var j = 0; j < points.length; j++) {
+    //     var p = points[j];
+    //     vectors[j] = new THREE.Vector3(p.x, p.y, height/2);
+    //   }
+    //   var curve = new THREE.CatmullRomCurve3(vectors);
+    //   console.log(material);
+    //   console.log(mat);
+    //   geometry = new THREE.TubeGeometry(curve, 36, 0.05, 10, false);
+    //   polymaterial = new THREE.MeshBasicMaterial({color: new THREE.Color(0x0000ff)});
+    //   mesh = new THREE.Mesh(geometry);
+    //   this.scene.setMaterial(mesh, mat);
+    //   parent.add(mesh);
+    // }
+    var vs = new Array(len);
+    for (var m = 0; m < len; m++) {
+      var polyline = geom.polyline[m];
+      var points = polyline.point;
+      var height = polyline.height;
+      var vectors = new Array(points.length);
+      for (var j = 0; j < points.length; j++) {
+        var p = points[j];
+        vectors[j] = new THREE.Vector3(p.x, p.y, 0);
+      }
+      vs[m] = vectors;
+    }
+
+    var holes = [];
+    var vertices = [];
+    if (len > 1)
+    {
+      for (var r = 0; r < vs[0].length; r++)
+      {
+        vertices.push(vs[0][r]);
+        // if (r+1 !== vs[0].length)
+        // {
+        vertices.push(vs[1][r]);
+        // }
+      }
+    }
+    else
+    {
+      vertices = vs[0];
+    }
+    var triangles;
+    geometry = new THREE.Geometry();
+    material = new THREE.MeshBasicMaterial();
+
+    geometry.vertices = vertices;
+
+    triangles = THREE.ShapeUtils.triangulateShape( vertices, holes );
+
+    for( var i = 0; i < triangles.length; i++ ){
+
+        geometry.faces.push( new THREE.Face3( triangles[i][0], triangles[i][1], triangles[i][2] ));
+    }
+
+    mesh = new THREE.Mesh( geometry, material );
+    parent.add(mesh);
   }
   else if (geom.mesh)
   {
