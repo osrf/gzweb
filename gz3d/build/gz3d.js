@@ -8113,14 +8113,13 @@ GZ3D.Scene.prototype.viewCOM = function(model)
         helperGeometry_3.vertices.push(points[4]);
         helperGeometry_3.vertices.push(points[5]);
 
-        var helperMaterial_1 = new THREE.LineBasicMaterial({color: 0x00ff00});
-        var helperMaterial_2 = new THREE.LineBasicMaterial({color: 0xff0000});
-        var helperMaterial_3 = new THREE.LineBasicMaterial({color: 0x0000ff});
-        line_1 = new THREE.Line(helperGeometry_1, helperMaterial_1,
+        helperMaterial = new THREE.LineBasicMaterial({color: 0x00ff00});
+
+        line_1 = new THREE.Line(helperGeometry_1, helperMaterial,
             THREE.LineSegments);
-        line_2 = new THREE.Line(helperGeometry_2, helperMaterial_2,
+        line_2 = new THREE.Line(helperGeometry_2, helperMaterial,
             THREE.LineSegments);
-        line_3 = new THREE.Line(helperGeometry_3, helperMaterial_3,
+        line_3 = new THREE.Line(helperGeometry_3, helperMaterial,
             THREE.LineSegments);
 
         line_1.name = 'COM_VISUAL';
