@@ -8113,8 +8113,7 @@ GZ3D.Scene.prototype.updateLight = function(entity, msg)
 };
 
 /**
- * Start spawning an entity.
- * Adds an object to the scene.
+ * Adds an sdf model to the scene.
  * @param {object} sdf - It is either SDF XML string or SDF XML DOM object
  */
 GZ3D.Scene.prototype.viewSdf = function(sdf)
