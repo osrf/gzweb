@@ -169,6 +169,7 @@ var modelList =
     {path:'street', title:'Street', examplePath1:'dumpster',
     examplePath2:'drc_practice_angled_barrier_45', examplePath3:'fire_hydrant', models:
     [
+      {modelPath:'thankyou_korean', modelTitle:'Thank you korean'},
       {modelPath:'cinder_block', modelTitle:'Cinder Block'},
       {modelPath:'cinder_block_2', modelTitle:'Cinder Block 2'},
       {modelPath:'cinder_block_wide', modelTitle:'Cinder Block Wide'},
@@ -192,7 +193,8 @@ var modelList =
       {modelPath:'stop_sign', modelTitle:'Stop Sign'},
       {modelPath:'first_2015_trash_can', modelTitle:'Trash Can'},
       {modelPath:'person_standing', modelTitle:'Person Standning'},
-      {modelPath:'person_walking', modelTitle:'Person Walking'}
+      {modelPath:'person_walking', modelTitle:'Person Walking'},
+      {modelPath:'arrow_red', modelTitle:'Arrow Red'}
     ]},
 
     {path:'tools', title:'Tools', examplePath1:'hammer',

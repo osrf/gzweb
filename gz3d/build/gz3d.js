@@ -174,6 +174,7 @@ var modelList =
     {path:'street', title:'Street', examplePath1:'dumpster',
     examplePath2:'drc_practice_angled_barrier_45', examplePath3:'fire_hydrant', models:
     [
+      {modelPath:'thankyou_korean', modelTitle:'Thank you korean'},
       {modelPath:'cinder_block', modelTitle:'Cinder Block'},
       {modelPath:'cinder_block_2', modelTitle:'Cinder Block 2'},
       {modelPath:'cinder_block_wide', modelTitle:'Cinder Block Wide'},
@@ -197,7 +198,8 @@ var modelList =
       {modelPath:'stop_sign', modelTitle:'Stop Sign'},
       {modelPath:'first_2015_trash_can', modelTitle:'Trash Can'},
       {modelPath:'person_standing', modelTitle:'Person Standning'},
-      {modelPath:'person_walking', modelTitle:'Person Walking'}
+      {modelPath:'person_walking', modelTitle:'Person Walking'},
+      {modelPath:'arrow_red', modelTitle:'Arrow Red'}
     ]},
 
     {path:'tools', title:'Tools', examplePath1:'hammer',
@@ -3184,59 +3186,42 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
   }
   else if (geom.polyline)
   {
-    // if (!meshManager->IsValidFilename(polyLineName))
-    // is this check of any use
-    var helperGeometry_1, helperGeometry_2;
-    // use the hight of the polyline to conclude the z cordinate.
-    var len = geom.polyline.length;
-    // for (var i = 0; i < len; i++) {
-    //   var polyline = geom.polyline[i];
-    //   var points = polyline.point;
-    //   var height = polyline.height;
-    //   var point_0 = points[0];
-    //   for (var m = 1, v = points.length; m < v; ++m) {
-    //     var point_1 = points[m];
-    //     helperGeometry_1 = new THREE.Geometry();
-    //     helperGeometry_2 = new THREE.Geometry();
-    //     helperGeometry_1.vertices.push(new THREE.Vector3(point_0.x, point_0.y,
-    //       0));
-    //     helperGeometry_1.vertices.push(new THREE.Vector3(point_1.x, point_1.y,
-    //       0));
-    //     helperGeometry_2.vertices.push(new THREE.Vector3(point_0.x, point_0.y,
-    //       0.1));
-    //     helperGeometry_2.vertices.push(new THREE.Vector3(point_1.x, point_1.y,
-    //       0.1));
-    //     var helperMaterial = new THREE.LineBasicMaterial({color: 0x00ff00});
-    //     var line_1 = new THREE.Line(helperGeometry_1, helperMaterial,
-    //         THREE.LineSegments);
-    //     var line_2 = new THREE.Line(helperGeometry_2, helperMaterial,
-    //       THREE.LineSegments);
-    //     parent.add(line_1);
-    //     parent.add(line_2);
-    //     point_0 = point_1;
-    //   }
-    // }
+    var sign = function(p1, p2, p3)
+    {
+        return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
+    }
 
+    var pointInTriangle = function (pt, v1, v2, v3)
+    {
+        var b1, b2, b3;
+        b1 = sign(pt, v1, v2) < 0;
+        b2 = sign(pt, v2, v3) < 0;
+        b3 = sign(pt, v3, v1) < 0;
+        return ((b1 == b2) && (b2 == b3));
+    }
+
+    var isPreHole = function(trigs, point, _vertices)
+    {
+      if (point === undefined || trigs === undefined)
+      {
+        return false;
+      }
+      for (var t = 0; t < trigs.length; t++)
+      {
+        var p1 = _vertices[triangles[t][0]];
+        var p2 = _vertices[triangles[t][1]];
+        var p3 = _vertices[triangles[t][2]];
+        if (pointInTriangle(point, p1, p2, p3))
+        {
+          return true;
+        }
+      }
+      return false;
+    }
+    var helperGeometry_1, helperGeometry_2;
+    var len = geom.polyline.length;
     var geometry, polymaterial, mesh;
 
-    // for (var m = 0; m < len-1; m++) {
-    //   var polyline = geom.polyline[m];
-    //   var points = polyline.point;
-    //   var height = polyline.height;
-    //   var vectors = new Array(points.length);
-    //   for (var j = 0; j < points.length; j++) {
-    //     var p = points[j];
-    //     vectors[j] = new THREE.Vector3(p.x, p.y, height/2);
-    //   }
-    //   var curve = new THREE.CatmullRomCurve3(vectors);
-    //   console.log(material);
-    //   console.log(mat);
-    //   geometry = new THREE.TubeGeometry(curve, 36, 0.05, 10, false);
-    //   polymaterial = new THREE.MeshBasicMaterial({color: new THREE.Color(0x0000ff)});
-    //   mesh = new THREE.Mesh(geometry);
-    //   this.scene.setMaterial(mesh, mat);
-    //   parent.add(mesh);
-    // }
     var vs = new Array(len);
     for (var m = 0; m < len; m++) {
       var polyline = geom.polyline[m];
@@ -3251,38 +3236,111 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
     }
 
     var holes = [];
+    var holed = false;
     var vertices = [];
-    if (len > 1)
+    var pre_len = 1;
+    for (var n=0; n<len; ++n)
     {
-      for (var r = 0; r < vs[0].length; r++)
+      for (var r = 0; r < vs[n].length; r++)
       {
-        vertices.push(vs[0][r]);
-        // if (r+1 !== vs[0].length)
-        // {
-        vertices.push(vs[1][r]);
-        // }
+        vertices.push(vs[n][r]);
       }
-    }
-    else
-    {
-      vertices = vs[0];
+      pre_len = r;
     }
     var triangles;
+    var intersect;
     geometry = new THREE.Geometry();
-    material = new THREE.MeshBasicMaterial(material);
+    material = new THREE.MeshBasicMaterial();
 
-    geometry.vertices = vertices;
+    var holding = false;
 
-    triangles = THREE.ShapeUtils.triangulateShape( vertices, holes );
+    for (var k = 0; k < len; k++)
+    {
+      if (holding)
+      {
+        if (isPreHole(triangles, vs[0][k], vs[k-1]) )
+        {
+          var holePoints = vs[k];
+          var hole = new THREE.Path();
+          hole.fromPoints(holePoints);
+          var shape = new THREE.Shape(geometry.vertices);
+          shape.holes.push(new THREE.Shape(holePoints));
+          var points = shape.extractPoints();
+          var options = {
+            amount: 0.1,
+            bevelEnabled: false,
+            curveSegments: 40,
+            material: 0,
+            extrudeMaterial: 1
+          };
+          var _geo = new THREE.ExtrudeGeometry(shape, options);
+          material = [
+            new THREE.MeshPhongMaterial({
+              color: 0xf00fff,
+              shading: THREE.FlatShading
+            }), // front
+            new THREE.MeshPhongMaterial({
+              color: 0xf00fff,
+              shading: THREE.SmoothShading
+            }) // side
+          ];
+          mesh = new THREE.Mesh(_geo, material);
+          parent.add(mesh);
+          // break;
 
-    for( var i = 0; i < triangles.length; i++ ){
-
-        geometry.faces.push( new THREE.Face3( triangles[i][0], triangles[i][1], triangles[i][2] ));
+          // triangles = THREE.ShapeUtils.triangulateShape( geometry.vertices, points.holes );
+          // for (var c = 0; c < vs[k].length; c++)
+          // {
+          //   geometry.vertices.push(vs[k][c]);
+          // }
+          // for( var i = 0; i < triangles.length; i++ )
+          // {
+          //   geometry.faces.push( new THREE.Face3( triangles[i][0], triangles[i][1], triangles[i][2] ));
+          // }
+          // mesh = new THREE.Mesh( geometry, material );
+          holed = true;
+          holding = false;
+          // parent.add(mesh);
+        }
+        else
+        {
+          if (triangles)
+          {
+            for( var i = 0; i < triangles.length; i++ )
+            {
+              geometry.faces.push( new THREE.Face3( triangles[i][0], triangles[i][1], triangles[i][2] ));
+            }
+            mesh = new THREE.Mesh( geometry, material );
+            parent.add(mesh);
+            holding = false;
+          }
+          geometry.vertices = vs[k];
+          triangles = THREE.ShapeUtils.triangulateShape( geometry.vertices, holes );
+          holed = false;
+          holding = true;
+        }
+      }
+      else
+      {
+        geometry.vertices = vs[k];
+        triangles = THREE.ShapeUtils.triangulateShape( geometry.vertices, holes );
+        holding = true;
+        if (k === len-1)
+        {
+          var shape = new THREE.Shape(geometry.vertices);
+          var options = {
+            amount: 0.1,
+            bevelEnabled: false,
+            curveSegments: 40,
+            material: 0,
+            extrudeMaterial: 1
+          };
+          geometry = new THREE.ExtrudeGeometry(shape, options);
+          mesh = new THREE.Mesh(geometry, material);
+          parent.add(mesh);
+        }
+      }
     }
-
-    mesh = new THREE.Mesh( geometry, material );
-    parent.add(mesh);
-    // var polylines = new Array();
   }
   else if (geom.mesh)
   {
@@ -8502,7 +8560,54 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
 
   else if (geom.polyline)
   {
-    console.log(geom.polyline);
+    // var helperGeometry_1, helperGeometry_2;
+    // var len = geom.polyline.length;
+    // var geometry, polymaterial, mesh;
+
+    // var vs = new Array(len);
+    // for (var m = 0; m < len; m++) {
+    //   var polyline = geom.polyline[m];
+    //   var points = polyline.point;
+    //   var height = polyline.height;
+    //   var vectors = new Array(points.length);
+    //   for (var j = 0; j < points.length; j++) {
+    //     var p = points[j];
+    //     vectors[j] = new THREE.Vector3(p.x, p.y, 0);
+    //   }
+    //   vs[m] = vectors;
+    // }
+
+    // var holes = [];
+    // var vertices = [];
+    // var trig_vertices = [];
+    // for (var n=0; n<len; ++n)
+    // {
+    //   for (var r = 0; r < vs[n].length; r++)
+    //   {
+    //     trig_vertices[r] = [vs[n][r].x, vs[n][r].y];
+    //     vertices.push(vs[n][r]);
+    //   }
+    // }
+    // var triangles;
+    // geometry = new THREE.Geometry();
+    // material = new THREE.MeshBasicMaterial();
+
+    // geometry.vertices = vertices;
+
+    // // console.time('triangulate');
+    // // triangles = Delaunay.triangulate(trig_vertices);
+    // // console.timeEnd('triangulate');
+
+    // triangles = THREE.ShapeUtils.triangulateShape( vertices, holes );
+
+    // for( var i = 0; i < triangles.length; i++ ){
+
+    //     geometry.faces.push( new THREE.Face3( triangles[i][0], triangles[i][1], triangles[i][2] ));
+    // }
+
+    // mesh = new THREE.Mesh( geometry, material );
+    // parent.add(mesh);
+    // var polylines = new Array();
   }
   else if (geom.mesh)
   {
