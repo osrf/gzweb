@@ -8066,17 +8066,19 @@ GZ3D.Scene.prototype.viewCOM = function(model)
         }
 
         COMVisual.crossLines = [];
+
+        // align the link with z axis and calculate its bounding box
+        var originalRotation = new THREE.Euler();
+        var rot = new THREE.Euler();
         box = new THREE.Box3();
-        // w.r.t. world
+        originalRotation.copy(child.rotation);
+        rot.copy(child.rotation);
+        rot.set(0, 0, -originalRotation.z, 0);
+        child.setRotationFromEuler(rot);
+
         box.setFromObject(child);
 
-        // // center vertices with object
-        // box.min.x = box.min.x - model.position.x - child.position.x;
-        // box.min.y = box.min.y - model.position.y - child.position.y;
-        // box.min.z = box.min.z - model.position.z - child.position.z;
-        // box.max.x = box.max.x - model.position.x - child.position.x;
-        // box.max.y = box.max.y - model.position.y - child.position.y;
-        // box.max.z = box.max.z - model.position.z - child.position.z;
+        child.setRotationFromEuler(originalRotation);
 
         // w.r.t child
         var worldToLocal = new THREE.Matrix4();
