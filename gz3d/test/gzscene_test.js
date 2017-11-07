@@ -389,7 +389,7 @@ describe('Gzscene tests', function() {
       model = scene.getByName('beer');
       expect(model).toEqual(undefined);
 
-      scene.spawnModel.spawnFromSdf(sdf);
+      scene.viewSdf(sdf);
       model = scene.getByName('beer');
 
       expect(model).not.toEqual(undefined);
@@ -425,7 +425,7 @@ describe('Gzscene tests', function() {
       model = scene.getByName('walkway_metal_straight');
       expect(model).toEqual(undefined);
 
-      scene.spawnModel.spawnFromSdf(sdf);
+      scene.viewSdf(sdf);
       model = scene.getByName('walkway_metal_straight');
 
       expect(model).not.toEqual(undefined);
@@ -451,7 +451,7 @@ describe('Gzscene tests', function() {
       model = scene.getByName('walkway_metal_straight');
       expect(model).toEqual(undefined);
 
-      scene.spawnModel.spawnFromSdf(sdf);
+      scene.viewSdf(sdf);
       model = scene.getByName('walkway_metal_straight');
 
       expect(model).not.toEqual(undefined);
@@ -472,7 +472,7 @@ describe('Gzscene tests', function() {
       model = scene.getByName('walkway_metal_straight');
       expect(model).toEqual(undefined);
 
-      scene.spawnModel.spawnFromSdf(undefined);
+      scene.viewSdf(undefined);
       model = scene.getByName('walkway_metal_straight');
 
       expect(model).toEqual(undefined);

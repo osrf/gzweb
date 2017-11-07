@@ -8113,6 +8113,52 @@ GZ3D.Scene.prototype.updateLight = function(entity, msg)
 };
 
 /**
+ * Start spawning an entity.
+ * Adds an object to the scene.
+ * @param {object} sdf - It is either SDF XML string or SDF XML DOM object
+ */
+GZ3D.Scene.prototype.viewSdf = function(sdf)
+{
+  if (sdf === undefined)
+  {
+    console.log(' No argument provided ');
+    return;
+  }
+
+  var obj = new THREE.Object3D();
+
+  var sdfXml = this.spawnModel.sdfParser.parseXML(sdf);
+  // sdfXML is always undefined, the XML parser doesn't work while testing
+  // while it does work during normal usage.
+  var myjson = xml2json(sdfXml, '\t');
+  var sdfObj = JSON.parse(myjson).sdf;
+
+  var mesh = this.spawnModel.sdfParser.spawnFromSDF(sdf);
+
+  obj.name = mesh.name;
+
+  var joints = [];
+
+  obj.add(mesh);
+
+  var getIdFromName = function (name)
+  {
+    for (var j = 0, len = obj.children[0].children.length; j < len; j++) {
+      if (name === obj.children[0].children[j].name)
+      {
+        return obj.children[0].children[j].id;
+      }
+    }
+  };
+
+  // the model appears at the origin
+  obj.position.x = 0;
+  obj.position.y = 0;
+  obj.position.z += 0.5;
+  this.add(obj);
+};
+
+/**
  * SDF parser constructor initializes SDF parser with the given parameters
  * and defines a DOM parser function to parse SDF XML files
  * @param {object} scene - the gz3d scene object
