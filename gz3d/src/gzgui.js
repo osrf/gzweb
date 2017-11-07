@@ -1099,8 +1099,8 @@ GZ3D.Gui.prototype.init = function()
 
   guiEvents.on('openTreeWhenSelected', function ()
       {
-        this.openTreeWhenSelected = !this.openTreeWhenSelected;
-        if(!this.openTreeWhenSelected)
+        that.openTreeWhenSelected = !that.openTreeWhenSelected;
+        if(!that.openTreeWhenSelected)
         {
           $('#open-tree-when-selected').buttonMarkup({icon: 'false'});
         }
@@ -1113,8 +1113,8 @@ GZ3D.Gui.prototype.init = function()
 
   guiEvents.on('toggle_notifications', function ()
       {
-        this.showNotifications = !this.showNotifications;
-        if(!this.showNotifications)
+        that.showNotifications = !that.showNotifications;
+        if(!that.showNotifications)
         {
           $('#toggle-notifications').buttonMarkup({icon: 'false'});
         }
