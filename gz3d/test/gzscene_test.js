@@ -380,6 +380,7 @@ describe('Gzscene tests', function() {
       expect(model).toEqual(undefined);
     });
   });
+
   // Test inertia visualizations
   describe('Test inertia visuals', function() {
     it('Should toggle inertia visualizations', function() {
