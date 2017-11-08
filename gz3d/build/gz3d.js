@@ -7560,6 +7560,74 @@ GZ3D.Scene.prototype.showRadialMenu = function(e)
 };
 
 /**
+ * Sets the bounding box of an object while ignoring the addtional visuals.
+ * @param {THREE.Box3} - box
+ * @param {THREE.Object3D} - object
+ */
+GZ3D.Scene.prototype.setFromObject = function(box, object)
+{
+  box.min.x = box.min.y = box.min.z = + Infinity;
+  box.max.x = box.max.y = box.max.z = - Infinity;
+  var v = new THREE.Vector3();
+  object.updateMatrixWorld( true );
+
+  object.traverse( function ( node )
+  {
+    var i, l;
+    var geometry = node.geometry;
+    if ( geometry !== undefined )
+    {
+
+      if (node.name !== 'INERTIA_VISUAL')
+      {
+
+        if ( geometry.isGeometry )
+        {
+
+          var vertices = geometry.vertices;
+
+          for ( i = 0, l = vertices.length; i < l; i ++ )
+          {
+
+            v.copy( vertices[ i ] );
+            v.applyMatrix4( node.matrixWorld );
+
+            expandByPoint( v );
+
+          }
+
+        }
+        else if ( geometry.isBufferGeometry )
+        {
+
+          var attribute = geometry.attributes.position;
+
+          if ( attribute !== undefined )
+          {
+
+            for ( i = 0, l = attribute.count; i < l; i ++ )
+            {
+
+              v.fromBufferAttribute( attribute, i ).applyMatrix4( node.matrixWorld );
+
+              expandByPoint( v );
+
+            }
+          }
+        }
+      }
+    }
+  });
+
+  function expandByPoint(point)
+  {
+    box.min.min( point );
+    box.max.max( point );
+  }
+
+};
+
+/**
  * Show bounding box for a model. The box is aligned with the world.
  * @param {THREE.Object3D} model
  */
@@ -7583,7 +7651,7 @@ GZ3D.Scene.prototype.showBoundingBox = function(model)
   }
   var box = new THREE.Box3();
   // w.r.t. world
-  box.setFromObject(model);
+  this.setFromObject(box, model);
   // center vertices with object
   box.min.x = box.min.x - model.position.x;
   box.min.y = box.min.y - model.position.y;
