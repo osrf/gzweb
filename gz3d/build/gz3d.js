@@ -7608,7 +7608,8 @@ GZ3D.Scene.prototype.setFromObject = function(box, object)
             for ( i = 0, l = attribute.count; i < l; i ++ )
             {
 
-              v.fromBufferAttribute( attribute, i ).applyMatrix4( node.matrixWorld );
+              v.fromBufferAttribute( attribute, i ).applyMatrix4( 
+                node.matrixWorld );
 
               expandByPoint( v );
 
