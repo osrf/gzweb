@@ -8134,15 +8134,8 @@ GZ3D.Scene.prototype.createFromSdf = function(sdf)
   var sdfObj = JSON.parse(myjson).sdf;
 
   var mesh = this.spawnModel.sdfParser.spawnFromSDF(sdf);
-
   obj.name = mesh.name;
-
   obj.add(mesh);
-
-  // the model is positioned at the origin
-  obj.position.x = 0;
-  obj.position.y = 0;
-  obj.position.z += 0.5;
 
   return obj;
 };
