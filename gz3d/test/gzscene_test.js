@@ -379,7 +379,7 @@ describe('Gzscene tests', function() {
 
   describe('Spawn a model with no mesh using the file api', function() {
     it('should add a model to the scene using the model files and then removes it', function() {
-      var sdf, model;
+      var sdf, model, obj;
       var xhttp = new XMLHttpRequest();
       xhttp.overrideMimeType('text/xml');
       xhttp.open('GET', 'http://localhost:9876/base/gz3d/test/utils/beer/model.sdf', false);
@@ -389,7 +389,8 @@ describe('Gzscene tests', function() {
       model = scene.getByName('beer');
       expect(model).toEqual(undefined);
 
-      scene.viewSdf(sdf);
+      obj = scene.createFromSdf(sdf);
+      scene.add(obj);
       model = scene.getByName('beer');
 
       expect(model).not.toEqual(undefined);
@@ -425,7 +426,8 @@ describe('Gzscene tests', function() {
       model = scene.getByName('walkway_metal_straight');
       expect(model).toEqual(undefined);
 
-      scene.viewSdf(sdf);
+      obj = scene.createFromSdf(sdf);
+      scene.add(obj);
       model = scene.getByName('walkway_metal_straight');
 
       expect(model).not.toEqual(undefined);
@@ -451,7 +453,8 @@ describe('Gzscene tests', function() {
       model = scene.getByName('walkway_metal_straight');
       expect(model).toEqual(undefined);
 
-      scene.viewSdf(sdf);
+      obj = scene.createFromSdf(sdf);
+      scene.add(obj);
       model = scene.getByName('walkway_metal_straight');
 
       expect(model).not.toEqual(undefined);
@@ -472,10 +475,9 @@ describe('Gzscene tests', function() {
       model = scene.getByName('walkway_metal_straight');
       expect(model).toEqual(undefined);
 
-      scene.viewSdf(undefined);
-      model = scene.getByName('walkway_metal_straight');
+      obj = scene.createFromSdf(undefined);
 
-      expect(model).toEqual(undefined);
+      expect(obj).toEqual(undefined);
     });
   });
 

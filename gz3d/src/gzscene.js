@@ -2509,8 +2509,9 @@ GZ3D.Scene.prototype.updateLight = function(entity, msg)
 /**
  * Adds an sdf model to the scene.
  * @param {object} sdf - It is either SDF XML string or SDF XML DOM object
+ * @returns {THREE.Object3D}
  */
-GZ3D.Scene.prototype.viewSdf = function(sdf)
+GZ3D.Scene.prototype.createFromSdf = function(sdf)
 {
   if (sdf === undefined)
   {
@@ -2530,23 +2531,12 @@ GZ3D.Scene.prototype.viewSdf = function(sdf)
 
   obj.name = mesh.name;
 
-  var joints = [];
-
   obj.add(mesh);
 
-  var getIdFromName = function (name)
-  {
-    for (var j = 0, len = obj.children[0].children.length; j < len; j++) {
-      if (name === obj.children[0].children[j].name)
-      {
-        return obj.children[0].children[j].id;
-      }
-    }
-  };
-
-  // the model appears at the origin
+  // the model is positioned at the origin
   obj.position.x = 0;
   obj.position.y = 0;
   obj.position.z += 0.5;
-  this.add(obj);
+
+  return obj;
 };
