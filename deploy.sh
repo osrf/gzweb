@@ -137,7 +137,7 @@ else
   echo "Not cloning the model repo"
 fi
 
-if [[ $MODELS ]] || [[ $THUMBNAIL ]]
+if [[ $THUMBNAIL ]]
 then
   echo "Generating a thumbnail for each model. Make sure gazebo is not running"
   ./tools/gzthumbnails.sh

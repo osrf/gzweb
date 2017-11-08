@@ -11,6 +11,9 @@ GZ3D.SdfParser = function(scene, gui, gziface)
   // set the sdf version
   this.SDF_VERSION = 1.5;
   this.MATERIAL_ROOT = 'assets';
+  // true for using URLs to load files.
+  // false for using the files loaded in the memory.
+  this.usingFilesUrls = false;
 
   // set the xml parser function
   this.parseXML = function(xmlStr) {
@@ -26,7 +29,10 @@ GZ3D.SdfParser = function(scene, gui, gziface)
   // cache materials if more than one model needs them
   this.materials = [];
   this.entityMaterial = {};
-
+  // store meshes when loading meshes from memory.
+  this.meshes = {};
+  this.mtls = {};
+  this.textures = {};
 };
 
 /**
@@ -36,8 +42,9 @@ GZ3D.SdfParser = function(scene, gui, gziface)
  */
 GZ3D.SdfParser.prototype.init = function()
 {
-  if(this.gziface)
+  if (this.gziface)
   {
+    this.usingFilesUrls = true;
     var that = this;
     this.gziface.emitter.on('error', function() {
       that.gui.guiEvents.emit('notification_popup',
@@ -339,7 +346,15 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
               }
             }
           }
-          texture = this.MATERIAL_ROOT + '/' + textureUri + '/' + mat.texture;
+          // Map texture name to the corresponding texture.
+          if (!this.usingFilesUrls)
+          {
+            texture = this.textures[mat.texture];
+          }
+          else
+          {
+            texture = this.MATERIAL_ROOT + '/' + textureUri + '/' + mat.texture;
+          }
         }
       }
       else
@@ -372,9 +387,18 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
         startIndex = 0;
       }
       var normalMapName = material.normal_map.substr(startIndex,
-              material.normal_map.lastIndexOf('.') - startIndex);
-      normalMap = this.MATERIAL_ROOT + '/' + mapUri + '/' +
+        material.normal_map.lastIndexOf('.') - startIndex);
+      // Map texture name to the corresponding texture.
+      if (!this.usingFilesUrls)
+      {
+        normalMap = this.textures[normalMapName + '.png'];
+      }
+      else
+      {
+        normalMap = this.MATERIAL_ROOT + '/' + mapUri + '/' +
           normalMapName + '.png';
+      }
+
     }
   }
 
@@ -452,35 +476,76 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
   }
   else if (geom.mesh)
   {
+    var meshUri = geom.mesh.uri;
+    var submesh;
+    var centerSubmesh;
+
+
+    if (geom.mesh.submesh)
     {
-      var meshUri = geom.mesh.uri;
-      var submesh;
-      var centerSubmesh;
-      if (geom.mesh.submesh)
+      submesh = geom.mesh.submesh.name;
+      centerSubmesh = this.parseBool(geom.mesh.submesh.center);
+    }
+
+    var uriType = meshUri.substring(0, meshUri.indexOf('://'));
+    if (uriType === 'file' || uriType === 'model')
+    {
+      var modelName = meshUri.substring(meshUri.indexOf('://') + 3);
+      if (geom.mesh.scale)
       {
-        submesh = geom.mesh.submesh.name;
-        centerSubmesh = this.parseBool(geom.mesh.submesh.center);
+        var scale = this.parseScale(geom.mesh.scale);
+        parent.scale.x = scale.x;
+        parent.scale.y = scale.y;
+        parent.scale.z = scale.z;
       }
 
-      var uriType = meshUri.substring(0, meshUri.indexOf('://'));
-      if (uriType === 'file' || uriType === 'model')
+      var modelUri = this.MATERIAL_ROOT + '/' + modelName;
+      var ext = modelUri.substr(-4).toLowerCase();
+      var materialName = parent.name + '::' + modelUri;
+      this.entityMaterial[materialName] = material;
+
+      if (!this.usingFilesUrls)
       {
-        var modelName = meshUri.substring(meshUri.indexOf('://') + 3);
-        if (geom.mesh.scale)
+        var meshFileName = meshUri.substring(meshUri.lastIndexOf('/') + 1);
+        var meshFile = this.meshes[meshFileName];
+        if (ext === 'obj')
         {
-          var scale = this.parseScale(geom.mesh.scale);
-          parent.scale.x = scale.x;
-          parent.scale.y = scale.y;
-          parent.scale.z = scale.z;
+          var mtlFile = this.mtls[meshFileName.split('.')[0]+'.mtl'];
+          that.scene.loadMeshFromString(modelUri, submesh,centerSubmesh,
+            function(obj)
+            {
+              parent.add(obj);
+              loadGeom(parent);
+            }, [meshFile, mtlFile]);
         }
-
-        var modelUri = this.MATERIAL_ROOT + '/' + modelName;
-        var materialName = parent.name + '::' + modelUri;
-        var ext = modelUri.substr(-4).toLowerCase();
-        this.entityMaterial[materialName] = material;
-
-        this.scene.loadMesh(modelUri, submesh, centerSubmesh, function(dae) {
-          if (that.entityMaterial[materialName])
+        else if (ext === 'dae')
+        {
+            that.scene.loadMeshFromString(modelUri, submesh, centerSubmesh,
+              function(dae)
+              {
+                if (that.entityMaterial[materialName])
+                {
+                  var allChildren = [];
+                  dae.getDescendants(allChildren);
+                  for (var c = 0; c < allChildren.length; ++c)
+                  {
+                    if (allChildren[c] instanceof THREE.Mesh)
+                    {
+                      that.scene.setMaterial(allChildren[c],
+                              that.entityMaterial[materialName]);
+                      break;
+                    }
+                  }
+                }
+                parent.add(dae);
+                loadGeom(parent);
+              }, [meshFile]);
+        }
+      }
+      else
+      {
+        this.scene.loadMeshFromUri(modelUri, submesh, centerSubmesh,
+          function (dae)
           {
             if (ext !== '.stl')
             {
@@ -500,7 +565,6 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
             {
               that.scene.setMaterial(dae, that.entityMaterial[materialName]);
             }
-          }
           parent.add(dae);
           loadGeom(parent);
         });
