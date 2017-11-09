@@ -8067,17 +8067,20 @@ GZ3D.Scene.prototype.viewCOM = function(model)
 
         COMVisual.crossLines = [];
 
-        // align the link with z axis and calculate its bounding box
+        // Store link's original rotation (w.r.t. the model)
         var originalRotation = new THREE.Euler();
-        var rot = new THREE.Euler();
-        box = new THREE.Box3();
         originalRotation.copy(child.rotation);
-        rot.copy(child.rotation);
-        rot.set(0, 0, -originalRotation.z, 0);
-        child.setRotationFromEuler(rot);
+
+        // Align link with world (reverse parent rotation w.r.t. the world)
+        child.setRotationFromMatrix(
+          new THREE.Matrix4().getInverse(child.parent.matrixWorld));
+
+        // Get its bounding box
+        box = new THREE.Box3();
 
         box.setFromObject(child);
 
+        // Rotate link back to its original rotation
         child.setRotationFromEuler(originalRotation);
 
         // w.r.t child
