@@ -380,4 +380,49 @@ describe('Gzscene tests', function() {
       expect(model).toEqual(undefined);
     });
   });
+
+  // Test center of mass visualizations
+  describe('Test center of mass visual', function() {
+    it('spawn a model and toggle center of mass visuals', function() {
+      var sdf, object, visual, model, xhttp;
+
+      xhttp = new XMLHttpRequest();
+      xhttp.overrideMimeType('text/xml');
+      xhttp.open('GET', 'http://localhost:9876/base/gz3d/test/utils/beer/model.sdf', false);
+      xhttp.send();
+      sdf = xhttp.responseXML;
+      model = sdfparser.spawnFromSDF(sdf);
+      scene.add(model);
+
+      // no visuals intially
+      visual = model.getObjectByName('COM_VISUAL');
+      expect(visual).toEqual(undefined);
+
+      // if there was no selected entity it shouldn't break
+      guiEvents.emit('view_com');
+      visual = model.getObjectByName('COM_VISUAL');
+      expect(visual).toEqual(undefined);
+
+      // select a model and then view the visuals
+      scene.selectedEntity = model;
+      guiEvents.emit('view_com');
+      visual = model.getObjectByName('COM_VISUAL');
+      expect(visual).not.toEqual(undefined);
+
+      // hide the visuals
+      guiEvents.emit('view_com');
+      visual = model.getObjectByName('COM_VISUAL');
+      expect(visual).toEqual(undefined);
+
+      // test to view the visuals when they already exist
+      guiEvents.emit('view_com');
+      visual = model.getObjectByName('COM_VISUAL');
+      expect(visual).not.toEqual(undefined);
+
+      // hide the visuals
+      guiEvents.emit('view_com');
+      visual = model.getObjectByName('COM_VISUAL');
+      expect(visual).toEqual(undefined);
+    });
+  });
 });

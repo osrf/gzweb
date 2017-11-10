@@ -8042,6 +8042,7 @@ GZ3D.Scene.prototype.viewCOM = function(model)
         radius = Math.cbrt((0.75 * inertialMass ) / (Math.PI * 11340));
 
         COMVisual = this.COMvisual.clone();
+        COMVisual.name = 'COMVisual';
         child.add(COMVisual);
         model.COMVisuals.push(COMVisual);
         COMVisual.scale.set(radius, radius, radius);
