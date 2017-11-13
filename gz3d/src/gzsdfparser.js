@@ -33,6 +33,7 @@ GZ3D.SdfParser = function(scene, gui, gziface)
   this.meshes = {};
   this.mtls = {};
   this.textures = {};
+  this.customUris = [];
 };
 
 /**
@@ -73,6 +74,16 @@ GZ3D.SdfParser.prototype.init = function()
     this.scene.initScene();
   }
 };
+
+/**
+ * sets usingFilesUrls value
+ *
+ */
+GZ3D.SdfParser.prototype.setUsingFilesUrls = function(value)
+{
+  this.usingFilesUrls = value;
+};
+
 
 /**
  * Event callback function for gziface connection error which occurs
@@ -353,7 +364,23 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
           }
           else
           {
-            texture = this.MATERIAL_ROOT + '/' + textureUri + '/' + mat.texture;
+            if (this.customUris.length !== 0)
+            {
+              for (var k = 0; k < this.customUris.length; k++)
+              {
+                if (this.customUris[k].indexOf(mat.texture) > -1)
+                {
+                  texture = this.customUris[k];
+                  this.customUris.splice(k, 1);
+                  break;
+                }
+              }
+            }
+            else
+            {
+              texture = this.MATERIAL_ROOT + '/' + textureUri + '/' +
+                mat.texture;
+            }
           }
         }
       }
@@ -395,8 +422,23 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
       }
       else
       {
-        normalMap = this.MATERIAL_ROOT + '/' + mapUri + '/' +
-          normalMapName + '.png';
+        if (this.customUris.length !== 0)
+        {
+          for (var j = 0; j < this.customUris.length; j++)
+          {
+            if (this.customUris[j].indexOf(normalMapName + '.png') > -1)
+            {
+              normalMap = this.customUris[j];
+              this.customUris.splice(j, 1);
+              break;
+            }
+          }
+        }
+        else
+        {
+          normalMap = this.MATERIAL_ROOT + '/' + mapUri + '/' +
+            normalMapName + '.png';
+        }
       }
 
     }
@@ -502,10 +544,10 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
       var modelUri = this.MATERIAL_ROOT + '/' + modelName;
       var materialName = parent.name + '::' + modelUri;
       this.entityMaterial[materialName] = material;
+      var meshFileName = meshUri.substring(meshUri.lastIndexOf('/') + 1);
 
       if (!this.usingFilesUrls)
       {
-        var meshFileName = meshUri.substring(meshUri.lastIndexOf('/') + 1);
         var ext = meshFileName.substring(meshFileName.indexOf('.') + 1);
         var meshFile = this.meshes[meshFileName];
         if (ext === 'obj')
@@ -544,6 +586,18 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
       }
       else
       {
+        if (this.customUris.length !== 0)
+        {
+          for (var k = 0; k < this.customUris.length; k++)
+          {
+            if (this.customUris[k].indexOf(meshFileName) > -1)
+            {
+              modelUri = this.customUris[k];
+              this.customUris.splice(k, 1);
+              break;
+            }
+          }
+        }
         this.scene.loadMeshFromUri(modelUri, submesh, centerSubmesh,
           function (dae)
           {
@@ -996,7 +1050,24 @@ GZ3D.SdfParser.prototype.createCylinderSDF = function(translation, euler)
  */
 GZ3D.SdfParser.prototype.loadModel = function(modelName)
 {
-  var modelFile = this.MATERIAL_ROOT + '/' + modelName + '/model.sdf';
+  var modelFile;
+
+  if (this.customUris.length !== 0)
+  {
+    for (var k = 0; k < this.customUris.length; k++)
+    {
+      if (this.customUris[k].indexOf(modelName) > -1)
+      {
+        modelFile = this.customUris[k];
+        this.customUris.splice(k, 1);
+        break;
+      }
+    }
+  }
+  else
+  {
+    modelFile = this.MATERIAL_ROOT + '/' + modelName + '/model.sdf';
+  }
 
   var xhttp = new XMLHttpRequest();
   xhttp.overrideMimeType('text/xml');

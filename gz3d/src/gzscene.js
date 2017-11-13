@@ -27,6 +27,7 @@ GZ3D.Scene.prototype.init = function()
 
   // loaders
   this.textureLoader = new THREE.TextureLoader();
+  this.textureLoader.crossOrigin = '';  
   this.colladaLoader = new THREE.ColladaLoader();
   this.objLoader = new THREE.OBJLoader();
 
@@ -107,7 +108,7 @@ GZ3D.Scene.prototype.init = function()
 
   this.timeDown = null;
 
-  this.controls = new THREE.OrbitControls(this.camera);
+  this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
   this.scene.add(this.controls.targetIndicator);
 
   this.emitter = new EventEmitter2({ verbose: true });
@@ -1249,6 +1250,7 @@ GZ3D.Scene.prototype.createRoads = function(points, width, texture)
   if (texture)
   {
     var tex = this.textureLoader.load(texture);
+    //allow cross origin loading
     tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
     material.map = tex;
   }
