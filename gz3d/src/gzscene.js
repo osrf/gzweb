@@ -2099,8 +2099,13 @@ GZ3D.Scene.prototype.hideBoundingBox = function()
  */
 GZ3D.Scene.prototype.onRightClick = function(event, callback)
 {
-  var pos = new THREE.Vector2(event.clientX, event.clientY);
-  var model = this.getRayCastModel(pos, new THREE.Vector3());
+  var canvasTop = Number(this.renderer.domElement.style.top);
+  var canvasLeft = Number(this.renderer.domElement.style.left);
+
+  var relativePose = new THREE.Vector2(event.clientX - canvasLeft,
+    event.clientY - canvasTop);
+
+  var model = this.getRayCastModel(relativePose, new THREE.Vector3());
 
   if(model && model.name !== '' && model.name !== 'plane' &&
       this.modelManipulator.pickerNames.indexOf(model.name) === -1)
