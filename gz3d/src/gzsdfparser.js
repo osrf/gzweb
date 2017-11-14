@@ -1040,7 +1040,7 @@ GZ3D.SdfParser.prototype.createCylinderSDF = function(translation, euler)
  */
 GZ3D.SdfParser.prototype.loadModel = function(modelName)
 {
-  var modelFile;
+  var modelFile = '';
 
   if (this.customUris.length !== 0)
   {

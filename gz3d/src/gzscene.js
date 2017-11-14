@@ -1265,7 +1265,6 @@ GZ3D.Scene.prototype.createRoads = function(points, width, texture)
   if (texture)
   {
     var tex = this.textureLoader.load(texture);
-    //allow cross origin loading
     tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
     material.map = tex;
   }
@@ -2116,7 +2115,6 @@ GZ3D.Scene.prototype.hideBoundingBox = function()
 GZ3D.Scene.prototype.onRightClick = function(event, callback)
 {
   var pos = new THREE.Vector2(event.clientX, event.clientY);
-
   var model = this.getRayCastModel(pos, new THREE.Vector3());
 
   if(model && model.name !== '' && model.name !== 'plane' &&
