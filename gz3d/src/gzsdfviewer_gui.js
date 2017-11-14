@@ -19,15 +19,9 @@ $(function()
   }
 
   // Toggle items
-  $('#view-collisions').buttonMarkup({icon: 'false'});
-  $('#snap-to-grid').buttonMarkup({icon: 'false'});
   $('#view-transparent').buttonMarkup({icon: 'false'});
   $('#view-wireframe').buttonMarkup({icon: 'false'});
   $('#view-joints').buttonMarkup({icon: 'false'});
-  guiEvents.emit('toggle_notifications');
-  guiEvents.emit('show_orbit_indicator');
-
-  $('#notification-popup-screen').remove();
 
   // Touch devices
   if (isTouchDevice)
@@ -60,7 +54,6 @@ $(function()
         }, press_time_container));
         guiEvents.emit('longpress_container_move',event);
       });
-
   }
   // Mouse devices
   else
@@ -136,25 +129,6 @@ $(function()
       guiEvents.emit('view_joints');
     }
   });
-
-  $('#view-model').click(function(event){
-    guiEvents.emit('view_sdf_model', event);
-  });
-
-  $('#material-file-input').change(function(event) {
-    guiEvents.emit('materials_ready', event);
-  });
-
-  var $list = $('#list-of-files');
-  $('#file-input').change(function(event) {
-    guiEvents.emit('model_files_ready', event, $list);
-  });
-
-  $(window).resize(function()
-  {
-    guiEvents.emit('resizePanel');
-  });
-  // init();
 });
 
 /**
@@ -181,110 +155,9 @@ GZ3D.Gui.prototype.init = function()
   this.showNotifications = false;
   this.openTreeWhenSelected = false;
   this.modelStatsDirty = false;
-  this.listOfFiles = [];
-  this.files_ready = false;
+  this.scene.grid.visible = true;
 
   var that = this;
-
-  // throttle model pose updates, otherwise complex model kills framerate
-  setInterval(function() {
-    if (that.modelStatsDirty)
-    {
-      that.updateStats();
-      that.modelStatsDirty = false;
-    }
-  }, 20);
-
-  var notificationTimeout;
-  guiEvents.on('notification_popup',
-      function (notification, duration)
-      {
-        if (this.showNotifications)
-        {
-          clearTimeout(notificationTimeout);
-          $( '#notification-popup' ).popup('close');
-          $( '#notification-popup' ).html('&nbsp;'+notification+'&nbsp;');
-          $( '#notification-popup' ).popup('open', {
-              y:window.innerHeight-50});
-
-          if (duration === undefined)
-          {
-            duration = 2000;
-          }
-          notificationTimeout = setTimeout(function()
-          {
-            $( '#notification-popup' ).popup('close');
-          }, duration);
-        }
-      }
-  );
-
-  guiEvents.on('materials_ready', function(event)
-    {
-      that.emitter.emit('load_materials', event.target.files[0])
-    }
-  );
-
-  guiEvents.on('view_sdf_model', function(event)
-    {
-     if(that.files_ready)
-     {
-       that.emitter.emit('load_files', that.listOfFiles);
-
-       var load_model = document.getElementById('model-loading');
-       load_model.style.display = 'none';
-
-       var container = document.getElementById('container');
-       container.style.display = '';
-
-       animate();
-     }
-    }
-  );
-
-  guiEvents.on('model_files_ready', function(event, $list)
-    {
-      that.listOfFiles = event.target.files;
-
-      // TODO: more comprehensive test later
-      if(that.listOfFiles.length > 0 ){
-        that.files_ready = true;
-      }
-
-      for (var i = 0, l = that.listOfFiles.length; i < l; ++i) {
-        // console.log(listOfFiles[i]);
-        $list.append($('<p>'+ that.listOfFiles[i].name +'</p>'));
-      }
-    }
-  );
-
-  guiEvents.on('show_grid', function(option)
-    {
-      if (option === 'show')
-      {
-        that.scene.grid.visible = true;
-      }
-      else if (option === 'hide')
-      {
-        that.scene.grid.visible = false;
-      }
-      else if (option === 'toggle')
-      {
-        that.scene.grid.visible = !that.scene.grid.visible;
-      }
-
-      if(!that.scene.grid.visible)
-      {
-        $('#view-grid').buttonMarkup({icon: 'false'});
-        guiEvents.emit('notification_popup','Hiding grid');
-      }
-      else
-      {
-        $('#view-grid').buttonMarkup({icon: 'check'});
-        guiEvents.emit('notification_popup','Viewing grid');
-      }
-    }
-  );
 
 
   guiEvents.on('show_orbit_indicator', function()
@@ -417,11 +290,6 @@ GZ3D.Gui.prototype.init = function()
     }
   );
 
-};
-
-GZ3D.Gui.prototype.updateModelStatsAsync = function()
-{
-  this.modelStatsDirty = true;
 };
 
 /**

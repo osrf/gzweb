@@ -76,16 +76,6 @@ GZ3D.SdfParser.prototype.init = function()
 };
 
 /**
- * sets usingFilesUrls value
- *
- */
-GZ3D.SdfParser.prototype.setUsingFilesUrls = function(value)
-{
-  this.usingFilesUrls = value;
-};
-
-
-/**
  * Event callback function for gziface connection error which occurs
  * when gziface cannot connect to gzbridge websocket
  * this is due to 2 reasons:
@@ -1056,7 +1046,7 @@ GZ3D.SdfParser.prototype.loadModel = function(modelName)
   {
     for (var k = 0; k < this.customUris.length; k++)
     {
-      if (this.customUris[k].indexOf(modelName) > -1)
+      if (this.customUris[k].indexOf('model.sdf') > -1)
       {
         modelFile = this.customUris[k];
         this.customUris.splice(k, 1);

@@ -5633,7 +5633,7 @@ GZ3D.Scene.prototype.init = function()
 
   // loaders
   this.textureLoader = new THREE.TextureLoader();
-  this.textureLoader.crossOrigin = '';  
+  this.textureLoader.crossOrigin = '';
   this.colladaLoader = new THREE.ColladaLoader();
   this.objLoader = new THREE.OBJLoader();
 
@@ -5645,13 +5645,17 @@ GZ3D.Scene.prototype.init = function()
   // this.renderer.shadowMapEnabled = true;
   // this.renderer.shadowMapSoft = true;
 
+  this.canvasX = this.renderer.domElement.getBoundingClientRect().top;
+  this.canvasY = this.renderer.domElement.getBoundingClientRect().left;
+
   // lights
   this.ambient = new THREE.AmbientLight( 0x666666 );
   this.scene.add(this.ambient);
 
   // camera
-  this.camera = new THREE.PerspectiveCamera(
-      60, window.innerWidth / window.innerHeight, 0.1, 1000 );
+  this.camera = new THREE.PerspectiveCamera(60,
+    this.renderer.domElement.width / this.renderer.domElement.height,
+    0.1, 1000 );
   this.defaultCameraPosition = new THREE.Vector3(0, -5, 5);
   this.resetView();
 
@@ -5714,7 +5718,8 @@ GZ3D.Scene.prototype.init = function()
 
   this.timeDown = null;
 
-  this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+  this.controls = new THREE.OrbitControls(this.camera,
+    this.renderer.domElement);
   this.scene.add(this.controls.targetIndicator);
 
   this.emitter = new EventEmitter2({ verbose: true });
@@ -5932,6 +5937,13 @@ GZ3D.Scene.prototype.initScene = function()
   this.add(obj);
 };
 
+GZ3D.Scene.prototype.setCanvasPosition = function(left, top)
+{
+  this.canvasX = left;
+  this.canvasY = top;
+};
+
+
 GZ3D.Scene.prototype.setSDFParser = function(sdfParser)
 {
   this.spawnModel.sdfParser = sdfParser;
@@ -5957,7 +5969,8 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
     if (event.touches.length === 1)
     {
       pos = new THREE.Vector2(
-          event.touches[0].clientX, event.touches[0].clientY);
+          event.touches[0].clientX,
+          event.touches[0].clientY);
     }
     else if (event.touches.length === 2)
     {
@@ -6061,7 +6074,8 @@ GZ3D.Scene.prototype.onMouseScroll = function(event)
 {
   event.preventDefault();
 
-  var pos = new THREE.Vector2(event.clientX, event.clientY);
+  var pos = new THREE.Vector2(event.clientX,
+    event.clientY);
 
   var intersect = new THREE.Vector3();
   var model = this.getRayCastModel(pos, intersect);
@@ -6147,11 +6161,12 @@ GZ3D.Scene.prototype.onKeyDown = function(event)
  */
 GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
 {
+  pos.setX(pos.x - this.canvasX);
+  pos.setY(pos.y - this.canvasY);
   var vector = new THREE.Vector3(
-      ((pos.x - this.renderer.domElement.offsetLeft)
-      / window.innerWidth) * 2 - 1,
-      -((pos.y - this.renderer.domElement.offsetTop)
-      / window.innerHeight) * 2 + 1, 1);
+    (pos.x / this.renderer.domElement.width) * 2 - 1,
+    -(pos.y / this.renderer.domElement.height) * 2 + 1, 1);
+
   vector.unproject(this.camera);
   var ray = new THREE.Raycaster( this.camera.position,
       vector.sub(this.camera.position).normalize() );
@@ -7614,7 +7629,8 @@ GZ3D.Scene.prototype.showRadialMenu = function(e)
   var event = e.originalEvent;
 
   var pointer = event.touches ? event.touches[ 0 ] : event;
-  var pos = new THREE.Vector2(pointer.clientX, pointer.clientY);
+  var pos = new THREE.Vector2(pointer.clientX,
+    pointer.clientY);
 
   var intersect = new THREE.Vector3();
   var model = this.getRayCastModel(pos, intersect);
@@ -7706,6 +7722,7 @@ GZ3D.Scene.prototype.hideBoundingBox = function()
 GZ3D.Scene.prototype.onRightClick = function(event, callback)
 {
   var pos = new THREE.Vector2(event.clientX, event.clientY);
+
   var model = this.getRayCastModel(pos, new THREE.Vector3());
 
   if(model && model.name !== '' && model.name !== 'plane' &&
@@ -7714,7 +7731,6 @@ GZ3D.Scene.prototype.onRightClick = function(event, callback)
     callback(model);
   }
 };
-
 
 /**
  * Set model's view mode
@@ -8218,16 +8234,6 @@ GZ3D.SdfParser.prototype.init = function()
     this.scene.initScene();
   }
 };
-
-/**
- * sets usingFilesUrls value
- *
- */
-GZ3D.SdfParser.prototype.setUsingFilesUrls = function(value)
-{
-  this.usingFilesUrls = value;
-};
-
 
 /**
  * Event callback function for gziface connection error which occurs
@@ -9200,7 +9206,7 @@ GZ3D.SdfParser.prototype.loadModel = function(modelName)
   {
     for (var k = 0; k < this.customUris.length; k++)
     {
-      if (this.customUris[k].indexOf(modelName) > -1)
+      if (this.customUris[k].indexOf('model.sdf') > -1)
       {
         modelFile = this.customUris[k];
         this.customUris.splice(k, 1);

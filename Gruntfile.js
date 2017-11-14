@@ -12,7 +12,7 @@ module.exports = function(grunt) {
         'gz3d/src/gzsdf*.js'],
         dest : 'gz3d/build/sdfviewer.js'
       },
-      build_dev: {
+      build_gz3d_lib: {
         src: [
         'gz3d/client/js/include/three.js', 'gz3d/client/js/include/three.compat.js',
         'gz3d/client/js/include/OrbitControls.js', 'gz3d/client/js/include/Detector.js',
@@ -24,7 +24,7 @@ module.exports = function(grunt) {
         'gz3d/client/js/include/ShaderPass.js', 'gz3d/client/js/include/xml2json.js',
         'gz3d/build/sdfviewer.js'
         ],
-        dest: 'gz3d/build/sdfviewer.js'
+        dest: 'gz3d/build/gz3d.lib.js'
       },
     },
     jshint: {
