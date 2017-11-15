@@ -1389,27 +1389,53 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
       }
     }
 
-    var material = new THREE.ShaderMaterial({
-      uniforms:
-      {
-        texture0: { type: 't', value: textureLoaded[0]},
-        texture1: { type: 't', value: textureLoaded[1]},
-        texture2: { type: 't', value: textureLoaded[2]},
-        repeat0: { type: 'f', value: repeats[0]},
-        repeat1: { type: 'f', value: repeats[1]},
-        repeat2: { type: 'f', value: repeats[2]},
-        minHeight1: { type: 'f', value: blends[0].min_height},
-        fadeDist1: { type: 'f', value: blends[0].fade_dist},
-        minHeight2: { type: 'f', value: blends[1].min_height},
-        fadeDist2: { type: 'f', value: blends[1].fade_dist},
-        ambient: { type: 'c', value: this.ambient.color},
-        lightDiffuse: { type: 'c', value: lightDiffuse},
-        lightDir: { type: 'v3', value: lightDir}
-      },
-      attributes: {},
-      vertexShader: this.shaders.heightmapVS,
-      fragmentShader: this.shaders.heightmapFS
-    });
+    var material;
+    if (this.heightmapFS && this.heightmapVS)
+    {
+      material = new THREE.ShaderMaterial({
+        uniforms:
+        {
+          texture0: { type: 't', value: textureLoaded[0]},
+          texture1: { type: 't', value: textureLoaded[1]},
+          texture2: { type: 't', value: textureLoaded[2]},
+          repeat0: { type: 'f', value: repeats[0]},
+          repeat1: { type: 'f', value: repeats[1]},
+          repeat2: { type: 'f', value: repeats[2]},
+          minHeight1: { type: 'f', value: blends[0].min_height},
+          fadeDist1: { type: 'f', value: blends[0].fade_dist},
+          minHeight2: { type: 'f', value: blends[1].min_height},
+          fadeDist2: { type: 'f', value: blends[1].fade_dist},
+          ambient: { type: 'c', value: this.ambient.color},
+          lightDiffuse: { type: 'c', value: lightDiffuse},
+          lightDir: { type: 'v3', value: lightDir}
+        },
+        attributes: {},
+        vertexShader: this.heightmapVS,
+        fragmentShader: this.heightmapFS
+      });
+    }
+    else
+    {
+      material = new THREE.ShaderMaterial({
+        uniforms:
+        {
+          texture0: { type: 't', value: textureLoaded[0]},
+          texture1: { type: 't', value: textureLoaded[1]},
+          texture2: { type: 't', value: textureLoaded[2]},
+          repeat0: { type: 'f', value: repeats[0]},
+          repeat1: { type: 'f', value: repeats[1]},
+          repeat2: { type: 'f', value: repeats[2]},
+          minHeight1: { type: 'f', value: blends[0].min_height},
+          fadeDist1: { type: 'f', value: blends[0].fade_dist},
+          minHeight2: { type: 'f', value: blends[1].min_height},
+          fadeDist2: { type: 'f', value: blends[1].fade_dist},
+          ambient: { type: 'c', value: this.ambient.color},
+          lightDiffuse: { type: 'c', value: lightDiffuse},
+          lightDir: { type: 'v3', value: lightDir}
+        },
+        attributes: {}
+      });
+    }
 
     mesh = new THREE.Mesh( geometry, material);
   }
