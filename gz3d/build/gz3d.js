@@ -5606,6 +5606,7 @@ GZ3D.RadialMenu.prototype.setNumberOfItems = function(number)
 
 /**
  * The scene is where everything is placed, from objects, to lights and cameras.
+ * @param gzshaders - gzshaders instance to access shaders.
  * @constructor
  */
 GZ3D.Scene = function(gzshaders)
@@ -9233,6 +9234,10 @@ GZ3D.SdfParser.prototype.loadModel = function(modelName)
   return xhttp.responseXML;
 };
 
+/**
+ * The gzshaders holds the all the shaders to be used.
+ * @constructor
+ */
 GZ3D.GZShaders = function()
 {
     this.init();

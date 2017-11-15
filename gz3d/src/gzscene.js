@@ -1,5 +1,6 @@
 /**
  * The scene is where everything is placed, from objects, to lights and cameras.
+ * @param gzshaders - gzshaders instance to access shaders.
  * @constructor
  */
 GZ3D.Scene = function(gzshaders)

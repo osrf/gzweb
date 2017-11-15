@@ -1,3 +1,7 @@
+/**
+ * The gzshaders holds the all the shaders to be used.
+ * @constructor
+ */
 GZ3D.GZShaders = function()
 {
     this.init();
