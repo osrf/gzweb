@@ -5645,6 +5645,7 @@ GZ3D.Scene.prototype.init = function()
   // this.renderer.shadowMapEnabled = true;
   // this.renderer.shadowMapSoft = true;
 
+  // get renderer absolute position.
   this.canvasX = this.renderer.domElement.getBoundingClientRect().top;
   this.canvasY = this.renderer.domElement.getBoundingClientRect().left;
 
@@ -5660,9 +5661,10 @@ GZ3D.Scene.prototype.init = function()
   this.resetView();
 
   // ortho camera and scene for rendering sprites
-  this.cameraOrtho = new THREE.OrthographicCamera( -window.innerWidth * 0.5,
-      window.innerWidth * 0.5, window.innerHeight*0.5, -window.innerHeight*0.5,
-      1, 10);
+  this.cameraOrtho = new THREE.OrthographicCamera(
+    -this.renderer.domElement.width * 0.5,
+    this.renderer.domElement.width * 0.5, this.renderer.domElement.height*0.5,
+    -this.renderer.domElement.height*0.5, 1, 10);
   this.cameraOrtho.position.z = 10;
   this.sceneOrtho = new THREE.Scene();
 
@@ -5937,6 +5939,11 @@ GZ3D.Scene.prototype.initScene = function()
   this.add(obj);
 };
 
+/**
+ * Set canvas absolute position
+ * @param {} left - canvas left.
+ * @param {} top - canvas top.
+ */
 GZ3D.Scene.prototype.setCanvasPosition = function(left, top)
 {
   this.canvasX = left;
@@ -8191,6 +8198,8 @@ GZ3D.SdfParser = function(scene, gui, gziface)
   this.meshes = {};
   this.mtls = {};
   this.textures = {};
+
+  // Should contain model files URLs if not using gzweb model files hierarchy.
   this.customUris = [];
 };
 

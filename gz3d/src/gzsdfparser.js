@@ -33,6 +33,8 @@ GZ3D.SdfParser = function(scene, gui, gziface)
   this.meshes = {};
   this.mtls = {};
   this.textures = {};
+
+  // Should contain model files URLs if not using gzweb model files hierarchy.
   this.customUris = [];
 };
 
