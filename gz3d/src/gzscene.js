@@ -2,8 +2,9 @@
  * The scene is where everything is placed, from objects, to lights and cameras.
  * @constructor
  */
-GZ3D.Scene = function()
+GZ3D.Scene = function(gzshaders)
 {
+  this.shaders = gzshaders;
   this.init();
 };
 
@@ -16,7 +17,6 @@ GZ3D.Scene.prototype.init = function()
   this.scene = new THREE.Scene();
   // this.scene.name = this.name;
   this.meshes = {};
-
   // only support one heightmap for now.
   this.heightmap = null;
 
@@ -1383,8 +1383,8 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
         lightDir: { type: 'v3', value: lightDir}
       },
       attributes: {},
-      vertexShader: document.getElementById( 'heightmapVS' ).innerHTML,
-      fragmentShader: document.getElementById( 'heightmapFS' ).innerHTML
+      vertexShader: this.shaders.heightmapVS,
+      fragmentShader: this.shaders.heightmapFS
     });
 
     mesh = new THREE.Mesh( geometry, material);
