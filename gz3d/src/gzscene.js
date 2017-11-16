@@ -314,6 +314,7 @@ GZ3D.Scene.prototype.init = function()
 
   // center of mass visual
   this.COMvisual = new THREE.Object3D();
+  this.COMvisual.name = 'COM_VISUAL';
 
   geometry = new THREE.SphereGeometry(1, 32, 32);
 

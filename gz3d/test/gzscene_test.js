@@ -534,6 +534,9 @@ describe('Gzscene tests', function() {
       visual = model.getObjectByName('COM_VISUAL');
       expect(visual).not.toEqual(undefined);
 
+      // Verify the position of the visual
+      expect(visual.position).toEqual(model.position);
+
       // hide the visuals
       guiEvents.emit('view_com');
       visual = model.getObjectByName('COM_VISUAL');
