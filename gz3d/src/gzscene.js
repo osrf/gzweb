@@ -1416,15 +1416,24 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
   this.heightmap = parent;
 };
 
+/* eslint-disable */
 /**
  * Load mesh
+ * @example
+ * // loading using URI
+ * // callback(mesh)
+ * loadMeshFromUri('assets/house_1/meshes/house_1.dae', undefined, undefined, function(mesh)
+            {
+              // use the mesh
+            });
  * @param {string} uri
  * @param {} submesh
  * @param {} centerSubmesh
  * @param {function} callback
  */
-GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh,
-    callback)
+/* eslint-enable */
+GZ3D.Scene.prototype.loadMeshFromUri = function(uri, submesh, centerSubmesh,
+  callback)
 {
   var uriPath = uri.substring(0, uri.lastIndexOf('/'));
   var uriFile = uri.substring(uri.lastIndexOf('/') + 1);
@@ -1483,20 +1492,105 @@ GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh,
   }
 };
 
+/* eslint-disable */
 /**
- * Load collada file
+ * Load mesh
+ * @example
+ * // loading using URI
+ * // callback(mesh)
+ * @example
+ * // loading using file string
+ * // callback(mesh)
+ * loadMeshFromString('assets/house_1/meshes/house_1.dae', undefined, undefined, function(mesh)
+            {
+              // use the mesh
+            }, ['<?xml version="1.0" encoding="utf-8"?>
+    <COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+      <asset>
+        <contributor>
+          <author>Cole</author>
+          <authoring_tool>OpenCOLLADA for 3ds Max;  Ver.....']);
  * @param {string} uri
  * @param {} submesh
  * @param {} centerSubmesh
  * @param {function} callback
+ * @param {array} files - files needed by the loaders[dae] in case of a collada
+ * mesh, [obj, mtl] in case of object mesh, all as strings
+ */
+/* eslint-enable */
+GZ3D.Scene.prototype.loadMeshFromString = function(uri, submesh, centerSubmesh,
+  callback, files)
+{
+  var uriPath = uri.substring(0, uri.lastIndexOf('/'));
+  var uriFile = uri.substring(uri.lastIndexOf('/') + 1);
+
+  if (this.meshes[uri])
+  {
+    var mesh = this.meshes[uri];
+    mesh = mesh.clone();
+    this.useSubMesh(mesh, submesh, centerSubmesh);
+    callback(mesh);
+    return;
+  }
+
+  // load urdf model
+  if (uriFile.substr(-4).toLowerCase() === '.dae')
+  {
+    // loadCollada just accepts one file, which is the dae file as string
+    return this.loadCollada(uri, submesh, centerSubmesh, callback, files[0]);
+  }
+  else if (uriFile.substr(-4).toLowerCase() === '.obj')
+  {
+    return this.loadOBJ(uri, submesh, centerSubmesh, callback, files);
+  }
+};
+
+/**
+ * Load collada file
+ * @param {string} uri - mesh uri which is used by colldaloader to load
+ * the mesh file using an XMLHttpRequest.
+ * @param {} submesh
+ * @param {} centerSubmesh
+ * @param {function} callback
+ * @param {string} filestring -optional- the mesh file as a string to be parsed
+ * if provided the uri will not be used just as a url, no XMLHttpRequest will
+ * be made.
  */
 GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
-    callback)
+  callback, filestring)
 {
   var dae;
-  // var loader = new ColladaLoader2();
-  // loader.options.convertUpAxis = true;
-  this.colladaLoader.load(uri, function(collada)
+  var mesh = null;
+  /*
+  // Crashes: issue #36
+  if (this.meshes[uri])
+  {
+    dae = this.meshes[uri];
+    dae = dae.clone();
+    this.useColladaSubMesh(dae, submesh, centerSubmesh);
+    callback(dae);
+    return;
+  }
+  */
+
+  var loader = new THREE.ColladaLoader();
+
+  if (!filestring)
+  {
+    loader.load(uri, function(collada)
+    {
+      meshReady(collada);
+    });
+  }
+  else
+  {
+    loader.parse(filestring, function(collada)
+    {
+      meshReady(collada);
+    }, undefined);
+  }
+
+  function meshReady(collada)
   {
     // check for a scale factor
     /*if(collada.dae.asset.unit)
@@ -1514,7 +1608,7 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
 
     dae.name = uri;
     callback(dae);
-  });
+  }
 };
 
 /**
@@ -1654,22 +1748,25 @@ GZ3D.Scene.prototype.useSubMesh = function(mesh, submesh, centerSubmesh)
 };
 
 /**
- * Load collada file
- * @param {string} uri
+ * Load Obj file
+ * @param {string} uri - mesh uri which is used by mtlloader and the objloader
+ * to load both the mesh file and the mtl file using XMLHttpRequests.
  * @param {} submesh
  * @param {} centerSubmesh
  * @param {function} callback
+ * @param {array} files -optional- the mesh and the mtl files as a strings
+ * to be parsed by the loaders, if provided the uri will not be used just
+ * as a url, no XMLHttpRequest will be made.
  */
-GZ3D.Scene.prototype.loadOBJ = function(uri, submesh, centerSubmesh,
-    callback)
+GZ3D.Scene.prototype.loadOBJ = function(uri, submesh, centerSubmesh, callback,
+  files)
 {
   var obj = null;
   var baseUrl = uri.substr(0, uri.lastIndexOf('/') + 1);
   var mtlLoader = new THREE.MTLLoader();
-  this.objLoader.load(uri, function(container)
+  var that = this;
+  var containerLoaded = function (container)
   {
-    mtlLoader.setPath(baseUrl);
-
     // callback to signal mesh loading is complete
     var loadComplete = function()
     {
@@ -1719,7 +1816,31 @@ GZ3D.Scene.prototype.loadOBJ = function(uri, submesh, centerSubmesh,
       var mtlPath = container.materialLibraries[i];
       mtlLoader.load(mtlPath, applyMaterial);
     }
-  });
+  };
+
+  if (!files)
+  {
+    this.objLoader.load(uri, function(_container)
+    {
+      mtlLoader.setPath(baseUrl);
+      containerLoaded(_container);
+    });
+  }
+  else if (files[0])
+  {
+    var _container = this.objLoader.parse(files[0]);
+    // mtlLoader.parse(files[1]);
+    // containerLoaded(_container);
+
+    // this part is to be removed after updateing the mtlLoader.
+    obj = _container;
+    this.meshes[uri] = obj;
+    obj = obj.clone();
+    this.useSubMesh(obj, submesh, centerSubmesh);
+
+    obj.name = uri;
+    callback(obj);
+  }
 };
 
 /**
@@ -2576,4 +2697,32 @@ GZ3D.Scene.prototype.updateLight = function(entity, msg)
       lightObj.target.position.copy(dir);
     }
   }
+};
+
+/**
+ * Adds an sdf model to the scene.
+ * @param {object} sdf - It is either SDF XML string or SDF XML DOM object
+ * @returns {THREE.Object3D}
+ */
+GZ3D.Scene.prototype.createFromSdf = function(sdf)
+{
+  if (sdf === undefined)
+  {
+    console.log(' No argument provided ');
+    return;
+  }
+
+  var obj = new THREE.Object3D();
+
+  var sdfXml = this.spawnModel.sdfParser.parseXML(sdf);
+  // sdfXML is always undefined, the XML parser doesn't work while testing
+  // while it does work during normal usage.
+  var myjson = xml2json(sdfXml, '\t');
+  var sdfObj = JSON.parse(myjson).sdf;
+
+  var mesh = this.spawnModel.sdfParser.spawnFromSDF(sdf);
+  obj.name = mesh.name;
+  obj.add(mesh);
+
+  return obj;
 };

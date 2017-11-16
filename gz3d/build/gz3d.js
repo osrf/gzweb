@@ -3360,7 +3360,7 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
         var materialName = parent.name + '::' + modelUri;
         this.entityMaterial[materialName] = mat;
 
-        this.scene.loadMesh(modelUri, submesh,
+        this.scene.loadMeshFromUri(modelUri, submesh,
             centerSubmesh, function(dae) {
               if (that.entityMaterial[materialName])
               {
@@ -7072,15 +7072,24 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
   this.heightmap = parent;
 };
 
+/* eslint-disable */
 /**
  * Load mesh
+ * @example
+ * // loading using URI
+ * // callback(mesh)
+ * loadMeshFromUri('assets/house_1/meshes/house_1.dae', undefined, undefined, function(mesh)
+            {
+              // use the mesh
+            });
  * @param {string} uri
  * @param {} submesh
  * @param {} centerSubmesh
  * @param {function} callback
  */
-GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh,
-    callback)
+/* eslint-enable */
+GZ3D.Scene.prototype.loadMeshFromUri = function(uri, submesh, centerSubmesh,
+  callback)
 {
   var uriPath = uri.substring(0, uri.lastIndexOf('/'));
   var uriFile = uri.substring(uri.lastIndexOf('/') + 1);
@@ -7139,20 +7148,105 @@ GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh,
   }
 };
 
+/* eslint-disable */
 /**
- * Load collada file
+ * Load mesh
+ * @example
+ * // loading using URI
+ * // callback(mesh)
+ * @example
+ * // loading using file string
+ * // callback(mesh)
+ * loadMeshFromString('assets/house_1/meshes/house_1.dae', undefined, undefined, function(mesh)
+            {
+              // use the mesh
+            }, ['<?xml version="1.0" encoding="utf-8"?>
+    <COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+      <asset>
+        <contributor>
+          <author>Cole</author>
+          <authoring_tool>OpenCOLLADA for 3ds Max;  Ver.....']);
  * @param {string} uri
  * @param {} submesh
  * @param {} centerSubmesh
  * @param {function} callback
+ * @param {array} files - files needed by the loaders[dae] in case of a collada
+ * mesh, [obj, mtl] in case of object mesh, all as strings
+ */
+/* eslint-enable */
+GZ3D.Scene.prototype.loadMeshFromString = function(uri, submesh, centerSubmesh,
+  callback, files)
+{
+  var uriPath = uri.substring(0, uri.lastIndexOf('/'));
+  var uriFile = uri.substring(uri.lastIndexOf('/') + 1);
+
+  if (this.meshes[uri])
+  {
+    var mesh = this.meshes[uri];
+    mesh = mesh.clone();
+    this.useSubMesh(mesh, submesh, centerSubmesh);
+    callback(mesh);
+    return;
+  }
+
+  // load urdf model
+  if (uriFile.substr(-4).toLowerCase() === '.dae')
+  {
+    // loadCollada just accepts one file, which is the dae file as string
+    return this.loadCollada(uri, submesh, centerSubmesh, callback, files[0]);
+  }
+  else if (uriFile.substr(-4).toLowerCase() === '.obj')
+  {
+    return this.loadOBJ(uri, submesh, centerSubmesh, callback, files);
+  }
+};
+
+/**
+ * Load collada file
+ * @param {string} uri - mesh uri which is used by colldaloader to load
+ * the mesh file using an XMLHttpRequest.
+ * @param {} submesh
+ * @param {} centerSubmesh
+ * @param {function} callback
+ * @param {string} filestring -optional- the mesh file as a string to be parsed
+ * if provided the uri will not be used just as a url, no XMLHttpRequest will
+ * be made.
  */
 GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
-    callback)
+  callback, filestring)
 {
   var dae;
-  // var loader = new ColladaLoader2();
-  // loader.options.convertUpAxis = true;
-  this.colladaLoader.load(uri, function(collada)
+  var mesh = null;
+  /*
+  // Crashes: issue #36
+  if (this.meshes[uri])
+  {
+    dae = this.meshes[uri];
+    dae = dae.clone();
+    this.useColladaSubMesh(dae, submesh, centerSubmesh);
+    callback(dae);
+    return;
+  }
+  */
+
+  var loader = new THREE.ColladaLoader();
+
+  if (!filestring)
+  {
+    loader.load(uri, function(collada)
+    {
+      meshReady(collada);
+    });
+  }
+  else
+  {
+    loader.parse(filestring, function(collada)
+    {
+      meshReady(collada);
+    }, undefined);
+  }
+
+  function meshReady(collada)
   {
     // check for a scale factor
     /*if(collada.dae.asset.unit)
@@ -7170,7 +7264,7 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
 
     dae.name = uri;
     callback(dae);
-  });
+  }
 };
 
 /**
@@ -7310,22 +7404,25 @@ GZ3D.Scene.prototype.useSubMesh = function(mesh, submesh, centerSubmesh)
 };
 
 /**
- * Load collada file
- * @param {string} uri
+ * Load Obj file
+ * @param {string} uri - mesh uri which is used by mtlloader and the objloader
+ * to load both the mesh file and the mtl file using XMLHttpRequests.
  * @param {} submesh
  * @param {} centerSubmesh
  * @param {function} callback
+ * @param {array} files -optional- the mesh and the mtl files as a strings
+ * to be parsed by the loaders, if provided the uri will not be used just
+ * as a url, no XMLHttpRequest will be made.
  */
-GZ3D.Scene.prototype.loadOBJ = function(uri, submesh, centerSubmesh,
-    callback)
+GZ3D.Scene.prototype.loadOBJ = function(uri, submesh, centerSubmesh, callback,
+  files)
 {
   var obj = null;
   var baseUrl = uri.substr(0, uri.lastIndexOf('/') + 1);
   var mtlLoader = new THREE.MTLLoader();
-  this.objLoader.load(uri, function(container)
+  var that = this;
+  var containerLoaded = function (container)
   {
-    mtlLoader.setPath(baseUrl);
-
     // callback to signal mesh loading is complete
     var loadComplete = function()
     {
@@ -7375,7 +7472,31 @@ GZ3D.Scene.prototype.loadOBJ = function(uri, submesh, centerSubmesh,
       var mtlPath = container.materialLibraries[i];
       mtlLoader.load(mtlPath, applyMaterial);
     }
-  });
+  };
+
+  if (!files)
+  {
+    this.objLoader.load(uri, function(_container)
+    {
+      mtlLoader.setPath(baseUrl);
+      containerLoaded(_container);
+    });
+  }
+  else if (files[0])
+  {
+    var _container = this.objLoader.parse(files[0]);
+    // mtlLoader.parse(files[1]);
+    // containerLoaded(_container);
+
+    // this part is to be removed after updateing the mtlLoader.
+    obj = _container;
+    this.meshes[uri] = obj;
+    obj = obj.clone();
+    this.useSubMesh(obj, submesh, centerSubmesh);
+
+    obj.name = uri;
+    callback(obj);
+  }
 };
 
 /**
@@ -8236,6 +8357,34 @@ GZ3D.Scene.prototype.updateLight = function(entity, msg)
 };
 
 /**
+ * Adds an sdf model to the scene.
+ * @param {object} sdf - It is either SDF XML string or SDF XML DOM object
+ * @returns {THREE.Object3D}
+ */
+GZ3D.Scene.prototype.createFromSdf = function(sdf)
+{
+  if (sdf === undefined)
+  {
+    console.log(' No argument provided ');
+    return;
+  }
+
+  var obj = new THREE.Object3D();
+
+  var sdfXml = this.spawnModel.sdfParser.parseXML(sdf);
+  // sdfXML is always undefined, the XML parser doesn't work while testing
+  // while it does work during normal usage.
+  var myjson = xml2json(sdfXml, '\t');
+  var sdfObj = JSON.parse(myjson).sdf;
+
+  var mesh = this.spawnModel.sdfParser.spawnFromSDF(sdf);
+  obj.name = mesh.name;
+  obj.add(mesh);
+
+  return obj;
+};
+
+/**
  * SDF parser constructor initializes SDF parser with the given parameters
  * and defines a DOM parser function to parse SDF XML files
  * @param {object} scene - the gz3d scene object
@@ -8248,6 +8397,9 @@ GZ3D.SdfParser = function(scene, gui, gziface)
   // set the sdf version
   this.SDF_VERSION = 1.5;
   this.MATERIAL_ROOT = 'assets';
+  // true for using URLs to load files.
+  // false for using the files loaded in the memory.
+  this.usingFilesUrls = false;
 
   // set the xml parser function
   this.parseXML = function(xmlStr) {
@@ -8263,7 +8415,10 @@ GZ3D.SdfParser = function(scene, gui, gziface)
   // cache materials if more than one model needs them
   this.materials = [];
   this.entityMaterial = {};
-
+  // store meshes when loading meshes from memory.
+  this.meshes = {};
+  this.mtls = {};
+  this.textures = {};
 };
 
 /**
@@ -8273,8 +8428,9 @@ GZ3D.SdfParser = function(scene, gui, gziface)
  */
 GZ3D.SdfParser.prototype.init = function()
 {
-  if(this.gziface)
+  if (this.gziface)
   {
+    this.usingFilesUrls = true;
     var that = this;
     this.gziface.emitter.on('error', function() {
       that.gui.guiEvents.emit('notification_popup',
@@ -8576,7 +8732,15 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
               }
             }
           }
-          texture = this.MATERIAL_ROOT + '/' + textureUri + '/' + mat.texture;
+          // Map texture name to the corresponding texture.
+          if (!this.usingFilesUrls)
+          {
+            texture = this.textures[mat.texture];
+          }
+          else
+          {
+            texture = this.MATERIAL_ROOT + '/' + textureUri + '/' + mat.texture;
+          }
         }
       }
       else
@@ -8609,9 +8773,18 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
         startIndex = 0;
       }
       var normalMapName = material.normal_map.substr(startIndex,
-              material.normal_map.lastIndexOf('.') - startIndex);
-      normalMap = this.MATERIAL_ROOT + '/' + mapUri + '/' +
+        material.normal_map.lastIndexOf('.') - startIndex);
+      // Map texture name to the corresponding texture.
+      if (!this.usingFilesUrls)
+      {
+        normalMap = this.textures[normalMapName + '.png'];
+      }
+      else
+      {
+        normalMap = this.MATERIAL_ROOT + '/' + mapUri + '/' +
           normalMapName + '.png';
+      }
+
     }
   }
 
@@ -8689,50 +8862,94 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
   }
   else if (geom.mesh)
   {
+    var meshUri = geom.mesh.uri;
+    var submesh;
+    var centerSubmesh;
+
+
+    if (geom.mesh.submesh)
     {
-      var meshUri = geom.mesh.uri;
-      var submesh;
-      var centerSubmesh;
-      if (geom.mesh.submesh)
+      submesh = geom.mesh.submesh.name;
+      centerSubmesh = this.parseBool(geom.mesh.submesh.center);
+    }
+
+    var uriType = meshUri.substring(0, meshUri.indexOf('://'));
+    if (uriType === 'file' || uriType === 'model')
+    {
+      var modelName = meshUri.substring(meshUri.indexOf('://') + 3);
+      if (geom.mesh.scale)
       {
-        submesh = geom.mesh.submesh.name;
-        centerSubmesh = this.parseBool(geom.mesh.submesh.center);
+        var scale = this.parseScale(geom.mesh.scale);
+        parent.scale.x = scale.x;
+        parent.scale.y = scale.y;
+        parent.scale.z = scale.z;
       }
 
-      var uriType = meshUri.substring(0, meshUri.indexOf('://'));
-      if (uriType === 'file' || uriType === 'model')
+      var modelUri = this.MATERIAL_ROOT + '/' + modelName;
+      var materialName = parent.name + '::' + modelUri;
+      this.entityMaterial[materialName] = material;
+
+      if (!this.usingFilesUrls)
       {
-        var modelName = meshUri.substring(meshUri.indexOf('://') + 3);
-        if (geom.mesh.scale)
+        var meshFileName = meshUri.substring(meshUri.lastIndexOf('/') + 1);
+        var ext = meshFileName.substring(meshFileName.indexOf('.') + 1);
+        var meshFile = this.meshes[meshFileName];
+        if (ext === 'obj')
         {
-          var scale = this.parseScale(geom.mesh.scale);
-          parent.scale.x = scale.x;
-          parent.scale.y = scale.y;
-          parent.scale.z = scale.z;
-        }
-
-        var modelUri = this.MATERIAL_ROOT + '/' + modelName;
-        var materialName = parent.name + '::' + modelUri;
-        this.entityMaterial[materialName] = material;
-
-        this.scene.loadMesh(modelUri, submesh, centerSubmesh, function(dae){
-          if (that.entityMaterial[materialName])
-          {
-            var allChildren = [];
-            dae.getDescendants(allChildren);
-            for (var c = 0; c < allChildren.length; ++c)
+          var mtlFile = this.mtls[meshFileName.split('.')[0]+'.mtl'];
+          that.scene.loadMeshFromString(modelUri, submesh,centerSubmesh,
+            function(obj)
             {
-              if (allChildren[c] instanceof THREE.Mesh)
+              parent.add(obj);
+              loadGeom(parent);
+            }, [meshFile, mtlFile]);
+        }
+        else if (ext === 'dae')
+        {
+            that.scene.loadMeshFromString(modelUri, submesh, centerSubmesh,
+              function(dae)
               {
-                that.scene.setMaterial(allChildren[c],
-                        that.entityMaterial[materialName]);
-                break;
+                if (that.entityMaterial[materialName])
+                {
+                  var allChildren = [];
+                  dae.getDescendants(allChildren);
+                  for (var c = 0; c < allChildren.length; ++c)
+                  {
+                    if (allChildren[c] instanceof THREE.Mesh)
+                    {
+                      that.scene.setMaterial(allChildren[c],
+                              that.entityMaterial[materialName]);
+                      break;
+                    }
+                  }
+                }
+                parent.add(dae);
+                loadGeom(parent);
+              }, [meshFile]);
+        }
+      }
+      else
+      {
+        this.scene.loadMeshFromUri(modelUri, submesh, centerSubmesh,
+          function (dae)
+          {
+            if (that.entityMaterial[materialName])
+            {
+              var allChildren = [];
+              dae.getDescendants(allChildren);
+              for (var c = 0; c < allChildren.length; ++c)
+              {
+                if (allChildren[c] instanceof THREE.Mesh)
+                {
+                  that.scene.setMaterial(allChildren[c],
+                          that.entityMaterial[materialName]);
+                  break;
+                }
               }
             }
-          }
-          parent.add(dae);
-          loadGeom(parent);
-        });
+            parent.add(dae);
+            loadGeom(parent);
+          });
       }
     }
   }
