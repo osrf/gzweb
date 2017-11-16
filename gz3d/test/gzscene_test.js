@@ -573,7 +573,7 @@ describe('Gzscene tests', function() {
     it('Should set the correct box vertices taking the model only into account', function() {
 
       var mesh, v1, v2, box, obj;
-      // add an object -box- at (0,0,0)
+      // add a box at (0,0,0)
       mesh = scene.createBox(1, 1, 1);
       v1 = new THREE.Vector3(-0.5, -0.5, -0.5);
       v2 = new THREE.Vector3(0.5, 0.5, 0.5);
