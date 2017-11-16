@@ -520,33 +520,41 @@ describe('Gzscene tests', function() {
       scene.add(model);
 
       // no visuals intially
-      visual = model.getObjectByName('COM_VISUAL');
+      visual = model.getObjectByName('COM_LINE_VISUAL');
       expect(visual).toEqual(undefined);
+
+      console.log('in COM vis test');
+      for (var index = 0; index < model.children.length; index++) {
+        console.log(model.children[index].name);
+      }
 
       // if there was no selected entity it shouldn't break
       guiEvents.emit('view_com');
-      visual = model.getObjectByName('COM_VISUAL');
+      visual = model.getObjectByName('COM_LINE_VISUAL');
       expect(visual).toEqual(undefined);
 
       // select a model and then view the visuals
       scene.selectedEntity = model;
       guiEvents.emit('view_com');
-      visual = model.getObjectByName('COM_VISUAL');
+      visual = model.getObjectByName('COM_LINE_VISUAL');
       expect(visual).not.toEqual(undefined);
+
+      // verify the position of the visuals.
+      expect(visual.position).not.toEqual(model.position);
 
       // hide the visuals
       guiEvents.emit('view_com');
-      visual = model.getObjectByName('COM_VISUAL');
+      visual = model.getObjectByName('COM_LINE_VISUAL');
       expect(visual).toEqual(undefined);
 
       // test to view the visuals when they already exist
       guiEvents.emit('view_com');
-      visual = model.getObjectByName('COM_VISUAL');
+      visual = model.getObjectByName('COM_LINE_VISUAL');
       expect(visual).not.toEqual(undefined);
 
       // hide the visuals
       guiEvents.emit('view_com');
-      visual = model.getObjectByName('COM_VISUAL');
+      visual = model.getObjectByName('COM_LINE_VISUAL');
       expect(visual).toEqual(undefined);
     });
   });

@@ -589,7 +589,8 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
       }
 
       if (model.name === 'grid' || model.name === 'boundingBox' ||
-          model.name === 'JOINT_VISUAL' || model.name === 'COM_VISUAL')
+          model.name === 'JOINT_VISUAL' || model.name === 'COM_VISUAL'||
+          model.name === 'COM_LINE_VISUAL')
       {
         point = objects[i].point;
         model = null;
@@ -2179,7 +2180,8 @@ GZ3D.Scene.prototype.setViewAs = function(model, viewAs)
         !this.getParentByPartialName(descendants[i], 'COLLISION_VISUAL') &&
         descendants[i].name.indexOf('wireframe') === -1 &&
         descendants[i].name.indexOf('JOINT_VISUAL') === -1 &&
-        descendants[i].name.indexOf('COM_VISUAL') === -1)
+        descendants[i].name.indexOf('COM_VISUAL') === -1 &&
+        descendants[i].name.indexOf('COM_LINE_VISUAL') === -1)
     {
       // Note: multi-material is being deprecated and will be removed soon
       if (descendants[i].material instanceof THREE.MultiMaterial)
@@ -2590,9 +2592,9 @@ GZ3D.Scene.prototype.viewCOM = function(model)
         line_3 = new THREE.Line(helperGeometry_3, helperMaterial,
             THREE.LineSegments);
 
-        line_1.name = 'COM_VISUAL';
-        line_2.name = 'COM_VISUAL';
-        line_3.name = 'COM_VISUAL';
+        line_1.name = 'COM_LINE_VISUAL';
+        line_2.name = 'COM_LINE_VISUAL';
+        line_3.name = 'COM_LINE_VISUAL';
         COMVisual.crossLines.push(line_1);
         COMVisual.crossLines.push(line_2);
         COMVisual.crossLines.push(line_3);
