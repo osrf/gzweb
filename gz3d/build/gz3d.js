@@ -3311,30 +3311,31 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
         var ext = modelUri.substr(-4).toLowerCase();
         this.entityMaterial[materialName] = mat;
 
-        this.scene.loadMesh(modelUri, submesh, centerSubmesh, function(dae) {
-          if (that.entityMaterial[materialName])
-          {
-            if (ext !== '.stl')
+        that.scene.loadMeshFromUri(modelUri, submesh, centerSubmesh,
+          function(dae) {
+            if (that.entityMaterial[materialName])
             {
-              var allChildren = [];
-              dae.getDescendants(allChildren);
-              for (var c = 0; c < allChildren.length; ++c)
+              if (ext !== '.stl')
               {
-                if (allChildren[c] instanceof THREE.Mesh)
+                var allChildren = [];
+                dae.getDescendants(allChildren);
+                for (var c = 0; c < allChildren.length; ++c)
                 {
-                  that.scene.setMaterial(allChildren[c],
-                      that.entityMaterial[materialName]);
-                  break;
+                  if (allChildren[c] instanceof THREE.Mesh)
+                  {
+                    that.scene.setMaterial(allChildren[c],
+                        that.entityMaterial[materialName]);
+                    break;
+                  }
                 }
               }
+              else
+              {
+                that.scene.setMaterial(dae, that.entityMaterial[materialName]);
+              }
             }
-            else
-            {
-              that.scene.setMaterial(dae, that.entityMaterial[materialName]);
-            }
-          }
-          parent.add(dae);
-          loadGeom(parent);
+            parent.add(dae);
+            loadGeom(parent);
         });
       }
     }
@@ -8689,7 +8690,7 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
       {
         var meshFileName = meshUri.substring(meshUri.lastIndexOf('/') + 1);
         var meshFile = this.meshes[meshFileName];
-        if (ext === 'obj')
+        if (ext === '.obj')
         {
           var mtlFile = this.mtls[meshFileName.split('.')[0]+'.mtl'];
           that.scene.loadMeshFromString(modelUri, submesh,centerSubmesh,
@@ -8699,33 +8700,33 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
               loadGeom(parent);
             }, [meshFile, mtlFile]);
         }
-        else if (ext === 'dae')
+        else if (ext === '.dae')
         {
-            that.scene.loadMeshFromString(modelUri, submesh, centerSubmesh,
-              function(dae)
+          that.scene.loadMeshFromString(modelUri, submesh, centerSubmesh,
+            function(dae)
+            {
+              if (that.entityMaterial[materialName])
               {
-                if (that.entityMaterial[materialName])
+                var allChildren = [];
+                dae.getDescendants(allChildren);
+                for (var c = 0; c < allChildren.length; ++c)
                 {
-                  var allChildren = [];
-                  dae.getDescendants(allChildren);
-                  for (var c = 0; c < allChildren.length; ++c)
+                  if (allChildren[c] instanceof THREE.Mesh)
                   {
-                    if (allChildren[c] instanceof THREE.Mesh)
-                    {
-                      that.scene.setMaterial(allChildren[c],
-                              that.entityMaterial[materialName]);
-                      break;
-                    }
+                    that.scene.setMaterial(allChildren[c],
+                            that.entityMaterial[materialName]);
+                    break;
                   }
                 }
-                parent.add(dae);
-                loadGeom(parent);
-              }, [meshFile]);
+              }
+              parent.add(dae);
+              loadGeom(parent);
+            }, [meshFile]);
         }
       }
       else
       {
-        this.scene.loadMeshFromUri(modelUri, submesh, centerSubmesh,
+        that.scene.loadMeshFromUri(modelUri, submesh, centerSubmesh,
           function (dae)
           {
             if (ext !== '.stl')

@@ -508,7 +508,7 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
       {
         var meshFileName = meshUri.substring(meshUri.lastIndexOf('/') + 1);
         var meshFile = this.meshes[meshFileName];
-        if (ext === 'obj')
+        if (ext === '.obj')
         {
           var mtlFile = this.mtls[meshFileName.split('.')[0]+'.mtl'];
           that.scene.loadMeshFromString(modelUri, submesh,centerSubmesh,
@@ -518,33 +518,33 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
               loadGeom(parent);
             }, [meshFile, mtlFile]);
         }
-        else if (ext === 'dae')
+        else if (ext === '.dae')
         {
-            that.scene.loadMeshFromString(modelUri, submesh, centerSubmesh,
-              function(dae)
+          that.scene.loadMeshFromString(modelUri, submesh, centerSubmesh,
+            function(dae)
+            {
+              if (that.entityMaterial[materialName])
               {
-                if (that.entityMaterial[materialName])
+                var allChildren = [];
+                dae.getDescendants(allChildren);
+                for (var c = 0; c < allChildren.length; ++c)
                 {
-                  var allChildren = [];
-                  dae.getDescendants(allChildren);
-                  for (var c = 0; c < allChildren.length; ++c)
+                  if (allChildren[c] instanceof THREE.Mesh)
                   {
-                    if (allChildren[c] instanceof THREE.Mesh)
-                    {
-                      that.scene.setMaterial(allChildren[c],
-                              that.entityMaterial[materialName]);
-                      break;
-                    }
+                    that.scene.setMaterial(allChildren[c],
+                            that.entityMaterial[materialName]);
+                    break;
                   }
                 }
-                parent.add(dae);
-                loadGeom(parent);
-              }, [meshFile]);
+              }
+              parent.add(dae);
+              loadGeom(parent);
+            }, [meshFile]);
         }
       }
       else
       {
-        this.scene.loadMeshFromUri(modelUri, submesh, centerSubmesh,
+        that.scene.loadMeshFromUri(modelUri, submesh, centerSubmesh,
           function (dae)
           {
             if (ext !== '.stl')
