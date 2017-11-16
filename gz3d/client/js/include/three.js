@@ -25434,21 +25434,21 @@
 
 		var vertices = [
 
-			// (Â±1, Â±1, Â±1)
+			// (±1, ±1, ±1)
 			- 1, - 1, - 1,    - 1, - 1,  1,
 			- 1,  1, - 1,    - 1,  1,  1,
 			  1, - 1, - 1,     1, - 1,  1,
 			  1,  1, - 1,     1,  1,  1,
 
-			// (0, Â±1/Ï†, Â±Ï†)
+			// (0, ±1/φ, ±φ)
 			 0, - r, - t,     0, - r,  t,
 			 0,  r, - t,     0,  r,  t,
 
-			// (Â±1/Ï†, Â±Ï†, 0)
+			// (±1/φ, ±φ, 0)
 			- r, - t,  0,    - r,  t,  0,
 			 r, - t,  0,     r,  t,  0,
 
-			// (Â±Ï†, 0, Â±1/Ï†)
+			// (±φ, 0, ±1/φ)
 			- t,  0, - r,     t,  0, - r,
 			- t,  0,  r,     t,  0,  r
 		];
@@ -34505,7 +34505,7 @@
 	 * @author zz85 / http://www.lab4games.net/zz85/blog
 	 *
 	 * Bezier Curves formulas obtained from
-	 * http://en.wikipedia.org/wiki/BÃ©zier_curve
+	 * http://en.wikipedia.org/wiki/Bézier_curve
 	 */
 
 	function CatmullRom( t, p0, p1, p2, p3 ) {
