@@ -3308,14 +3308,13 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
         }
 
         var materialName = parent.name + '::' + modelUri;
-        var ext = modelUri.substr(-4).toLowerCase();
         this.entityMaterial[materialName] = mat;
 
         that.scene.loadMeshFromUri(modelUri, submesh, centerSubmesh,
           function(dae) {
             if (that.entityMaterial[materialName])
             {
-              if (ext !== '.stl')
+              if (modelUri.indexOf('.stl') === -1)
               {
                 var allChildren = [];
                 dae.getDescendants(allChildren);
