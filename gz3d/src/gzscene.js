@@ -1584,6 +1584,7 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
 {
   var dae;
   var mesh = null;
+  var that = this;
   /*
   // Crashes: issue #36
   if (this.meshes[uri])
@@ -1624,10 +1625,10 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
 
     dae = collada.scene;
     dae.updateMatrix();
-    this.scene.prepareColladaMesh(dae);
-    this.scene.meshes[uri] = dae;
+    that.prepareColladaMesh(dae);
+    that.meshes[uri] = dae;
     dae = dae.clone();
-    this.scene.useSubMesh(dae, submesh, centerSubmesh);
+    that.useSubMesh(dae, submesh, centerSubmesh);
 
     dae.name = uri;
     callback(dae);
