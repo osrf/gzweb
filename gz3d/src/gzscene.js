@@ -71,7 +71,7 @@ GZ3D.Scene.prototype.init = function()
   this.grid.castShadow = false;
   this.grid.material.transparent = true;
   this.grid.material.opacity = 0.5;
-  this.grid.visible = false;
+  this.grid.visible = true;
   this.scene.add(this.grid);
 
   this.showCollisions = false;

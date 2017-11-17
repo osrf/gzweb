@@ -2,11 +2,12 @@ var GZ3D = GZ3D || {
   REVISION : '1'
 };
 
+// https://bitbucket.org/osrf/gzweb/issues/136
+var guiEvents = new EventEmitter2({ verbose: true });
+
 
 /*global $:false */
 /*global angular*/
-
-var guiEvents = new EventEmitter2({ verbose: true });
 
 var emUnits = function(value)
     {
@@ -5677,7 +5678,7 @@ GZ3D.Scene.prototype.init = function()
   this.grid.castShadow = false;
   this.grid.material.transparent = true;
   this.grid.material.opacity = 0.5;
-  this.grid.visible = false;
+  this.grid.visible = true;
   this.scene.add(this.grid);
 
   this.showCollisions = false;

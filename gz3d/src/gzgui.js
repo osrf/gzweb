@@ -1,8 +1,6 @@
 /*global $:false */
 /*global angular*/
 
-var guiEvents = new EventEmitter2({ verbose: true });
-
 var emUnits = function(value)
     {
       return value*parseFloat($('body').css('font-size'));

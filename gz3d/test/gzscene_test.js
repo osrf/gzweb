@@ -24,7 +24,7 @@ describe('Gzscene tests', function() {
         expect(scene.grid.name).toEqual('grid');
         expect(scene.grid.material.transparent).toEqual(true);
         expect(scene.grid.material.opacity).toEqual(0.5);
-        expect(scene.grid.visible).toEqual(false);
+        expect(scene.grid.visible).toEqual(true);
 
         expect(scene.showCollisions).toEqual(false);
 
