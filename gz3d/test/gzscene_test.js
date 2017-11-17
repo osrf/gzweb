@@ -567,30 +567,4 @@ describe('Gzscene tests', function() {
       expect(box.max).toEqual(v2);
     });
   });
-
-  // Test gzscene.setFromObject after adding inertia visual
-  describe('Test gzscene setFromObject with inertia visual', function() {
-    it('Should set the correct box vertices taking the model only into account', function() {
-
-      var mesh, v1, v2, box, obj;
-      // add a box at (0,0,0)
-      mesh = scene.createBox(1, 1, 1);
-      v1 = new THREE.Vector3(-0.5, -0.5, -0.5);
-      v2 = new THREE.Vector3(0.5, 0.5, 0.5);
-      obj = new THREE.Object3D();
-      obj.add(mesh);
-      scene.add(obj);
-
-      // select a model and then view the visuals
-      scene.selectedEntity = obj;
-      guiEvents.emit('view_inertia');
-
-      box = new THREE.Box3();
-      scene.setFromObject(box, obj);
-      expect(box.min).toEqual(v1);
-      expect(box.max).toEqual(v2);
-
-      scene.remove(obj);
-    });
-  });
 });

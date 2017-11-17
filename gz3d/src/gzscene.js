@@ -2489,7 +2489,7 @@ GZ3D.Scene.prototype.viewJoints = function(model)
 
 /**
  * View inertia
- * Toggle: if there are COM visuals, hide, otherwise, show.
+ * Toggle: if there are inertia visuals, hide, otherwise, show.
  * @param {} model
  */
 GZ3D.Scene.prototype.viewInertia = function(model)
