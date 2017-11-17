@@ -2,12 +2,12 @@
  * The gzshaders holds the all the shaders to be used.
  * @constructor
  */
-GZ3D.GZShaders = function()
+GZ3D.Shaders = function()
 {
     this.init();
 };
 
-GZ3D.GZShaders.prototype.init = function()
+GZ3D.Shaders.prototype.init = function()
 {
   this.heightmapVS = 'varying vec2 vUv;'+
     'varying vec3 vPosition;'+
