@@ -5,6 +5,9 @@ var GZ3D = GZ3D || {
 // https://bitbucket.org/osrf/gzweb/issues/136
 var guiEvents = new EventEmitter2({ verbose: true });
 
+// Assuming all mobile devices are touch devices.
+var isTouchDevice = /Mobi/.test(navigator.userAgent);
+
 
 /*global $:false */
 /*global angular*/
@@ -13,9 +16,6 @@ var emUnits = function(value)
     {
       return value*parseFloat($('body').css('font-size'));
     };
-
-// Assuming all mobile devices are touch devices.
-var isTouchDevice = /Mobi/.test(navigator.userAgent);
 
 var isWideScreen = function()
     {
