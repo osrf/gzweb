@@ -54556,13 +54556,23 @@ GZ3D.Scene.prototype.init = function()
 
   var that = this;
 
-  // Need to use `document` instead of getDomElement in order to get events
-  // outside the webgl div element.
-  document.addEventListener( 'mouseup',
-      function(event) {that.onPointerUp(event);}, false );
+  // In case we are using sdfviewer, which doesn't depend on Jquery
+  // which these event listeners do use.
+  if (GZ3D.Gui !== undefined)
+  {
+    // Need to use `document` instead of getDomElement in order to get events
+    // outside the webgl div element.
+    document.addEventListener( 'mouseup',
+        function(event) {that.onPointerUp(event);}, false );
 
-  this.getDomElement().addEventListener( 'mouseup',
-      function(event) {that.onPointerUp(event);}, false );
+    document.addEventListener( 'keydown',
+        function(event) {that.onKeyDown(event);}, false );
+    this.getDomElement().addEventListener( 'mouseup',
+        function(event) {that.onPointerUp(event);}, false );
+
+    this.getDomElement().addEventListener( 'touchend',
+        function(event) {that.onPointerUp(event);}, false );
+  }
 
   this.getDomElement().addEventListener( 'DOMMouseScroll',
       function(event) {that.onMouseScroll(event);}, false ); //firefox
@@ -54570,16 +54580,11 @@ GZ3D.Scene.prototype.init = function()
   this.getDomElement().addEventListener( 'mousewheel',
       function(event) {that.onMouseScroll(event);}, false );
 
-  document.addEventListener( 'keydown',
-      function(event) {that.onKeyDown(event);}, false );
-
   this.getDomElement().addEventListener( 'mousedown',
       function(event) {that.onPointerDown(event);}, false );
+
   this.getDomElement().addEventListener( 'touchstart',
       function(event) {that.onPointerDown(event);}, false );
-
-  this.getDomElement().addEventListener( 'touchend',
-      function(event) {that.onPointerUp(event);}, false );
 
   // Handles for translating and rotating objects
   this.modelManipulator = new GZ3D.Manipulator(this.camera, isTouchDevice,
