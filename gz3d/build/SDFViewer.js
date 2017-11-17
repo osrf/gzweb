@@ -52617,6 +52617,9 @@ var GZ3D = GZ3D || {
 // https://bitbucket.org/osrf/gzweb/issues/136
 var guiEvents = new EventEmitter2({ verbose: true });
 
+// Assuming all mobile devices are touch devices.
+var isTouchDevice = /Mobi/.test(navigator.userAgent);
+
 
 var nsInSec = 1000000000;
 
@@ -58108,12 +58111,12 @@ GZ3D.SdfParser.prototype.loadModel = function(modelName)
  * The gzshaders holds the all the shaders to be used.
  * @constructor
  */
-GZ3D.GZShaders = function()
+GZ3D.Shaders = function()
 {
     this.init();
 };
 
-GZ3D.GZShaders.prototype.init = function()
+GZ3D.Shaders.prototype.init = function()
 {
   this.heightmapVS = 'varying vec2 vUv;'+
     'varying vec3 vPosition;'+
