@@ -57328,7 +57328,7 @@ GZ3D.SdfParser.prototype.parseBool = function(boolStr)
  * Parses SDF material element which is going to be used by THREE library
  * It matches material scripts with the material objects which are
  * already parsed by gzbridge and saved by SDFParser.
- * In case of using a custom Url for the textures, the URLs should be added
+ * In case of using custom Urls for the textures, the URLs should be added
  * to the customUrls array to be loaded.
  * @param {object} material - SDF material object
  * @returns {object} material - material object which has the followings:
@@ -57524,8 +57524,8 @@ GZ3D.SdfParser.prototype.parseSize = function(sizeStr)
  * @param {object} geom - SDF geometry object which determines the geometry
  *  of the object and can have following properties: box, cylinder, sphere,
  *  plane, mesh.
- *  Note that in case of using a custom Url for the mesh, it should be added
- *  to the array cistomUrls to be used instead of the default Url.
+ *  Note that in case of using custom Urls for the meshs, the URLS should be
+ *  added to the array cistomUrls to be used instead of the default Url.
  * @param {object} mat - SDF material object which is going to be parsed
  * by createMaterial function
  * @param {object} parent - parent 3D object
