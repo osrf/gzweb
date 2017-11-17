@@ -8214,7 +8214,7 @@ GZ3D.SdfParser = function(scene, gui, gziface)
   this.textures = {};
 
   // Should contain model files URLs if not using gzweb model files hierarchy.
-  this.customUris = [];
+  this.customUrls = [];
 };
 
 /**
@@ -8535,14 +8535,14 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
           }
           else
           {
-            if (this.customUris.length !== 0)
+            if (this.customUrls.length !== 0)
             {
-              for (var k = 0; k < this.customUris.length; k++)
+              for (var k = 0; k < this.customUrls.length; k++)
               {
-                if (this.customUris[k].indexOf(mat.texture) > -1)
+                if (this.customUrls[k].indexOf(mat.texture) > -1)
                 {
-                  texture = this.customUris[k];
-                  this.customUris.splice(k, 1);
+                  texture = this.customUrls[k];
+                  this.customUrls.splice(k, 1);
                   break;
                 }
               }
@@ -8593,14 +8593,14 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
       }
       else
       {
-        if (this.customUris.length !== 0)
+        if (this.customUrls.length !== 0)
         {
-          for (var j = 0; j < this.customUris.length; j++)
+          for (var j = 0; j < this.customUrls.length; j++)
           {
-            if (this.customUris[j].indexOf(normalMapName + '.png') > -1)
+            if (this.customUrls[j].indexOf(normalMapName + '.png') > -1)
             {
-              normalMap = this.customUris[j];
-              this.customUris.splice(j, 1);
+              normalMap = this.customUrls[j];
+              this.customUrls.splice(j, 1);
               break;
             }
           }
@@ -8757,14 +8757,14 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
       }
       else
       {
-        if (this.customUris.length !== 0)
+        if (this.customUrls.length !== 0)
         {
-          for (var k = 0; k < this.customUris.length; k++)
+          for (var k = 0; k < this.customUrls.length; k++)
           {
-            if (this.customUris[k].indexOf(meshFileName) > -1)
+            if (this.customUrls[k].indexOf(meshFileName) > -1)
             {
-              modelUri = this.customUris[k];
-              this.customUris.splice(k, 1);
+              modelUri = this.customUrls[k];
+              this.customUrls.splice(k, 1);
               break;
             }
           }
@@ -9216,21 +9216,23 @@ GZ3D.SdfParser.prototype.createCylinderSDF = function(translation, euler)
 /**
  * Loads SDF of the model. It first constructs the url of the model
  * according to modelname
- * @param {string} modelName - name of the model
+ * @param {string} modelName - name of the model, the customUrls is not empty
+ * the modelName parm wouldn't be used, the function will search for the
+ * URL that has the 'model.sdf' and loads it.
  * @returns {XMLDocument} modelDOM - SDF DOM object of the loaded model
  */
 GZ3D.SdfParser.prototype.loadModel = function(modelName)
 {
   var modelFile = '';
 
-  if (this.customUris.length !== 0)
+  if (this.customUrls.length !== 0)
   {
-    for (var k = 0; k < this.customUris.length; k++)
+    for (var k = 0; k < this.customUrls.length; k++)
     {
-      if (this.customUris[k].indexOf('model.sdf') > -1)
+      if (this.customUrls[k].indexOf('model.sdf') > -1)
       {
-        modelFile = this.customUris[k];
-        this.customUris.splice(k, 1);
+        modelFile = this.customUrls[k];
+        this.customUrls.splice(k, 1);
         break;
       }
     }
