@@ -78,6 +78,16 @@ GZ3D.SdfParser.prototype.init = function()
 };
 
 /**
+ * Pushes Urls into the customUrls array where the parser looks for assets.
+ * this array should be usedd if the assets files hierarchy is different than
+ * that of gzweb.
+ */
+GZ3D.SdfParser.prototype.addUrl = function(url)
+{
+  this.customUrls.push(url);
+};
+
+/**
  * Event callback function for gziface connection error which occurs
  * when gziface cannot connect to gzbridge websocket
  * this is due to 2 reasons:

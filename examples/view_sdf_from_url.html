@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" ng-app='gzangular'>
+<html lang="en">
 
   <head>
     <title>View SDF from URL</title>
@@ -78,7 +78,7 @@
 
       function addURL()
       {
-        sdfparser.customUris.push(urlInput.value);
+        sdfparser.addUrl(urlInput.value);
 
         urlList.innerHTML = urlList.innerHTML + "<br>" + urlInput.value;
       }
