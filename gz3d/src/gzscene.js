@@ -2487,6 +2487,7 @@ GZ3D.Scene.prototype.viewJoints = function(model)
   }
 };
 
+// TODO: Issue https://bitbucket.org/osrf/gzweb/issues/138
 /**
  * View inertia
  * Toggle: if there are inertia visuals, hide, otherwise, show.
