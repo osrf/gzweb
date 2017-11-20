@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en" ng-app='gzangular'>
+
+  <head>
+    <title>View SDF from URL</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0, initial-scale=1.0">
+    <script src="../gz3d/build/SDFViewer.js"></script>
+  </head>
+
+  <body style="font-family=helvetica">
+
+    <div>
+      <div>
+        <input type="text" id="url-input" style="width: 90%"></input>
+        <button onclick="addURL()" style="width: 8%">Add URL</button>
+      </div>
+      <div id="url-list" style="font-size: 0.8em; padding-bottom: 2em;">
+      </div>
+      <center>
+        <button onclick="loadModel()" style="min-width: 50%; height: 3em;">Load model!</button>
+      </center>
+    </div>
+
+    <center>
+      <div id="container" style="max-width: 80%; max-height: 50em; margin: 2em">
+      </div>
+    </center>
+
+    <script>
+      if (!Detector.webgl)
+        Detector.addGetWebGLMessage();
+
+      var scene;
+      var sdfparser;
+      var urlInput;
+      var urlList;
+
+      init();
+      animate();
+
+      function init()
+      {
+        var shaders = new GZ3D.Shaders();
+        scene = new GZ3D.Scene(shaders);
+        sdfparser = new GZ3D.SdfParser(scene);
+        sdfparser.usingFilesUrls = true;
+
+        var container = document.getElementById('container');
+        container.appendChild(scene.getDomElement());
+
+        urlInput = document.getElementById('url-input');
+        urlList = document.getElementById('url-list');
+
+        window.addEventListener('resize', onWindowResize, false);
+        onWindowResize();
+      }
+
+      function onWindowResize()
+      {
+        scene.setWindowSize(container.clientWidth, container.clientHeight);
+        scene.setCanvasPosition(scene.renderer.domElement.getBoundingClientRect().left,
+            scene.renderer.domElement.getBoundingClientRect().top);
+      }
+
+      function animate()
+      {
+        requestAnimationFrame(animate);
+        scene.render();
+      }
+
+      function loadModel()
+      {
+        console.log('loading');
+        var obj = sdfparser.loadSDF();
+        scene.add(obj);
+      }
+
+      function addURL()
+      {
+        sdfparser.customUris.push(urlInput.value);
+
+        urlList.innerHTML = urlList.innerHTML + "<br>" + urlInput.value;
+      }
+    </script>
+
+  </body>
+</html>
