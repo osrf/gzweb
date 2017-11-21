@@ -2053,7 +2053,7 @@ GZ3D.Scene.prototype.setFromObject = function(box, object)
     if ( geometry !== undefined )
     {
 
-      if (node.name !== 'INERTIA_VISUAL' || node.name !== 'COM_VISUAL')
+      if (node.name !== 'INERTIA_VISUAL' && node.name !== 'COM_VISUAL')
       {
 
         if ( geometry.isGeometry )
