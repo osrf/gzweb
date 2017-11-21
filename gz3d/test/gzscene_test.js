@@ -523,9 +523,10 @@ describe('Gzscene tests', function() {
           expect(model).not.toEqual(undefined);
 
           // no mesh should be added to the model because stl loader.
+          // this test was deduced through debuging, not sure if it will work
+          // with other models.
           expect(model.children[0].children[0].children.length).toEqual(0);
           expect(model.children[1].children[0].children.length).toEqual(0);
-          expect(model.children[1].children[1].children.length).toEqual(0);
 
           scene.remove(model);
           model = scene.getByName('husky');

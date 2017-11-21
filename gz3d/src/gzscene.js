@@ -1836,7 +1836,8 @@ GZ3D.Scene.prototype.loadOBJ = function(uri, submesh, centerSubmesh, callback,
 };
 
 /**
- * Load stl file
+ * Load stl file.
+ * Loads stl mesh given using it's uri
  * @param {string} uri
  * @param {} submesh
  * @param {} centerSubmesh
@@ -1848,7 +1849,6 @@ GZ3D.Scene.prototype.loadSTL = function(uri, submesh, centerSubmesh,
   var mesh = null;
   this.stlLoader.load(uri, function(geometry)
   {
-
     mesh = new THREE.Mesh( geometry );
     mesh.castShadow = true;
     mesh.receiveShadow = true;
