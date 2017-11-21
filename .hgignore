@@ -13,3 +13,4 @@ http/client
 coverage
 doc
 npm-debug.log
+test_results
