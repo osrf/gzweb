@@ -3362,6 +3362,7 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
           }
         }
 
+        var ext = modelUri.substr(-4).toLowerCase();
         var materialName = parent.name + '::' + modelUri;
         this.entityMaterial[materialName] = mat;
 
@@ -3388,6 +3389,10 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
               {
                 that.scene.setMaterial(mesh, mat);
               }
+            }
+            if (ext === '.stl')
+            {
+              that.scene.setMaterial(mesh, {'ambient': [1,1,1,1]});
             }
             parent.add(mesh);
             loadGeom(parent);
@@ -9039,10 +9044,6 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
                   }
                 }
               }
-              else
-              {
-                that.scene.setMaterial(dae, this.undefinedMaterial);
-              }
               parent.add(dae);
               loadGeom(parent);
             }, [meshFile]);
@@ -9073,6 +9074,13 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
               else
               {
                 that.scene.setMaterial(mesh, material);
+              }
+            }
+            else
+            {
+              if (ext === '.stl')
+              {
+                that.scene.setMaterial(mesh, {'ambient': [1,1,1,1]});
               }
             }
           parent.add(mesh);
