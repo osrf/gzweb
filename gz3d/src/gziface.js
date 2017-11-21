@@ -682,9 +682,17 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
 
     if (link.inertial)
     {
-      var inertialPose = link.inertial.pose;
-      var inertialMass = link.inertial.mass;
+      var inertialPose, inertialMass, inertia = {};
       linkObj.userData.inertial = {};
+      inertialPose = link.inertial.pose;
+      inertialMass = link.inertial.mass;
+      inertia.ixx = link.inertial.ixx;
+      inertia.ixy = link.inertial.ixy;
+      inertia.ixz = link.inertial.ixz;
+      inertia.iyy = link.inertial.iyy;
+      inertia.iyz = link.inertial.iyz;
+      inertia.izz = link.inertial.izz;
+      linkObj.userData.inertial.inertia = inertia;
       if (inertialMass)
       {
         linkObj.userData.inertial.mass = inertialMass;

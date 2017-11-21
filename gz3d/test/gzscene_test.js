@@ -321,7 +321,6 @@ describe('Gzscene tests', function() {
     });
   });
 
-
   describe('Spawn a model', function() {
     it('should add a model to the scene and then removes it', function() {
       var sdf, model;
@@ -505,6 +504,121 @@ describe('Gzscene tests', function() {
         expect(model).toEqual(undefined);
       });
     });
+
+  // Test inertia visualizations
+  describe('Test inertia visuals', function() {
+    it('Should toggle inertia visualizations', function() {
+      var sdf, object, visual, model, xhttp;
+      xhttp = new XMLHttpRequest();
+      xhttp.overrideMimeType('text/xml');
+      xhttp.open('GET', 'http://localhost:9876/base/gz3d/test/utils/beer/model.sdf', false);
+      xhttp.send();
+      sdf = xhttp.responseXML;
+      model = sdfparser.spawnFromSDF(sdf);
+      scene.add(model);
+
+      // no visuals intially
+      visual = model.getObjectByName('INERTIA_VISUAL');
+      expect(visual).toEqual(undefined);
+
+      // if there was no selected entity it shouldn't break
+      guiEvents.emit('view_inertia');
+      visual = model.getObjectByName('INERTIA_VISUAL');
+      expect(visual).toEqual(undefined);
+
+      // select a model and then view the visuals
+      scene.selectedEntity = model;
+      guiEvents.emit('view_inertia');
+      visual = model.getObjectByName('INERTIA_VISUAL');
+      expect(visual).not.toEqual(undefined);
+
+      // hide the visuals
+      guiEvents.emit('view_inertia');
+      visual = model.getObjectByName('INERTIA_VISUAL');
+      expect(visual).toEqual(undefined);
+
+      // test to view the visuals when they already exist
+      guiEvents.emit('view_inertia');
+      visual = model.getObjectByName('INERTIA_VISUAL');
+      expect(visual).not.toEqual(undefined);
+
+      // hide the visuals
+      guiEvents.emit('view_inertia');
+      visual = model.getObjectByName('INERTIA_VISUAL');
+      expect(visual).toEqual(undefined);
+    });
+  });
+
+  // Test gzscene.setFromObject
+  describe('Test gzscene setFromObject', function() {
+    it('Should set the correct box vertices', function() {
+
+      var mesh, v1, v2, box, obj;
+      // add a box at (0,0,0)
+      mesh = scene.createBox(1, 1, 1);
+      v1 = new THREE.Vector3(-0.5, -0.5, -0.5);
+      v2 = new THREE.Vector3(0.5, 0.5, 0.5);
+      obj = new THREE.Object3D();
+      obj.add(mesh);
+      box = new THREE.Box3();
+      scene.setFromObject(box, obj);
+      expect(box.min).toEqual(v1);
+      expect(box.max).toEqual(v2);
+    });
+  });
+
+  describe('Test setFromObject on inertia visuals', function() {
+    it('Should return same bounding box before and after adding the inertia visuals', function() {
+      var sdf, object, visual, model, xhttp;
+      var box, v1, v2;
+      xhttp = new XMLHttpRequest();
+      xhttp.overrideMimeType('text/xml');
+      xhttp.open('GET', 'http://localhost:9876/base/gz3d/test/utils/beer/model.sdf', false);
+      xhttp.send();
+      sdf = xhttp.responseXML;
+      model = sdfparser.spawnFromSDF(sdf);
+      scene.add(model);
+
+      // no visuals intially
+      visual = model.getObjectByName('INERTIA_VISUAL');
+      expect(visual).toEqual(undefined);
+
+      box = new THREE.Box3();
+      scene.setFromObject(box, model);
+      v1 = box.min;
+      v2 = box.max;
+
+      // if there was no selected entity it shouldn't break
+      guiEvents.emit('view_inertia');
+      visual = model.getObjectByName('INERTIA_VISUAL');
+      expect(visual).toEqual(undefined);
+
+      // select a model and then view the visuals
+      scene.selectedEntity = model;
+      guiEvents.emit('view_inertia');
+      visual = model.getObjectByName('INERTIA_VISUAL');
+      expect(visual).not.toEqual(undefined);
+
+      scene.setFromObject(box, model);
+      expect(box.min).toEqual(v1);
+      expect(box.max).toEqual(v2);
+
+      // hide the visuals
+      guiEvents.emit('view_inertia');
+      visual = model.getObjectByName('INERTIA_VISUAL');
+      expect(visual).toEqual(undefined);
+
+      // test to view the visuals when they already exist
+      guiEvents.emit('view_inertia');
+      visual = model.getObjectByName('INERTIA_VISUAL');
+      expect(visual).not.toEqual(undefined);
+
+      // hide the visuals
+      guiEvents.emit('view_inertia');
+      visual = model.getObjectByName('INERTIA_VISUAL');
+      expect(visual).toEqual(undefined);
+    });
+  });
 
   // Test center of mass visualizations
   describe('Test center of mass visual', function() {
