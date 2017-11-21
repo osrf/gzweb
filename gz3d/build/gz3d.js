@@ -5698,8 +5698,6 @@ GZ3D.Scene.prototype.init = function()
 
     document.addEventListener( 'keydown',
         function(event) {that.onKeyDown(event);}, false );
-    this.getDomElement().addEventListener( 'mouseup',
-        function(event) {that.onPointerUp(event);}, false );
 
     this.getDomElement().addEventListener( 'touchend',
         function(event) {that.onPointerUp(event);}, false );
