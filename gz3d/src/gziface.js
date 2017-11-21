@@ -833,6 +833,7 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
   var uriPath = 'assets';
   var that = this;
   var mat = this.parseMaterial(material);
+
   if (geom.box)
   {
     obj = this.scene.createBox(geom.box.size.x, geom.box.size.y,
@@ -949,7 +950,7 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
 
         this.scene.loadMeshFromUri(modelUri, submesh, centerSubmesh,
           function(mesh) {
-            if (that.entityMaterial[materialName])
+            if (mat)
             {
               // Because the stl mesh doesn't have any children we cannot set
               // the materials like other mesh types.
@@ -961,15 +962,14 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
                 {
                   if (allChildren[c] instanceof THREE.Mesh)
                   {
-                    that.scene.setMaterial(allChildren[c],
-                        that.entityMaterial[materialName]);
+                    that.scene.setMaterial(allChildren[c], mat);
                     break;
                   }
                 }
               }
               else
               {
-                that.scene.setMaterial(mesh, that.entityMaterial[materialName]);
+                that.scene.setMaterial(mesh, mat);
               }
             }
             parent.add(mesh);

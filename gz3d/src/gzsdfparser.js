@@ -455,6 +455,7 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
   var size, normal;
 
   var material = this.createMaterial(mat);
+
   if (geom.box)
   {
     size = this.parseSize(geom.box.size);
@@ -523,7 +524,7 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
           that.scene.loadMeshFromString(modelUri, submesh, centerSubmesh,
             function(dae)
             {
-              if (that.entityMaterial[materialName])
+              if (material)
               {
                 var allChildren = [];
                 dae.getDescendants(allChildren);
@@ -531,11 +532,14 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
                 {
                   if (allChildren[c] instanceof THREE.Mesh)
                   {
-                    that.scene.setMaterial(allChildren[c],
-                            that.entityMaterial[materialName]);
+                    that.scene.setMaterial(allChildren[c], material);
                     break;
                   }
                 }
+              }
+              else
+              {
+                that.scene.setMaterial(dae, this.undefinedMaterial);
               }
               parent.add(dae);
               loadGeom(parent);
@@ -547,25 +551,27 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
         that.scene.loadMeshFromUri(modelUri, submesh, centerSubmesh,
           function (mesh)
           {
-            // Because the stl mesh doesn't have any children we cannot set the
-            // materials like other mesh types.
-            if (ext !== '.stl')
+            if (material)
             {
-              var allChildren = [];
-              mesh.getDescendants(allChildren);
-              for (var c = 0; c < allChildren.length; ++c)
+              // Because the stl mesh doesn't have any children we cannot set
+              // the materials like other mesh types.
+              if (ext !== '.stl')
               {
-                if (allChildren[c] instanceof THREE.Mesh)
+                var allChildren = [];
+                mesh.getDescendants(allChildren);
+                for (var c = 0; c < allChildren.length; ++c)
                 {
-                  that.scene.setMaterial(allChildren[c],
-                      that.entityMaterial[materialName]);
-                  break;
+                  if (allChildren[c] instanceof THREE.Mesh)
+                  {
+                    that.scene.setMaterial(allChildren[c], material);
+                    break;
+                  }
                 }
               }
-            }
-            else
-            {
-              that.scene.setMaterial(mesh, that.entityMaterial[materialName]);
+              else
+              {
+                that.scene.setMaterial(mesh, material);
+              }
             }
           parent.add(mesh);
           loadGeom(parent);
