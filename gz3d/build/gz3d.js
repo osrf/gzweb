@@ -5647,10 +5647,6 @@ GZ3D.Scene.prototype.init = function()
   // this.renderer.shadowMapEnabled = true;
   // this.renderer.shadowMapSoft = true;
 
-  // get renderer absolute position.
-  this.canvasX = this.renderer.domElement.getBoundingClientRect().top;
-  this.canvasY = this.renderer.domElement.getBoundingClientRect().left;
-
   // lights
   this.ambient = new THREE.AmbientLight( 0x666666 );
   this.scene.add(this.ambient);
@@ -5946,18 +5942,6 @@ GZ3D.Scene.prototype.initScene = function()
   this.add(obj);
 };
 
-/**
- * Set canvas absolute position
- * @param {} left - canvas left.
- * @param {} top - canvas top.
- */
-GZ3D.Scene.prototype.setCanvasPosition = function(left, top)
-{
-  this.canvasX = left;
-  this.canvasY = top;
-};
-
-
 GZ3D.Scene.prototype.setSDFParser = function(sdfParser)
 {
   this.spawnModel.sdfParser = sdfParser;
@@ -6175,8 +6159,12 @@ GZ3D.Scene.prototype.onKeyDown = function(event)
  */
 GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
 {
-  pos.setX(pos.x - this.canvasX);
-  pos.setY(pos.y - this.canvasY);
+  // get renderer absolute position.
+  var canvasX = this.renderer.domElement.getBoundingClientRect().top;
+  var canvasY = this.renderer.domElement.getBoundingClientRect().left;
+
+  pos.setX(pos.x - canvasX);
+  pos.setY(pos.y - canvasY);
   var vector = new THREE.Vector3(
     (pos.x / this.renderer.domElement.width) * 2 - 1,
     -(pos.y / this.renderer.domElement.height) * 2 + 1, 1);
