@@ -3390,9 +3390,12 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
                 that.scene.setMaterial(mesh, mat);
               }
             }
-            if (ext === '.stl')
+            else
             {
-              that.scene.setMaterial(mesh, {'ambient': [1,1,1,1]});
+              if (ext === '.stl')
+              {
+                that.scene.setMaterial(mesh, {'ambient': [1,1,1,1]});
+              }
             }
             parent.add(mesh);
             loadGeom(parent);
