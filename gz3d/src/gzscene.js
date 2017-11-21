@@ -322,6 +322,7 @@ GZ3D.Scene.prototype.init = function()
   this.setMaterial(mesh, {'ambient':[0.5,0.5,0.5,1.000000],
     'texture':'assets/media/materials/textures/com.png'});
   mesh.name = 'COM_VISUAL';
+  mesh.rotation.z = -Math.PI/2;
   this.COMvisual.add(mesh);
 };
 
