@@ -29,17 +29,18 @@ module.exports = function(config) {
       "gz3d/client/js/include/ColladaLoader.js",
       "gz3d/client/js/include/OBJLoader.js",
       "gz3d/client/js/include/MTLLoader.js",
-      "gz3d/client/js/include/CopyShader.js",
-      "gz3d/client/js/include/SSAOShader.js",
-      "gz3d/client/js/include/EffectComposer.js",
-      "gz3d/client/js/include/RenderPass.js",
-      "gz3d/client/js/include/MaskPass.js",
-      "gz3d/client/js/include/ShaderPass.js",
+      "gz3d/client/js/include/STLLoader.js",
       "gz3d/client/js/include/xml2json.js",
       'gz3d/build/gz3d.js',
       "gz3d/test/utils/angular-mocks.min.js",
       'gz3d/test/fixture/*.html',
-      'gz3d/test/*.js'
+      'gz3d/test/*.js',
+      {pattern: 'gz3d/test/utils/beer/*', included: false, served: true, watched: false, nocache: true},
+      {pattern: 'gz3d/test/utils/walkway_metal_straight/*', included: false, served: true, watched: false, nocache: true},
+      {pattern: 'gz3d/test/utils/walkway_metal_straight/meshes/*', included: false, served: true, watched: false, nocache: true},
+      {pattern: 'gz3d/test/utils/house_2/*', included: false, served: true, watched: false, nocache: true},
+      {pattern: 'gz3d/test/utils/house_2/meshes/*', included: false, served: true, watched: false, nocache: true},
+      {pattern: 'gz3d/test/utils/husky/model.sdf', included: false, served: true, watched: false, nocache: true}
     ],
 
 
@@ -58,7 +59,7 @@ module.exports = function(config) {
     // test results reporter to use
     // possible values: 'dots', 'progress'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-    reporters: ['progress', 'coverage'],
+    reporters: ['progress', 'coverage', 'html'],
 
     // optionally, configure the reporter
     coverageReporter: {
@@ -71,6 +72,9 @@ module.exports = function(config) {
           type : 'lcov'
         },
       ]
+    },
+    htmlReporter: {
+      outputFile: 'test_results/test_results.html'
     },
 
     // web server port

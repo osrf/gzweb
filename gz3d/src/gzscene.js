@@ -29,6 +29,7 @@ GZ3D.Scene.prototype.init = function()
   this.textureLoader = new THREE.TextureLoader();
   this.colladaLoader = new THREE.ColladaLoader();
   this.objLoader = new THREE.OBJLoader();
+  this.stlLoader = new THREE.STLLoader();
 
   this.renderer = new THREE.WebGLRenderer({antialias: true });
   this.renderer.setPixelRatio(window.devicePixelRatio);
@@ -311,6 +312,19 @@ GZ3D.Scene.prototype.init = function()
   ballVisual.add(mesh);
 
   this.jointAxis['ballVisual'] = ballVisual;
+
+  // center of mass visual
+  this.COMvisual = new THREE.Object3D();
+  this.COMvisual.name = 'COM_VISUAL';
+
+  geometry = new THREE.SphereGeometry(1, 32, 32);
+
+  mesh = new THREE.Mesh(geometry);
+  this.setMaterial(mesh, {'ambient':[0.5,0.5,0.5,1.000000],
+    'texture':'assets/media/materials/textures/com.png'});
+  mesh.name = 'COM_VISUAL';
+  mesh.rotation.z = -Math.PI/2;
+  this.COMvisual.add(mesh);
 };
 
 GZ3D.Scene.prototype.initScene = function()
@@ -576,7 +590,8 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
       }
 
       if (model.name === 'grid' || model.name === 'boundingBox' ||
-          model.name === 'JOINT_VISUAL')
+          model.name === 'JOINT_VISUAL' || model.name === 'INERTIA_VISUAL'
+	  || model.name === 'COM_VISUAL')
       {
         point = objects[i].point;
         model = null;
@@ -1403,15 +1418,24 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
   this.heightmap = parent;
 };
 
+/* eslint-disable */
 /**
  * Load mesh
+ * @example
+ * // loading using URI
+ * // callback(mesh)
+ * loadMeshFromUri('assets/house_1/meshes/house_1.dae', undefined, undefined, function(mesh)
+            {
+              // use the mesh
+            });
  * @param {string} uri
  * @param {} submesh
  * @param {} centerSubmesh
  * @param {function} callback
  */
-GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh,
-    callback)
+/* eslint-enable */
+GZ3D.Scene.prototype.loadMeshFromUri = function(uri, submesh, centerSubmesh,
+  callback)
 {
   var uriPath = uri.substring(0, uri.lastIndexOf('/'));
   var uriFile = uri.substring(uri.lastIndexOf('/') + 1);
@@ -1433,6 +1457,10 @@ GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh,
   else if (uriFile.substr(-4).toLowerCase() === '.obj')
   {
     return this.loadOBJ(uri, submesh, centerSubmesh, callback);
+  }
+  else if (uriFile.substr(-4).toLowerCase() === '.stl')
+  {
+    return this.loadSTL(uri, submesh, centerSubmesh, callback);
   }
   else if (uriFile.substr(-5).toLowerCase() === '.urdf')
   {
@@ -1470,20 +1498,105 @@ GZ3D.Scene.prototype.loadMesh = function(uri, submesh, centerSubmesh,
   }
 };
 
+/* eslint-disable */
 /**
- * Load collada file
+ * Load mesh
+ * @example
+ * // loading using URI
+ * // callback(mesh)
+ * @example
+ * // loading using file string
+ * // callback(mesh)
+ * loadMeshFromString('assets/house_1/meshes/house_1.dae', undefined, undefined, function(mesh)
+            {
+              // use the mesh
+            }, ['<?xml version="1.0" encoding="utf-8"?>
+    <COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+      <asset>
+        <contributor>
+          <author>Cole</author>
+          <authoring_tool>OpenCOLLADA for 3ds Max;  Ver.....']);
  * @param {string} uri
  * @param {} submesh
  * @param {} centerSubmesh
  * @param {function} callback
+ * @param {array} files - files needed by the loaders[dae] in case of a collada
+ * mesh, [obj, mtl] in case of object mesh, all as strings
+ */
+/* eslint-enable */
+GZ3D.Scene.prototype.loadMeshFromString = function(uri, submesh, centerSubmesh,
+  callback, files)
+{
+  var uriPath = uri.substring(0, uri.lastIndexOf('/'));
+  var uriFile = uri.substring(uri.lastIndexOf('/') + 1);
+
+  if (this.meshes[uri])
+  {
+    var mesh = this.meshes[uri];
+    mesh = mesh.clone();
+    this.useSubMesh(mesh, submesh, centerSubmesh);
+    callback(mesh);
+    return;
+  }
+
+  // load urdf model
+  if (uriFile.substr(-4).toLowerCase() === '.dae')
+  {
+    // loadCollada just accepts one file, which is the dae file as string
+    return this.loadCollada(uri, submesh, centerSubmesh, callback, files[0]);
+  }
+  else if (uriFile.substr(-4).toLowerCase() === '.obj')
+  {
+    return this.loadOBJ(uri, submesh, centerSubmesh, callback, files);
+  }
+};
+
+/**
+ * Load collada file
+ * @param {string} uri - mesh uri which is used by colldaloader to load
+ * the mesh file using an XMLHttpRequest.
+ * @param {} submesh
+ * @param {} centerSubmesh
+ * @param {function} callback
+ * @param {string} filestring -optional- the mesh file as a string to be parsed
+ * if provided the uri will not be used just as a url, no XMLHttpRequest will
+ * be made.
  */
 GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
-    callback)
+  callback, filestring)
 {
   var dae;
-  // var loader = new ColladaLoader2();
-  // loader.options.convertUpAxis = true;
-  this.colladaLoader.load(uri, function(collada)
+  var mesh = null;
+  /*
+  // Crashes: issue #36
+  if (this.meshes[uri])
+  {
+    dae = this.meshes[uri];
+    dae = dae.clone();
+    this.useColladaSubMesh(dae, submesh, centerSubmesh);
+    callback(dae);
+    return;
+  }
+  */
+
+  var loader = new THREE.ColladaLoader();
+
+  if (!filestring)
+  {
+    loader.load(uri, function(collada)
+    {
+      meshReady(collada);
+    });
+  }
+  else
+  {
+    loader.parse(filestring, function(collada)
+    {
+      meshReady(collada);
+    }, undefined);
+  }
+
+  function meshReady(collada)
   {
     // check for a scale factor
     /*if(collada.dae.asset.unit)
@@ -1501,7 +1614,7 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
 
     dae.name = uri;
     callback(dae);
-  });
+  }
 };
 
 /**
@@ -1641,22 +1754,25 @@ GZ3D.Scene.prototype.useSubMesh = function(mesh, submesh, centerSubmesh)
 };
 
 /**
- * Load collada file
- * @param {string} uri
+ * Load Obj file
+ * @param {string} uri - mesh uri which is used by mtlloader and the objloader
+ * to load both the mesh file and the mtl file using XMLHttpRequests.
  * @param {} submesh
  * @param {} centerSubmesh
  * @param {function} callback
+ * @param {array} files -optional- the mesh and the mtl files as a strings
+ * to be parsed by the loaders, if provided the uri will not be used just
+ * as a url, no XMLHttpRequest will be made.
  */
-GZ3D.Scene.prototype.loadOBJ = function(uri, submesh, centerSubmesh,
-    callback)
+GZ3D.Scene.prototype.loadOBJ = function(uri, submesh, centerSubmesh, callback,
+  files)
 {
   var obj = null;
   var baseUrl = uri.substr(0, uri.lastIndexOf('/') + 1);
   var mtlLoader = new THREE.MTLLoader();
-  this.objLoader.load(uri, function(container)
+  var that = this;
+  var containerLoaded = function (container)
   {
-    mtlLoader.setPath(baseUrl);
-
     // callback to signal mesh loading is complete
     var loadComplete = function()
     {
@@ -1706,6 +1822,57 @@ GZ3D.Scene.prototype.loadOBJ = function(uri, submesh, centerSubmesh,
       var mtlPath = container.materialLibraries[i];
       mtlLoader.load(mtlPath, applyMaterial);
     }
+  };
+
+  if (!files)
+  {
+    this.objLoader.load(uri, function(_container)
+    {
+      mtlLoader.setPath(baseUrl);
+      containerLoaded(_container);
+    });
+  }
+  else if (files[0])
+  {
+    var _container = this.objLoader.parse(files[0]);
+    // mtlLoader.parse(files[1]);
+    // containerLoaded(_container);
+
+    // this part is to be removed after updateing the mtlLoader.
+    obj = _container;
+    this.meshes[uri] = obj;
+    obj = obj.clone();
+    this.useSubMesh(obj, submesh, centerSubmesh);
+
+    obj.name = uri;
+    callback(obj);
+  }
+};
+
+/**
+ * Load stl file.
+ * Loads stl mesh given using it's uri
+ * @param {string} uri
+ * @param {} submesh
+ * @param {} centerSubmesh
+ * @param {function} callback
+ */
+GZ3D.Scene.prototype.loadSTL = function(uri, submesh, centerSubmesh,
+  callback)
+{
+  var mesh = null;
+  this.stlLoader.load(uri, function(geometry)
+  {
+    mesh = new THREE.Mesh( geometry );
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+
+    this.scene.meshes[uri] = mesh;
+    mesh = mesh.clone();
+    this.scene.useSubMesh(mesh, submesh, centerSubmesh);
+
+    mesh.name = uri;
+    callback(mesh);
   });
 };
 
@@ -1899,6 +2066,75 @@ GZ3D.Scene.prototype.showRadialMenu = function(e)
 };
 
 /**
+ * Sets the bounding box of an object while ignoring the addtional visuals.
+ * @param {THREE.Box3} - box
+ * @param {THREE.Object3D} - object
+ */
+GZ3D.Scene.prototype.setFromObject = function(box, object)
+{
+  box.min.x = box.min.y = box.min.z = + Infinity;
+  box.max.x = box.max.y = box.max.z = - Infinity;
+  var v = new THREE.Vector3();
+  object.updateMatrixWorld( true );
+
+  object.traverse( function ( node )
+  {
+    var i, l;
+    var geometry = node.geometry;
+    if ( geometry !== undefined )
+    {
+
+      if (node.name !== 'INERTIA_VISUAL' && node.name !== 'COM_VISUAL')
+      {
+
+        if ( geometry.isGeometry )
+        {
+
+          var vertices = geometry.vertices;
+
+          for ( i = 0, l = vertices.length; i < l; i ++ )
+          {
+
+            v.copy( vertices[ i ] );
+            v.applyMatrix4( node.matrixWorld );
+
+            expandByPoint( v );
+
+          }
+
+        }
+        else if ( geometry.isBufferGeometry )
+        {
+
+          var attribute = geometry.attributes.position;
+
+          if ( attribute !== undefined )
+          {
+
+            for ( i = 0, l = attribute.count; i < l; i ++ )
+            {
+
+              v.fromBufferAttribute( attribute, i ).applyMatrix4( 
+                node.matrixWorld );
+
+              expandByPoint( v );
+
+            }
+          }
+        }
+      }
+    }
+  });
+
+  function expandByPoint(point)
+  {
+    box.min.min( point );
+    box.max.max( point );
+  }
+
+};
+
+/**
  * Show bounding box for a model. The box is aligned with the world.
  * @param {THREE.Object3D} model
  */
@@ -1922,7 +2158,7 @@ GZ3D.Scene.prototype.showBoundingBox = function(model)
   }
   var box = new THREE.Box3();
   // w.r.t. world
-  box.setFromObject(model);
+  this.setFromObject(box, model);
   // center vertices with object
   box.min.x = box.min.x - model.position.x;
   box.min.y = box.min.y - model.position.y;
@@ -2044,7 +2280,9 @@ GZ3D.Scene.prototype.setViewAs = function(model, viewAs)
         descendants[i].name.indexOf('COLLISION_VISUAL') === -1 &&
         !this.getParentByPartialName(descendants[i], 'COLLISION_VISUAL') &&
         descendants[i].name.indexOf('wireframe') === -1 &&
-        descendants[i].name.indexOf('JOINT_VISUAL') === -1)
+        descendants[i].name.indexOf('JOINT_VISUAL') === -1 &&
+        descendants[i].name.indexOf('COM_VISUAL') === -1 &&
+        descendants[i].name.indexOf('INERTIA_VISUAL') === -1)
     {
       // Note: multi-material is being deprecated and will be removed soon
       if (descendants[i].material instanceof THREE.MultiMaterial)
@@ -2293,6 +2531,376 @@ GZ3D.Scene.prototype.viewJoints = function(model)
 };
 
 /**
+ * View Center Of Mass
+ * Toggle: if there are COM visuals, hide, otherwise, show.
+ * @param {} model
+ */
+GZ3D.Scene.prototype.viewCOM = function(model)
+{
+  if (model === undefined || model === null)
+  {
+    return;
+  }
+  if (model.children.length === 0)
+  {
+    return;
+  }
+
+  var child;
+
+  // Visuals already exist
+  if (model.COMVisuals)
+  {
+    // Hide = remove from parent
+    if (model.COMVisuals[0].parent !== undefined &&
+      model.COMVisuals[0].parent !== null)
+    {
+      for (var v = 0; v < model.COMVisuals.length; ++v)
+      {
+        for (var k = 0; k < 3; k++)
+        {
+          model.COMVisuals[v].parent.remove(model.COMVisuals[v].crossLines[k]);
+        }
+        model.COMVisuals[v].parent.remove(model.COMVisuals[v]);
+      }
+    }
+    // Show: attach to parent
+    else
+    {
+      for (var s = 0; s < model.children.length; ++s)
+      {
+        child = model.getObjectByName(model.children[s].name);
+
+        if (!child || child.name === 'boundingBox')
+        {
+          continue;
+        }
+
+        child.add(model.COMVisuals[s].crossLines[0]);
+        child.add(model.COMVisuals[s].crossLines[1]);
+        child.add(model.COMVisuals[s].crossLines[2]);
+        child.add(model.COMVisuals[s]);
+      }
+    }
+  }
+  // Create visuals
+  else
+  {
+    model.COMVisuals = [];
+    var box, COMVisual, line_1, line_2, line_3, helperGeometry_1,
+    helperGeometry_2, helperGeometry_3, helperMaterial, points = new Array(6);
+    for (var j = 0; j < model.children.length; ++j)
+    {
+      child = model.getObjectByName(model.children[j].name);
+
+      if (!child)
+      {
+        continue;
+      }
+
+      if (child.userData.inertial)
+      {
+        var mesh, radius, inertialMass, userdatapose, inertialPose = {};
+        var inertial = child.userData.inertial;
+
+        userdatapose = child.userData.inertial.pose;
+        inertialMass = inertial.mass;
+
+        // calculate the radius using lead density
+        radius = Math.cbrt((0.75 * inertialMass ) / (Math.PI * 11340));
+
+        COMVisual = this.COMvisual.clone();
+        child.add(COMVisual);
+        model.COMVisuals.push(COMVisual);
+        COMVisual.scale.set(radius, radius, radius);
+
+        var position = new THREE.Vector3(0, 0, 0);
+
+        // get euler rotation and convert it to Quaternion
+        var quaternion = new THREE.Quaternion();
+        var euler = new THREE.Euler(0, 0, 0, 'XYZ');
+        quaternion.setFromEuler(euler);
+
+        inertialPose = {
+          'position': position,
+          'orientation': quaternion
+        };
+
+        if (userdatapose !== undefined)
+        {
+          this.setPose(COMVisual, userdatapose.position,
+            userdatapose.orientation);
+            inertialPose = userdatapose;
+        }
+
+        COMVisual.crossLines = [];
+
+        // Store link's original rotation (w.r.t. the model)
+        var originalRotation = new THREE.Euler();
+        originalRotation.copy(child.rotation);
+
+        // Align link with world (reverse parent rotation w.r.t. the world)
+        child.setRotationFromMatrix(
+          new THREE.Matrix4().getInverse(child.parent.matrixWorld));
+
+        // Get its bounding box
+        box = new THREE.Box3();
+
+        box.setFromObject(child);
+
+        // Rotate link back to its original rotation
+        child.setRotationFromEuler(originalRotation);
+
+        // w.r.t child
+        var worldToLocal = new THREE.Matrix4();
+        worldToLocal.getInverse(child.matrixWorld);
+        box.applyMatrix4(worldToLocal);
+
+        // X
+        points[0] = new THREE.Vector3(box.min.x, inertialPose.position.y,
+          inertialPose.position.z);
+        points[1] = new THREE.Vector3(box.max.x, inertialPose.position.y,
+            inertialPose.position.z);
+        // Y
+        points[2] = new THREE.Vector3(inertialPose.position.x, box.min.y,
+              inertialPose.position.z);
+        points[3] = new THREE.Vector3(inertialPose.position.x, box.max.y,
+                inertialPose.position.z);
+        // Z
+        points[4] = new THREE.Vector3(inertialPose.position.x,
+          inertialPose.position.y, box.min.z);
+        points[5] = new THREE.Vector3(inertialPose.position.x,
+          inertialPose.position.y, box.max.z);
+
+        helperGeometry_1 = new THREE.Geometry();
+        helperGeometry_1.vertices.push(points[0]);
+        helperGeometry_1.vertices.push(points[1]);
+
+        helperGeometry_2 = new THREE.Geometry();
+        helperGeometry_2.vertices.push(points[2]);
+        helperGeometry_2.vertices.push(points[3]);
+
+        helperGeometry_3 = new THREE.Geometry();
+        helperGeometry_3.vertices.push(points[4]);
+        helperGeometry_3.vertices.push(points[5]);
+
+        helperMaterial = new THREE.LineBasicMaterial({color: 0x00ff00});
+
+        line_1 = new THREE.Line(helperGeometry_1, helperMaterial,
+            THREE.LineSegments);
+        line_2 = new THREE.Line(helperGeometry_2, helperMaterial,
+            THREE.LineSegments);
+        line_3 = new THREE.Line(helperGeometry_3, helperMaterial,
+            THREE.LineSegments);
+
+        line_1.name = 'COM_VISUAL';
+        line_2.name = 'COM_VISUAL';
+        line_3.name = 'COM_VISUAL';
+        COMVisual.crossLines.push(line_1);
+        COMVisual.crossLines.push(line_2);
+        COMVisual.crossLines.push(line_3);
+
+        // show lines
+        child.add(line_1);
+        child.add(line_2);
+        child.add(line_3);
+       }
+    }
+  }
+};
+
+// TODO: Issue https://bitbucket.org/osrf/gzweb/issues/138
+/**
+ * View inertia
+ * Toggle: if there are inertia visuals, hide, otherwise, show.
+ * @param {} model
+ */
+GZ3D.Scene.prototype.viewInertia = function(model)
+{
+  if (model === undefined || model === null)
+  {
+    return;
+  }
+
+  if (model.children.length === 0)
+  {
+    return;
+  }
+
+  var child;
+
+  // Visuals already exist
+  if (model.inertiaVisuals)
+  {
+    // Hide = remove from parent
+    if (model.inertiaVisuals[0].parent !== undefined &&
+      model.inertiaVisuals[0].parent !== null)
+    {
+      for (var v = 0; v < model.inertiaVisuals.length; ++v)
+      {
+        for (var k = 0; k < 3; k++)
+        {
+          model.inertiaVisuals[v].parent.remove(
+            model.inertiaVisuals[v].crossLines[k]);
+        }
+        model.inertiaVisuals[v].parent.remove(model.inertiaVisuals[v]);
+      }
+    }
+    // Show: attach to parent
+    else
+    {
+      for (var s = 0; s < model.children.length; ++s)
+      {
+        child = model.getObjectByName(model.children[s].name);
+
+        if (!child || child.name === 'boundingBox')
+        {
+          continue;
+        }
+        child.add(model.inertiaVisuals[s].crossLines[0]);
+        child.add(model.inertiaVisuals[s].crossLines[1]);
+        child.add(model.inertiaVisuals[s].crossLines[2]);
+        child.add(model.inertiaVisuals[s]);
+      }
+    }
+  }
+  // Create visuals
+  else
+  {
+    model.inertiaVisuals = [];
+    var box , line_1, line_2, line_3, helperGeometry_1, helperGeometry_2,
+    helperGeometry_3, helperMaterial, inertial, inertiabox,
+    points = new Array(6);
+    for (var j = 0; j < model.children.length; ++j)
+    {
+      child = model.getObjectByName(model.children[j].name);
+
+      if (!child)
+      {
+        continue;
+      }
+
+      inertial = child.userData.inertial;
+      if (inertial)
+      {
+        var mesh, boxScale, Ixx, Iyy, Izz, mass, inertia, material,
+          inertialPose = {};
+
+        if (inertial.pose)
+        {
+          inertialPose = child.userData.inertial.pose;
+        }
+        else if (child.position)
+        {
+          inertialPose.position = child.position;
+          inertialPose.orientation = child.quaternion;
+        }
+        else
+        {
+          console.log('Link pose not found!');
+          continue;
+        }
+
+        mass = inertial.mass;
+        inertia = inertial.inertia;
+        Ixx = inertia.ixx;
+        Iyy = inertia.iyy;
+        Izz = inertia.izz;
+        boxScale = new THREE.Vector3();
+
+        if (mass < 0 || Ixx < 0 || Iyy < 0 || Izz < 0 ||
+          Ixx + Iyy < Izz || Iyy + Izz < Ixx || Izz + Ixx < Iyy)
+        {
+          // Unrealistic inertia, load with default scale
+          console.log('The link ' + child.name + ' has unrealistic inertia, '
+                +'unable to visualize box of equivalent inertia.');
+        }
+        else
+        {
+          // Compute dimensions of box with uniform density
+          // and equivalent inertia.
+          boxScale.x = Math.sqrt(6*(Izz +  Iyy - Ixx) / mass);
+          boxScale.y = Math.sqrt(6*(Izz +  Ixx - Iyy) / mass);
+          boxScale.z = Math.sqrt(6*(Ixx  + Iyy - Izz) / mass);
+
+          inertiabox = new THREE.Object3D();
+          inertiabox.name = 'INERTIA_VISUAL';
+
+          // Inertia indicator: equivalent box of uniform density
+          mesh = this.createBox(1, 1, 1);
+          mesh.name = 'INERTIA_VISUAL';
+          material = {'ambient':[1,0.0,1,1],'diffuse':[1,0.0,1,1],
+            'depth_write':false,'opacity':0.5};
+          this.setMaterial(mesh, material);
+          inertiabox.add(mesh);
+          inertiabox.name = 'INERTIA_VISUAL';
+          child.add(inertiabox);
+
+          model.inertiaVisuals.push(inertiabox);
+          inertiabox.scale.set(boxScale.x, boxScale.y, boxScale.z);
+          inertiabox.crossLines = [];
+
+          this.setPose(inertiabox, inertialPose.position,
+            inertialPose.orientation);
+          // show lines
+          box = new THREE.Box3();
+          // w.r.t. world
+          box.setFromObject(child);
+          points[0] = new THREE.Vector3(inertialPose.position.x,
+            inertialPose.position.y,
+            -2 * boxScale.z + inertialPose.position.z);
+          points[1] = new THREE.Vector3(inertialPose.position.x,
+            inertialPose.position.y, 2 * boxScale.z + inertialPose.position.z);
+          points[2] = new THREE.Vector3(inertialPose.position.x,
+            -2 * boxScale.y + inertialPose.position.y ,
+            inertialPose.position.z);
+          points[3] = new THREE.Vector3(inertialPose.position.x,
+            2 * boxScale.y + inertialPose.position.y, inertialPose.position.z);
+          points[4] = new THREE.Vector3(
+            -2 * boxScale.x + inertialPose.position.x,
+            inertialPose.position.y, inertialPose.position.z);
+          points[5] = new THREE.Vector3(
+            2 * boxScale.x + inertialPose.position.x,
+            inertialPose.position.y, inertialPose.position.z);
+
+          helperGeometry_1 = new THREE.Geometry();
+          helperGeometry_1.vertices.push(points[0]);
+          helperGeometry_1.vertices.push(points[1]);
+
+          helperGeometry_2 = new THREE.Geometry();
+          helperGeometry_2.vertices.push(points[2]);
+          helperGeometry_2.vertices.push(points[3]);
+
+          helperGeometry_3 = new THREE.Geometry();
+          helperGeometry_3.vertices.push(points[4]);
+          helperGeometry_3.vertices.push(points[5]);
+
+          helperMaterial = new THREE.LineBasicMaterial({color: 0x00ff00});
+          line_1 = new THREE.Line(helperGeometry_1, helperMaterial,
+              THREE.LineSegments);
+          line_2 = new THREE.Line(helperGeometry_2, helperMaterial,
+            THREE.LineSegments);
+          line_3 = new THREE.Line(helperGeometry_3, helperMaterial,
+            THREE.LineSegments);
+
+          line_1.name = 'INERTIA_VISUAL';
+          line_2.name = 'INERTIA_VISUAL';
+          line_3.name = 'INERTIA_VISUAL';
+          inertiabox.crossLines.push(line_1);
+          inertiabox.crossLines.push(line_2);
+          inertiabox.crossLines.push(line_3);
+
+          // attach lines
+          child.add(line_1);
+          child.add(line_2);
+          child.add(line_3);
+        }
+      }
+    }
+  }
+};
+
+/**
  * Update a light entity from a message
  * @param {} entity
  * @param {} msg
@@ -2383,4 +2991,32 @@ GZ3D.Scene.prototype.updateLight = function(entity, msg)
       lightObj.target.position.copy(dir);
     }
   }
+};
+
+/**
+ * Adds an sdf model to the scene.
+ * @param {object} sdf - It is either SDF XML string or SDF XML DOM object
+ * @returns {THREE.Object3D}
+ */
+GZ3D.Scene.prototype.createFromSdf = function(sdf)
+{
+  if (sdf === undefined)
+  {
+    console.log(' No argument provided ');
+    return;
+  }
+
+  var obj = new THREE.Object3D();
+
+  var sdfXml = this.spawnModel.sdfParser.parseXML(sdf);
+  // sdfXML is always undefined, the XML parser doesn't work while testing
+  // while it does work during normal usage.
+  var myjson = xml2json(sdfXml, '\t');
+  var sdfObj = JSON.parse(myjson).sdf;
+
+  var mesh = this.spawnModel.sdfParser.spawnFromSDF(sdf);
+  obj.name = mesh.name;
+  obj.add(mesh);
+
+  return obj;
 };

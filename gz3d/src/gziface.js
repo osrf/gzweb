@@ -435,7 +435,7 @@ GZ3D.GZIface.prototype.onConnected = function()
     var entityMsg =
     {
       name : entity.name,
-      id : entity.userData,
+      id : entity.userData.id,
       createEntity : 0,
       position :
       {
@@ -496,11 +496,11 @@ GZ3D.GZIface.prototype.onConnected = function()
     var modelMsg =
     {
       name : entity.parent.name,
-      id : entity.parent.userData,
+      id : entity.parent.userData.id,
       link:
       {
         name: entity.name,
-        id: entity.userData,
+        id: entity.userData.id,
         self_collide: entity.serverProperties.self_collide,
         gravity: entity.serverProperties.gravity,
         kinematic: entity.serverProperties.kinematic
@@ -662,7 +662,7 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
 {
   var modelObj = new THREE.Object3D();
   modelObj.name = model.name;
-  modelObj.userData = model.id;
+  modelObj.userData.id = model.id;
   if (model.pose)
   {
     this.scene.setPose(modelObj, model.pose.position, model.pose.orientation);
@@ -672,13 +672,36 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
     var link = model.link[j];
     var linkObj = new THREE.Object3D();
     linkObj.name = link.name;
-    linkObj.userData = link.id;
+    linkObj.userData.id = link.id;
     linkObj.serverProperties =
         {
           self_collide: link.self_collide,
           gravity: link.gravity,
           kinematic: link.kinematic
         };
+
+    if (link.inertial)
+    {
+      var inertialPose, inertialMass, inertia = {};
+      linkObj.userData.inertial = {};
+      inertialPose = link.inertial.pose;
+      inertialMass = link.inertial.mass;
+      inertia.ixx = link.inertial.ixx;
+      inertia.ixy = link.inertial.ixy;
+      inertia.ixz = link.inertial.ixz;
+      inertia.iyy = link.inertial.iyy;
+      inertia.iyz = link.inertial.iyz;
+      inertia.izz = link.inertial.izz;
+      linkObj.userData.inertial.inertia = inertia;
+      if (inertialMass)
+      {
+        linkObj.userData.inertial.mass = inertialMass;
+      }
+      if (inertialPose)
+      {
+        linkObj.userData.inertial.pose = inertialPose;
+      }
+    }
 
     if (link.pose)
     {
@@ -810,6 +833,7 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
   var uriPath = 'assets';
   var that = this;
   var mat = this.parseMaterial(material);
+
   if (geom.box)
   {
     obj = this.scene.createBox(geom.box.size.x, geom.box.size.y,
@@ -921,28 +945,44 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
           }
         }
 
+        var ext = modelUri.substr(-4).toLowerCase();
         var materialName = parent.name + '::' + modelUri;
         this.entityMaterial[materialName] = mat;
 
-        this.scene.loadMesh(modelUri, submesh,
-            centerSubmesh, function(dae) {
-              if (that.entityMaterial[materialName])
+        this.scene.loadMeshFromUri(modelUri, submesh, centerSubmesh,
+          function(mesh) {
+            if (mat)
+            {
+              // Because the stl mesh doesn't have any children we cannot set
+              // the materials like other mesh types.
+              if (modelUri.indexOf('.stl') === -1)
               {
                 var allChildren = [];
-                dae.getDescendants(allChildren);
+                mesh.getDescendants(allChildren);
                 for (var c = 0; c < allChildren.length; ++c)
                 {
                   if (allChildren[c] instanceof THREE.Mesh)
                   {
-                    that.scene.setMaterial(allChildren[c],
-                        that.entityMaterial[materialName]);
+                    that.scene.setMaterial(allChildren[c], mat);
                     break;
                   }
                 }
               }
-              parent.add(dae);
-              loadGeom(parent);
-            });
+              else
+              {
+                that.scene.setMaterial(mesh, mat);
+              }
+            }
+            else
+            {
+              if (ext === '.stl')
+              {
+                that.scene.setMaterial(mesh, {'ambient': [1,1,1,1]});
+              }
+            }
+            parent.add(mesh);
+            loadGeom(parent);
+        });
       }
     }
   }
