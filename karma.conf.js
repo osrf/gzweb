@@ -29,6 +29,7 @@ module.exports = function(config) {
       "gz3d/client/js/include/ColladaLoader.js",
       "gz3d/client/js/include/OBJLoader.js",
       "gz3d/client/js/include/MTLLoader.js",
+      "gz3d/client/js/include/STLLoader.js",
       "gz3d/client/js/include/xml2json.js",
       'gz3d/build/gz3d.js',
       "gz3d/test/utils/angular-mocks.min.js",
@@ -38,8 +39,9 @@ module.exports = function(config) {
       {pattern: 'gz3d/test/utils/walkway_metal_straight/*', included: false, served: true, watched: false, nocache: true},
       {pattern: 'gz3d/test/utils/walkway_metal_straight/meshes/*', included: false, served: true, watched: false, nocache: true},
       {pattern: 'gz3d/test/utils/house_2/*', included: false, served: true, watched: false, nocache: true},
-      {pattern: 'gz3d/test/utils/house_2/meshes/*', included: false, served: true, watched: false, nocache: true}
-     ],
+      {pattern: 'gz3d/test/utils/house_2/meshes/*', included: false, served: true, watched: false, nocache: true},
+      {pattern: 'gz3d/test/utils/husky/model.sdf', included: false, served: true, watched: false, nocache: true}
+    ],
 
 
     // list of files to exclude

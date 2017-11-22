@@ -833,6 +833,7 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
   var uriPath = 'assets';
   var that = this;
   var mat = this.parseMaterial(material);
+
   if (geom.box)
   {
     obj = this.scene.createBox(geom.box.size.x, geom.box.size.y,
@@ -944,28 +945,44 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
           }
         }
 
+        var ext = modelUri.substr(-4).toLowerCase();
         var materialName = parent.name + '::' + modelUri;
         this.entityMaterial[materialName] = mat;
 
-        this.scene.loadMeshFromUri(modelUri, submesh,
-            centerSubmesh, function(dae) {
-              if (that.entityMaterial[materialName])
+        this.scene.loadMeshFromUri(modelUri, submesh, centerSubmesh,
+          function(mesh) {
+            if (mat)
+            {
+              // Because the stl mesh doesn't have any children we cannot set
+              // the materials like other mesh types.
+              if (modelUri.indexOf('.stl') === -1)
               {
                 var allChildren = [];
-                dae.getDescendants(allChildren);
+                mesh.getDescendants(allChildren);
                 for (var c = 0; c < allChildren.length; ++c)
                 {
                   if (allChildren[c] instanceof THREE.Mesh)
                   {
-                    that.scene.setMaterial(allChildren[c],
-                        that.entityMaterial[materialName]);
+                    that.scene.setMaterial(allChildren[c], mat);
                     break;
                   }
                 }
               }
-              parent.add(dae);
-              loadGeom(parent);
-            });
+              else
+              {
+                that.scene.setMaterial(mesh, mat);
+              }
+            }
+            else
+            {
+              if (ext === '.stl')
+              {
+                that.scene.setMaterial(mesh, {'ambient': [1,1,1,1]});
+              }
+            }
+            parent.add(mesh);
+            loadGeom(parent);
+        });
       }
     }
   }

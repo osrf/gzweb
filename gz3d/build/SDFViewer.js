@@ -54502,6 +54502,7 @@ GZ3D.Scene.prototype.init = function()
   this.textureLoader.crossOrigin = '';
   this.colladaLoader = new THREE.ColladaLoader();
   this.objLoader = new THREE.OBJLoader();
+  this.stlLoader = new THREE.STLLoader();
 
   this.renderer = new THREE.WebGLRenderer({antialias: true });
   this.renderer.setPixelRatio(window.devicePixelRatio);
@@ -54790,6 +54791,19 @@ GZ3D.Scene.prototype.init = function()
   ballVisual.add(mesh);
 
   this.jointAxis['ballVisual'] = ballVisual;
+
+  // center of mass visual
+  this.COMvisual = new THREE.Object3D();
+  this.COMvisual.name = 'COM_VISUAL';
+
+  geometry = new THREE.SphereGeometry(1, 32, 32);
+
+  mesh = new THREE.Mesh(geometry);
+  this.setMaterial(mesh, {'ambient':[0.5,0.5,0.5,1.000000],
+    'texture':'assets/media/materials/textures/com.png'});
+  mesh.name = 'COM_VISUAL';
+  mesh.rotation.z = -Math.PI/2;
+  this.COMvisual.add(mesh);
 };
 
 GZ3D.Scene.prototype.initScene = function()
@@ -55062,7 +55076,8 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
       }
 
       if (model.name === 'grid' || model.name === 'boundingBox' ||
-          model.name === 'JOINT_VISUAL' || model.name === 'INERTIA_VISUAL')
+          model.name === 'JOINT_VISUAL' || model.name === 'INERTIA_VISUAL'
+	  || model.name === 'COM_VISUAL')
       {
         point = objects[i].point;
         model = null;
@@ -55936,6 +55951,10 @@ GZ3D.Scene.prototype.loadMeshFromUri = function(uri, submesh, centerSubmesh,
   {
     return this.loadOBJ(uri, submesh, centerSubmesh, callback);
   }
+  else if (uriFile.substr(-4).toLowerCase() === '.stl')
+  {
+    return this.loadSTL(uri, submesh, centerSubmesh, callback);
+  }
   else if (uriFile.substr(-5).toLowerCase() === '.urdf')
   {
     /*var urdfModel = new ROSLIB.UrdfModel({
@@ -56325,6 +56344,33 @@ GZ3D.Scene.prototype.loadOBJ = function(uri, submesh, centerSubmesh, callback,
 };
 
 /**
+ * Load stl file.
+ * Loads stl mesh given using it's uri
+ * @param {string} uri
+ * @param {} submesh
+ * @param {} centerSubmesh
+ * @param {function} callback
+ */
+GZ3D.Scene.prototype.loadSTL = function(uri, submesh, centerSubmesh,
+  callback)
+{
+  var mesh = null;
+  this.stlLoader.load(uri, function(geometry)
+  {
+    mesh = new THREE.Mesh( geometry );
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+
+    this.scene.meshes[uri] = mesh;
+    mesh = mesh.clone();
+    this.scene.useSubMesh(mesh, submesh, centerSubmesh);
+
+    mesh.name = uri;
+    callback(mesh);
+  });
+};
+
+/**
  * Set material for an object
  * @param {} obj
  * @param {} material
@@ -56533,7 +56579,7 @@ GZ3D.Scene.prototype.setFromObject = function(box, object)
     if ( geometry !== undefined )
     {
 
-      if (node.name !== 'INERTIA_VISUAL')
+      if (node.name !== 'INERTIA_VISUAL' && node.name !== 'COM_VISUAL')
       {
 
         if ( geometry.isGeometry )
@@ -56729,6 +56775,7 @@ GZ3D.Scene.prototype.setViewAs = function(model, viewAs)
         !this.getParentByPartialName(descendants[i], 'COLLISION_VISUAL') &&
         descendants[i].name.indexOf('wireframe') === -1 &&
         descendants[i].name.indexOf('JOINT_VISUAL') === -1 &&
+        descendants[i].name.indexOf('COM_VISUAL') === -1 &&
         descendants[i].name.indexOf('INERTIA_VISUAL') === -1)
     {
       // Note: multi-material is being deprecated and will be removed soon
@@ -56783,10 +56830,6 @@ GZ3D.Scene.prototype.selectEntity = function(object)
 {
   if (object)
   {
-    if (object.name === 'INERTIA_VISUAL')
-    {
-      return;
-    }
     if (object !== this.selectedEntity)
     {
       this.showBoundingBox(object);
@@ -56977,6 +57020,185 @@ GZ3D.Scene.prototype.viewJoints = function(model)
         rotMatrix.lookAt(direction, new THREE.Vector3(0, 0, 0), secondAxis.up);
         secondAxis.quaternion.setFromRotationMatrix(rotMatrix);
       }
+    }
+  }
+};
+
+/**
+ * View Center Of Mass
+ * Toggle: if there are COM visuals, hide, otherwise, show.
+ * @param {} model
+ */
+GZ3D.Scene.prototype.viewCOM = function(model)
+{
+  if (model === undefined || model === null)
+  {
+    return;
+  }
+  if (model.children.length === 0)
+  {
+    return;
+  }
+
+  var child;
+
+  // Visuals already exist
+  if (model.COMVisuals)
+  {
+    // Hide = remove from parent
+    if (model.COMVisuals[0].parent !== undefined &&
+      model.COMVisuals[0].parent !== null)
+    {
+      for (var v = 0; v < model.COMVisuals.length; ++v)
+      {
+        for (var k = 0; k < 3; k++)
+        {
+          model.COMVisuals[v].parent.remove(model.COMVisuals[v].crossLines[k]);
+        }
+        model.COMVisuals[v].parent.remove(model.COMVisuals[v]);
+      }
+    }
+    // Show: attach to parent
+    else
+    {
+      for (var s = 0; s < model.children.length; ++s)
+      {
+        child = model.getObjectByName(model.children[s].name);
+
+        if (!child || child.name === 'boundingBox')
+        {
+          continue;
+        }
+
+        child.add(model.COMVisuals[s].crossLines[0]);
+        child.add(model.COMVisuals[s].crossLines[1]);
+        child.add(model.COMVisuals[s].crossLines[2]);
+        child.add(model.COMVisuals[s]);
+      }
+    }
+  }
+  // Create visuals
+  else
+  {
+    model.COMVisuals = [];
+    var box, COMVisual, line_1, line_2, line_3, helperGeometry_1,
+    helperGeometry_2, helperGeometry_3, helperMaterial, points = new Array(6);
+    for (var j = 0; j < model.children.length; ++j)
+    {
+      child = model.getObjectByName(model.children[j].name);
+
+      if (!child)
+      {
+        continue;
+      }
+
+      if (child.userData.inertial)
+      {
+        var mesh, radius, inertialMass, userdatapose, inertialPose = {};
+        var inertial = child.userData.inertial;
+
+        userdatapose = child.userData.inertial.pose;
+        inertialMass = inertial.mass;
+
+        // calculate the radius using lead density
+        radius = Math.cbrt((0.75 * inertialMass ) / (Math.PI * 11340));
+
+        COMVisual = this.COMvisual.clone();
+        child.add(COMVisual);
+        model.COMVisuals.push(COMVisual);
+        COMVisual.scale.set(radius, radius, radius);
+
+        var position = new THREE.Vector3(0, 0, 0);
+
+        // get euler rotation and convert it to Quaternion
+        var quaternion = new THREE.Quaternion();
+        var euler = new THREE.Euler(0, 0, 0, 'XYZ');
+        quaternion.setFromEuler(euler);
+
+        inertialPose = {
+          'position': position,
+          'orientation': quaternion
+        };
+
+        if (userdatapose !== undefined)
+        {
+          this.setPose(COMVisual, userdatapose.position,
+            userdatapose.orientation);
+            inertialPose = userdatapose;
+        }
+
+        COMVisual.crossLines = [];
+
+        // Store link's original rotation (w.r.t. the model)
+        var originalRotation = new THREE.Euler();
+        originalRotation.copy(child.rotation);
+
+        // Align link with world (reverse parent rotation w.r.t. the world)
+        child.setRotationFromMatrix(
+          new THREE.Matrix4().getInverse(child.parent.matrixWorld));
+
+        // Get its bounding box
+        box = new THREE.Box3();
+
+        box.setFromObject(child);
+
+        // Rotate link back to its original rotation
+        child.setRotationFromEuler(originalRotation);
+
+        // w.r.t child
+        var worldToLocal = new THREE.Matrix4();
+        worldToLocal.getInverse(child.matrixWorld);
+        box.applyMatrix4(worldToLocal);
+
+        // X
+        points[0] = new THREE.Vector3(box.min.x, inertialPose.position.y,
+          inertialPose.position.z);
+        points[1] = new THREE.Vector3(box.max.x, inertialPose.position.y,
+            inertialPose.position.z);
+        // Y
+        points[2] = new THREE.Vector3(inertialPose.position.x, box.min.y,
+              inertialPose.position.z);
+        points[3] = new THREE.Vector3(inertialPose.position.x, box.max.y,
+                inertialPose.position.z);
+        // Z
+        points[4] = new THREE.Vector3(inertialPose.position.x,
+          inertialPose.position.y, box.min.z);
+        points[5] = new THREE.Vector3(inertialPose.position.x,
+          inertialPose.position.y, box.max.z);
+
+        helperGeometry_1 = new THREE.Geometry();
+        helperGeometry_1.vertices.push(points[0]);
+        helperGeometry_1.vertices.push(points[1]);
+
+        helperGeometry_2 = new THREE.Geometry();
+        helperGeometry_2.vertices.push(points[2]);
+        helperGeometry_2.vertices.push(points[3]);
+
+        helperGeometry_3 = new THREE.Geometry();
+        helperGeometry_3.vertices.push(points[4]);
+        helperGeometry_3.vertices.push(points[5]);
+
+        helperMaterial = new THREE.LineBasicMaterial({color: 0x00ff00});
+
+        line_1 = new THREE.Line(helperGeometry_1, helperMaterial,
+            THREE.LineSegments);
+        line_2 = new THREE.Line(helperGeometry_2, helperMaterial,
+            THREE.LineSegments);
+        line_3 = new THREE.Line(helperGeometry_3, helperMaterial,
+            THREE.LineSegments);
+
+        line_1.name = 'COM_VISUAL';
+        line_2.name = 'COM_VISUAL';
+        line_3.name = 'COM_VISUAL';
+        COMVisual.crossLines.push(line_1);
+        COMVisual.crossLines.push(line_2);
+        COMVisual.crossLines.push(line_3);
+
+        // show lines
+        child.add(line_1);
+        child.add(line_2);
+        child.add(line_3);
+       }
     }
   }
 };
@@ -57798,6 +58020,7 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
   var size, normal;
 
   var material = this.createMaterial(mat);
+
   if (geom.box)
   {
     size = this.parseSize(geom.box.size);
@@ -57843,15 +58066,15 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
       }
 
       var modelUri = this.MATERIAL_ROOT + '/' + modelName;
+      var ext = modelUri.substr(-4).toLowerCase();
       var materialName = parent.name + '::' + modelUri;
       this.entityMaterial[materialName] = material;
       var meshFileName = meshUri.substring(meshUri.lastIndexOf('/') + 1);
 
       if (!this.usingFilesUrls)
       {
-        var ext = meshFileName.substring(meshFileName.indexOf('.') + 1);
         var meshFile = this.meshes[meshFileName];
-        if (ext === 'obj')
+        if (ext === '.obj')
         {
           var mtlFile = this.mtls[meshFileName.split('.')[0]+'.mtl'];
           that.scene.loadMeshFromString(modelUri, submesh,centerSubmesh,
@@ -57861,28 +58084,27 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
               loadGeom(parent);
             }, [meshFile, mtlFile]);
         }
-        else if (ext === 'dae')
+        else if (ext === '.dae')
         {
-            that.scene.loadMeshFromString(modelUri, submesh, centerSubmesh,
-              function(dae)
+          that.scene.loadMeshFromString(modelUri, submesh, centerSubmesh,
+            function(dae)
+            {
+              if (material)
               {
-                if (that.entityMaterial[materialName])
+                var allChildren = [];
+                dae.getDescendants(allChildren);
+                for (var c = 0; c < allChildren.length; ++c)
                 {
-                  var allChildren = [];
-                  dae.getDescendants(allChildren);
-                  for (var c = 0; c < allChildren.length; ++c)
+                  if (allChildren[c] instanceof THREE.Mesh)
                   {
-                    if (allChildren[c] instanceof THREE.Mesh)
-                    {
-                      that.scene.setMaterial(allChildren[c],
-                              that.entityMaterial[materialName]);
-                      break;
-                    }
+                    that.scene.setMaterial(allChildren[c], material);
+                    break;
                   }
                 }
-                parent.add(dae);
-                loadGeom(parent);
-              }, [meshFile]);
+              }
+              parent.add(dae);
+              loadGeom(parent);
+            }, [meshFile]);
         }
       }
       else
@@ -57900,25 +58122,40 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
           }
         }
         this.scene.loadMeshFromUri(modelUri, submesh, centerSubmesh,
-          function (dae)
+          function (mesh)
           {
-            if (that.entityMaterial[materialName])
+            if (material)
             {
-              var allChildren = [];
-              dae.getDescendants(allChildren);
-              for (var c = 0; c < allChildren.length; ++c)
+              // Because the stl mesh doesn't have any children we cannot set
+              // the materials like other mesh types.
+              if (ext !== '.stl')
               {
-                if (allChildren[c] instanceof THREE.Mesh)
+                var allChildren = [];
+                mesh.getDescendants(allChildren);
+                for (var c = 0; c < allChildren.length; ++c)
                 {
-                  that.scene.setMaterial(allChildren[c],
-                          that.entityMaterial[materialName]);
-                  break;
+                  if (allChildren[c] instanceof THREE.Mesh)
+                  {
+                    that.scene.setMaterial(allChildren[c], material);
+                    break;
+                  }
                 }
               }
+              else
+              {
+                that.scene.setMaterial(mesh, material);
+              }
             }
-            parent.add(dae);
-            loadGeom(parent);
-          });
+            else
+            {
+              if (ext === '.stl')
+              {
+                that.scene.setMaterial(mesh, {'ambient': [1,1,1,1]});
+              }
+            }
+          parent.add(mesh);
+          loadGeom(parent);
+        });
       }
     }
   }
