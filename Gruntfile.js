@@ -13,8 +13,8 @@ module.exports = function(grunt) {
         'gz3d/client/js/include/OrbitControls.js', 'gz3d/client/js/include/Detector.js',
         'gz3d/client/js/include/eventemitter2.js', 'gz3d/client/js/include/ColladaLoader.js',
         'gz3d/client/js/include/OBJLoader.js', 'gz3d/client/js/include/MTLLoader.js',
-        'gz3d/client/js/include/xml2json.js', 'gz3d/src/gz*.js', '!gz3d/src/gziface.js',
-        '!gz3d/src/gzgui.js'
+        'gz3d/client/js/include/STLLoader.js', 'gz3d/client/js/include/xml2json.js',
+        'gz3d/src/gz*.js', '!gz3d/src/gziface.js', '!gz3d/src/gzgui.js'
         ],
         dest: 'gz3d/build/SDFViewer.js'
       },
