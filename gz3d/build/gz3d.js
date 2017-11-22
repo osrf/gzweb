@@ -3280,6 +3280,7 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
   var uriPath = 'assets';
   var that = this;
   var mat = this.parseMaterial(material);
+
   if (geom.box)
   {
     obj = this.scene.createBox(geom.box.size.x, geom.box.size.y,
@@ -3391,28 +3392,44 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
           }
         }
 
+        var ext = modelUri.substr(-4).toLowerCase();
         var materialName = parent.name + '::' + modelUri;
         this.entityMaterial[materialName] = mat;
 
-        this.scene.loadMeshFromUri(modelUri, submesh,
-            centerSubmesh, function(dae) {
-              if (that.entityMaterial[materialName])
+        this.scene.loadMeshFromUri(modelUri, submesh, centerSubmesh,
+          function(mesh) {
+            if (mat)
+            {
+              // Because the stl mesh doesn't have any children we cannot set
+              // the materials like other mesh types.
+              if (modelUri.indexOf('.stl') === -1)
               {
                 var allChildren = [];
-                dae.getDescendants(allChildren);
+                mesh.getDescendants(allChildren);
                 for (var c = 0; c < allChildren.length; ++c)
                 {
                   if (allChildren[c] instanceof THREE.Mesh)
                   {
-                    that.scene.setMaterial(allChildren[c],
-                        that.entityMaterial[materialName]);
+                    that.scene.setMaterial(allChildren[c], mat);
                     break;
                   }
                 }
               }
-              parent.add(dae);
-              loadGeom(parent);
-            });
+              else
+              {
+                that.scene.setMaterial(mesh, mat);
+              }
+            }
+            else
+            {
+              if (ext === '.stl')
+              {
+                that.scene.setMaterial(mesh, {'ambient': [1,1,1,1]});
+              }
+            }
+            parent.add(mesh);
+            loadGeom(parent);
+        });
       }
     }
   }
@@ -5719,6 +5736,7 @@ GZ3D.Scene.prototype.init = function()
   this.textureLoader = new THREE.TextureLoader();
   this.colladaLoader = new THREE.ColladaLoader();
   this.objLoader = new THREE.OBJLoader();
+  this.stlLoader = new THREE.STLLoader();
 
   this.renderer = new THREE.WebGLRenderer({antialias: true });
   this.renderer.setPixelRatio(window.devicePixelRatio);
@@ -7147,6 +7165,10 @@ GZ3D.Scene.prototype.loadMeshFromUri = function(uri, submesh, centerSubmesh,
   {
     return this.loadOBJ(uri, submesh, centerSubmesh, callback);
   }
+  else if (uriFile.substr(-4).toLowerCase() === '.stl')
+  {
+    return this.loadSTL(uri, submesh, centerSubmesh, callback);
+  }
   else if (uriFile.substr(-5).toLowerCase() === '.urdf')
   {
     /*var urdfModel = new ROSLIB.UrdfModel({
@@ -7532,6 +7554,33 @@ GZ3D.Scene.prototype.loadOBJ = function(uri, submesh, centerSubmesh, callback,
     obj.name = uri;
     callback(obj);
   }
+};
+
+/**
+ * Load stl file.
+ * Loads stl mesh given using it's uri
+ * @param {string} uri
+ * @param {} submesh
+ * @param {} centerSubmesh
+ * @param {function} callback
+ */
+GZ3D.Scene.prototype.loadSTL = function(uri, submesh, centerSubmesh,
+  callback)
+{
+  var mesh = null;
+  this.stlLoader.load(uri, function(geometry)
+  {
+    mesh = new THREE.Mesh( geometry );
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+
+    this.scene.meshes[uri] = mesh;
+    mesh = mesh.clone();
+    this.scene.useSubMesh(mesh, submesh, centerSubmesh);
+
+    mesh.name = uri;
+    callback(mesh);
+  });
 };
 
 /**
@@ -9136,6 +9185,7 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
   var size, normal;
 
   var material = this.createMaterial(mat);
+
   if (geom.box)
   {
     size = this.parseSize(geom.box.size);
@@ -9181,15 +9231,15 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
       }
 
       var modelUri = this.MATERIAL_ROOT + '/' + modelName;
+      var ext = modelUri.substr(-4).toLowerCase();
       var materialName = parent.name + '::' + modelUri;
       this.entityMaterial[materialName] = material;
 
       if (!this.usingFilesUrls)
       {
         var meshFileName = meshUri.substring(meshUri.lastIndexOf('/') + 1);
-        var ext = meshFileName.substring(meshFileName.indexOf('.') + 1);
         var meshFile = this.meshes[meshFileName];
-        if (ext === 'obj')
+        if (ext === '.obj')
         {
           var mtlFile = this.mtls[meshFileName.split('.')[0]+'.mtl'];
           that.scene.loadMeshFromString(modelUri, submesh,centerSubmesh,
@@ -9199,52 +9249,66 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
               loadGeom(parent);
             }, [meshFile, mtlFile]);
         }
-        else if (ext === 'dae')
+        else if (ext === '.dae')
         {
-            that.scene.loadMeshFromString(modelUri, submesh, centerSubmesh,
-              function(dae)
+          that.scene.loadMeshFromString(modelUri, submesh, centerSubmesh,
+            function(dae)
+            {
+              if (material)
               {
-                if (that.entityMaterial[materialName])
+                var allChildren = [];
+                dae.getDescendants(allChildren);
+                for (var c = 0; c < allChildren.length; ++c)
                 {
-                  var allChildren = [];
-                  dae.getDescendants(allChildren);
-                  for (var c = 0; c < allChildren.length; ++c)
+                  if (allChildren[c] instanceof THREE.Mesh)
                   {
-                    if (allChildren[c] instanceof THREE.Mesh)
-                    {
-                      that.scene.setMaterial(allChildren[c],
-                              that.entityMaterial[materialName]);
-                      break;
-                    }
+                    that.scene.setMaterial(allChildren[c], material);
+                    break;
                   }
                 }
-                parent.add(dae);
-                loadGeom(parent);
-              }, [meshFile]);
+              }
+              parent.add(dae);
+              loadGeom(parent);
+            }, [meshFile]);
         }
       }
       else
       {
-        this.scene.loadMeshFromUri(modelUri, submesh, centerSubmesh,
-          function (dae)
+        that.scene.loadMeshFromUri(modelUri, submesh, centerSubmesh,
+          function (mesh)
           {
-            if (that.entityMaterial[materialName])
+            if (material)
             {
-              var allChildren = [];
-              dae.getDescendants(allChildren);
-              for (var c = 0; c < allChildren.length; ++c)
+              // Because the stl mesh doesn't have any children we cannot set
+              // the materials like other mesh types.
+              if (ext !== '.stl')
               {
-                if (allChildren[c] instanceof THREE.Mesh)
+                var allChildren = [];
+                mesh.getDescendants(allChildren);
+                for (var c = 0; c < allChildren.length; ++c)
                 {
-                  that.scene.setMaterial(allChildren[c],
-                          that.entityMaterial[materialName]);
-                  break;
+                  if (allChildren[c] instanceof THREE.Mesh)
+                  {
+                    that.scene.setMaterial(allChildren[c], material);
+                    break;
+                  }
                 }
               }
+              else
+              {
+                that.scene.setMaterial(mesh, material);
+              }
             }
-            parent.add(dae);
-            loadGeom(parent);
-          });
+            else
+            {
+              if (ext === '.stl')
+              {
+                that.scene.setMaterial(mesh, {'ambient': [1,1,1,1]});
+              }
+            }
+          parent.add(mesh);
+          loadGeom(parent);
+        });
       }
     }
   }

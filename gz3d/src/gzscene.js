@@ -29,6 +29,7 @@ GZ3D.Scene.prototype.init = function()
   this.textureLoader = new THREE.TextureLoader();
   this.colladaLoader = new THREE.ColladaLoader();
   this.objLoader = new THREE.OBJLoader();
+  this.stlLoader = new THREE.STLLoader();
 
   this.renderer = new THREE.WebGLRenderer({antialias: true });
   this.renderer.setPixelRatio(window.devicePixelRatio);
@@ -1457,6 +1458,10 @@ GZ3D.Scene.prototype.loadMeshFromUri = function(uri, submesh, centerSubmesh,
   {
     return this.loadOBJ(uri, submesh, centerSubmesh, callback);
   }
+  else if (uriFile.substr(-4).toLowerCase() === '.stl')
+  {
+    return this.loadSTL(uri, submesh, centerSubmesh, callback);
+  }
   else if (uriFile.substr(-5).toLowerCase() === '.urdf')
   {
     /*var urdfModel = new ROSLIB.UrdfModel({
@@ -1842,6 +1847,33 @@ GZ3D.Scene.prototype.loadOBJ = function(uri, submesh, centerSubmesh, callback,
     obj.name = uri;
     callback(obj);
   }
+};
+
+/**
+ * Load stl file.
+ * Loads stl mesh given using it's uri
+ * @param {string} uri
+ * @param {} submesh
+ * @param {} centerSubmesh
+ * @param {function} callback
+ */
+GZ3D.Scene.prototype.loadSTL = function(uri, submesh, centerSubmesh,
+  callback)
+{
+  var mesh = null;
+  this.stlLoader.load(uri, function(geometry)
+  {
+    mesh = new THREE.Mesh( geometry );
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+
+    this.scene.meshes[uri] = mesh;
+    mesh = mesh.clone();
+    this.scene.useSubMesh(mesh, submesh, centerSubmesh);
+
+    mesh.name = uri;
+    callback(mesh);
+  });
 };
 
 /**

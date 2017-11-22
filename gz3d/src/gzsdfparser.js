@@ -455,6 +455,7 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
   var size, normal;
 
   var material = this.createMaterial(mat);
+
   if (geom.box)
   {
     size = this.parseSize(geom.box.size);
@@ -500,15 +501,15 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
       }
 
       var modelUri = this.MATERIAL_ROOT + '/' + modelName;
+      var ext = modelUri.substr(-4).toLowerCase();
       var materialName = parent.name + '::' + modelUri;
       this.entityMaterial[materialName] = material;
 
       if (!this.usingFilesUrls)
       {
         var meshFileName = meshUri.substring(meshUri.lastIndexOf('/') + 1);
-        var ext = meshFileName.substring(meshFileName.indexOf('.') + 1);
         var meshFile = this.meshes[meshFileName];
-        if (ext === 'obj')
+        if (ext === '.obj')
         {
           var mtlFile = this.mtls[meshFileName.split('.')[0]+'.mtl'];
           that.scene.loadMeshFromString(modelUri, submesh,centerSubmesh,
@@ -518,52 +519,66 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
               loadGeom(parent);
             }, [meshFile, mtlFile]);
         }
-        else if (ext === 'dae')
+        else if (ext === '.dae')
         {
-            that.scene.loadMeshFromString(modelUri, submesh, centerSubmesh,
-              function(dae)
+          that.scene.loadMeshFromString(modelUri, submesh, centerSubmesh,
+            function(dae)
+            {
+              if (material)
               {
-                if (that.entityMaterial[materialName])
+                var allChildren = [];
+                dae.getDescendants(allChildren);
+                for (var c = 0; c < allChildren.length; ++c)
                 {
-                  var allChildren = [];
-                  dae.getDescendants(allChildren);
-                  for (var c = 0; c < allChildren.length; ++c)
+                  if (allChildren[c] instanceof THREE.Mesh)
                   {
-                    if (allChildren[c] instanceof THREE.Mesh)
-                    {
-                      that.scene.setMaterial(allChildren[c],
-                              that.entityMaterial[materialName]);
-                      break;
-                    }
+                    that.scene.setMaterial(allChildren[c], material);
+                    break;
                   }
                 }
-                parent.add(dae);
-                loadGeom(parent);
-              }, [meshFile]);
+              }
+              parent.add(dae);
+              loadGeom(parent);
+            }, [meshFile]);
         }
       }
       else
       {
-        this.scene.loadMeshFromUri(modelUri, submesh, centerSubmesh,
-          function (dae)
+        that.scene.loadMeshFromUri(modelUri, submesh, centerSubmesh,
+          function (mesh)
           {
-            if (that.entityMaterial[materialName])
+            if (material)
             {
-              var allChildren = [];
-              dae.getDescendants(allChildren);
-              for (var c = 0; c < allChildren.length; ++c)
+              // Because the stl mesh doesn't have any children we cannot set
+              // the materials like other mesh types.
+              if (ext !== '.stl')
               {
-                if (allChildren[c] instanceof THREE.Mesh)
+                var allChildren = [];
+                mesh.getDescendants(allChildren);
+                for (var c = 0; c < allChildren.length; ++c)
                 {
-                  that.scene.setMaterial(allChildren[c],
-                          that.entityMaterial[materialName]);
-                  break;
+                  if (allChildren[c] instanceof THREE.Mesh)
+                  {
+                    that.scene.setMaterial(allChildren[c], material);
+                    break;
+                  }
                 }
               }
+              else
+              {
+                that.scene.setMaterial(mesh, material);
+              }
             }
-            parent.add(dae);
-            loadGeom(parent);
-          });
+            else
+            {
+              if (ext === '.stl')
+              {
+                that.scene.setMaterial(mesh, {'ambient': [1,1,1,1]});
+              }
+            }
+          parent.add(mesh);
+          loadGeom(parent);
+        });
       }
     }
   }

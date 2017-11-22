@@ -667,4 +667,36 @@ describe('Gzscene tests', function() {
       expect(visual).toEqual(undefined);
     });
   });
+
+  describe('Spawn a model with stl mesh, without adding the mesh',
+    function() {
+      it('should add a model to the scene and make sure there is no mesh\
+        attached to it, then removes it', function() {
+          var sdf, model;
+          var xhttp = new XMLHttpRequest();
+          xhttp.overrideMimeType('text/xml');
+          xhttp.open('GET', 'http://localhost:9876/base/gz3d/test/utils/husky/model.sdf', false);
+          xhttp.send();
+          sdf = xhttp.responseXML;
+
+          model = scene.getByName('husky');
+          expect(model).toEqual(undefined);
+
+          model = sdfparser.spawnFromSDF(sdf);
+          scene.add(model);
+
+          model = scene.getByName('husky');
+          expect(model).not.toEqual(undefined);
+
+          // no mesh should be added to the model because stl loader.
+          // this test was deduced through debuging, not sure if it will work
+          // with other models.
+          expect(model.children[0].children[0].children.length).toEqual(0);
+          expect(model.children[1].children[0].children.length).toEqual(0);
+
+          scene.remove(model);
+          model = scene.getByName('husky');
+          expect(model).toEqual(undefined);
+    });
+  });
 });
