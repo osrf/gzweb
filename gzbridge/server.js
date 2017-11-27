@@ -12,17 +12,13 @@ const gzbridge = require('./build/Debug/gzbridge');
 const staticBasePath = './../http/client';
 
 /**
- * Port to serve static files from, defaults to 8080
+ * Port to serve from, defaults to 8080
  */
-const staticPort = process.argv[2] || 8080;
+const port = process.argv[2] || 8080;
 
 /**
- * Port to connect websocket
- */
-const wsPort = 7681;
-
-/**
- * Array of websocket connections currently active
+ * Array of websocket connections currently active, if it is empty, there are no
+ * clients connected.
  */
 let connections = [];
 
@@ -33,7 +29,7 @@ let connections = [];
 let materialScriptsMessage = {};
 
 /**
- * Whether the websocket is connected to a gzserver
+ * Whether currently connected to a gzserver
  */
 let isConnected = false;
 
@@ -64,11 +60,11 @@ let staticServe = function(req, res) {
   });
 };
 
-// Serve static files
-let staticServer = http.createServer(staticServe);
-staticServer.listen(staticPort);
+// HTTP server
+let httpServer = http.createServer(staticServe);
+httpServer.listen(port);
 
-console.log(new Date() + " Static server listening on port: " + staticPort);
+console.log(new Date() + " Static server listening on port: " + port);
 
 // Websocket
 let gzNode = new gzbridge.GZNode();
@@ -96,18 +92,9 @@ else
       gzNode.getMaterialScriptsMessage(staticBasePath + '/assets');
 }
 
-// Server for websocket, it is on a different port from the static server
-let server = http.createServer(function(request, response) {
-  console.log(new Date() + ' Received request for ' + request.url);
-  response.writeHead(404);
-  response.end();
-});
-server.listen(wsPort, function() {
-  console.log(new Date() + ' Websocket is listening on port: ' + wsPort);
-});
-
+// Start websocket server
 wsServer = new WebSocketServer({
-  httpServer: server,
+  httpServer: httpServer,
   // You should not use autoAcceptConnections for production
   // applications, as it defeats all standard cross-origin protection
   // facilities built into the protocol and the browser.  You should
