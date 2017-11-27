@@ -9850,23 +9850,28 @@ GZ3D.SdfParser.prototype.createCylinderSDF = function(translation, euler)
  */
 GZ3D.SdfParser.prototype.loadModel = function(modelName)
 {
-  var modelFile = '';
+  var modelFile = '', found;
 
   if (this.customUrls.length !== 0)
   {
     for (var k = 0; k < this.customUrls.length; k++)
     {
-      if (this.customUrls[k].indexOf('model.sdf') > -1)
+      if (this.customUrls[k].indexOf('.sdf') > -1)
       {
         modelFile = this.customUrls[k];
         this.customUrls.splice(k, 1);
+        found = true;
         break;
       }
     }
   }
-  else
+  else if (modelName !== undefined)
   {
     modelFile = this.MATERIAL_ROOT + '/' + modelName + '/model.sdf';
+  }
+  else if (modelName === undefined || !found)
+  {
+    console.error('Must provide either `this.customUrls` or `modelName`');
   }
 
   var xhttp = new XMLHttpRequest();
