@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-var WebSocketServer = require('websocket').server;
-var http = require('http');
-var fs = require('fs');
-var path = require('path');
-var gzbridge = require('./build/Debug/gzbridge');
+const WebSocketServer = require('websocket').server;
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+const gzbridge = require('./build/Debug/gzbridge');
 
 /**
  * Path from where the static site is served
@@ -96,7 +96,7 @@ else
       gzNode.getMaterialScriptsMessage(staticBasePath + '/assets');
 }
 
-//
+// Server for websocket, it is on a different port from the static server
 let server = http.createServer(function(request, response) {
   console.log(new Date() + ' Received request for ' + request.url);
   response.writeHead(404);
