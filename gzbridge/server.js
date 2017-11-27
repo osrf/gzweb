@@ -42,8 +42,8 @@ let isConnected = false;
  * @param req Request
  * @param res Response
  */
-var staticServe = function(req, res) {
-  var fileLoc = path.resolve(staticBasePath);
+let staticServe = function(req, res) {
+  let fileLoc = path.resolve(staticBasePath);
 
   if (req.url === '/')
     req.url = '/index.html';
@@ -65,13 +65,13 @@ var staticServe = function(req, res) {
 };
 
 // Serve static files
-var staticServer = http.createServer(staticServe);
+let staticServer = http.createServer(staticServe);
 staticServer.listen(staticPort);
 
 console.log(new Date() + " Static server listening on port: " + staticPort);
 
 // Websocket
-var gzNode = new gzbridge.GZNode();
+let gzNode = new gzbridge.GZNode();
 if (gzNode.getIsGzServerConnected())
 {
   gzNode.loadMaterialScripts(staticBasePath + '/assets');
@@ -81,22 +81,23 @@ if (gzNode.getIsGzServerConnected())
 
   console.log('--------------------------------------------------------------');
   console.log('Gazebo transport node connected to gzserver.');
-  console.log('Pose message filter parameters: ');
-  console.log('  minimum seconds between successive messages: ' +
+  console.log('Pose message filter parameters between successive messages: ');
+  console.log('  minimum seconds: ' +
       gzNode.getPoseMsgFilterMinimumAge());
-  console.log('  minimum XYZ distance squared between successive messages: ' +
+  console.log('  minimum XYZ distance squared: ' +
       gzNode.getPoseMsgFilterMinimumDistanceSquared());
-  console.log('  minimum Quartenion distance squared between successive messages:'
+  console.log('  minimum Quartenion distance squared:'
       + ' ' + gzNode.getPoseMsgFilterMinimumQuaternionSquared());
   console.log('--------------------------------------------------------------');
 }
 else
 {
-  materialScriptsMessage = gzNode.getMaterialScriptsMessage(staticBasePath + '/assets');
+  materialScriptsMessage =
+      gzNode.getMaterialScriptsMessage(staticBasePath + '/assets');
 }
 
 //
-var server = http.createServer(function(request, response) {
+let server = http.createServer(function(request, response) {
   console.log(new Date() + ' Received request for ' + request.url);
   response.writeHead(404);
   response.end();
@@ -118,13 +119,14 @@ wsServer = new WebSocketServer({
 wsServer.on('request', function(request) {
 
   // Accept request
-  var connection = request.accept(null, request.origin);
+  let connection = request.accept(null, request.origin);
 
   // If gzserver is not connected just send material scripts and status
   if (!gzNode.getIsGzServerConnected())
   {
     // create error status and send it
-    var statusMessage = '{"op":"publish","topic":"~/status","msg":{"status":"error"}}';
+    let statusMessage =
+        '{"op":"publish","topic":"~/status","msg":{"status":"error"}}';
     connection.sendUTF(statusMessage);
     // send material scripts message
     connection.sendUTF(materialScriptsMessage);
@@ -163,7 +165,7 @@ wsServer.on('request', function(request) {
         connection.remoteAddress + ' disconnected.');
 
     // remove connection from array
-    var conIndex = connections.indexOf(connection);
+    let conIndex = connections.indexOf(connection);
     connections.splice(conIndex, 1);
 
     // if there is no connection notify server that there is no connected client
@@ -183,10 +185,10 @@ if (gzNode.getIsGzServerConnected())
   {
     if (connections.length > 0)
     {
-      var msgs = gzNode.getMessages();
-      for (var i = 0; i < connections.length; ++i)
+      let msgs = gzNode.getMessages();
+      for (let i = 0; i < connections.length; ++i)
       {
-        for (var j = 0; j < msgs.length; ++j)
+        for (let j = 0; j < msgs.length; ++j)
         {
           connections[i].sendUTF(msgs[j]);
         }
