@@ -18,7 +18,7 @@ GZ3D.Shaders.prototype.init = function()
     'void main( void ) {'+
     '  vUv = uv;'+
     '  vPosition = position;'+
-    '  vNormal = normal;'+
+    '  vNormal = -normal;'+
     '  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);'+
     '}';
 

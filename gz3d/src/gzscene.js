@@ -1278,11 +1278,11 @@ GZ3D.Scene.prototype.createRoads = function(points, width, texture)
 
 /**
  * Load heightmap
- * @param {} heights
- * @param {} width
- * @param {} height
- * @param {} segmentWidth
- * @param {} segmentHeight
+ * @param {} heights Lookup table of heights
+ * @param {} width Width in meters
+ * @param {} height Height in meters
+ * @param {} segmentWidth Size of lookup table
+ * @param {} segmentHeight Size of lookup table
  * @param {} textures
  * @param {} blends
  * @param {} parent
@@ -1292,9 +1292,11 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
 {
   if (this.heightmap)
   {
+    console.log('Only one heightmap can be loaded at a time');
     return;
   }
-  // unfortunately large heightmaps kills the fps and freeze everything so
+
+  // unfortunately large heightmaps kill the fps and freeze everything so
   // we have to scale it down
   var scale = 1;
   var maxHeightmapWidth = 256;
@@ -1309,7 +1311,7 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
       (segmentWidth-1) * scale, (segmentHeight-1) * scale);
   geometry.dynamic = true;
 
-  // flip the heights
+  // Mirror the vertices about the X axis
   var vertices = [];
   for (var h = segmentHeight-1; h >= 0; --h)
   {
@@ -1320,7 +1322,7 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
     }
   }
 
-  // sub-sample
+  // Sub-sample
   var col = (segmentWidth-1) * scale;
   var row = (segmentHeight-1) * scale;
   for (var r = 0; r < row; ++r)
@@ -1332,13 +1334,15 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
     }
   }
 
-  var mesh;
+  // Compute normals
+  geometry.computeFaceNormals();
+  geometry.computeVertexNormals();
+
+  // Material - use shader if textures provided, otherwise use a generic phong
+  // material
+  var material;
   if (textures && textures.length > 0)
   {
-    geometry.computeFaceNormals();
-    geometry.computeVertexNormals();
-    geometry.computeTangents();
-
     var textureLoaded = [];
     var repeats = [];
     for (var t = 0; t < textures.length; ++t)
@@ -1411,14 +1415,14 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
       console.log('Warning: heightmap shaders not provided.');
     }
 
-    var material = new THREE.ShaderMaterial(options);
-    mesh = new THREE.Mesh( geometry, material);
+    material = new THREE.ShaderMaterial(options);
   }
   else
   {
-    mesh = new THREE.Mesh( geometry,
-        new THREE.MeshPhongMaterial( { color: 0x555555 } ) );
+    material = new THREE.MeshPhongMaterial( { color: 0x555555 } );
   }
+
+  var mesh = new THREE.Mesh(geometry, material);
 
   mesh.position.x = origin.x;
   mesh.position.y = origin.y;
