@@ -1,9 +1,12 @@
 /**
  * The scene is where everything is placed, from objects, to lights and cameras.
+ * @param shaders GZ3D.Shaders instance, if not provided, custom shaders will
+ *                not be set.
  * @constructor
  */
-GZ3D.Scene = function()
+GZ3D.Scene = function(shaders)
 {
+  this.shaders = shaders;
   this.init();
 };
 
@@ -1340,8 +1343,7 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
     var repeats = [];
     for (var t = 0; t < textures.length; ++t)
     {
-      textureLoaded[t] = this.textureLoader.load(textures[t].diffuse,
-          new THREE.UVMapping());
+      textureLoaded[t] = this.textureLoader.load(textures[t].diffuse);
       textureLoaded[t].wrapS = THREE.RepeatWrapping;
       textureLoaded[t].wrapT = THREE.RepeatWrapping;
       repeats[t] = width/textures[t].size;
@@ -1380,7 +1382,7 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
       }
     }
 
-    var material = new THREE.ShaderMaterial({
+    var options = {
       uniforms:
       {
         texture0: { type: 't', value: textureLoaded[0]},
@@ -1397,11 +1399,19 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
         lightDiffuse: { type: 'c', value: lightDiffuse},
         lightDir: { type: 'v3', value: lightDir}
       },
-      attributes: {},
-      vertexShader: document.getElementById( 'heightmapVS' ).innerHTML,
-      fragmentShader: document.getElementById( 'heightmapFS' ).innerHTML
-    });
+    };
 
+    if (this.shaders !== undefined)
+    {
+      options.vertexShader = this.shaders.heightmapVS;
+      options.fragmentShader = this.shaders.heightmapFS;
+    }
+    else
+    {
+      console.log('Warning: heightmap shaders not provided.');
+    }
+
+    var material = new THREE.ShaderMaterial(options);
     mesh = new THREE.Mesh( geometry, material);
   }
   else
@@ -2114,7 +2124,7 @@ GZ3D.Scene.prototype.setFromObject = function(box, object)
             for ( i = 0, l = attribute.count; i < l; i ++ )
             {
 
-              v.fromBufferAttribute( attribute, i ).applyMatrix4( 
+              v.fromBufferAttribute( attribute, i ).applyMatrix4(
                 node.matrixWorld );
 
               expandByPoint( v );
