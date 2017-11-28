@@ -6990,6 +6990,7 @@ GZ3D.Scene.prototype.createRoads = function(points, width, texture)
  * @param {} height Height in meters
  * @param {} segmentWidth Size of lookup table
  * @param {} segmentHeight Size of lookup table
+ * @param {} origin Heightmap position in the world
  * @param {} textures
  * @param {} blends
  * @param {} parent
@@ -7000,6 +7001,12 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
   if (this.heightmap)
   {
     console.log('Only one heightmap can be loaded at a time');
+    return;
+  }
+
+  if (parent === undefined)
+  {
+    console.error('Missing parent, heightmap won\'t be loaded.');
     return;
   }
 
