@@ -1,15 +1,10 @@
 /*global $:false */
 /*global angular*/
 
-var guiEvents = new EventEmitter2({ verbose: true });
-
 var emUnits = function(value)
     {
       return value*parseFloat($('body').css('font-size'));
     };
-
-// Assuming all mobile devices are touch devices.
-var isTouchDevice = /Mobi/.test(navigator.userAgent);
 
 var isWideScreen = function()
     {
@@ -923,8 +918,7 @@ GZ3D.Gui.prototype.init = function()
   this.openTreeWhenSelected = false;
   this.modelStatsDirty = false;
 
-  this.logPlay = new GZ3D.LogPlay(
-      this, guiEvents);
+  this.logPlay = new GZ3D.LogPlay(this, guiEvents);
 
   var that = this;
 
@@ -2032,7 +2026,7 @@ GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
     $('#view-wireframe').css('visibility','collapse');
     $('#view-joints').css('visibility','collapse');
     $('#view-com').css('visibility','collapse');
-    $('#view-inertia').css('visibility','collapse');    
+    $('#view-inertia').css('visibility','collapse');
     $('#model-popup').popup('open',
       {x: event.clientX + emUnits(6),
        y: event.clientY + emUnits(-8)});

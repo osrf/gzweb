@@ -3,9 +3,26 @@ module.exports = function(grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
     concat: {
+      // Only gz*.js files
       build: {
         src  : ['gz3d/src/*.js'],
         dest : 'gz3d/build/gz3d.js'
+      },
+      // Self-contained Gz3D
+      build_full: {
+        src  : ['gz3d/client/js/include/three.js',
+                'gz3d/client/js/include/three.compat.js',
+                'gz3d/client/js/include/*.js',
+                '!gz3d/client/js/include/three.min.js',
+                '!gz3d/client/js/include/stats.min.js',
+                '!gz3d/client/js/include/roslib.min.js',
+                '!gz3d/client/js/include/jquery-1.9.1.js',
+                '!gz3d/client/js/include/jquery.mobile-1.4.0.min.js',
+                '!gz3d/client/js/include/',
+                'gz3d/src/gz*.js',
+                '!gz3d/src/gzgui.js',
+        ],
+        dest : 'gz3d/build/gz3d.full.js'
       }
     },
     jshint: {

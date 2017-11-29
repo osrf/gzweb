@@ -48,7 +48,7 @@ GZ3D.GZIface.prototype.onError = function()
   // init scene and show popup only for the first connection error
   if (this.numConnectionTrials === 1)
   {
-    this.emitter.emit('error');
+    this.emitter.emit('connectionError');
   }
 
   var that = this;
@@ -129,7 +129,7 @@ GZ3D.GZIface.prototype.onConnected = function()
 
     if (message.grid === true)
     {
-      this.gui.guiEvents.emit('show_grid', 'show');
+      guiEvents.emit('show_grid', 'show');
     }
 
     if (message.ambient)
@@ -158,7 +158,10 @@ GZ3D.GZIface.prototype.onConnected = function()
       var light = message.light[i];
       var lightObj = this.createLightFromMsg(light);
       this.scene.add(lightObj);
-      this.gui.setLightStats(light, 'update');
+      if (this.gui !== undefined)
+      {
+        this.gui.setLightStats(light, 'update');
+      }
     }
 
     for (var j = 0; j < message.model.length; ++j)
@@ -166,10 +169,16 @@ GZ3D.GZIface.prototype.onConnected = function()
       var model = message.model[j];
       var modelObj = this.createModelFromMsg(model);
       this.scene.add(modelObj);
-      this.gui.setModelStats(model, 'update');
+      if (this.gui !== undefined)
+      {
+        this.gui.setModelStats(model, 'update');
+      }
     }
 
-    this.gui.setSceneStats(message);
+    if (this.gui !== undefined)
+    {
+      this.gui.setSceneStats(message);
+    }
     this.sceneTopic.unsubscribe();
   };
   this.sceneTopic.subscribe(sceneUpdate.bind(this));
@@ -182,7 +191,10 @@ GZ3D.GZIface.prototype.onConnected = function()
 
   var physicsUpdate = function(message)
   {
-    this.gui.setPhysicsStats(message);
+    if (this.gui !== undefined)
+    {
+      this.gui.setPhysicsStats(message);
+    }
   };
   this.physicsTopic.subscribe(physicsUpdate.bind(this));
 
@@ -201,7 +213,10 @@ GZ3D.GZIface.prototype.onConnected = function()
         && entity.parent !== this.scene.modelManipulator.object)
     {
       this.scene.updatePose(entity, message.position, message.orientation);
-      this.gui.setModelStats(message, 'update');
+      if (this.gui !== undefined)
+      {
+        this.gui.setModelStats(message, 'update');
+      }
     }
   };
 
@@ -223,12 +238,18 @@ GZ3D.GZIface.prototype.onConnected = function()
       {
         if (entity.children[0] instanceof THREE.Light)
         {
-          this.gui.setLightStats({name: message.data}, 'delete');
+          if (this.gui !== undefined)
+          {
+            this.gui.setLightStats({name: message.data}, 'delete');
+          }
           guiEvents.emit('notification_popup', message.data+' deleted');
         }
         else
         {
-          this.gui.setModelStats({name: message.data}, 'delete');
+          if (this.gui !== undefined)
+          {
+            this.gui.setModelStats({name: message.data}, 'delete');
+          }
           guiEvents.emit('notification_popup', message.data+' deleted');
         }
         this.scene.remove(entity);
@@ -278,7 +299,10 @@ GZ3D.GZIface.prototype.onConnected = function()
         i++;
       }
     }
-    this.gui.setModelStats(message, 'update');
+    if (this.gui !== undefined)
+    {
+      this.gui.setModelStats(message, 'update');
+    }
   };
 
   modelInfoTopic.subscribe(modelUpdate.bind(this));
@@ -359,7 +383,10 @@ GZ3D.GZIface.prototype.onConnected = function()
 
       guiEvents.emit('notification_popup', message.name+' inserted');
     }
-    this.gui.setLightStats(message, 'update');
+    if (this.gui !== undefined)
+    {
+      this.gui.setLightStats(message, 'update');
+    }
   };
 
   lightFactoryTopic.subscribe(lightCreate.bind(this));
@@ -378,7 +405,10 @@ GZ3D.GZIface.prototype.onConnected = function()
         && entity.parent !== this.scene.modelManipulator.object)
     {
       this.scene.updateLight(entity, message);
-      this.gui.setLightStats(message, 'update');
+      if (this.gui !== undefined)
+      {
+        this.gui.setLightStats(message, 'update');
+      }
     }
   };
 
@@ -579,12 +609,15 @@ GZ3D.GZIface.prototype.onConnected = function()
     that.deleteTopic.publish(modelMsg);
   };
 
-  this.gui.emitter.on('deleteEntity',
-      function(entity)
-      {
-        publishDeleteEntity(entity);
-      }
-  );
+    if (this.gui !== undefined)
+    {
+      this.gui.emitter.on('deleteEntity',
+        function(entity)
+        {
+          publishDeleteEntity(entity);
+        }
+      );
+    }
 
   // World control messages - for resetting world/models
   this.worldControlTopic = new ROSLIB.Topic({
@@ -607,21 +640,30 @@ GZ3D.GZIface.prototype.onConnected = function()
     that.worldControlTopic.publish(worldControlMsg);
   };
 
-  this.gui.emitter.on('entityCreated', publishFactory);
+    if (this.gui !== undefined)
+    {
+      this.gui.emitter.on('entityCreated', publishFactory);
+    }
 
-  this.gui.emitter.on('reset',
-      function(resetType)
-      {
-        publishWorldControl(null, resetType);
-      }
-  );
+    if (this.gui !== undefined)
+    {
+      this.gui.emitter.on('reset',
+          function(resetType)
+          {
+            publishWorldControl(null, resetType);
+          }
+      );
+    }
 
-  this.gui.emitter.on('pause',
+    if (this.gui !== undefined)
+    {
+      this.gui.emitter.on('pause',
       function(paused)
       {
         publishWorldControl(paused, null);
       }
-  );
+      );
+    }
 
   // Log play control messages
   this.playbackControlTopic = new ROSLIB.Topic({
@@ -635,12 +677,18 @@ GZ3D.GZIface.prototype.onConnected = function()
     that.playbackControlTopic.publish(playbackControl);
   };
 
-  this.gui.emitter.on('logPlayChanged', publishPlaybackControl);
+  if (this.gui !== undefined)
+  {
+    this.gui.emitter.on('logPlayChanged', publishPlaybackControl);
+  }
 };
 
 GZ3D.GZIface.prototype.updateStatsGuiFromMsg = function(stats)
 {
-  this.gui.setPaused(stats.paused);
+  if (this.gui === undefined)
+  {
+    return;
+  }
 
   if (stats.log_playback_stats)
   {
