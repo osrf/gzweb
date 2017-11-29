@@ -4,5 +4,8 @@ module.exports = {
     },
     "rules": {
         "max-len": "error"
+    },
+    "parserOptions": {
+         "ecmaVersion": 6
     }
 };

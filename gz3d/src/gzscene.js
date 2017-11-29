@@ -30,6 +30,7 @@ GZ3D.Scene.prototype.init = function()
 
   // loaders
   this.textureLoader = new THREE.TextureLoader();
+  this.textureLoader.crossOrigin = '';
   this.colladaLoader = new THREE.ColladaLoader();
   this.objLoader = new THREE.OBJLoader();
   this.stlLoader = new THREE.STLLoader();
@@ -1588,6 +1589,8 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
 {
   var dae;
   var mesh = null;
+  var that = this;
+
   /*
   // Crashes: issue #36
   if (this.meshes[uri])
@@ -1600,18 +1603,16 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
   }
   */
 
-  var loader = new THREE.ColladaLoader();
-
   if (!filestring)
   {
-    loader.load(uri, function(collada)
+    this.colladaLoader.load(uri, function(collada)
     {
       meshReady(collada);
     });
   }
   else
   {
-    loader.parse(filestring, function(collada)
+    this.colladaLoader.parse(filestring, function(collada)
     {
       meshReady(collada);
     }, undefined);
@@ -1628,10 +1629,10 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
 
     dae = collada.scene;
     dae.updateMatrix();
-    this.scene.prepareColladaMesh(dae);
-    this.scene.meshes[uri] = dae;
+    that.prepareColladaMesh(dae);
+    that.meshes[uri] = dae;
     dae = dae.clone();
-    this.scene.useSubMesh(dae, submesh, centerSubmesh);
+    that.useSubMesh(dae, submesh, centerSubmesh);
 
     dae.name = uri;
     callback(dae);
@@ -1798,9 +1799,9 @@ GZ3D.Scene.prototype.loadOBJ = function(uri, submesh, centerSubmesh, callback,
     var loadComplete = function()
     {
       obj = container;
-      this.scene.meshes[uri] = obj;
+      that.meshes[uri] = obj;
       obj = obj.clone();
-      this.scene.useSubMesh(obj, submesh, centerSubmesh);
+      that.useSubMesh(obj, submesh, centerSubmesh);
 
       obj.name = uri;
       callback(obj);
@@ -1882,15 +1883,16 @@ GZ3D.Scene.prototype.loadSTL = function(uri, submesh, centerSubmesh,
   callback)
 {
   var mesh = null;
+  var that = this;
   this.stlLoader.load(uri, function(geometry)
   {
     mesh = new THREE.Mesh( geometry );
     mesh.castShadow = true;
     mesh.receiveShadow = true;
 
-    this.scene.meshes[uri] = mesh;
+    that.meshes[uri] = mesh;
     mesh = mesh.clone();
-    this.scene.useSubMesh(mesh, submesh, centerSubmesh);
+    that.useSubMesh(mesh, submesh, centerSubmesh);
 
     mesh.name = uri;
     callback(mesh);

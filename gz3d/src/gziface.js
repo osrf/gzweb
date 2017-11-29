@@ -998,6 +998,8 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
         var materialName = parent.name + '::' + modelUri;
         this.entityMaterial[materialName] = mat;
 
+        modelUri = 'http://' + this.url + '/' + modelUri;
+
         this.scene.loadMeshFromUri(modelUri, submesh, centerSubmesh,
           function(mesh) {
             if (mat)
