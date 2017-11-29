@@ -1,8 +1,9 @@
 //var GAZEBO_MODEL_DATABASE_URI='http://gazebosim.org/models';
 
-GZ3D.GZIface = function(scene, gui)
+GZ3D.GZIface = function(scene, gui, url)
 {
   this.scene = scene;
+  this.url = url || (location.hostname + ':' + location.port);
   this.gui = gui;
 
   this.isConnected = false;
@@ -29,7 +30,7 @@ GZ3D.GZIface.prototype.connect = function()
 {
   // connect to websocket
   this.webSocket = new ROSLIB.Ros({
-    url : 'ws://' + location.hostname + ':7681'
+    url : 'ws://' + this.url
   });
 
   var that = this;
