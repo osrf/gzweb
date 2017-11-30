@@ -729,7 +729,7 @@ describe('Gzscene tests', function() {
       const origin = new THREE.Vector3(0, 0, 0);
       const textures = [];
       const blends = [];
-      var visualObj = new THREE.Object3D();
+      const visualObj = new THREE.Object3D();
 
       // Load heightmap
       scene.loadHeightmap(heights, segmentWidth, segmentHeight, width, height,
@@ -741,7 +741,7 @@ describe('Gzscene tests', function() {
       expect(mesh.material instanceof THREE.MeshPhongMaterial).toBeTruthy();
 
       // Fail to load a second heightmap
-      var visualObj2 = new THREE.Object3D();
+      const visualObj2 = new THREE.Object3D();
       scene.loadHeightmap(heights, segmentWidth, segmentHeight, width, height,
           origin, textures, blends, visualObj2);
 
