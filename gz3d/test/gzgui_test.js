@@ -1,5 +1,3 @@
-jasmine.getFixtures().fixturesPath = 'base/gz3d/test/fixture';
-
 describe('Gui tests', function() {
 
       beforeEach(function(){
