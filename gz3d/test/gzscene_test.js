@@ -737,7 +737,7 @@ describe('Gzscene tests', function() {
 
       expect(scene.heightmap).toEqual(visualObj);
       expect(scene.heightmap.children.length).toEqual(1);
-      let mesh = scene.heightmap.children[0];
+      const mesh = scene.heightmap.children[0];
       expect(mesh.material instanceof THREE.MeshPhongMaterial).toBeTruthy();
 
       // Fail to load a second heightmap
@@ -788,7 +788,7 @@ describe('Gzscene tests', function() {
 
       expect(scene.heightmap).toEqual(visualObj);
       expect(scene.heightmap.children.length).toEqual(1);
-      let mesh = scene.heightmap.children[0];
+      const mesh = scene.heightmap.children[0];
       expect(mesh.material instanceof THREE.ShaderMaterial).toBeTruthy();
     });
   });
