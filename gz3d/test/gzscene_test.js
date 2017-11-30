@@ -780,7 +780,7 @@ describe('Gzscene tests', function() {
            {fade_dist: 5, min_height: 2},
            {fade_dist: 5, min_height: 4},
       ];
-      var visualObj = new THREE.Object3D();
+      const visualObj = new THREE.Object3D();
 
       // Load heightmap
       scene.loadHeightmap(heights, segmentWidth, segmentHeight, width, height,
