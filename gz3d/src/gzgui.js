@@ -1577,6 +1577,60 @@ GZ3D.Gui.prototype.init = function()
         that.scene.emitter.emit('linkChanged', entity);
       }
   );
+
+  this.emitter.on('setLightStats', function (stats, action)
+      {
+        that.setLightStats(stats, action);
+      }
+  );
+
+  this.emitter.on('setModelStats', function (stats, action)
+      {
+        that.setModelStats(stats, action);
+      }
+  );
+
+  this.emitter.on('setSceneStats', function (stats)
+      {
+        that.setSceneStats(stats);
+      }
+  );
+
+  this.emitter.on('setPhysicsStats', function (stats)
+      {
+        that.setPhysicsStats(stats);
+      }
+  );
+
+  this.emitter.on('setPaused', function (stats)
+      {
+        that.setPaused(stats);
+      }
+  );
+
+  this.emitter.on('setLogPlayVisible', function (stats)
+      {
+        that.setLogPlayVisible(stats);
+      }
+  );
+
+  this.emitter.on('setLogPlayStats', function (simTime, startTime, endTime)
+      {
+        that.setLogPlayStats(simTime, startTime, endTime);
+      }
+  );
+
+  this.emitter.on('setRealTime', function (stats)
+      {
+        that.setRealTime(stats);
+      }
+  );
+
+  this.emitter.on('setSimTime', function (stats)
+      {
+        that.setSimTime(stats);
+      }
+  );
 };
 
 /**

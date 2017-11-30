@@ -15,6 +15,8 @@ describe('Gzscene tests', function() {
   describe('Test gzscene Initialize', function() {
     it('Intial values should match', function() {
 
+        expect(scene.emitter).toEqual(globalEmitter);
+
         var bbox, indices, positions, boxGeometry,
         bbox_rotation, jointTypes, jointAxis, jointAxisMeshes,
         jointMainAxisMeshes, mesh, rot, pos, mainAxisLen,
@@ -33,8 +35,6 @@ describe('Gzscene tests', function() {
         expect(scene.grid.visible).toEqual(false);
 
         expect(scene.showCollisions).toEqual(false);
-
-        expect(scene.emitter).toEqual(new EventEmitter2({ verbose: true }));
 
         expect(scene.timeDown).toEqual(null);
 
@@ -317,7 +317,7 @@ describe('Gzscene tests', function() {
   describe('Test manipulation mode', function() {
     it('Should change manipulation mode to translate', function() {
 
-      guiEvents.emit('manipulation_mode', 'translate');
+      globalEmitter.emit('manipulation_mode', 'translate');
       expect(scene.manipulationMode).not.toEqual('view');
       expect(scene.manipulationMode).toEqual('translate');
     });
@@ -524,28 +524,28 @@ describe('Gzscene tests', function() {
       expect(visual).toEqual(undefined);
 
       // if there was no selected entity it shouldn't break
-      guiEvents.emit('view_inertia');
+      globalEmitter.emit('view_inertia');
       visual = model.getObjectByName('INERTIA_VISUAL');
       expect(visual).toEqual(undefined);
 
       // select a model and then view the visuals
       scene.selectedEntity = model;
-      guiEvents.emit('view_inertia');
+      globalEmitter.emit('view_inertia');
       visual = model.getObjectByName('INERTIA_VISUAL');
       expect(visual).not.toEqual(undefined);
 
       // hide the visuals
-      guiEvents.emit('view_inertia');
+      globalEmitter.emit('view_inertia');
       visual = model.getObjectByName('INERTIA_VISUAL');
       expect(visual).toEqual(undefined);
 
       // test to view the visuals when they already exist
-      guiEvents.emit('view_inertia');
+      globalEmitter.emit('view_inertia');
       visual = model.getObjectByName('INERTIA_VISUAL');
       expect(visual).not.toEqual(undefined);
 
       // hide the visuals
-      guiEvents.emit('view_inertia');
+      globalEmitter.emit('view_inertia');
       visual = model.getObjectByName('INERTIA_VISUAL');
       expect(visual).toEqual(undefined);
     });
@@ -591,13 +591,13 @@ describe('Gzscene tests', function() {
       v2 = box.max;
 
       // if there was no selected entity it shouldn't break
-      guiEvents.emit('view_inertia');
+      globalEmitter.emit('view_inertia');
       visual = model.getObjectByName('INERTIA_VISUAL');
       expect(visual).toEqual(undefined);
 
       // select a model and then view the visuals
       scene.selectedEntity = model;
-      guiEvents.emit('view_inertia');
+      globalEmitter.emit('view_inertia');
       visual = model.getObjectByName('INERTIA_VISUAL');
       expect(visual).not.toEqual(undefined);
 
@@ -606,17 +606,17 @@ describe('Gzscene tests', function() {
       expect(box.max).toEqual(v2);
 
       // hide the visuals
-      guiEvents.emit('view_inertia');
+      globalEmitter.emit('view_inertia');
       visual = model.getObjectByName('INERTIA_VISUAL');
       expect(visual).toEqual(undefined);
 
       // test to view the visuals when they already exist
-      guiEvents.emit('view_inertia');
+      globalEmitter.emit('view_inertia');
       visual = model.getObjectByName('INERTIA_VISUAL');
       expect(visual).not.toEqual(undefined);
 
       // hide the visuals
-      guiEvents.emit('view_inertia');
+      globalEmitter.emit('view_inertia');
       visual = model.getObjectByName('INERTIA_VISUAL');
       expect(visual).toEqual(undefined);
     });
@@ -640,13 +640,13 @@ describe('Gzscene tests', function() {
       expect(visual).toEqual(undefined);
 
       // if there was no selected entity it shouldn't break
-      guiEvents.emit('view_com');
+      globalEmitter.emit('view_com');
       visual = model.getObjectByName('COM_VISUAL');
       expect(visual).toEqual(undefined);
 
       // select a model and then view the visuals
       scene.selectedEntity = model;
-      guiEvents.emit('view_com');
+      globalEmitter.emit('view_com');
       visual = model.getObjectByName('COM_VISUAL');
       expect(visual).not.toEqual(undefined);
 
@@ -654,17 +654,17 @@ describe('Gzscene tests', function() {
       expect(visual.position).toEqual(model.position);
 
       // hide the visuals
-      guiEvents.emit('view_com');
+      globalEmitter.emit('view_com');
       visual = model.getObjectByName('COM_VISUAL');
       expect(visual).toEqual(undefined);
 
       // test to view the visuals when they already exist
-      guiEvents.emit('view_com');
+      globalEmitter.emit('view_com');
       visual = model.getObjectByName('COM_VISUAL');
       expect(visual).not.toEqual(undefined);
 
       // hide the visuals
-      guiEvents.emit('view_com');
+      globalEmitter.emit('view_com');
       visual = model.getObjectByName('COM_VISUAL');
       expect(visual).toEqual(undefined);
     });

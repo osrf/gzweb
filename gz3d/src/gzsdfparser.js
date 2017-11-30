@@ -106,7 +106,7 @@ GZ3D.SdfParser.prototype.onConnectionError = function()
     {
       if (obj.children[0] instanceof THREE.Light)
       {
-        that.gui.setLightStats({name: name}, 'delete');
+        that.emitter.emit('setLightStats', {name: name}, 'delete');
       }
       else
       {

@@ -8,17 +8,15 @@ describe('Gui tests', function() {
         });
 
       var $controller;
-      var emitter;
       var scene;
       var gui;
       var sdfparser;
 
       beforeAll(function(){
         // Initializing object used in the test.
-        emitter = new EventEmitter2({verbose: true});
-        scene = new GZ3D.Scene(emitter);
-        gui = new GZ3D.Gui(emitter, scene);
-        sdfparser = new GZ3D.SdfParser(emitter, scene, gui);
+        scene = new GZ3D.Scene();
+        gui = new GZ3D.Gui(scene);
+        sdfparser = new GZ3D.SdfParser(scene, gui);
       });
 
       beforeEach(inject(function(_$controller_){
@@ -30,40 +28,42 @@ describe('Gui tests', function() {
       describe('Test gzgui init', function() {
         it('Should verify the status of the gui after initialization', function() {
 
+          expect(gui.emitter).toEqual(globalEmitter);
+
           expect(gui.spawnState).toEqual(null);
           expect(gui.longPressContainerState).toEqual(null);
           expect(gui.showNotifications).toEqual(false);
           expect(gui.openTreeWhenSelected).toEqual(false);
           expect(gui.modelStatsDirty).toEqual(false);
 
-          // On guiEvents, emitter events
+          // On globalEmitter, emitter events
 
           // Manipulation modes
           expect(scene.manipulationMode).toEqual('view');
-          guiEvents.emit('manipulation_mode', 'translate');
+          globalEmitter.emit('manipulation_mode', 'translate');
           expect(scene.manipulationMode).toEqual('translate');
-          guiEvents.emit('manipulation_mode', 'rotate');
+          globalEmitter.emit('manipulation_mode', 'rotate');
           expect(scene.manipulationMode).toEqual('rotate');
 
           expect($('#view-mode').prop('checked')).toEqual(true);
 
-          guiEvents.emit('show_grid', 'show');
+          globalEmitter.emit('show_grid', 'show');
           expect(scene.grid.visible).toEqual(true);
-          guiEvents.emit('show_grid', 'hide');
+          globalEmitter.emit('show_grid', 'hide');
           expect(scene.grid.visible).toEqual(false);
 
           expect(scene.modelManipulator.snapDist).toEqual(null);
-          guiEvents.emit('snap_to_grid');
+          globalEmitter.emit('snap_to_grid');
           expect(scene.modelManipulator.snapDist).toEqual(0.5);
-          guiEvents.emit('snap_to_grid');
+          globalEmitter.emit('snap_to_grid');
           expect(scene.modelManipulator.snapDist).toEqual(null);
 
           expect(gui.showNotifications).toEqual(false);
-          guiEvents.emit('toggle_notifications');
+          globalEmitter.emit('toggle_notifications');
           expect(gui.showNotifications).toEqual(true);
 
           expect(gui.openTreeWhenSelected).toEqual(false);
-          guiEvents.emit('openTreeWhenSelected');
+          globalEmitter.emit('openTreeWhenSelected');
           expect(gui.openTreeWhenSelected).toEqual(true)
 
         });

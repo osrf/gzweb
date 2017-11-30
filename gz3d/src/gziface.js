@@ -1,10 +1,7 @@
-//var GAZEBO_MODEL_DATABASE_URI='http://gazebosim.org/models';
-
-GZ3D.GZIface = function(scene, gui)
+GZ3D.GZIface = function(scene)
 {
   this.emitter = globalEmitter || new EventEmitter2({verbose: true});
   this.scene = scene;
-  this.gui = gui;
 
   this.isConnected = false;
 
@@ -157,7 +154,7 @@ GZ3D.GZIface.prototype.onConnected = function()
       var light = message.light[i];
       var lightObj = this.createLightFromMsg(light);
       this.scene.add(lightObj);
-      this.gui.setLightStats(light, 'update');
+      this.emitter.emit('setLightStats', light, 'update');
     }
 
     for (var j = 0; j < message.model.length; ++j)
@@ -165,10 +162,10 @@ GZ3D.GZIface.prototype.onConnected = function()
       var model = message.model[j];
       var modelObj = this.createModelFromMsg(model);
       this.scene.add(modelObj);
-      this.gui.setModelStats(model, 'update');
+      this.emitter.emit('setModelStats', model, 'update');
     }
 
-    this.gui.setSceneStats(message);
+    this.emitter.emit('setSceneStats', message);
     this.sceneTopic.unsubscribe();
   };
   this.sceneTopic.subscribe(sceneUpdate.bind(this));
@@ -181,7 +178,7 @@ GZ3D.GZIface.prototype.onConnected = function()
 
   var physicsUpdate = function(message)
   {
-    this.gui.setPhysicsStats(message);
+    this.emitter.emit('setPhysicsStats', message);
   };
   this.physicsTopic.subscribe(physicsUpdate.bind(this));
 
@@ -200,7 +197,7 @@ GZ3D.GZIface.prototype.onConnected = function()
         && entity.parent !== this.scene.modelManipulator.object)
     {
       this.scene.updatePose(entity, message.position, message.orientation);
-      this.gui.setModelStats(message, 'update');
+      this.emitter.emit('setModelStats', message, 'update');
     }
   };
 
@@ -222,12 +219,12 @@ GZ3D.GZIface.prototype.onConnected = function()
       {
         if (entity.children[0] instanceof THREE.Light)
         {
-          this.gui.setLightStats({name: message.data}, 'delete');
+          this.emitter.emit('setLightStats', {name: message.data}, 'delete');
           this.emitter.emit('notification_popup', message.data+' deleted');
         }
         else
         {
-          this.gui.setModelStats({name: message.data}, 'delete');
+          this.emitter.emit('setModelStats', {name: message.data}, 'delete');
           this.emitter.emit('notification_popup', message.data+' deleted');
         }
         this.scene.remove(entity);
@@ -277,7 +274,7 @@ GZ3D.GZIface.prototype.onConnected = function()
         i++;
       }
     }
-    this.gui.setModelStats(message, 'update');
+    this.emitter.emit('setModelStats', message, 'update');
   };
 
   modelInfoTopic.subscribe(modelUpdate.bind(this));
@@ -358,7 +355,7 @@ GZ3D.GZIface.prototype.onConnected = function()
 
       this.emitter.emit('notification_popup', message.name+' inserted');
     }
-    this.gui.setLightStats(message, 'update');
+    this.emitter.emit('setLightStats', message, 'update');
   };
 
   lightFactoryTopic.subscribe(lightCreate.bind(this));
@@ -377,7 +374,7 @@ GZ3D.GZIface.prototype.onConnected = function()
         && entity.parent !== this.scene.modelManipulator.object)
     {
       this.scene.updateLight(entity, message);
-      this.gui.setLightStats(message, 'update');
+      this.emitter.emit('setLightStats', message, 'update');
     }
   };
 
@@ -639,22 +636,22 @@ GZ3D.GZIface.prototype.onConnected = function()
 
 GZ3D.GZIface.prototype.updateStatsGuiFromMsg = function(stats)
 {
-  this.gui.setPaused(stats.paused);
+  this.emitter.emit('setPaused', stats.paused);
 
   if (stats.log_playback_stats)
   {
-    this.gui.setLogPlayVisible(true);
-    this.gui.setLogPlayStats(stats.sim_time,
+    this.emitter.emit('setLogPlayVisible', true);
+    this.emitter.emit('setLogPlayStats', stats.sim_time,
         stats.log_playback_stats.start_time,
         stats.log_playback_stats.end_time);
   }
   else
   {
-    this.gui.setLogPlayVisible(false);
-    this.gui.setRealTime(stats.real_time);
+    this.emitter.emit('setLogPlayVisible', false);
+    this.emitter.emit('setRealTime', stats.real_time);
   }
 
-  this.gui.setSimTime(stats.sim_time);
+  this.emitter.emit('setSimTime', stats.sim_time);
 };
 
 GZ3D.GZIface.prototype.createModelFromMsg = function(model)

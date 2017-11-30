@@ -11,6 +11,13 @@ describe('Sdf Parser tests', function() {
     sdfparser = new GZ3D.SdfParser(scene, gui);
   });
 
+  describe('Initialization', function() {
+    it('should be properly initialized', function() {
+
+      expect(sdfparser.emitter).toEqual(globalEmitter);
+    });
+  });
+
   describe('Parse color test, string to json', function() {
     it('should return a json color', function() {
       var color = {r: 212, g: 199, b: 0.2, a: 0.9};
