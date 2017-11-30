@@ -5710,10 +5710,13 @@ GZ3D.RadialMenu.prototype.setNumberOfItems = function(number)
 
 /**
  * The scene is where everything is placed, from objects, to lights and cameras.
+ * @param shaders GZ3D.Shaders instance, if not provided, custom shaders will
+ *                not be set.
  * @constructor
  */
-GZ3D.Scene = function()
+GZ3D.Scene = function(shaders)
 {
+  this.shaders = shaders;
   this.init();
 };
 
@@ -6985,11 +6988,12 @@ GZ3D.Scene.prototype.createRoads = function(points, width, texture)
 
 /**
  * Load heightmap
- * @param {} heights
- * @param {} width
- * @param {} height
- * @param {} segmentWidth
- * @param {} segmentHeight
+ * @param {} heights Lookup table of heights
+ * @param {} width Width in meters
+ * @param {} height Height in meters
+ * @param {} segmentWidth Size of lookup table
+ * @param {} segmentHeight Size of lookup table
+ * @param {} origin Heightmap position in the world
  * @param {} textures
  * @param {} blends
  * @param {} parent
@@ -6999,9 +7003,17 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
 {
   if (this.heightmap)
   {
+    console.log('Only one heightmap can be loaded at a time');
     return;
   }
-  // unfortunately large heightmaps kills the fps and freeze everything so
+
+  if (parent === undefined)
+  {
+    console.error('Missing parent, heightmap won\'t be loaded.');
+    return;
+  }
+
+  // unfortunately large heightmaps kill the fps and freeze everything so
   // we have to scale it down
   var scale = 1;
   var maxHeightmapWidth = 256;
@@ -7016,7 +7028,7 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
       (segmentWidth-1) * scale, (segmentHeight-1) * scale);
   geometry.dynamic = true;
 
-  // flip the heights
+  // Mirror the vertices about the X axis
   var vertices = [];
   for (var h = segmentHeight-1; h >= 0; --h)
   {
@@ -7027,7 +7039,7 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
     }
   }
 
-  // sub-sample
+  // Sub-sample
   var col = (segmentWidth-1) * scale;
   var row = (segmentHeight-1) * scale;
   for (var r = 0; r < row; ++r)
@@ -7039,19 +7051,20 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
     }
   }
 
-  var mesh;
+  // Compute normals
+  geometry.computeFaceNormals();
+  geometry.computeVertexNormals();
+
+  // Material - use shader if textures provided, otherwise use a generic phong
+  // material
+  var material;
   if (textures && textures.length > 0)
   {
-    geometry.computeFaceNormals();
-    geometry.computeVertexNormals();
-    geometry.computeTangents();
-
     var textureLoaded = [];
     var repeats = [];
     for (var t = 0; t < textures.length; ++t)
     {
-      textureLoaded[t] = this.textureLoader.load(textures[t].diffuse,
-          new THREE.UVMapping());
+      textureLoaded[t] = this.textureLoader.load(textures[t].diffuse);
       textureLoaded[t].wrapS = THREE.RepeatWrapping;
       textureLoaded[t].wrapT = THREE.RepeatWrapping;
       repeats[t] = width/textures[t].size;
@@ -7090,7 +7103,7 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
       }
     }
 
-    var material = new THREE.ShaderMaterial({
+    var options = {
       uniforms:
       {
         texture0: { type: 't', value: textureLoaded[0]},
@@ -7107,18 +7120,26 @@ GZ3D.Scene.prototype.loadHeightmap = function(heights, width, height,
         lightDiffuse: { type: 'c', value: lightDiffuse},
         lightDir: { type: 'v3', value: lightDir}
       },
-      attributes: {},
-      vertexShader: document.getElementById( 'heightmapVS' ).innerHTML,
-      fragmentShader: document.getElementById( 'heightmapFS' ).innerHTML
-    });
+    };
 
-    mesh = new THREE.Mesh( geometry, material);
+    if (this.shaders !== undefined)
+    {
+      options.vertexShader = this.shaders.heightmapVS;
+      options.fragmentShader = this.shaders.heightmapFS;
+    }
+    else
+    {
+      console.log('Warning: heightmap shaders not provided.');
+    }
+
+    material = new THREE.ShaderMaterial(options);
   }
   else
   {
-    mesh = new THREE.Mesh( geometry,
-        new THREE.MeshPhongMaterial( { color: 0x555555 } ) );
+    material = new THREE.MeshPhongMaterial( { color: 0x555555 } );
   }
+
+  var mesh = new THREE.Mesh(geometry, material);
 
   mesh.position.x = origin.x;
   mesh.position.y = origin.y;
@@ -7824,7 +7845,7 @@ GZ3D.Scene.prototype.setFromObject = function(box, object)
             for ( i = 0, l = attribute.count; i < l; i ++ )
             {
 
-              v.fromBufferAttribute( attribute, i ).applyMatrix4( 
+              v.fromBufferAttribute( attribute, i ).applyMatrix4(
                 node.matrixWorld );
 
               expandByPoint( v );
@@ -9774,6 +9795,87 @@ GZ3D.SdfParser.prototype.loadModel = function(modelName)
   xhttp.open('GET', modelFile, false);
   xhttp.send();
   return xhttp.responseXML;
+};
+
+/**
+ * @constructor
+ * Holds custom shaders in string format which can be passed to
+ * THREE.ShaderMaterial's options.
+ */
+GZ3D.Shaders = function()
+{
+  this.init();
+};
+
+GZ3D.Shaders.prototype.init = function()
+{
+  // Custom vertex shader for heightmaps
+  this.heightmapVS =
+    'varying vec2 vUv;'+
+    'varying vec3 vPosition;'+
+    'varying vec3 vNormal;'+
+    'void main( void ) {'+
+    '  vUv = uv;'+
+    '  vPosition = position;'+
+    '  vNormal = -normal;'+
+    '  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);'+
+    '}';
+
+  // Custom fragment shader for heightmaps
+  this.heightmapFS =
+    'uniform sampler2D texture0;'+
+    'uniform sampler2D texture1;'+
+    'uniform sampler2D texture2;'+
+    'uniform float repeat0;'+
+    'uniform float repeat1;'+
+    'uniform float repeat2;'+
+    'uniform float minHeight1;'+
+    'uniform float minHeight2;'+
+    'uniform float fadeDist1;'+
+    'uniform float fadeDist2;'+
+    'uniform vec3 ambient;'+
+    'uniform vec3 lightDiffuse;'+
+    'uniform vec3 lightDir;'+
+    'varying vec2 vUv;'+
+    'varying vec3 vPosition;'+
+    'varying vec3 vNormal;'+
+    'float blend(float distance, float fadeDist) {'+
+    '  float alpha = distance / fadeDist;'+
+    '  if (alpha < 0.0) {'+
+    '    alpha = 0.0;'+
+    '  }'+
+    '  if (alpha > 1.0) {'+
+    '    alpha = 1.0;'+
+    '  }'+
+    '  return alpha;'+
+    '}'+
+    'void main()'+
+    '{'+
+    '  vec3 diffuse0 = texture2D( texture0, vUv*repeat0 ).rgb;'+
+    '  vec3 diffuse1 = texture2D( texture1, vUv*repeat1 ).rgb;'+
+    '  vec3 diffuse2 = texture2D( texture2, vUv*repeat2 ).rgb;'+
+    '  vec3 fragcolor = diffuse0;'+
+    '  if (fadeDist1 > 0.0)'+
+    '  {'+
+    '    fragcolor = mix('+
+    '      fragcolor,'+
+    '      diffuse1,'+
+    '      blend(vPosition.z - minHeight1, fadeDist1)'+
+    '    );'+
+    '  }'+
+    '  if (fadeDist2 > 0.0)'+
+    '  {'+
+    '    fragcolor = mix('+
+    '      fragcolor,'+
+    '      diffuse2,'+
+    '      blend(vPosition.z - (minHeight1 + minHeight2), fadeDist2)'+
+    '    );'+
+    '  }'+
+    '  vec3 lightDirNorm = normalize(lightDir);'+
+    '  float intensity = max(dot(vNormal, lightDirNorm), 0.0);'+
+    '  vec3 vLightFactor = ambient + lightDiffuse * intensity;'+
+    '  gl_FragColor = vec4(fragcolor.rgb * vLightFactor, 1.0);'+
+    '}';
 };
 
 /**
