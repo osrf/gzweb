@@ -44,7 +44,7 @@ GZ3D.GZIface.prototype.onError = function()
   // init scene and show popup only for the first connection error
   if (this.numConnectionTrials === 1)
   {
-    this.emitter.emit('error');
+    this.emitter.emit('connectError');
   }
 
   var that = this;

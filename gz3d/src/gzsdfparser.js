@@ -48,7 +48,7 @@ GZ3D.SdfParser.prototype.init = function()
   {
     this.usingFilesUrls = true;
     var that = this;
-    this.emitter.on('error', function() {
+    this.emitter.on('connectError', function() {
       this.emitter.emit('notification_popup',
               'GzWeb is currently running' +
               'without a server, and materials could not be loaded.' +

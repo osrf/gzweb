@@ -578,12 +578,12 @@ $(function()
 
   $('#reset-model').click(function()
       {
-        globalEmitter.emit('model_reset');
+        globalEmitter.emit('reset', 'model');
         globalEmitter.emit('closeTabs', false);
       });
   $('#reset-world').click(function()
       {
-        globalEmitter.emit('world_reset');
+        globalEmitter.emit('reset', 'world');
         globalEmitter.emit('closeTabs', false);
       });
   $('#reset-view').click(function()
@@ -918,7 +918,6 @@ GZ3D.Gui = function(scene, logPlay)
 
 /**
  * Initialize GUI
- * @fires entityCreated
  */
 GZ3D.Gui.prototype.init = function()
 {
@@ -999,11 +998,16 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  this.emitter.on('world_reset', function()
+  this.emitter.on('reset', function(resetType)
       {
-        // TODO: no need to emit another one
-        that.emitter.emit('reset', 'world');
-        that.emitter.emit('notification_popup','Reset world');
+        if (resetType === 'world')
+        {
+          that.emitter.emit('notification_popup','Reset world');
+        }
+        else if (resetType === 'model')
+        {
+          that.emitter.emit('notification_popup','Reset model poses');
+        }
       }
   );
 
@@ -2552,7 +2556,7 @@ GZ3D.GZIface.prototype.onError = function()
   // init scene and show popup only for the first connection error
   if (this.numConnectionTrials === 1)
   {
-    this.emitter.emit('error');
+    this.emitter.emit('connectError');
   }
 
   var that = this;
@@ -8855,7 +8859,7 @@ GZ3D.SdfParser.prototype.init = function()
   {
     this.usingFilesUrls = true;
     var that = this;
-    this.emitter.on('error', function() {
+    this.emitter.on('connectError', function() {
       this.emitter.emit('notification_popup',
               'GzWeb is currently running' +
               'without a server, and materials could not be loaded.' +
