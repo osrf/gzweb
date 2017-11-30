@@ -2,12 +2,11 @@
 
 GZ3D.GZIface = function(scene, gui)
 {
+  this.emitter = globalEmitter || new EventEmitter2({verbose: true});
   this.scene = scene;
   this.gui = gui;
 
   this.isConnected = false;
-
-  this.emitter = new EventEmitter2({ verbose: true });
 
   this.init();
   this.visualsToAdd = [];
@@ -129,7 +128,7 @@ GZ3D.GZIface.prototype.onConnected = function()
 
     if (message.grid === true)
     {
-      this.gui.guiEvents.emit('show_grid', 'show');
+      this.emitter.emit('show_grid', 'show');
     }
 
     if (message.ambient)
@@ -224,12 +223,12 @@ GZ3D.GZIface.prototype.onConnected = function()
         if (entity.children[0] instanceof THREE.Light)
         {
           this.gui.setLightStats({name: message.data}, 'delete');
-          guiEvents.emit('notification_popup', message.data+' deleted');
+          this.emitter.emit('notification_popup', message.data+' deleted');
         }
         else
         {
           this.gui.setModelStats({name: message.data}, 'delete');
-          guiEvents.emit('notification_popup', message.data+' deleted');
+          this.emitter.emit('notification_popup', message.data+' deleted');
         }
         this.scene.remove(entity);
       }
@@ -253,7 +252,7 @@ GZ3D.GZIface.prototype.onConnected = function()
       if (modelObj)
       {
         this.scene.add(modelObj);
-        guiEvents.emit('notification_popup', message.name+' inserted');
+        this.emitter.emit('notification_popup', message.name+' inserted');
       }
 
       // visuals may arrive out of order (before the model msg),
@@ -357,7 +356,7 @@ GZ3D.GZIface.prototype.onConnected = function()
         }
       }
 
-      guiEvents.emit('notification_popup', message.name+' inserted');
+      this.emitter.emit('notification_popup', message.name+' inserted');
     }
     this.gui.setLightStats(message, 'update');
   };
@@ -482,7 +481,7 @@ GZ3D.GZIface.prototype.onConnected = function()
     }
   };
 
-  this.scene.emitter.on('entityChanged', publishEntityModify);
+  this.emitter.on('entityChanged', publishEntityModify);
 
   // Link messages - for modifying links
   this.linkModifyTopic = new ROSLIB.Topic({
@@ -510,7 +509,7 @@ GZ3D.GZIface.prototype.onConnected = function()
     that.linkModifyTopic.publish(modelMsg);
   };
 
-  this.scene.emitter.on('linkChanged', publishLinkModify);
+  this.emitter.on('linkChanged', publishLinkModify);
 
   // Factory messages - for spawning new models
   this.factoryTopic = new ROSLIB.Topic({
@@ -579,7 +578,7 @@ GZ3D.GZIface.prototype.onConnected = function()
     that.deleteTopic.publish(modelMsg);
   };
 
-  this.gui.emitter.on('deleteEntity',
+  this.emitter.on('deleteEntity',
       function(entity)
       {
         publishDeleteEntity(entity);
@@ -607,16 +606,16 @@ GZ3D.GZIface.prototype.onConnected = function()
     that.worldControlTopic.publish(worldControlMsg);
   };
 
-  this.gui.emitter.on('entityCreated', publishFactory);
+  this.emitter.on('entityCreated', publishFactory);
 
-  this.gui.emitter.on('reset',
+  this.emitter.on('reset',
       function(resetType)
       {
         publishWorldControl(null, resetType);
       }
   );
 
-  this.gui.emitter.on('pause',
+  this.emitter.on('pause',
       function(paused)
       {
         publishWorldControl(paused, null);
@@ -635,7 +634,7 @@ GZ3D.GZIface.prototype.onConnected = function()
     that.playbackControlTopic.publish(playbackControl);
   };
 
-  this.gui.emitter.on('logPlayChanged', publishPlaybackControl);
+  this.emitter.on('logPlayChanged', publishPlaybackControl);
 };
 
 GZ3D.GZIface.prototype.updateStatsGuiFromMsg = function(stats)

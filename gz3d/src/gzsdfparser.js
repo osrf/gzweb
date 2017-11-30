@@ -8,6 +8,8 @@
  **/
 GZ3D.SdfParser = function(scene, gui, gziface)
 {
+  this.emitter = globalEmitter || new EventEmitter2({verbose: true});
+
   // set the sdf version
   this.SDF_VERSION = 1.5;
   this.MATERIAL_ROOT = 'assets';
@@ -46,22 +48,22 @@ GZ3D.SdfParser.prototype.init = function()
   {
     this.usingFilesUrls = true;
     var that = this;
-    this.gziface.emitter.on('error', function() {
-      that.gui.guiEvents.emit('notification_popup',
+    this.emitter.on('error', function() {
+      this.emitter.emit('notification_popup',
               'GzWeb is currently running' +
               'without a server, and materials could not be loaded.' +
               'When connected scene will be reinitialized', 5000);
       that.onConnectionError();
     });
 
-    this.gziface.emitter.on('material', function(mat) {
+    this.emitter.on('material', function(mat) {
       that.materials = mat;
     });
 
-    this.gziface.emitter.on('gzstatus', function(gzstatus) {
+    this.emitter.on('gzstatus', function(gzstatus) {
       if (gzstatus === 'error')
       {
-        that.gui.guiEvents.emit('notification_popup', 'GzWeb is currently ' +
+        this.emitter.emit('notification_popup', 'GzWeb is currently ' +
                 'running without a GzServer,'
                 + 'and Scene is reinitialized.', 5000);
         that.onConnectionError();
@@ -94,7 +96,7 @@ GZ3D.SdfParser.prototype.onConnectionError = function()
       that.addModelByType(model, type);
     }
   };
-  this.gui.emitter.on('entityCreated', entityCreated);
+  this.emitter.on('entityCreated', entityCreated);
 
   var deleteEntity = function(entity)
   {
@@ -113,7 +115,7 @@ GZ3D.SdfParser.prototype.onConnectionError = function()
       that.scene.remove(obj);
     }
   };
-  this.gui.emitter.on('deleteEntity', deleteEntity);
+  this.emitter.on('deleteEntity', deleteEntity);
 };
 
 /**

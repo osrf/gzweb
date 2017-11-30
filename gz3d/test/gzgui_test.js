@@ -8,17 +8,17 @@ describe('Gui tests', function() {
         });
 
       var $controller;
-
-
+      var emitter;
       var scene;
       var gui;
       var sdfparser;
 
       beforeAll(function(){
         // Initializing object used in the test.
-        scene = new GZ3D.Scene();
-        gui = new GZ3D.Gui(scene);
-        sdfparser = new GZ3D.SdfParser(scene, gui);
+        emitter = new EventEmitter2({verbose: true});
+        scene = new GZ3D.Scene(emitter);
+        gui = new GZ3D.Gui(emitter, scene);
+        sdfparser = new GZ3D.SdfParser(emitter, scene, gui);
       });
 
       beforeEach(inject(function(_$controller_){
