@@ -1,7 +1,7 @@
 describe('Iface tests', function() {
 
-   let scene;
-   let iface;
+  let scene;
+  let iface;
 
   beforeAll(function(){
     scene = new GZ3D.Scene();
