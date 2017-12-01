@@ -1,16 +1,22 @@
-//var GAZEBO_MODEL_DATABASE_URI='http://gazebosim.org/models';
-
-GZ3D.GZIface = function(scene, gui, url)
+/**
+ * Class responsible for communication with the backend via a websocket, it
+ * forwards user commands to the server and propagates updates coming from the
+ * server to other classes.
+ * @constructor
+ * @param {GZ3D.Scene} scene - A scene to connect to
+ */
+GZ3D.GZIface = function(scene, url)
 {
+  this.emitter = globalEmitter || new EventEmitter2({verbose: true});
   this.scene = scene;
   this.url = url || (location.hostname + ':' + location.port);
-  this.gui = gui;
 
   this.isConnected = false;
 
-  this.emitter = new EventEmitter2({ verbose: true });
+  this.material = [];
+  this.entityMaterial = {};
 
-  this.init();
+  this.connect();
   this.visualsToAdd = [];
 
   this.numConnectionTrials = 0;
@@ -18,17 +24,11 @@ GZ3D.GZIface = function(scene, gui, url)
   this.timeToSleepBtwTrials = 1000; // wait 1 second between connection trials
 };
 
-GZ3D.GZIface.prototype.init = function()
-{
-  this.material = [];
-  this.entityMaterial = {};
-
-  this.connect();
-};
-
+/**
+ * Attempt to establish websocket connection.
+ */
 GZ3D.GZIface.prototype.connect = function()
 {
-  // connect to websocket
   this.webSocket = new ROSLIB.Ros({
     url : 'ws://' + this.url
   });
@@ -44,12 +44,15 @@ GZ3D.GZIface.prototype.connect = function()
   this.numConnectionTrials++;
 };
 
+/**
+ * Callback when the websocket fails to connect.
+ */
 GZ3D.GZIface.prototype.onError = function()
 {
-  // init scene and show popup only for the first connection error
+  // Notify others about connection failure only once
   if (this.numConnectionTrials === 1)
   {
-    this.emitter.emit('connectionError');
+    this.emitter.emit('connectError');
   }
 
   var that = this;
@@ -62,6 +65,9 @@ GZ3D.GZIface.prototype.onError = function()
   }
 };
 
+/**
+ * Callback when the websocket connects successfully.
+ */
 GZ3D.GZIface.prototype.onConnected = function()
 {
   this.isConnected = true;
@@ -130,7 +136,7 @@ GZ3D.GZIface.prototype.onConnected = function()
 
     if (message.grid === true)
     {
-      guiEvents.emit('show_grid', 'show');
+      this.emitter.emit('show_grid', 'show');
     }
 
     if (message.ambient)
@@ -159,10 +165,7 @@ GZ3D.GZIface.prototype.onConnected = function()
       var light = message.light[i];
       var lightObj = this.createLightFromMsg(light);
       this.scene.add(lightObj);
-      if (this.gui !== undefined)
-      {
-        this.gui.setLightStats(light, 'update');
-      }
+      this.emitter.emit('setLightStats', light, 'update');
     }
 
     for (var j = 0; j < message.model.length; ++j)
@@ -170,16 +173,10 @@ GZ3D.GZIface.prototype.onConnected = function()
       var model = message.model[j];
       var modelObj = this.createModelFromMsg(model);
       this.scene.add(modelObj);
-      if (this.gui !== undefined)
-      {
-        this.gui.setModelStats(model, 'update');
-      }
+      this.emitter.emit('setModelStats', model, 'update');
     }
 
-    if (this.gui !== undefined)
-    {
-      this.gui.setSceneStats(message);
-    }
+    this.emitter.emit('setSceneStats', message);
     this.sceneTopic.unsubscribe();
   };
   this.sceneTopic.subscribe(sceneUpdate.bind(this));
@@ -192,13 +189,9 @@ GZ3D.GZIface.prototype.onConnected = function()
 
   var physicsUpdate = function(message)
   {
-    if (this.gui !== undefined)
-    {
-      this.gui.setPhysicsStats(message);
-    }
+    this.emitter.emit('setPhysicsStats', message);
   };
   this.physicsTopic.subscribe(physicsUpdate.bind(this));
-
 
   // Update model pose
   var poseTopic = new ROSLIB.Topic({
@@ -214,10 +207,7 @@ GZ3D.GZIface.prototype.onConnected = function()
         && entity.parent !== this.scene.modelManipulator.object)
     {
       this.scene.updatePose(entity, message.position, message.orientation);
-      if (this.gui !== undefined)
-      {
-        this.gui.setModelStats(message, 'update');
-      }
+      this.emitter.emit('setModelStats', message, 'update');
     }
   };
 
@@ -239,19 +229,13 @@ GZ3D.GZIface.prototype.onConnected = function()
       {
         if (entity.children[0] instanceof THREE.Light)
         {
-          if (this.gui !== undefined)
-          {
-            this.gui.setLightStats({name: message.data}, 'delete');
-          }
-          guiEvents.emit('notification_popup', message.data+' deleted');
+          this.emitter.emit('setLightStats', {name: message.data}, 'delete');
+          this.emitter.emit('notification_popup', message.data+' deleted');
         }
         else
         {
-          if (this.gui !== undefined)
-          {
-            this.gui.setModelStats({name: message.data}, 'delete');
-          }
-          guiEvents.emit('notification_popup', message.data+' deleted');
+          this.emitter.emit('setModelStats', {name: message.data}, 'delete');
+          this.emitter.emit('notification_popup', message.data+' deleted');
         }
         this.scene.remove(entity);
       }
@@ -275,7 +259,7 @@ GZ3D.GZIface.prototype.onConnected = function()
       if (modelObj)
       {
         this.scene.add(modelObj);
-        guiEvents.emit('notification_popup', message.name+' inserted');
+        this.emitter.emit('notification_popup', message.name+' inserted');
       }
 
       // visuals may arrive out of order (before the model msg),
@@ -300,10 +284,7 @@ GZ3D.GZIface.prototype.onConnected = function()
         i++;
       }
     }
-    if (this.gui !== undefined)
-    {
-      this.gui.setModelStats(message, 'update');
-    }
+    this.emitter.emit('setModelStats', message, 'update');
   };
 
   modelInfoTopic.subscribe(modelUpdate.bind(this));
@@ -351,7 +332,7 @@ GZ3D.GZIface.prototype.onConnected = function()
 
   var worldStatsUpdate = function(message)
   {
-    this.updateStatsGuiFromMsg(message);
+    this.forwardWorldStats(message);
   };
 
   worldStatsTopic.subscribe(worldStatsUpdate.bind(this));
@@ -382,12 +363,9 @@ GZ3D.GZIface.prototype.onConnected = function()
         }
       }
 
-      guiEvents.emit('notification_popup', message.name+' inserted');
+      this.emitter.emit('notification_popup', message.name+' inserted');
     }
-    if (this.gui !== undefined)
-    {
-      this.gui.setLightStats(message, 'update');
-    }
+    this.emitter.emit('setLightStats', message, 'update');
   };
 
   lightFactoryTopic.subscribe(lightCreate.bind(this));
@@ -406,10 +384,7 @@ GZ3D.GZIface.prototype.onConnected = function()
         && entity.parent !== this.scene.modelManipulator.object)
     {
       this.scene.updateLight(entity, message);
-      if (this.gui !== undefined)
-      {
-        this.gui.setLightStats(message, 'update');
-      }
+      this.emitter.emit('setLightStats', message, 'update');
     }
   };
 
@@ -513,7 +488,7 @@ GZ3D.GZIface.prototype.onConnected = function()
     }
   };
 
-  this.scene.emitter.on('entityChanged', publishEntityModify);
+  this.emitter.on('entityChanged', publishEntityModify);
 
   // Link messages - for modifying links
   this.linkModifyTopic = new ROSLIB.Topic({
@@ -541,7 +516,7 @@ GZ3D.GZIface.prototype.onConnected = function()
     that.linkModifyTopic.publish(modelMsg);
   };
 
-  this.scene.emitter.on('linkChanged', publishLinkModify);
+  this.emitter.on('linkChanged', publishLinkModify);
 
   // Factory messages - for spawning new models
   this.factoryTopic = new ROSLIB.Topic({
@@ -610,15 +585,12 @@ GZ3D.GZIface.prototype.onConnected = function()
     that.deleteTopic.publish(modelMsg);
   };
 
-    if (this.gui !== undefined)
-    {
-      this.gui.emitter.on('deleteEntity',
-        function(entity)
-        {
-          publishDeleteEntity(entity);
-        }
-      );
-    }
+  this.emitter.on('deleteEntity',
+      function(entity)
+      {
+        publishDeleteEntity(entity);
+      }
+  );
 
   // World control messages - for resetting world/models
   this.worldControlTopic = new ROSLIB.Topic({
@@ -641,30 +613,21 @@ GZ3D.GZIface.prototype.onConnected = function()
     that.worldControlTopic.publish(worldControlMsg);
   };
 
-    if (this.gui !== undefined)
-    {
-      this.gui.emitter.on('entityCreated', publishFactory);
-    }
+  this.emitter.on('entityCreated', publishFactory);
 
-    if (this.gui !== undefined)
-    {
-      this.gui.emitter.on('reset',
-          function(resetType)
-          {
-            publishWorldControl(null, resetType);
-          }
-      );
-    }
+  this.emitter.on('reset',
+      function(resetType)
+      {
+        publishWorldControl(null, resetType);
+      }
+  );
 
-    if (this.gui !== undefined)
-    {
-      this.gui.emitter.on('pause',
+  this.emitter.on('pause',
       function(paused)
       {
         publishWorldControl(paused, null);
       }
-      );
-    }
+  );
 
   // Log play control messages
   this.playbackControlTopic = new ROSLIB.Topic({
@@ -678,35 +641,38 @@ GZ3D.GZIface.prototype.onConnected = function()
     that.playbackControlTopic.publish(playbackControl);
   };
 
-  if (this.gui !== undefined)
-  {
-    this.gui.emitter.on('logPlayChanged', publishPlaybackControl);
-  }
+  this.emitter.on('logPlayChanged', publishPlaybackControl);
 };
 
-GZ3D.GZIface.prototype.updateStatsGuiFromMsg = function(stats)
+/**
+ * Emit events with latest world stats
+ * @param {Object} stats - World statistics message
+ */
+GZ3D.GZIface.prototype.forwardWorldStats = function(stats)
 {
-  if (this.gui === undefined)
-  {
-    return;
-  }
+  this.emitter.emit('setPaused', stats.paused);
 
   if (stats.log_playback_stats)
   {
-    this.gui.setLogPlayVisible(true);
-    this.gui.setLogPlayStats(stats.sim_time,
+    this.emitter.emit('setLogPlayVisible', true);
+    this.emitter.emit('setLogPlayStats', stats.sim_time,
         stats.log_playback_stats.start_time,
         stats.log_playback_stats.end_time);
   }
   else
   {
-    this.gui.setLogPlayVisible(false);
-    this.gui.setRealTime(stats.real_time);
+    this.emitter.emit('setLogPlayVisible', false);
+    this.emitter.emit('setRealTime', stats.real_time);
   }
 
-  this.gui.setSimTime(stats.sim_time);
+  this.emitter.emit('setSimTime', stats.sim_time);
 };
 
+/**
+ * Create new model based on a message.
+ * @param {Object} model - Model message
+ * @return {Object} Model object
+ */
 GZ3D.GZIface.prototype.createModelFromMsg = function(model)
 {
   var modelObj = new THREE.Object3D();
@@ -790,6 +756,11 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
   return modelObj;
 };
 
+/**
+ * Create new visual based on a message.
+ * @param {Object} visual - Visual message
+ * @return {Object} Visual object
+ */
 GZ3D.GZIface.prototype.createVisualFromMsg = function(visual)
 {
   if (visual.geometry)
@@ -812,6 +783,11 @@ GZ3D.GZIface.prototype.createVisualFromMsg = function(visual)
   }
 };
 
+/**
+ * Create new light based on a message.
+ * @param {Object} light - Light message
+ * @return {Object} Light object
+ */
 GZ3D.GZIface.prototype.createLightFromMsg = function(light)
 {
   var obj, range, direction;
@@ -850,6 +826,11 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
   return obj;
 };
 
+/**
+ * Create new roads based on a message.
+ * @param {Object} roads - Road message
+ * @return {Object} Road object
+ */
 GZ3D.GZIface.prototype.createRoadsFromMsg = function(roads)
 {
   var roadObj = new THREE.Object3D();
@@ -865,6 +846,12 @@ GZ3D.GZIface.prototype.createRoadsFromMsg = function(roads)
   return roadObj;
 };
 
+/**
+ * Substitute URI scheme with 'assets' or simply prepend 'assets' if URI
+ * doesn't have a scheme.
+ * @param {string} uri - Full URI including scheme
+ * @return {string} Updated URI
+ */
 GZ3D.GZIface.prototype.parseUri = function(uri)
 {
   var uriPath = 'assets';
@@ -876,6 +863,12 @@ GZ3D.GZIface.prototype.parseUri = function(uri)
   return uriPath + '/' + uri.substring(idx);
 };
 
+/**
+ * Create geometry and append it to parent
+ * @param {Object} geom - geometry message
+ * @param {Object} material - material message
+ * @param {Object} parent - parent object (i.e. visual)
+ */
 GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
 {
   var obj;
@@ -1116,6 +1109,11 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
   }
 };
 
+/**
+ * Parse a material message and return an object containing its properties.
+ * @param {Object} material - material message
+ * @return Object containing material properties
+ */
 GZ3D.GZIface.prototype.parseMaterial = function(material)
 {
   if (!material)

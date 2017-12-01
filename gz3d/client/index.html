@@ -1114,8 +1114,9 @@
       {
         shaders = new GZ3D.Shaders();
         scene = new GZ3D.Scene(shaders);
-        gui = new GZ3D.Gui(scene);
-        iface = new GZ3D.GZIface(scene, gui);
+        logPlay = new GZ3D.LogPlay();
+        gui = new GZ3D.Gui(scene, logPlay);
+        iface = new GZ3D.GZIface(scene);
         sdfparser = new GZ3D.SdfParser(scene, gui, iface);
 
         container = document.getElementById( 'container' );

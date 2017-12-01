@@ -6,6 +6,7 @@
  */
 GZ3D.Scene = function(shaders)
 {
+  this.emitter = globalEmitter || new EventEmitter2({verbose: true});
   this.shaders = shaders;
   this.init();
 };
@@ -114,8 +115,6 @@ GZ3D.Scene.prototype.init = function()
 
   this.controls = new THREE.OrbitControls(this.camera);
   this.scene.add(this.controls.targetIndicator);
-
-  this.emitter = new EventEmitter2({ verbose: true });
 
   // Radial menu (only triggered by touch)
   this.radialMenu = new GZ3D.RadialMenu(this.getDomElement());
@@ -333,7 +332,7 @@ GZ3D.Scene.prototype.init = function()
 
 GZ3D.Scene.prototype.initScene = function()
 {
-  guiEvents.emit('show_grid', 'show');
+  this.emitter.emit('show_grid', 'show');
 
   // create a sun light
   var obj = this.createLight(3, new THREE.Color(0.8, 0.8, 0.8), 0.9,
@@ -521,7 +520,7 @@ GZ3D.Scene.prototype.onKeyDown = function(event)
   {
     if (this.selectedEntity)
     {
-      guiEvents.emit('delete_entity');
+      this.emitter.emit('delete_entity');
     }
   }
 
@@ -2365,7 +2364,7 @@ GZ3D.Scene.prototype.selectEntity = function(object)
       this.selectedEntity = object;
     }
     this.attachManipulator(object, this.manipulationMode);
-    guiEvents.emit('setTreeSelected', object.name);
+    this.emitter.emit('setTreeSelected', object.name);
   }
   else
   {
@@ -2376,7 +2375,7 @@ GZ3D.Scene.prototype.selectEntity = function(object)
     }
     this.hideBoundingBox();
     this.selectedEntity = null;
-    guiEvents.emit('setTreeDeselected');
+    this.emitter.emit('setTreeDeselected');
   }
 };
 
