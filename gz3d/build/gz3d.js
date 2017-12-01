@@ -2510,6 +2510,13 @@ var formatTime = function(time)
   return timeValue;
 };
 
+/**
+ * Class responsible for communication with the backend via a websocket, it
+ * forwards user commands to the server and propagates updates coming from the
+ * server to other classes.
+ * @constructor
+ * @param {GZ3D.Scene} scene - A scene to connect to
+ */
 GZ3D.GZIface = function(scene)
 {
   this.emitter = globalEmitter || new EventEmitter2({verbose: true});
@@ -2517,7 +2524,10 @@ GZ3D.GZIface = function(scene)
 
   this.isConnected = false;
 
-  this.init();
+  this.material = [];
+  this.entityMaterial = {};
+
+  this.connect();
   this.visualsToAdd = [];
 
   this.numConnectionTrials = 0;
@@ -2525,17 +2535,11 @@ GZ3D.GZIface = function(scene)
   this.timeToSleepBtwTrials = 1000; // wait 1 second between connection trials
 };
 
-GZ3D.GZIface.prototype.init = function()
-{
-  this.material = [];
-  this.entityMaterial = {};
-
-  this.connect();
-};
-
+/**
+ * Attempt to establish websocket connection.
+ */
 GZ3D.GZIface.prototype.connect = function()
 {
-  // connect to websocket
   this.webSocket = new ROSLIB.Ros({
     url : 'ws://' + location.hostname + ':7681'
   });
@@ -2551,9 +2555,12 @@ GZ3D.GZIface.prototype.connect = function()
   this.numConnectionTrials++;
 };
 
+/**
+ * Callback when the websocket fails to connect.
+ */
 GZ3D.GZIface.prototype.onError = function()
 {
-  // init scene and show popup only for the first connection error
+  // Notify others about connection failure only once
   if (this.numConnectionTrials === 1)
   {
     this.emitter.emit('connectError');
@@ -2569,6 +2576,9 @@ GZ3D.GZIface.prototype.onError = function()
   }
 };
 
+/**
+ * Callback when the websocket connects successfully.
+ */
 GZ3D.GZIface.prototype.onConnected = function()
 {
   this.isConnected = true;
@@ -2693,7 +2703,6 @@ GZ3D.GZIface.prototype.onConnected = function()
     this.emitter.emit('setPhysicsStats', message);
   };
   this.physicsTopic.subscribe(physicsUpdate.bind(this));
-
 
   // Update model pose
   var poseTopic = new ROSLIB.Topic({
@@ -2834,7 +2843,7 @@ GZ3D.GZIface.prototype.onConnected = function()
 
   var worldStatsUpdate = function(message)
   {
-    this.updateStatsGuiFromMsg(message);
+    this.forwardWorldStats(message);
   };
 
   worldStatsTopic.subscribe(worldStatsUpdate.bind(this));
@@ -3146,7 +3155,11 @@ GZ3D.GZIface.prototype.onConnected = function()
   this.emitter.on('logPlayChanged', publishPlaybackControl);
 };
 
-GZ3D.GZIface.prototype.updateStatsGuiFromMsg = function(stats)
+/**
+ * Emit events with latest world stats
+ * @param {Object} stats - World statistics message
+ */
+GZ3D.GZIface.prototype.forwardWorldStats = function(stats)
 {
   this.emitter.emit('setPaused', stats.paused);
 
@@ -3166,6 +3179,11 @@ GZ3D.GZIface.prototype.updateStatsGuiFromMsg = function(stats)
   this.emitter.emit('setSimTime', stats.sim_time);
 };
 
+/**
+ * Create new model based on a message.
+ * @param {Object} model - Model message
+ * @return {Object} Model object
+ */
 GZ3D.GZIface.prototype.createModelFromMsg = function(model)
 {
   var modelObj = new THREE.Object3D();
@@ -3249,6 +3267,11 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
   return modelObj;
 };
 
+/**
+ * Create new visual based on a message.
+ * @param {Object} visual - Visual message
+ * @return {Object} Visual object
+ */
 GZ3D.GZIface.prototype.createVisualFromMsg = function(visual)
 {
   if (visual.geometry)
@@ -3271,6 +3294,11 @@ GZ3D.GZIface.prototype.createVisualFromMsg = function(visual)
   }
 };
 
+/**
+ * Create new light based on a message.
+ * @param {Object} light - Light message
+ * @return {Object} Light object
+ */
 GZ3D.GZIface.prototype.createLightFromMsg = function(light)
 {
   var obj, range, direction;
@@ -3309,6 +3337,11 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
   return obj;
 };
 
+/**
+ * Create new roads based on a message.
+ * @param {Object} roads - Road message
+ * @return {Object} Road object
+ */
 GZ3D.GZIface.prototype.createRoadsFromMsg = function(roads)
 {
   var roadObj = new THREE.Object3D();
@@ -3324,6 +3357,12 @@ GZ3D.GZIface.prototype.createRoadsFromMsg = function(roads)
   return roadObj;
 };
 
+/**
+ * Substitute URI scheme with 'assets' or simply prepend 'assets' if URI
+ * doesn't have a scheme.
+ * @param {string} uri - Full URI including scheme
+ * @return {string} Updated URI
+ */
 GZ3D.GZIface.prototype.parseUri = function(uri)
 {
   var uriPath = 'assets';
@@ -3335,6 +3374,12 @@ GZ3D.GZIface.prototype.parseUri = function(uri)
   return uriPath + '/' + uri.substring(idx);
 };
 
+/**
+ * Create geometry and append it to parent
+ * @param {Object} geom - geometry message
+ * @param {Object} material - material message
+ * @param {Object} parent - parent object (i.e. visual)
+ */
 GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
 {
   var obj;
@@ -3573,6 +3618,11 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
   }
 };
 
+/**
+ * Parse a material message and return an object containing its properties.
+ * @param {Object} material - material message
+ * @return Object containing material properties
+ */
 GZ3D.GZIface.prototype.parseMaterial = function(material)
 {
   if (!material)
@@ -8860,6 +8910,7 @@ GZ3D.SdfParser.prototype.init = function()
     this.usingFilesUrls = true;
     var that = this;
     this.emitter.on('connectError', function() {
+      // init scene and show popup only for the first connection error
       this.emitter.emit('notification_popup',
               'GzWeb is currently running' +
               'without a server, and materials could not be loaded.' +

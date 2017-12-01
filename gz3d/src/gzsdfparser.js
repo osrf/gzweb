@@ -49,6 +49,7 @@ GZ3D.SdfParser.prototype.init = function()
     this.usingFilesUrls = true;
     var that = this;
     this.emitter.on('connectError', function() {
+      // init scene and show popup only for the first connection error
       this.emitter.emit('notification_popup',
               'GzWeb is currently running' +
               'without a server, and materials could not be loaded.' +
