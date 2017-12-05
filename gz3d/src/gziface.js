@@ -5,10 +5,11 @@
  * @constructor
  * @param {GZ3D.Scene} scene - A scene to connect to
  */
-GZ3D.GZIface = function(scene)
+GZ3D.GZIface = function(scene, url)
 {
   this.emitter = globalEmitter || new EventEmitter2({verbose: true});
   this.scene = scene;
+  this.url = url || (location.hostname + ':' + location.port);
 
   this.isConnected = false;
 
@@ -29,7 +30,7 @@ GZ3D.GZIface = function(scene)
 GZ3D.GZIface.prototype.connect = function()
 {
   this.webSocket = new ROSLIB.Ros({
-    url : 'ws://' + location.hostname + ':7681'
+    url : 'ws://' + this.url
   });
 
   var that = this;
@@ -51,7 +52,7 @@ GZ3D.GZIface.prototype.onError = function()
   // Notify others about connection failure only once
   if (this.numConnectionTrials === 1)
   {
-    this.emitter.emit('connectError');
+    this.emitter.emit('connectionError');
   }
 
   var that = this;
@@ -989,6 +990,8 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
         var ext = modelUri.substr(-4).toLowerCase();
         var materialName = parent.name + '::' + modelUri;
         this.entityMaterial[materialName] = mat;
+
+        modelUri = 'http://' + this.url + '/' + modelUri;
 
         this.scene.loadMeshFromUri(modelUri, submesh, centerSubmesh,
           function(mesh) {
