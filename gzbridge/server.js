@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+"use strict"
+
 const WebSocketServer = require('websocket').server;
 const http = require('http');
 const fs = require('fs');
@@ -100,7 +102,7 @@ else
 }
 
 // Start websocket server
-wsServer = new WebSocketServer({
+let wsServer = new WebSocketServer({
   httpServer: httpServer,
   // You should not use autoAcceptConnections for production
   // applications, as it defeats all standard cross-origin protection

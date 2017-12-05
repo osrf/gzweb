@@ -52,7 +52,7 @@ GZ3D.GZIface.prototype.onError = function()
   // Notify others about connection failure only once
   if (this.numConnectionTrials === 1)
   {
-    this.emitter.emit('connectError');
+    this.emitter.emit('connectionError');
   }
 
   var that = this;

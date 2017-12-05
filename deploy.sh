@@ -134,6 +134,7 @@ then
   ./webify_models_v2.py $DIR/http/client/assets
 
 else
+  mkdir -p $DIR/http/client/assets
   echo "Not cloning the model repo"
 fi
 

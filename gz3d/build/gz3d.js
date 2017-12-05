@@ -2564,7 +2564,7 @@ GZ3D.GZIface.prototype.onError = function()
   // Notify others about connection failure only once
   if (this.numConnectionTrials === 1)
   {
-    this.emitter.emit('connectError');
+    this.emitter.emit('connectionError');
   }
 
   var that = this;
@@ -8914,7 +8914,7 @@ GZ3D.SdfParser.prototype.init = function()
   {
     this.usingFilesUrls = true;
     var that = this;
-    this.emitter.on('connectError', function() {
+    this.emitter.on('connectionError', function() {
       // init scene and show popup only for the first connection error
       this.emitter.emit('notification_popup',
               'GzWeb is currently running' +
