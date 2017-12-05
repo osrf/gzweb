@@ -7,20 +7,23 @@
     "url": "https://bitbucket.org/osrf/gzweb"
   },
   "config": {
-    "port": "8080",
+    "port": "",
     "deploy_op": ""
   },
   "scripts": {
-    "test": "./node_modules/.bin/eslint gz3d/src/*.js && ./node_modules/karma/bin/karma start --singleRun",
+    "test": "./node_modules/.bin/eslint gz3d/src/*.js gzbridge/server.js && ./node_modules/karma/bin/karma start --singleRun",
     "update": "grunt build && cd build && cmake ..",
-    "start": "if [ $npm_config_port ]; then port=$npm_config_port; else port=8080; fi; cd gzbridge && ./server.js $port",
+    "start": "if [ $npm_config_port ]; then port=$npm_config_port; fi; cd gzbridge && ./server.js $port",
     "deploy": "if [ $npm_config_deploy_op ]; then ./deploy.sh -$npm_config_deploy_op; else ./deploy.sh; fi;",
     "docs": "grunt doc",
     "coverage": "codecov"
   },
   "dependencies": {
-    "websocket": "",
-    "node-gyp": ""
+    "fs": "0.0.1-security",
+    "http": "0.0.0",
+    "node-gyp": "",
+    "path": "^0.12.7",
+    "websocket": "^1.0.25"
   },
   "devDependencies": {
     "catharsis": "^0.8.9",
