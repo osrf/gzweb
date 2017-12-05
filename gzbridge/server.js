@@ -102,7 +102,7 @@ else
 }
 
 // Start websocket server
-wsServer = new WebSocketServer({
+let wsServer = new WebSocketServer({
   httpServer: httpServer,
   // You should not use autoAcceptConnections for production
   // applications, as it defeats all standard cross-origin protection
