@@ -5,9 +5,9 @@ pipelines:
     - step:
         script:
           - apt update
-          # Node 6
+          # Node 4 (xenial)
           - apt install -y curl
-          - curl -sL https://deb.nodesource.com/setup_6.x | bash -
+          - curl -sL https://deb.nodesource.com/setup_4.x | bash -
           # Dependencies
           - apt install -y libjansson-dev nodejs libboost-dev imagemagick libtinyxml-dev mercurial cmake build-essential wget
           - npm install -g grunt
