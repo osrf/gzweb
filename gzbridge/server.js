@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+"use strict"
+
 const WebSocketServer = require('websocket').server;
 const http = require('http');
 const fs = require('fs');
