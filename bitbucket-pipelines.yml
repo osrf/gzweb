@@ -6,7 +6,7 @@ pipelines:
         script:
           - apt update
           # Node (xenial uses v4.6.2)
-          - apt install -y nodejs
+          - apt install -y nodejs npm
           # Dependencies
           - apt install -y libjansson-dev nodejs libboost-dev imagemagick libtinyxml-dev mercurial cmake build-essential wget
           - npm install -g grunt
