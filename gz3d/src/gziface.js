@@ -1,8 +1,9 @@
 //var GAZEBO_MODEL_DATABASE_URI='http://gazebosim.org/models';
 
-GZ3D.GZIface = function(scene, gui)
+GZ3D.GZIface = function(scene, gui, url)
 {
   this.scene = scene;
+  this.url = url || (location.hostname + ':' + location.port);
   this.gui = gui;
 
   this.isConnected = false;
@@ -29,7 +30,7 @@ GZ3D.GZIface.prototype.connect = function()
 {
   // connect to websocket
   this.webSocket = new ROSLIB.Ros({
-    url : 'ws://' + location.hostname + ':7681'
+    url : 'ws://' + this.url
   });
 
   var that = this;
@@ -48,7 +49,7 @@ GZ3D.GZIface.prototype.onError = function()
   // init scene and show popup only for the first connection error
   if (this.numConnectionTrials === 1)
   {
-    this.emitter.emit('error');
+    this.emitter.emit('connectionError');
   }
 
   var that = this;
@@ -948,6 +949,8 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
         var ext = modelUri.substr(-4).toLowerCase();
         var materialName = parent.name + '::' + modelUri;
         this.entityMaterial[materialName] = mat;
+
+        modelUri = 'http://' + this.url + '/' + modelUri;
 
         this.scene.loadMeshFromUri(modelUri, submesh, centerSubmesh,
           function(mesh) {
