@@ -496,7 +496,7 @@ $(function()
         });
   }
 
-  $('.tab').click(function()
+  $('body').on('click', '.tab', function()
       {
         var idTab = $(this).attr('id');
         var idMenu = idTab.substring(0,idTab.indexOf('Tab'));
@@ -511,25 +511,25 @@ $(function()
         }
       });
 
-  $('.closePanels').click(function()
+  $('body').on('click', '.closePanels', function()
       {
         globalEmitter.emit('closeTabs', true);
       });
 
-  $('#view-mode').click(function()
+  $('body').on('click', '#view-mode', function()
       {
         globalEmitter.emit('manipulation_mode', 'view');
       });
-  $('#translate-mode').click(function()
+  $('body').on('click', '#translate-mode', function()
       {
         globalEmitter.emit('manipulation_mode', 'translate');
       });
-  $('#rotate-mode').click(function()
+  $('body').on('click', '#rotate-mode', function()
       {
         globalEmitter.emit('manipulation_mode', 'rotate');
       });
 
-  $('[id^="header-insert-"]').click(function()
+  $('body').on('click', '[id^="header-insert-"]', function()
       {
         var entity = $(this).attr('id');
         entity = entity.substring(14); // after 'header-insert-'
@@ -537,7 +537,7 @@ $(function()
         globalEmitter.emit('spawn_entity_start', entity);
       });
 
-  $('#play').click(function()
+  $('body').on('click', '#play', function()
       {
         if ( $('#playText').html().indexOf('Play') !== -1 )
         {
@@ -550,7 +550,7 @@ $(function()
           globalEmitter.emit('notification_popup','Physics engine paused');
         }
       });
-  $('#clock').click(function()
+  $('body').on('click', '#clock', function()
       {
         if ($.mobile.activePage.find('#clock-touch').parent().
             hasClass('ui-popup-active'))
@@ -567,48 +567,51 @@ $(function()
         }
       });
 
-  $('#reset-model').click(function()
+  $('body').on('click', '#reset-model', function()
       {
         globalEmitter.emit('reset', 'model');
         globalEmitter.emit('closeTabs', false);
       });
-  $('#reset-world').click(function()
+  $('body').on('click', '#reset-world', function()
       {
         globalEmitter.emit('reset', 'world');
         globalEmitter.emit('closeTabs', false);
       });
-  $('#reset-view').click(function()
+  $('body').on('click', '#reset-view', function()
       {
         globalEmitter.emit('view_reset');
         globalEmitter.emit('closeTabs', false);
       });
-  $('#view-grid').click(function()
+  $('body').on('click', '#view-grid', function()
       {
         globalEmitter.emit('show_grid', 'toggle');
         globalEmitter.emit('closeTabs', false);
       });
-  $('#view-collisions').click(function()
+  $('body').on('click', '#view-collisions', function()
       {
         globalEmitter.emit('show_collision');
         globalEmitter.emit('closeTabs', false);
       });
-  $('#view-orbit-indicator').click(function()
+  $('body').on('click', '#view-orbit-indicator', function()
       {
         globalEmitter.emit('show_orbit_indicator');
         globalEmitter.emit('closeTabs', false);
       });
-  $( '#snap-to-grid' ).click(function() {
-    globalEmitter.emit('snap_to_grid');
-    globalEmitter.emit('closeTabs', false);
-  });
-  $( '#open-tree-when-selected' ).click(function() {
-    globalEmitter.emit('openTreeWhenSelected');
-    globalEmitter.emit('closeTabs', false);
-  });
-  $( '#toggle-notifications' ).click(function() {
-    globalEmitter.emit('toggle_notifications');
-    globalEmitter.emit('closeTabs', false);
-  });
+  $('body').on('click', '#snap-to-grid', function()
+      {
+        globalEmitter.emit('snap_to_grid');
+        globalEmitter.emit('closeTabs', false);
+      });
+  $('body').on('click', '#open-tree-when-selected', function()
+      {
+        globalEmitter.emit('openTreeWhenSelected');
+        globalEmitter.emit('closeTabs', false);
+      });
+  $('body').on('click', '#toggle-notifications', function()
+      {
+        globalEmitter.emit('toggle_notifications');
+        globalEmitter.emit('closeTabs', false);
+      });
 
   // Disable Esc key to close panel
   $('body').on('keyup', function(event)
@@ -620,17 +623,20 @@ $(function()
       });
 
   // Object menu
-  $( '#view-transparent' ).click(function() {
+  $('body').on('click', '#view-transparent', function()
+  {
     $('#model-popup').popup('close');
     globalEmitter.emit('set_view_as','transparent');
   });
 
-  $( '#view-wireframe' ).click(function() {
+  $('body').on('click', '#view-wireframe', function()
+  {
     $('#model-popup').popup('close');
     globalEmitter.emit('set_view_as','wireframe');
   });
 
-  $( '#view-joints' ).click(function() {
+  $('body').on('click', '#view-joints', function()
+  {
     if ($('#view-joints a').css('color') === 'rgb(255, 255, 255)')
     {
       $('#model-popup').popup('close');
@@ -638,7 +644,8 @@ $(function()
     }
   });
 
-  $( '#view-com' ).click(function() {
+  $('body').on('click', '#view-com', function()
+  {
     if ($('#view-com a').css('color') === 'rgb(255, 255, 255)')
     {
       $('#model-popup').popup('close');
@@ -646,7 +653,8 @@ $(function()
     }
   });
 
-  $( '#view-inertia' ).click(function() {
+  $('body').on('click', '#view-inertia', function()
+  {
     if ($('#view-inertia a').css('color') === 'rgb(255, 255, 255)')
     {
       $('#model-popup').popup('close');
@@ -654,7 +662,8 @@ $(function()
     }
   });
 
-  $( '#delete-entity' ).click(function() {
+  $('body').on('click', '#delete-entity', function()
+  {
     globalEmitter.emit('delete_entity');
   });
 
