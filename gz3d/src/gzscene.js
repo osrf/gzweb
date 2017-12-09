@@ -31,7 +31,7 @@ GZ3D.Scene.prototype.init = function()
 
   // loaders
   this.textureLoader = new THREE.TextureLoader();
-  this.textureLoader.crossOrigin = '';
+  this.textureLoader.crossOrigin = 'anonymous';
   this.colladaLoader = new THREE.ColladaLoader();
   this.objLoader = new THREE.OBJLoader();
   this.stlLoader = new THREE.STLLoader();
@@ -117,8 +117,11 @@ GZ3D.Scene.prototype.init = function()
   this.scene.add(this.controls.targetIndicator);
 
   // Radial menu (only triggered by touch)
-  this.radialMenu = new GZ3D.RadialMenu(this.getDomElement());
-  this.sceneOrtho.add(this.radialMenu.menu);
+  if (typeof GZ3D.RadialMenu === 'function')
+  {
+    this.radialMenu = new GZ3D.RadialMenu(this.getDomElement());
+    this.sceneOrtho.add(this.radialMenu.menu);
+  }
 
   // Bounding Box
   var indices = new Uint16Array(
@@ -615,7 +618,7 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
         model = model.parent;
       }
 
-      if (model === this.radialMenu.menu)
+      if (this.radialMenu && model === this.radialMenu.menu)
       {
         continue;
       }
@@ -669,7 +672,7 @@ GZ3D.Scene.prototype.render = function()
   // -pointer over menus
   // -spawning
   if (this.modelManipulator.hovered ||
-      this.radialMenu.showing ||
+      (this.radialMenu && this.radialMenu.showing) ||
       this.pointerOnMenu ||
       this.spawnModel.active)
   {
@@ -683,7 +686,10 @@ GZ3D.Scene.prototype.render = function()
   }
 
   this.modelManipulator.update();
-  this.radialMenu.update();
+  if (this.radialMenu)
+  {
+    this.radialMenu.update();
+  }
 
   this.renderer.clear();
   this.renderer.render(this.scene, this.camera);
@@ -2071,6 +2077,11 @@ GZ3D.Scene.prototype.resetView = function()
  */
 GZ3D.Scene.prototype.showRadialMenu = function(e)
 {
+  if (!this.radialMenu)
+  {
+    return;
+  }
+
   var event = e.originalEvent;
 
   var pointer = event.touches ? event.touches[ 0 ] : event;
