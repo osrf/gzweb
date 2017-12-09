@@ -460,8 +460,12 @@ GZ3D.Scene.prototype.onPointerUp = function(event)
   if (millisecs - this.timeDown < 150)
   {
     this.setManipulationMode('view');
-    $( '#view-mode' ).click();
-    $('input[type="radio"]').checkboxradio('refresh');
+    // TODO: Remove jquery from scene
+    if (typeof GZ3D.Gui === 'function')
+    {
+      $( '#view-mode' ).click();
+      $('input[type="radio"]').checkboxradio('refresh');
+    }
   }
   this.timeDown = null;
 };
@@ -534,20 +538,24 @@ GZ3D.Scene.prototype.onKeyDown = function(event)
   }
 
   // Esc/R/T for changing manipulation modes
-  if (event.keyCode === 27) // Esc
+  // TODO: Remove jquery from scene
+  if (typeof GZ3D.Gui === 'function')
   {
-    $( '#view-mode' ).click();
-    $('input[type="radio"]').checkboxradio('refresh');
-  }
-  if (event.keyCode === 82) // R
-  {
-    $( '#rotate-mode' ).click();
-    $('input[type="radio"]').checkboxradio('refresh');
-  }
-  if (event.keyCode === 84) // T
-  {
-    $( '#translate-mode' ).click();
-    $('input[type="radio"]').checkboxradio('refresh');
+    if (event.keyCode === 27) // Esc
+    {
+      $( '#view-mode' ).click();
+      $('input[type="radio"]').checkboxradio('refresh');
+    }
+    if (event.keyCode === 82) // R
+    {
+      $( '#rotate-mode' ).click();
+      $('input[type="radio"]').checkboxradio('refresh');
+    }
+    if (event.keyCode === 84) // T
+    {
+      $( '#translate-mode' ).click();
+      $('input[type="radio"]').checkboxradio('refresh');
+    }
   }
 };
 
