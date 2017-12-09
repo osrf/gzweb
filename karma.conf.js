@@ -32,6 +32,7 @@ module.exports = function(config) {
       "gz3d/client/js/include/STLLoader.js",
       "gz3d/client/js/include/xml2json.js",
       'gz3d/build/gz3d.js',
+      'gz3d/client/style/gz3d.css',
       "gz3d/test/utils/angular-mocks.min.js",
       'gz3d/test/fixture/*.html',
       'gz3d/test/*.js',

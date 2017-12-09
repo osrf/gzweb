@@ -650,7 +650,10 @@ GZ3D.GZIface.prototype.onConnected = function()
  */
 GZ3D.GZIface.prototype.forwardWorldStats = function(stats)
 {
-  this.emitter.emit('setPaused', stats.paused);
+  if (stats.paused !== undefined)
+  {
+    this.emitter.emit('setPaused', stats.paused);
+  }
 
   if (stats.log_playback_stats)
   {
