@@ -48,7 +48,7 @@ var subtractTime = function(timeA, timeB)
  */
 GZ3D.LogPlay = function()
 {
-  this.emitter = globalEmitter || new EventEmitter2({verbose: true});
+  this.emitter = globalEmitter || new EventEmitter2({verboseMemoryLeak: true});
   this.visible = null;
   this.startTime = null;
   this.endTime = null;

@@ -6,7 +6,7 @@
  */
 GZ3D.Scene = function(shaders)
 {
-  this.emitter = globalEmitter || new EventEmitter2({verbose: true});
+  this.emitter = globalEmitter || new EventEmitter2({verboseMemoryLeak: true});
   this.shaders = shaders;
   this.init();
 };

@@ -1,20 +1,9 @@
 describe('Gui tests', function() {
 
-  beforeEach(function(){
-    module('gzangular');
-    loadFixtures('myfixture.html');
-  });
-
   var $controller;
-  var scene;
-  var gui;
-  var sdfparser;
 
   beforeAll(function(){
-    // Initializing object used in the test.
-    scene = new GZ3D.Scene();
-    gui = new GZ3D.Gui(scene);
-    sdfparser = new GZ3D.SdfParser(scene, gui);
+    module('gzangular');
   });
 
   beforeEach(inject(function(_$controller_){
@@ -23,21 +12,79 @@ describe('Gui tests', function() {
     $controller = _$controller_;
   }));
 
-  // Initialization test
-  describe('Test gzgui init', function() {
-    it('Should verify the status of the gui after initialization', function() {
+  // Perform all GUI tests on a single spec because the timing between fixture
+  // loading and jquery readiness is tricky
+  describe('jQuery interactions', function() {
 
+    it('check GUI events', function() {
+
+      // Check global emitter
+      expect(globalEmitter).toBeDefined();
+
+      // Check there are no listeners yet
+      expect(globalEmitter.eventNames().length).toEqual(0);
+      expect(globalEmitter.listenerCount()).toEqual(0);
+
+      // Check Jquery is ready
+      expect(jQuery.isReady).toBeTruthy();
+
+      // Check the fixture is not there yet
+      expect($('body').length).toEqual(1);
+      expect($('#translate-mode').length).toEqual(0);
+      expect($('.tab').length).toEqual(0);
+
+      // Load fixture
+      loadFixtures('myfixture.html');
+
+      // Check the fixture is present
+      expect($('#translate-mode').length).toEqual(1);
+      expect($('.tab').length).toEqual(3);
+
+      // Now we can release jQuery so the events get setup using the fixture
+      $.holdReady(false);
+
+/*
+      // There are events
+      expect(globalEmitter.eventNames().length).toEqual(8);
+console.log(globalEmitter.eventNames());
+
+      // But no listeners yet
+      for (e in globalEmitter.eventNames())
+      {
+        expect(globalEmitter.listeners(e).length).toEqual(0);
+      }
+*/
+      // Initialize objects used in the test.
+      const scene = new GZ3D.Scene();
+      const gui = new GZ3D.Gui(scene);
+
+      // Check everyone is using the same emitter
       expect(gui.emitter).toEqual(globalEmitter);
+      expect(scene.emitter).toEqual(globalEmitter);
 
+      // Now we have more events and listeners
+      expect(globalEmitter.eventNames().length).toEqual(49);
+      expect(globalEmitter.listeners('manipulation_mode').length)
+          .toEqual(1);
+      expect(globalEmitter.listeners('toggle_notifications').length)
+          .toEqual(1);
+      expect(globalEmitter.listeners('show_orbit_indicator').length)
+          .toEqual(1);
+      expect(globalEmitter.listeners('openTab').length).toEqual(1);
+      expect(globalEmitter.listeners('pointerOnMenu').length)
+          .toEqual(1);
+      expect(globalEmitter.listeners('pointerOffMenu').length)
+          .toEqual(1);
+      expect(globalEmitter.listeners('longpress_container_start').length)
+          .toEqual(1);
+
+      // Check GUI initial values
       expect(gui.spawnState).toEqual(null);
       expect(gui.longPressContainerState).toEqual(null);
-      expect(gui.showNotifications).toEqual(false);
       expect(gui.openTreeWhenSelected).toEqual(false);
       expect(gui.modelStatsDirty).toEqual(false);
 
-      // On globalEmitter, emitter events
-
-      // Manipulation modes
+      // Emit some events
       expect(scene.manipulationMode).toEqual('view');
       globalEmitter.emit('manipulation_mode', 'translate');
       expect(scene.manipulationMode).toEqual('translate');
@@ -64,37 +111,14 @@ describe('Gui tests', function() {
       expect(gui.openTreeWhenSelected).toEqual(false);
       globalEmitter.emit('openTreeWhenSelected');
       expect(gui.openTreeWhenSelected).toEqual(true)
-    });
-  });
 
-  describe('Test getNameFromPath()', function() {
-    it('Should return thr model title given the model path', function() {
-
-      expect(getNameFromPath('box')).toEqual('Box');
-      expect(getNameFromPath('spotlight')).toEqual('Spot Light');
-      expect(getNameFromPath('stone_10_2_5_1cm')).toEqual(
-          'Stone 10 x 2.5 x 1 cm');
-      expect(getNameFromPath('depth_camera')).toEqual('Depth Camera');
-      expect(getNameFromPath('cinder_block_wide')).toEqual('Cinder Block Wide');
-      expect(getNameFromPath('polaris_ranger_xp900_no_roll_cage')).toEqual(
-          'Polaris Ranger without roll cage');
-    });
-  });
-
-  // Test buttons/clicks
-  describe('Gui clicks test', function() {
-
-    beforeAll(function(){
-      expect(globalEmitter).toBeDefined();
+      // Spy on global emitter so we can see when it is triggered
+      // The function is suppresed from here on, so the effects of `emit`
+      // aren't achieved
       spyOn(globalEmitter, 'emit');
-    });
+      expect(globalEmitter.emit.calls.count()).toEqual(0);
 
-    beforeEach(function(){
-      globalEmitter.emit.calls.reset();
-    });
-
-    it('should enter translate mode', function() {
-
+      // Click translate mode
       var spyEvent = spyOnEvent('#translate-mode', 'click')
       $('#translate-mode').click()
       expect('click').toHaveBeenTriggeredOn('#translate-mode')
@@ -102,10 +126,9 @@ describe('Gui tests', function() {
       expect(globalEmitter.emit.calls.count()).toEqual(1);
       expect(globalEmitter.emit).toHaveBeenCalledWith('manipulation_mode',
           'translate');
-    });
+      globalEmitter.emit.calls.reset();
 
-    it('should enter view mode', function() {
-
+      // Click view mode
       var spyEvent = spyOnEvent('#view-mode', 'click')
       $('#view-mode').click()
       expect('click').toHaveBeenTriggeredOn('#view-mode')
@@ -113,10 +136,9 @@ describe('Gui tests', function() {
       expect(globalEmitter.emit.calls.count()).toEqual(1);
       expect(globalEmitter.emit).toHaveBeenCalledWith('manipulation_mode',
           'view');
-    });
+      globalEmitter.emit.calls.reset();
 
-    it('should enter rotate mode', function() {
-
+      // Click rotate mode
       var spyEvent = spyOnEvent('#rotate-mode', 'click')
       $('#rotate-mode').click()
       expect('click').toHaveBeenTriggeredOn('#rotate-mode')
@@ -124,30 +146,29 @@ describe('Gui tests', function() {
       expect(globalEmitter.emit.calls.count()).toEqual(1);
       expect(globalEmitter.emit).toHaveBeenCalledWith('manipulation_mode',
           'rotate');
-    });
+      globalEmitter.emit.calls.reset();
 
-    it('should close tabs when clicking on open one', function() {
+      // close tabs when clicking to open one
 
       var spyEvent = spyOnEvent('.tab', 'click')
-      $('#mainMenuTab').click()
+      $('#mainMenuTab').trigger('click')
       expect('click').toHaveBeenTriggeredOn('.tab')
       expect(spyEvent).toHaveBeenTriggered()
       expect(globalEmitter.emit.calls.count()).toEqual(1);
-      expect(globalEmitter.emit).toHaveBeenCalledWith('closeTabs', true);
-    });
+      expect(globalEmitter.emit).toHaveBeenCalledWith('openTab', 'mainMenu',
+          'mainMenu');
+      globalEmitter.emit.calls.reset();
 
-    it('should close tabs when clicking on closePanels class', function() {
-
+      // close tabs when clicking on closePanels class
       var spyEvent = spyOnEvent('.closePanels', 'click')
       $('.closePanels')[0].click()
       expect('click').toHaveBeenTriggeredOn('.closePanels')
       expect(spyEvent).toHaveBeenTriggered()
       expect(globalEmitter.emit.calls.count()).toEqual(1);
       expect(globalEmitter.emit).toHaveBeenCalledWith('closeTabs', true);
-    });
+      globalEmitter.emit.calls.reset();
 
-    it('should start spawning box', function() {
-
+      // start spawning box
       var spyEvent = spyOnEvent('[id^="header-insert-"]', 'click')
       $('#header-insert-box').click()
       expect('click').toHaveBeenTriggeredOn('[id^="header-insert-"]')
@@ -156,10 +177,9 @@ describe('Gui tests', function() {
       expect(globalEmitter.emit).toHaveBeenCalledWith('closeTabs', false);
       expect(globalEmitter.emit).toHaveBeenCalledWith('spawn_entity_start',
           'box');
-    });
+      globalEmitter.emit.calls.reset();
 
-    it('should play', function() {
-
+      // play
       var spyEvent = spyOnEvent('#play', 'click')
       $('#play').click()
       expect('click').toHaveBeenTriggeredOn('#play')
@@ -168,22 +188,21 @@ describe('Gui tests', function() {
       expect(globalEmitter.emit).toHaveBeenCalledWith('notification_popup',
           'Physics engine running');
       expect(globalEmitter.emit).toHaveBeenCalledWith('pause', false);
-    });
+      globalEmitter.emit.calls.reset();
 
-    // TODO: Test clock popup on mobile
-    it('should open clock popup', function() {
+      // TODO: Test clock popup on mobile
+      // open clock popup
 
-      // $('#clock').popup();
+        // $('#clock').popup();
 
-      // var spyEvent = spyOnEvent('#clock', 'click')
-      // $('#clock').click()
-      // expect('click').toHaveBeenTriggeredOn('#clock')
-      // expect(spyEvent).toHaveBeenTriggered()
-      // expect(globalEmitter.emit).not.toHaveBeenCalled();
-    });
+        // var spyEvent = spyOnEvent('#clock', 'click')
+        // $('#clock').click()
+        // expect('click').toHaveBeenTriggeredOn('#clock')
+        // expect(spyEvent).toHaveBeenTriggered()
+        // expect(globalEmitter.emit).not.toHaveBeenCalled();
+      globalEmitter.emit.calls.reset();
 
-    it('should reset models', function() {
-
+      // reset models
       var spyEvent = spyOnEvent('#reset-model', 'click')
       $('#reset-model').click()
       expect('click').toHaveBeenTriggeredOn('#reset-model')
@@ -191,10 +210,9 @@ describe('Gui tests', function() {
       expect(globalEmitter.emit.calls.count()).toEqual(2);
       expect(globalEmitter.emit).toHaveBeenCalledWith('reset', 'model');
       expect(globalEmitter.emit).toHaveBeenCalledWith('closeTabs', false);
-    });
+      globalEmitter.emit.calls.reset();
 
-    it('should reset world', function() {
-
+      // reset world
       var spyEvent = spyOnEvent('#reset-world', 'click')
       $('#reset-world').click()
       expect('click').toHaveBeenTriggeredOn('#reset-world')
@@ -202,10 +220,10 @@ describe('Gui tests', function() {
       expect(globalEmitter.emit.calls.count()).toEqual(2);
       expect(globalEmitter.emit).toHaveBeenCalledWith('reset', 'world');
       expect(globalEmitter.emit).toHaveBeenCalledWith('closeTabs', false);
-    });
+      globalEmitter.emit.calls.reset();
 
-    it('should reset view', function() {
 
+      // reset view
       globalEmitter.emit.calls.reset();
       var spyEvent = spyOnEvent('#reset-view', 'click')
       $('#reset-view').click()
@@ -214,10 +232,9 @@ describe('Gui tests', function() {
       expect(globalEmitter.emit.calls.count()).toEqual(2);
       expect(globalEmitter.emit).toHaveBeenCalledWith('view_reset');
       expect(globalEmitter.emit).toHaveBeenCalledWith('closeTabs', false);
-    });
+      globalEmitter.emit.calls.reset();
 
-    it('should view grid', function() {
-
+      // view grid
       var spyEvent = spyOnEvent('#view-grid', 'click')
       $('#view-grid').click()
       expect('click').toHaveBeenTriggeredOn('#view-grid')
@@ -225,10 +242,9 @@ describe('Gui tests', function() {
       expect(globalEmitter.emit.calls.count()).toEqual(2);
       expect(globalEmitter.emit).toHaveBeenCalledWith('show_grid', 'toggle');
       expect(globalEmitter.emit).toHaveBeenCalledWith('closeTabs', false);
-    });
+      globalEmitter.emit.calls.reset();
 
-    it('should view collisions', function() {
-
+      // view collisions
       var spyEvent = spyOnEvent('#view-collisions', 'click')
       $('#view-collisions').click()
       expect('click').toHaveBeenTriggeredOn('#view-collisions')
@@ -236,10 +252,9 @@ describe('Gui tests', function() {
       expect(globalEmitter.emit.calls.count()).toEqual(2);
       expect(globalEmitter.emit).toHaveBeenCalledWith('show_collision');
       expect(globalEmitter.emit).toHaveBeenCalledWith('closeTabs', false);
-    });
+      globalEmitter.emit.calls.reset();
 
-    it('should view orbit indicator', function() {
-
+      // view orbit indicator
       var spyEvent = spyOnEvent('#view-orbit-indicator', 'click')
       $('#view-orbit-indicator').click()
       expect('click').toHaveBeenTriggeredOn('#view-orbit-indicator')
@@ -247,10 +262,9 @@ describe('Gui tests', function() {
       expect(globalEmitter.emit.calls.count()).toEqual(2);
       expect(globalEmitter.emit).toHaveBeenCalledWith('show_orbit_indicator');
       expect(globalEmitter.emit).toHaveBeenCalledWith('closeTabs', false);
-    });
+      globalEmitter.emit.calls.reset();
 
-    it('should snap to grid', function() {
-
+      // snap to grid
       var spyEvent = spyOnEvent('#snap-to-grid', 'click')
       $('#snap-to-grid').click()
       expect('click').toHaveBeenTriggeredOn('#snap-to-grid')
@@ -258,10 +272,9 @@ describe('Gui tests', function() {
       expect(globalEmitter.emit.calls.count()).toEqual(2);
       expect(globalEmitter.emit).toHaveBeenCalledWith('snap_to_grid');
       expect(globalEmitter.emit).toHaveBeenCalledWith('closeTabs', false);
-    });
+      globalEmitter.emit.calls.reset();
 
-    it('should open tree when selected', function() {
-
+      // open tree when selected
       var spyEvent = spyOnEvent('#open-tree-when-selected', 'click')
       $('#open-tree-when-selected').click()
       expect('click').toHaveBeenTriggeredOn('#open-tree-when-selected')
@@ -269,10 +282,9 @@ describe('Gui tests', function() {
       expect(globalEmitter.emit.calls.count()).toEqual(2);
       expect(globalEmitter.emit).toHaveBeenCalledWith('openTreeWhenSelected');
       expect(globalEmitter.emit).toHaveBeenCalledWith('closeTabs', false);
-    });
+      globalEmitter.emit.calls.reset();
 
-    it('should toggle notifications', function() {
-
+      // toggle notifications
       var spyEvent = spyOnEvent('#toggle-notifications', 'click')
       $('#toggle-notifications').click()
       expect('click').toHaveBeenTriggeredOn('#toggle-notifications')
@@ -280,10 +292,9 @@ describe('Gui tests', function() {
       expect(globalEmitter.emit.calls.count()).toEqual(2);
       expect(globalEmitter.emit).toHaveBeenCalledWith('toggle_notifications');
       expect(globalEmitter.emit).toHaveBeenCalledWith('closeTabs', false);
-    });
+      globalEmitter.emit.calls.reset();
 
-    it('should view transparent', function() {
-
+      // view transparent
       $('#model-popup').popup();
 
       var spyEvent = spyOnEvent('#view-transparent', 'click')
@@ -293,12 +304,9 @@ describe('Gui tests', function() {
       expect(globalEmitter.emit.calls.count()).toEqual(1);
       expect(globalEmitter.emit).toHaveBeenCalledWith('set_view_as',
           'transparent');
-    });
+      globalEmitter.emit.calls.reset();
 
-    it('should view wireframe', function() {
-
-      $('#model-popup').popup();
-
+      // view wireframe
       var spyEvent = spyOnEvent('#view-wireframe', 'click')
       $('#view-wireframe').click()
       expect('click').toHaveBeenTriggeredOn('#view-wireframe')
@@ -306,55 +314,50 @@ describe('Gui tests', function() {
       expect(globalEmitter.emit.calls.count()).toEqual(1);
       expect(globalEmitter.emit).toHaveBeenCalledWith('set_view_as',
           'wireframe');
-    });
+      globalEmitter.emit.calls.reset();
 
-    it('should not view joints if there isn\'t an entity with joints selected',
-      function() {
-
-      $('#model-popup').popup();
-
+      // not view joints if there isn't an entity with joints selected
       var spyEvent = spyOnEvent('#view-joints', 'click')
       $('#view-joints').click()
       expect('click').toHaveBeenTriggeredOn('#view-joints')
       expect(spyEvent).toHaveBeenTriggered()
       expect(globalEmitter.emit).not.toHaveBeenCalled();
-    });
+      globalEmitter.emit.calls.reset();
 
-    it('should not view COM if there isn\'t an entity with mass selected',
-      function() {
-
-      $('#model-popup').popup();
-
+      // not view COM if there isn\'t an entity with mass selected
       var spyEvent = spyOnEvent('#view-com', 'click')
       $('#view-com').click()
       expect('click').toHaveBeenTriggeredOn('#view-com')
       expect(spyEvent).toHaveBeenTriggered()
       expect(globalEmitter.emit).not.toHaveBeenCalled();
-    });
+      globalEmitter.emit.calls.reset();
 
-    it('should not view inertia if there isn\'t an entity with mass selected',
-      function() {
-
-      $('#model-popup').popup();
-
+      // not view inertia if there isn\'t an entity with mass selected
       var spyEvent = spyOnEvent('#view-inertia', 'click')
       $('#view-inertia').click()
       expect('click').toHaveBeenTriggeredOn('#view-inertia')
       expect(spyEvent).toHaveBeenTriggered()
       expect(globalEmitter.emit).not.toHaveBeenCalled();
-    });
+      globalEmitter.emit.calls.reset();
 
-    it('should delete entity', function() {
-
-      $('#model-popup').popup();
-
+      // delete entity
       var spyEvent = spyOnEvent('#delete-entity', 'click')
       $('#delete-entity').click()
       expect('click').toHaveBeenTriggeredOn('#delete-entity')
       expect(spyEvent).toHaveBeenTriggered()
       expect(globalEmitter.emit.calls.count()).toEqual(1);
       expect(globalEmitter.emit).toHaveBeenCalledWith('delete_entity');
+      globalEmitter.emit.calls.reset();
 
+      // Return the model title given the model path
+      expect(getNameFromPath('box')).toEqual('Box');
+      expect(getNameFromPath('spotlight')).toEqual('Spot Light');
+      expect(getNameFromPath('stone_10_2_5_1cm')).toEqual(
+          'Stone 10 x 2.5 x 1 cm');
+      expect(getNameFromPath('depth_camera')).toEqual('Depth Camera');
+      expect(getNameFromPath('cinder_block_wide')).toEqual('Cinder Block Wide');
+      expect(getNameFromPath('polaris_ranger_xp900_no_roll_cage')).toEqual(
+          'Polaris Ranger without roll cage');
     });
   });
 });

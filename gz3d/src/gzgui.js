@@ -499,7 +499,7 @@ $(function()
         });
   }
 
-  $('body').on('click', '.tab', function()
+  $('.tab').click(function()
       {
         var idTab = $(this).attr('id');
         var idMenu = idTab.substring(0,idTab.indexOf('Tab'));
@@ -514,25 +514,25 @@ $(function()
         }
       });
 
-  $('body').on('click', '.closePanels', function()
+  $('.closePanels').click(function()
       {
         globalEmitter.emit('closeTabs', true);
       });
 
-  $('body').on('click', '#view-mode', function()
+  $('#view-mode').click(function()
       {
         globalEmitter.emit('manipulation_mode', 'view');
       });
-  $('body').on('click', '#translate-mode', function()
+  $('#translate-mode').click(function()
       {
         globalEmitter.emit('manipulation_mode', 'translate');
       });
-  $('body').on('click', '#rotate-mode', function()
+  $('#rotate-mode').click(function()
       {
         globalEmitter.emit('manipulation_mode', 'rotate');
       });
 
-  $('body').on('click', '[id^="header-insert-"]', function()
+  $('[id^="header-insert-"]').click(function()
       {
         var entity = $(this).attr('id');
         entity = entity.substring(14); // after 'header-insert-'
@@ -540,7 +540,7 @@ $(function()
         globalEmitter.emit('spawn_entity_start', entity);
       });
 
-  $('body').on('click', '#play', function()
+  $('#play').click(function()
       {
         if ( $('#playText').html().indexOf('Play') !== -1 )
         {
@@ -553,7 +553,7 @@ $(function()
           globalEmitter.emit('notification_popup','Physics engine paused');
         }
       });
-  $('body').on('click', '#clock', function()
+  $('#clock').click(function()
       {
         if ($.mobile.activePage.find('#clock-touch').parent().
             hasClass('ui-popup-active'))
@@ -570,47 +570,47 @@ $(function()
         }
       });
 
-  $('body').on('click', '#reset-model', function()
+  $('#reset-model').click(function()
       {
         globalEmitter.emit('reset', 'model');
         globalEmitter.emit('closeTabs', false);
       });
-  $('body').on('click', '#reset-world', function()
+  $('#reset-world').click(function()
       {
         globalEmitter.emit('reset', 'world');
         globalEmitter.emit('closeTabs', false);
       });
-  $('body').on('click', '#reset-view', function()
+  $('#reset-view').click(function()
       {
         globalEmitter.emit('view_reset');
         globalEmitter.emit('closeTabs', false);
       });
-  $('body').on('click', '#view-grid', function()
+  $('#view-grid').click(function()
       {
         globalEmitter.emit('show_grid', 'toggle');
         globalEmitter.emit('closeTabs', false);
       });
-  $('body').on('click', '#view-collisions', function()
+  $('#view-collisions').click(function()
       {
         globalEmitter.emit('show_collision');
         globalEmitter.emit('closeTabs', false);
       });
-  $('body').on('click', '#view-orbit-indicator', function()
+  $('#view-orbit-indicator').click(function()
       {
         globalEmitter.emit('show_orbit_indicator');
         globalEmitter.emit('closeTabs', false);
       });
-  $('body').on('click', '#snap-to-grid', function()
+  $( '#snap-to-grid' ).click(function()
       {
         globalEmitter.emit('snap_to_grid');
         globalEmitter.emit('closeTabs', false);
       });
-  $('body').on('click', '#open-tree-when-selected', function()
+  $( '#open-tree-when-selected' ).click(function()
       {
         globalEmitter.emit('openTreeWhenSelected');
         globalEmitter.emit('closeTabs', false);
       });
-  $('body').on('click', '#toggle-notifications', function()
+  $( '#toggle-notifications' ).click(function()
       {
         globalEmitter.emit('toggle_notifications');
         globalEmitter.emit('closeTabs', false);
@@ -626,20 +626,17 @@ $(function()
       });
 
   // Object menu
-  $('body').on('click', '#view-transparent', function()
-  {
+  $( '#view-transparent' ).click(function() {
     $('#model-popup').popup('close');
     globalEmitter.emit('set_view_as','transparent');
   });
 
-  $('body').on('click', '#view-wireframe', function()
-  {
+  $( '#view-wireframe' ).click(function() {
     $('#model-popup').popup('close');
     globalEmitter.emit('set_view_as','wireframe');
   });
 
-  $('body').on('click', '#view-joints', function()
-  {
+  $( '#view-joints' ).click(function() {
     if ($('#view-joints a').css('color') === 'rgb(255, 255, 255)')
     {
       $('#model-popup').popup('close');
@@ -647,8 +644,7 @@ $(function()
     }
   });
 
-  $('body').on('click', '#view-com', function()
-  {
+  $( '#view-com' ).click(function() {
     if ($('#view-com a').css('color') === 'rgb(255, 255, 255)')
     {
       $('#model-popup').popup('close');
@@ -656,8 +652,7 @@ $(function()
     }
   });
 
-  $('body').on('click', '#view-inertia', function()
-  {
+  $( '#view-inertia' ).click(function() {
     if ($('#view-inertia a').css('color') === 'rgb(255, 255, 255)')
     {
       $('#model-popup').popup('close');
@@ -665,11 +660,10 @@ $(function()
     }
   });
 
-  $('body').on('click', '#delete-entity', function()
+  $( '#delete-entity' ).click(function()
   {
     globalEmitter.emit('delete_entity');
   });
-
   $(window).resize(function()
   {
     globalEmitter.emit('resizePanel');
@@ -912,7 +906,7 @@ gzangular.controller('insertControl', ['$scope', function($scope)
  */
 GZ3D.Gui = function(scene, logPlay)
 {
-  this.emitter = globalEmitter || new EventEmitter2({verbose: true});
+  this.emitter = globalEmitter || new EventEmitter2({verboseMemoryLeak: true});
   this.logPlay = logPlay;
   this.scene = scene;
   this.domElement = scene.getDomElement();
