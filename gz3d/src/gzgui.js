@@ -904,25 +904,18 @@ gzangular.controller('insertControl', ['$scope', function($scope)
  * @constructor
  * @param {GZ3D.Scene} scene - A scene to connect to
  */
-GZ3D.Gui = function(scene, logPlay)
+GZ3D.Gui = function(scene)
 {
   this.emitter = globalEmitter || new EventEmitter2({verboseMemoryLeak: true});
-  this.logPlay = logPlay;
   this.scene = scene;
   this.domElement = scene.getDomElement();
-  this.init();
-};
-
-/**
- * Initialize GUI
- */
-GZ3D.Gui.prototype.init = function()
-{
   this.spawnState = null;
   this.longPressContainerState = null;
   this.showNotifications = false;
   this.openTreeWhenSelected = false;
   this.modelStatsDirty = false;
+
+  this.logPlay = new GZ3D.LogPlay();
 
   var that = this;
 
@@ -2383,12 +2376,6 @@ GZ3D.Gui.prototype.deleteFromStats = function(type, name)
  */
 GZ3D.Gui.prototype.setLogPlayVisible = function(visible)
 {
-  if (this.logPlay === undefined)
-  {
-    console.error('Missing LogPlay');
-    return;
-  }
-
   if (visible === this.logPlay.isVisible())
   {
     return;
@@ -2429,12 +2416,6 @@ GZ3D.Gui.prototype.setLogPlayVisible = function(visible)
  */
 GZ3D.Gui.prototype.setLogPlayStats = function(simTime, startTime, endTime)
 {
-  if (this.logPlay === undefined)
-  {
-    console.error('Missing LogPlay');
-    return;
-  }
-
   this.logPlay.setStats(simTime, startTime, endTime);
   $('.end-time-value').text(formatTime(endTime));
 };
