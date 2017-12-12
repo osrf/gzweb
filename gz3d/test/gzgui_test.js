@@ -1,6 +1,6 @@
 describe('Gui tests', function() {
 
-  var $controller;
+  let $controller;
 
   beforeAll(function(){
     module('gzangular');
@@ -43,17 +43,6 @@ describe('Gui tests', function() {
       // Now we can release jQuery so the events get setup using the fixture
       $.holdReady(false);
 
-/*
-      // There are events
-      expect(globalEmitter.eventNames().length).toEqual(8);
-console.log(globalEmitter.eventNames());
-
-      // But no listeners yet
-      for (e in globalEmitter.eventNames())
-      {
-        expect(globalEmitter.listeners(e).length).toEqual(0);
-      }
-*/
       // Initialize objects used in the test.
       const scene = new GZ3D.Scene();
       const gui = new GZ3D.Gui(scene);
@@ -63,7 +52,7 @@ console.log(globalEmitter.eventNames());
       expect(scene.emitter).toEqual(globalEmitter);
 
       // Now we have more events and listeners
-      expect(globalEmitter.eventNames().length).toEqual(49);
+      expect(globalEmitter.eventNames().length).toEqual(56);
       expect(globalEmitter.listeners('manipulation_mode').length)
           .toEqual(1);
       expect(globalEmitter.listeners('toggle_notifications').length)
@@ -83,6 +72,7 @@ console.log(globalEmitter.eventNames());
       expect(gui.longPressContainerState).toEqual(null);
       expect(gui.openTreeWhenSelected).toEqual(false);
       expect(gui.modelStatsDirty).toEqual(false);
+      expect(gui.logPlay).toBeDefined();
 
       // Emit some events
       expect(scene.manipulationMode).toEqual('view');
@@ -119,7 +109,7 @@ console.log(globalEmitter.eventNames());
       expect(globalEmitter.emit.calls.count()).toEqual(0);
 
       // Click translate mode
-      var spyEvent = spyOnEvent('#translate-mode', 'click')
+      let spyEvent = spyOnEvent('#translate-mode', 'click')
       $('#translate-mode').click()
       expect('click').toHaveBeenTriggeredOn('#translate-mode')
       expect(spyEvent).toHaveBeenTriggered()
@@ -129,7 +119,7 @@ console.log(globalEmitter.eventNames());
       globalEmitter.emit.calls.reset();
 
       // Click view mode
-      var spyEvent = spyOnEvent('#view-mode', 'click')
+      spyEvent = spyOnEvent('#view-mode', 'click')
       $('#view-mode').click()
       expect('click').toHaveBeenTriggeredOn('#view-mode')
       expect(spyEvent).toHaveBeenTriggered()
@@ -139,7 +129,7 @@ console.log(globalEmitter.eventNames());
       globalEmitter.emit.calls.reset();
 
       // Click rotate mode
-      var spyEvent = spyOnEvent('#rotate-mode', 'click')
+      spyEvent = spyOnEvent('#rotate-mode', 'click')
       $('#rotate-mode').click()
       expect('click').toHaveBeenTriggeredOn('#rotate-mode')
       expect(spyEvent).toHaveBeenTriggered()
@@ -150,7 +140,7 @@ console.log(globalEmitter.eventNames());
 
       // close tabs when clicking to open one
 
-      var spyEvent = spyOnEvent('.tab', 'click')
+      spyEvent = spyOnEvent('.tab', 'click')
       $('#mainMenuTab').trigger('click')
       expect('click').toHaveBeenTriggeredOn('.tab')
       expect(spyEvent).toHaveBeenTriggered()
@@ -160,7 +150,7 @@ console.log(globalEmitter.eventNames());
       globalEmitter.emit.calls.reset();
 
       // close tabs when clicking on closePanels class
-      var spyEvent = spyOnEvent('.closePanels', 'click')
+      spyEvent = spyOnEvent('.closePanels', 'click')
       $('.closePanels')[0].click()
       expect('click').toHaveBeenTriggeredOn('.closePanels')
       expect(spyEvent).toHaveBeenTriggered()
@@ -169,7 +159,7 @@ console.log(globalEmitter.eventNames());
       globalEmitter.emit.calls.reset();
 
       // start spawning box
-      var spyEvent = spyOnEvent('[id^="header-insert-"]', 'click')
+      spyEvent = spyOnEvent('[id^="header-insert-"]', 'click')
       $('#header-insert-box').click()
       expect('click').toHaveBeenTriggeredOn('[id^="header-insert-"]')
       expect(spyEvent).toHaveBeenTriggered()
@@ -180,7 +170,7 @@ console.log(globalEmitter.eventNames());
       globalEmitter.emit.calls.reset();
 
       // play
-      var spyEvent = spyOnEvent('#play', 'click')
+      spyEvent = spyOnEvent('#play', 'click')
       $('#play').click()
       expect('click').toHaveBeenTriggeredOn('#play')
       expect(spyEvent).toHaveBeenTriggered()
@@ -190,20 +180,8 @@ console.log(globalEmitter.eventNames());
       expect(globalEmitter.emit).toHaveBeenCalledWith('pause', false);
       globalEmitter.emit.calls.reset();
 
-      // TODO: Test clock popup on mobile
-      // open clock popup
-
-        // $('#clock').popup();
-
-        // var spyEvent = spyOnEvent('#clock', 'click')
-        // $('#clock').click()
-        // expect('click').toHaveBeenTriggeredOn('#clock')
-        // expect(spyEvent).toHaveBeenTriggered()
-        // expect(globalEmitter.emit).not.toHaveBeenCalled();
-      globalEmitter.emit.calls.reset();
-
       // reset models
-      var spyEvent = spyOnEvent('#reset-model', 'click')
+      spyEvent = spyOnEvent('#reset-model', 'click')
       $('#reset-model').click()
       expect('click').toHaveBeenTriggeredOn('#reset-model')
       expect(spyEvent).toHaveBeenTriggered()
@@ -213,7 +191,7 @@ console.log(globalEmitter.eventNames());
       globalEmitter.emit.calls.reset();
 
       // reset world
-      var spyEvent = spyOnEvent('#reset-world', 'click')
+      spyEvent = spyOnEvent('#reset-world', 'click')
       $('#reset-world').click()
       expect('click').toHaveBeenTriggeredOn('#reset-world')
       expect(spyEvent).toHaveBeenTriggered()
@@ -225,7 +203,7 @@ console.log(globalEmitter.eventNames());
 
       // reset view
       globalEmitter.emit.calls.reset();
-      var spyEvent = spyOnEvent('#reset-view', 'click')
+      spyEvent = spyOnEvent('#reset-view', 'click')
       $('#reset-view').click()
       expect('click').toHaveBeenTriggeredOn('#reset-view')
       expect(spyEvent).toHaveBeenTriggered()
@@ -235,7 +213,7 @@ console.log(globalEmitter.eventNames());
       globalEmitter.emit.calls.reset();
 
       // view grid
-      var spyEvent = spyOnEvent('#view-grid', 'click')
+      spyEvent = spyOnEvent('#view-grid', 'click')
       $('#view-grid').click()
       expect('click').toHaveBeenTriggeredOn('#view-grid')
       expect(spyEvent).toHaveBeenTriggered()
@@ -245,7 +223,7 @@ console.log(globalEmitter.eventNames());
       globalEmitter.emit.calls.reset();
 
       // view collisions
-      var spyEvent = spyOnEvent('#view-collisions', 'click')
+      spyEvent = spyOnEvent('#view-collisions', 'click')
       $('#view-collisions').click()
       expect('click').toHaveBeenTriggeredOn('#view-collisions')
       expect(spyEvent).toHaveBeenTriggered()
@@ -255,7 +233,7 @@ console.log(globalEmitter.eventNames());
       globalEmitter.emit.calls.reset();
 
       // view orbit indicator
-      var spyEvent = spyOnEvent('#view-orbit-indicator', 'click')
+      spyEvent = spyOnEvent('#view-orbit-indicator', 'click')
       $('#view-orbit-indicator').click()
       expect('click').toHaveBeenTriggeredOn('#view-orbit-indicator')
       expect(spyEvent).toHaveBeenTriggered()
@@ -265,7 +243,7 @@ console.log(globalEmitter.eventNames());
       globalEmitter.emit.calls.reset();
 
       // snap to grid
-      var spyEvent = spyOnEvent('#snap-to-grid', 'click')
+      spyEvent = spyOnEvent('#snap-to-grid', 'click')
       $('#snap-to-grid').click()
       expect('click').toHaveBeenTriggeredOn('#snap-to-grid')
       expect(spyEvent).toHaveBeenTriggered()
@@ -275,7 +253,7 @@ console.log(globalEmitter.eventNames());
       globalEmitter.emit.calls.reset();
 
       // open tree when selected
-      var spyEvent = spyOnEvent('#open-tree-when-selected', 'click')
+      spyEvent = spyOnEvent('#open-tree-when-selected', 'click')
       $('#open-tree-when-selected').click()
       expect('click').toHaveBeenTriggeredOn('#open-tree-when-selected')
       expect(spyEvent).toHaveBeenTriggered()
@@ -285,7 +263,7 @@ console.log(globalEmitter.eventNames());
       globalEmitter.emit.calls.reset();
 
       // toggle notifications
-      var spyEvent = spyOnEvent('#toggle-notifications', 'click')
+      spyEvent = spyOnEvent('#toggle-notifications', 'click')
       $('#toggle-notifications').click()
       expect('click').toHaveBeenTriggeredOn('#toggle-notifications')
       expect(spyEvent).toHaveBeenTriggered()
@@ -297,7 +275,7 @@ console.log(globalEmitter.eventNames());
       // view transparent
       $('#model-popup').popup();
 
-      var spyEvent = spyOnEvent('#view-transparent', 'click')
+      spyEvent = spyOnEvent('#view-transparent', 'click')
       $('#view-transparent').click()
       expect('click').toHaveBeenTriggeredOn('#view-transparent')
       expect(spyEvent).toHaveBeenTriggered()
@@ -307,7 +285,7 @@ console.log(globalEmitter.eventNames());
       globalEmitter.emit.calls.reset();
 
       // view wireframe
-      var spyEvent = spyOnEvent('#view-wireframe', 'click')
+      spyEvent = spyOnEvent('#view-wireframe', 'click')
       $('#view-wireframe').click()
       expect('click').toHaveBeenTriggeredOn('#view-wireframe')
       expect(spyEvent).toHaveBeenTriggered()
@@ -317,7 +295,7 @@ console.log(globalEmitter.eventNames());
       globalEmitter.emit.calls.reset();
 
       // not view joints if there isn't an entity with joints selected
-      var spyEvent = spyOnEvent('#view-joints', 'click')
+      spyEvent = spyOnEvent('#view-joints', 'click')
       $('#view-joints').click()
       expect('click').toHaveBeenTriggeredOn('#view-joints')
       expect(spyEvent).toHaveBeenTriggered()
@@ -325,7 +303,7 @@ console.log(globalEmitter.eventNames());
       globalEmitter.emit.calls.reset();
 
       // not view COM if there isn\'t an entity with mass selected
-      var spyEvent = spyOnEvent('#view-com', 'click')
+      spyEvent = spyOnEvent('#view-com', 'click')
       $('#view-com').click()
       expect('click').toHaveBeenTriggeredOn('#view-com')
       expect(spyEvent).toHaveBeenTriggered()
@@ -333,7 +311,7 @@ console.log(globalEmitter.eventNames());
       globalEmitter.emit.calls.reset();
 
       // not view inertia if there isn\'t an entity with mass selected
-      var spyEvent = spyOnEvent('#view-inertia', 'click')
+      spyEvent = spyOnEvent('#view-inertia', 'click')
       $('#view-inertia').click()
       expect('click').toHaveBeenTriggeredOn('#view-inertia')
       expect(spyEvent).toHaveBeenTriggered()
@@ -341,7 +319,7 @@ console.log(globalEmitter.eventNames());
       globalEmitter.emit.calls.reset();
 
       // delete entity
-      var spyEvent = spyOnEvent('#delete-entity', 'click')
+      spyEvent = spyOnEvent('#delete-entity', 'click')
       $('#delete-entity').click()
       expect('click').toHaveBeenTriggeredOn('#delete-entity')
       expect(spyEvent).toHaveBeenTriggered()
