@@ -6,7 +6,7 @@
  */
 GZ3D.Scene = function(shaders)
 {
-  this.emitter = globalEmitter || new EventEmitter2({verbose: true});
+  this.emitter = globalEmitter || new EventEmitter2({verboseMemoryLeak: true});
   this.shaders = shaders;
   this.init();
 };
@@ -31,8 +31,9 @@ GZ3D.Scene.prototype.init = function()
 
   // loaders
   this.textureLoader = new THREE.TextureLoader();
-  this.textureLoader.crossOrigin = 'anonymous';
+  this.textureLoader.crossOrigin = '';
   this.colladaLoader = new THREE.ColladaLoader();
+  this.colladaLoader.setCrossOrigin('');
   this.objLoader = new THREE.OBJLoader();
   this.stlLoader = new THREE.STLLoader();
 
@@ -1616,6 +1617,7 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
   }
   */
 
+console.log(uri);
   if (!filestring)
   {
     this.colladaLoader.load(uri, function(collada)

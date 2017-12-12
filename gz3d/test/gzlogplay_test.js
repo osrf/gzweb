@@ -1,6 +1,6 @@
 describe('Log play tests', function() {
 
-   let logPlay;
+  let logPlay;
 
   beforeAll(function(){
     logPlay = new GZ3D.LogPlay();

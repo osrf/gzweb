@@ -2,11 +2,10 @@ var GZ3D = GZ3D || {
   REVISION : '1'
 };
 
-var globalEmitter = new EventEmitter2({verbose: true});
+var globalEmitter = new EventEmitter2({verboseMemoryLeak: true});
 
 // Assuming all mobile devices are touch devices.
 var isTouchDevice = /Mobi/.test(navigator.userAgent);
-
 /*global $:false */
 /*global angular*/
 
@@ -505,7 +504,7 @@ $(function()
         });
   }
 
-  $('body').on('click', '.tab', function()
+  $('.tab').click(function()
       {
         var idTab = $(this).attr('id');
         var idMenu = idTab.substring(0,idTab.indexOf('Tab'));
@@ -520,25 +519,25 @@ $(function()
         }
       });
 
-  $('body').on('click', '.closePanels', function()
+  $('.closePanels').click(function()
       {
         globalEmitter.emit('closeTabs', true);
       });
 
-  $('body').on('click', '#view-mode', function()
+  $('#view-mode').click(function()
       {
         globalEmitter.emit('manipulation_mode', 'view');
       });
-  $('body').on('click', '#translate-mode', function()
+  $('#translate-mode').click(function()
       {
         globalEmitter.emit('manipulation_mode', 'translate');
       });
-  $('body').on('click', '#rotate-mode', function()
+  $('#rotate-mode').click(function()
       {
         globalEmitter.emit('manipulation_mode', 'rotate');
       });
 
-  $('body').on('click', '[id^="header-insert-"]', function()
+  $('[id^="header-insert-"]').click(function()
       {
         var entity = $(this).attr('id');
         entity = entity.substring(14); // after 'header-insert-'
@@ -546,7 +545,7 @@ $(function()
         globalEmitter.emit('spawn_entity_start', entity);
       });
 
-  $('body').on('click', '#play', function()
+  $('#play').click(function()
       {
         if ( $('#playText').html().indexOf('Play') !== -1 )
         {
@@ -559,7 +558,7 @@ $(function()
           globalEmitter.emit('notification_popup','Physics engine paused');
         }
       });
-  $('body').on('click', '#clock', function()
+  $('#clock').click(function()
       {
         if ($.mobile.activePage.find('#clock-touch').parent().
             hasClass('ui-popup-active'))
@@ -576,47 +575,47 @@ $(function()
         }
       });
 
-  $('body').on('click', '#reset-model', function()
+  $('#reset-model').click(function()
       {
         globalEmitter.emit('reset', 'model');
         globalEmitter.emit('closeTabs', false);
       });
-  $('body').on('click', '#reset-world', function()
+  $('#reset-world').click(function()
       {
         globalEmitter.emit('reset', 'world');
         globalEmitter.emit('closeTabs', false);
       });
-  $('body').on('click', '#reset-view', function()
+  $('#reset-view').click(function()
       {
         globalEmitter.emit('view_reset');
         globalEmitter.emit('closeTabs', false);
       });
-  $('body').on('click', '#view-grid', function()
+  $('#view-grid').click(function()
       {
         globalEmitter.emit('show_grid', 'toggle');
         globalEmitter.emit('closeTabs', false);
       });
-  $('body').on('click', '#view-collisions', function()
+  $('#view-collisions').click(function()
       {
         globalEmitter.emit('show_collision');
         globalEmitter.emit('closeTabs', false);
       });
-  $('body').on('click', '#view-orbit-indicator', function()
+  $('#view-orbit-indicator').click(function()
       {
         globalEmitter.emit('show_orbit_indicator');
         globalEmitter.emit('closeTabs', false);
       });
-  $('body').on('click', '#snap-to-grid', function()
+  $( '#snap-to-grid' ).click(function()
       {
         globalEmitter.emit('snap_to_grid');
         globalEmitter.emit('closeTabs', false);
       });
-  $('body').on('click', '#open-tree-when-selected', function()
+  $( '#open-tree-when-selected' ).click(function()
       {
         globalEmitter.emit('openTreeWhenSelected');
         globalEmitter.emit('closeTabs', false);
       });
-  $('body').on('click', '#toggle-notifications', function()
+  $( '#toggle-notifications' ).click(function()
       {
         globalEmitter.emit('toggle_notifications');
         globalEmitter.emit('closeTabs', false);
@@ -632,20 +631,17 @@ $(function()
       });
 
   // Object menu
-  $('body').on('click', '#view-transparent', function()
-  {
+  $( '#view-transparent' ).click(function() {
     $('#model-popup').popup('close');
     globalEmitter.emit('set_view_as','transparent');
   });
 
-  $('body').on('click', '#view-wireframe', function()
-  {
+  $( '#view-wireframe' ).click(function() {
     $('#model-popup').popup('close');
     globalEmitter.emit('set_view_as','wireframe');
   });
 
-  $('body').on('click', '#view-joints', function()
-  {
+  $( '#view-joints' ).click(function() {
     if ($('#view-joints a').css('color') === 'rgb(255, 255, 255)')
     {
       $('#model-popup').popup('close');
@@ -653,8 +649,7 @@ $(function()
     }
   });
 
-  $('body').on('click', '#view-com', function()
-  {
+  $( '#view-com' ).click(function() {
     if ($('#view-com a').css('color') === 'rgb(255, 255, 255)')
     {
       $('#model-popup').popup('close');
@@ -662,8 +657,7 @@ $(function()
     }
   });
 
-  $('body').on('click', '#view-inertia', function()
-  {
+  $( '#view-inertia' ).click(function() {
     if ($('#view-inertia a').css('color') === 'rgb(255, 255, 255)')
     {
       $('#model-popup').popup('close');
@@ -671,11 +665,10 @@ $(function()
     }
   });
 
-  $('body').on('click', '#delete-entity', function()
+  $( '#delete-entity' ).click(function()
   {
     globalEmitter.emit('delete_entity');
   });
-
   $(window).resize(function()
   {
     globalEmitter.emit('resizePanel');
@@ -916,25 +909,18 @@ gzangular.controller('insertControl', ['$scope', function($scope)
  * @constructor
  * @param {GZ3D.Scene} scene - A scene to connect to
  */
-GZ3D.Gui = function(scene, logPlay)
+GZ3D.Gui = function(scene)
 {
-  this.emitter = globalEmitter || new EventEmitter2({verbose: true});
-  this.logPlay = logPlay;
+  this.emitter = globalEmitter || new EventEmitter2({verboseMemoryLeak: true});
   this.scene = scene;
   this.domElement = scene.getDomElement();
-  this.init();
-};
-
-/**
- * Initialize GUI
- */
-GZ3D.Gui.prototype.init = function()
-{
   this.spawnState = null;
   this.longPressContainerState = null;
   this.showNotifications = false;
   this.openTreeWhenSelected = false;
   this.modelStatsDirty = false;
+
+  this.logPlay = new GZ3D.LogPlay();
 
   var that = this;
 
@@ -2395,12 +2381,6 @@ GZ3D.Gui.prototype.deleteFromStats = function(type, name)
  */
 GZ3D.Gui.prototype.setLogPlayVisible = function(visible)
 {
-  if (this.logPlay === undefined)
-  {
-    console.error('Missing LogPlay');
-    return;
-  }
-
   if (visible === this.logPlay.isVisible())
   {
     return;
@@ -2441,12 +2421,6 @@ GZ3D.Gui.prototype.setLogPlayVisible = function(visible)
  */
 GZ3D.Gui.prototype.setLogPlayStats = function(simTime, startTime, endTime)
 {
-  if (this.logPlay === undefined)
-  {
-    console.error('Missing LogPlay');
-    return;
-  }
-
   this.logPlay.setStats(simTime, startTime, endTime);
   $('.end-time-value').text(formatTime(endTime));
 };
@@ -2528,7 +2502,7 @@ var formatTime = function(time)
  */
 GZ3D.GZIface = function(scene, url)
 {
-  this.emitter = globalEmitter || new EventEmitter2({verbose: true});
+  this.emitter = globalEmitter || new EventEmitter2({verboseMemoryLeak: true});
   this.scene = scene;
   this.url = url || (location.hostname + ':' + location.port);
 
@@ -4027,12 +4001,13 @@ var subtractTime = function(timeA, timeB)
 };
 
 /**
- * log playback
+ * Provides an interface to control a running log playback. It sends events to
+ * GzIface and updates some UI elements.
  * @constructor
  */
 GZ3D.LogPlay = function()
 {
-  this.emitter = globalEmitter || new EventEmitter2({verbose: true});
+  this.emitter = globalEmitter || new EventEmitter2({verboseMemoryLeak: true});
   this.visible = null;
   this.startTime = null;
   this.endTime = null;
@@ -4060,7 +4035,7 @@ GZ3D.LogPlay = function()
       playback.seek.nsec = Math.round((seek - playback.seek.sec) * nsInSec);
 
       // publich playback control command msg
-      this.emitter.emit('logPlayChanged', playback);
+      that.emitter.emit('logPlayChanged', playback);
       that.active = false;
     }
   );
@@ -4075,28 +4050,28 @@ GZ3D.LogPlay = function()
     {
       var playback = {};
       playback.rewind = true;
-      this.emitter.emit('logPlayChanged', playback);
+      that.emitter.emit('logPlayChanged', playback);
     }
   );
   this.emitter.on('logPlayForward', function ()
     {
       var playback = {};
       playback.forward = true;
-      this.emitter.emit('logPlayChanged', playback);
+      that.emitter.emit('logPlayChanged', playback);
     }
   );
   this.emitter.on('logPlayStepforward', function ()
     {
       var playback = {};
       playback.multi_step = 1;
-      this.emitter.emit('logPlayChanged', playback);
+      that.emitter.emit('logPlayChanged', playback);
     }
   );
   this.emitter.on('logPlayStepback', function ()
     {
       var playback = {};
       playback.multi_step = -1;
-      this.emitter.emit('logPlayChanged', playback);
+      that.emitter.emit('logPlayChanged', playback);
     }
   );
   this.emitter.on('paused', function (paused)
@@ -5839,7 +5814,7 @@ GZ3D.RadialMenu.prototype.setNumberOfItems = function(number)
  */
 GZ3D.Scene = function(shaders)
 {
-  this.emitter = globalEmitter || new EventEmitter2({verbose: true});
+  this.emitter = globalEmitter || new EventEmitter2({verboseMemoryLeak: true});
   this.shaders = shaders;
   this.init();
 };
@@ -7794,6 +7769,7 @@ GZ3D.Scene.prototype.setMaterial = function(obj, material)
 
       if (material.texture)
       {
+console.log(material.texture);
         var texture = this.textureLoader.load(material.texture);
         if (material.scale)
         {
@@ -8905,7 +8881,7 @@ GZ3D.Scene.prototype.createFromSdf = function(sdf)
  **/
 GZ3D.SdfParser = function(scene, gui, gziface)
 {
-  this.emitter = globalEmitter || new EventEmitter2({verbose: true});
+  this.emitter = globalEmitter || new EventEmitter2({verboseMemoryLeak: true});
 
   // set the sdf version
   this.SDF_VERSION = 1.5;

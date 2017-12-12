@@ -43,12 +43,13 @@ var subtractTime = function(timeA, timeB)
 };
 
 /**
- * log playback
+ * Provides an interface to control a running log playback. It sends events to
+ * GzIface and updates some UI elements.
  * @constructor
  */
 GZ3D.LogPlay = function()
 {
-  this.emitter = globalEmitter || new EventEmitter2({verbose: true});
+  this.emitter = globalEmitter || new EventEmitter2({verboseMemoryLeak: true});
   this.visible = null;
   this.startTime = null;
   this.endTime = null;
@@ -76,7 +77,7 @@ GZ3D.LogPlay = function()
       playback.seek.nsec = Math.round((seek - playback.seek.sec) * nsInSec);
 
       // publich playback control command msg
-      this.emitter.emit('logPlayChanged', playback);
+      that.emitter.emit('logPlayChanged', playback);
       that.active = false;
     }
   );
@@ -91,28 +92,28 @@ GZ3D.LogPlay = function()
     {
       var playback = {};
       playback.rewind = true;
-      this.emitter.emit('logPlayChanged', playback);
+      that.emitter.emit('logPlayChanged', playback);
     }
   );
   this.emitter.on('logPlayForward', function ()
     {
       var playback = {};
       playback.forward = true;
-      this.emitter.emit('logPlayChanged', playback);
+      that.emitter.emit('logPlayChanged', playback);
     }
   );
   this.emitter.on('logPlayStepforward', function ()
     {
       var playback = {};
       playback.multi_step = 1;
-      this.emitter.emit('logPlayChanged', playback);
+      that.emitter.emit('logPlayChanged', playback);
     }
   );
   this.emitter.on('logPlayStepback', function ()
     {
       var playback = {};
       playback.multi_step = -1;
-      this.emitter.emit('logPlayChanged', playback);
+      that.emitter.emit('logPlayChanged', playback);
     }
   );
   this.emitter.on('paused', function (paused)
