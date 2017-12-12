@@ -21,6 +21,7 @@ module.exports = function(grunt) {
                 '!gz3d/client/js/include/',
                 'gz3d/src/gz*.js',
                 '!gz3d/src/gzgui.js',
+                '!gz3d/src/gzlogplay.js',
                 '!gz3d/src/gzradialmenu.js',
         ],
         dest : 'gz3d/build/gz3d.full.js'
