@@ -3736,6 +3736,7 @@ THREE.ColladaLoader = function () {
 
 										if ( loader !== null ) {
 
+                      loader.crossOrigin = '';
 											texture = loader.load( url );
 
 										} else {
@@ -5256,6 +5257,7 @@ THREE.ColladaLoader = function () {
 
 		var loader = new THREE.ImageLoader();
 
+    loader.setCrossOrigin('');
 		loader.load( url, function ( image ) {
 
 			texture.image = image;

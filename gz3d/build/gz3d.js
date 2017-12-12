@@ -5839,7 +5839,7 @@ GZ3D.Scene.prototype.init = function()
 
   // loaders
   this.textureLoader = new THREE.TextureLoader();
-  this.textureLoader.crossOrigin = 'anonymous';
+  this.textureLoader.crossOrigin = '';
   this.colladaLoader = new THREE.ColladaLoader();
   this.objLoader = new THREE.OBJLoader();
   this.stlLoader = new THREE.STLLoader();
@@ -7769,7 +7769,6 @@ GZ3D.Scene.prototype.setMaterial = function(obj, material)
 
       if (material.texture)
       {
-console.log(material.texture);
         var texture = this.textureLoader.load(material.texture);
         if (material.scale)
         {

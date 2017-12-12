@@ -33,7 +33,6 @@ GZ3D.Scene.prototype.init = function()
   this.textureLoader = new THREE.TextureLoader();
   this.textureLoader.crossOrigin = '';
   this.colladaLoader = new THREE.ColladaLoader();
-  this.colladaLoader.setCrossOrigin('');
   this.objLoader = new THREE.OBJLoader();
   this.stlLoader = new THREE.STLLoader();
 
@@ -1617,7 +1616,6 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
   }
   */
 
-console.log(uri);
   if (!filestring)
   {
     this.colladaLoader.load(uri, function(collada)
