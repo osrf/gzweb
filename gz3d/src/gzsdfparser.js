@@ -50,7 +50,7 @@ GZ3D.SdfParser.prototype.init = function()
     var that = this;
     this.emitter.on('connectionError', function() {
       // init scene and show popup only for the first connection error
-      this.emitter.emit('notification_popup',
+      that.emitter.emit('notification_popup',
               'GzWeb is currently running' +
               'without a server, and materials could not be loaded.' +
               'When connected scene will be reinitialized', 5000);
@@ -64,7 +64,7 @@ GZ3D.SdfParser.prototype.init = function()
     this.emitter.on('gzstatus', function(gzstatus) {
       if (gzstatus === 'error')
       {
-        this.emitter.emit('notification_popup', 'GzWeb is currently ' +
+        that.emitter.emit('notification_popup', 'GzWeb is currently ' +
                 'running without a GzServer,'
                 + 'and Scene is reinitialized.', 5000);
         that.onConnectionError();
