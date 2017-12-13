@@ -3,13 +3,16 @@ module.exports = function(grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
     concat: {
-      // Only gz*.js files
-      build: {
+      // All gz*.js files
+      build_src: {
         src  : ['gz3d/src/*.js'],
         dest : 'gz3d/build/gz3d.js'
       },
-      // Self-contained Gz3D
-      build_full: {
+      // Self-contained file which can be embedded into other sites.
+      //
+      // .iface Means it provides a websocket interface to the backend
+      // .full Means it brings all the necessary dependencies
+      build_iface_full: {
         src  : ['gz3d/client/js/include/three.js',
                 'gz3d/client/js/include/three.compat.js',
                 'gz3d/client/js/include/*.js',
@@ -24,7 +27,7 @@ module.exports = function(grunt) {
                 '!gz3d/src/gzlogplay.js',
                 '!gz3d/src/gzradialmenu.js',
         ],
-        dest : 'gz3d/build/gz3d.full.js'
+        dest : 'gz3d/build/gz3d.iface.full.js'
       }
     },
     jshint: {
@@ -40,9 +43,13 @@ module.exports = function(grunt) {
       options: {
         report: 'min'
       },
-      build: {
+      build_src: {
         src: 'gz3d/build/gz3d.js',
         dest: 'gz3d/build/gz3d.min.js'
+      },
+      build_iface_full: {
+        src: 'gz3d/build/gz3d.iface.full.js',
+        dest: 'gz3d/build/gz3d.iface.full.min.js'
       }
     },
     watch: {
