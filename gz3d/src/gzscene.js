@@ -39,7 +39,6 @@ GZ3D.Scene.prototype.init = function()
   this.renderer = new THREE.WebGLRenderer({antialias: true });
   this.renderer.setPixelRatio(window.devicePixelRatio);
   this.renderer.setClearColor(0xb2b2b2, 1);
-  this.renderer.setSize( window.innerWidth, window.innerHeight);
   this.renderer.autoClear = false;
   // this.renderer.shadowMapEnabled = true;
   // this.renderer.shadowMapSoft = true;
@@ -49,15 +48,15 @@ GZ3D.Scene.prototype.init = function()
   this.scene.add(this.ambient);
 
   // camera
-  this.camera = new THREE.PerspectiveCamera(
-      60, window.innerWidth / window.innerHeight, 0.1, 1000 );
+  var width = this.renderer.domElement.width;
+  var height = this.renderer.domElement.height;
+  this.camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000 );
   this.defaultCameraPosition = new THREE.Vector3(0, -5, 5);
   this.resetView();
 
   // ortho camera and scene for rendering sprites
-  this.cameraOrtho = new THREE.OrthographicCamera( -window.innerWidth * 0.5,
-      window.innerWidth * 0.5, window.innerHeight*0.5, -window.innerHeight*0.5,
-      1, 10);
+  this.cameraOrtho = new THREE.OrthographicCamera( -width * 0.5, width * 0.5,
+      height*0.5, -height*0.5, 1, 10);
   this.cameraOrtho.position.z = 10;
   this.sceneOrtho = new THREE.Scene();
 
@@ -84,9 +83,6 @@ GZ3D.Scene.prototype.init = function()
 
   // Need to use `document` instead of getDomElement in order to get events
   // outside the webgl div element.
-  document.addEventListener( 'mouseup',
-      function(event) {that.onPointerUp(event);}, false );
-
   this.getDomElement().addEventListener( 'mouseup',
       function(event) {that.onPointerUp(event);}, false );
 
@@ -96,11 +92,9 @@ GZ3D.Scene.prototype.init = function()
   this.getDomElement().addEventListener( 'mousewheel',
       function(event) {that.onMouseScroll(event);}, false );
 
-  document.addEventListener( 'keydown',
+  this.getDomElement().addEventListener( 'keydown',
       function(event) {that.onKeyDown(event);}, false );
 
-  this.getDomElement().addEventListener( 'mousedown',
-      function(event) {that.onPointerDown(event);}, false );
   this.getDomElement().addEventListener( 'touchstart',
       function(event) {that.onPointerDown(event);}, false );
 
@@ -113,7 +107,8 @@ GZ3D.Scene.prototype.init = function()
 
   this.timeDown = null;
 
-  this.controls = new THREE.OrbitControls(this.camera);
+  this.controls = new THREE.OrbitControls(this.camera,
+      this.renderer.domElement);
   this.scene.add(this.controls.targetIndicator);
 
   // Radial menu (only triggered by touch)
@@ -500,8 +495,8 @@ GZ3D.Scene.prototype.onKeyDown = function(event)
     // + and - for zooming
     if (event.keyCode === 187 || event.keyCode === 189)
     {
-      var pos = new THREE.Vector2(window.innerWidth/2.0,
-          window.innerHeight/2.0);
+      var pos = new THREE.Vector2(this.getDomElement().width/2.0,
+          this.getDomElement().height/2.0);
 
       var intersect = new THREE.Vector3();
       var model = this.getRayCastModel(pos, intersect);
@@ -570,9 +565,9 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
 {
   var vector = new THREE.Vector3(
       ((pos.x - this.renderer.domElement.offsetLeft)
-      / window.innerWidth) * 2 - 1,
+      / this.getDomElement().width) * 2 - 1,
       -((pos.y - this.renderer.domElement.offsetTop)
-      / window.innerHeight) * 2 + 1, 1);
+      / this.getDomElement().height) * 2 + 1, 1);
   vector.unproject(this.camera);
   var ray = new THREE.Raycaster( this.camera.position,
       vector.sub(this.camera.position).normalize() );
