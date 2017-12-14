@@ -4,7 +4,7 @@ module.exports = function(grunt) {
     pkg: grunt.file.readJSON('package.json'),
     concat: {
       build: {
-        src  : ['gz3d/src/*.js', 'gz3d/src/**/*.js'],
+        src  : ['gz3d/src/*.js'],
         dest : 'gz3d/build/gz3d.js'
       },
       build_sdfviewer: {

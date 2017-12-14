@@ -1,11 +1,13 @@
 describe('Gzscene tests', function() {
 
+  var shaders;
   var scene;
   var gui;
   var sdfparser;
 
   beforeAll(function(){
-    scene = new GZ3D.Scene();
+    shaders = new GZ3D.Shaders();
+    scene = new GZ3D.Scene(shaders);
     gui = new GZ3D.Gui(scene);
     sdfparser = new GZ3D.SdfParser(scene, gui);
   });
@@ -697,6 +699,97 @@ describe('Gzscene tests', function() {
           scene.remove(model);
           model = scene.getByName('husky');
           expect(model).toEqual(undefined);
+    });
+  });
+
+  describe('Load a heightmap', function() {
+    it('should fail to create a heightmap without a parent', function() {
+
+      // Check there is no heightmap
+      expect(scene.heightmap).toEqual(null);
+
+      // Fail to load without a parent
+      scene.loadHeightmap();
+      expect(scene.heightmap).toEqual(null);
+    });
+  });
+
+  describe('Load a heightmap', function() {
+    it('should use a default material when texture not provided', function() {
+
+      // Check there is no heightmap
+      expect(scene.heightmap).toEqual(null);
+
+      // Params
+      const heights = [1, 0.5, 0.25, 1];
+      const segmentWidth = 256;
+      const segmentHeight = 256;
+      const width = 1000;
+      const height = 10;
+      const origin = new THREE.Vector3(0, 0, 0);
+      const textures = [];
+      const blends = [];
+      const visualObj = new THREE.Object3D();
+
+      // Load heightmap
+      scene.loadHeightmap(heights, segmentWidth, segmentHeight, width, height,
+          origin, textures, blends, visualObj);
+
+      expect(scene.heightmap).toEqual(visualObj);
+      expect(scene.heightmap.children.length).toEqual(1);
+      const mesh = scene.heightmap.children[0];
+      expect(mesh.material instanceof THREE.MeshPhongMaterial).toBeTruthy();
+
+      // Fail to load a second heightmap
+      const visualObj2 = new THREE.Object3D();
+      scene.loadHeightmap(heights, segmentWidth, segmentHeight, width, height,
+          origin, textures, blends, visualObj2);
+
+      expect(scene.heightmap).toEqual(visualObj);
+
+      // Manually cleanup
+      scene.heightmap = null;
+    });
+  });
+
+  describe('Load a heightmap', function() {
+    it('should load texture', function() {
+
+      // Check there is no heightmap
+      expect(scene.heightmap).toEqual(null);
+
+      // Params
+      const heights = [1, 0.5, 0.25, 1];
+      const width = 129;
+      const height = 129;
+      const segmentWidth = 257;
+      const segmentHeight = 257;
+      const origin = new THREE.Vector3(0, 0, 0);
+      const textures = [
+          {diffuse: "assets/media/materials/textures/dirt_diffusespecular.png",
+           normal: "assets/media/materials/textures/flat_normal.png",
+           size: 1},
+          {diffuse: "assets/media/materials/textures/grass_diffusespecular.png",
+           normal: "assets/media/materials/textures/flat_normal.png",
+           size: 1},
+          {diffuse: "assets/media/materials/textures/fungus_diffusespecular.png",
+           normal: "assets/media/materials/textures/flat_normal.png",
+           size: 1}
+      ];
+      const blends = [
+           {fade_dist: 5, min_height: 2},
+           {fade_dist: 5, min_height: 4},
+      ];
+      const visualObj = new THREE.Object3D();
+
+      // Load heightmap
+      scene.loadHeightmap(heights, segmentWidth, segmentHeight, width, height,
+          origin, textures, blends, visualObj);
+
+      expect(scene.heightmap).toEqual(visualObj);
+      expect(scene.heightmap.children.length).toEqual(1);
+      const mesh = scene.heightmap.children[0];
+      expect(mesh.material instanceof THREE.ShaderMaterial).toBeTruthy();
     });
   });
 });
