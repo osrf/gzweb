@@ -28,8 +28,9 @@
     </p>
 
     <div id="url-div">
-      <input type="text" id="url-input"></input>
-      <button onclick="init()" id="connect-button">Connect!</button>
+      <span>Server URL</span>
+      <input type="text" id="url-input" value="localhost:8080"></input>
+      <button onclick="init()">Connect!</button>
     </div>
 
     <center>
@@ -46,15 +47,14 @@
       // Initialization
       function init()
       {
-        // Get URL and remove elements
+        // Get URL
+        var url = document.getElementById('url-input').value;
+
+        // Clear URL input div
         var urlDiv = document.getElementById('url-div');
-        var urlInput = document.getElementById('url-input');
-        var button = document.getElementById('connect-button');
-
-        var url = urlInput.value;
-
-        urlDiv.removeChild(urlInput);
-        urlDiv.removeChild(button);
+        while (urlDiv.firstChild) {
+          urlDiv.removeChild(urlDiv.firstChild);
+        }
 
         // Initialize objects
         var shaders = new GZ3D.Shaders();
