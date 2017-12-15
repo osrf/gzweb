@@ -27,6 +27,7 @@ describe('Gzscene tests', function() {
       scene.init();
       expect(scene.manipulationMode).toEqual('view');
       expect(scene.name).toEqual('default');
+      expect(scene.renderer.domElement).toBeDefined();
 
       // Grid initialize
       expect(scene.grid.position.z).toEqual(0.05);
@@ -802,6 +803,46 @@ describe('Gzscene tests', function() {
       expect(scene.heightmap.children.length).toEqual(1);
       const mesh = scene.heightmap.children[0];
       expect(mesh.material instanceof THREE.ShaderMaterial).toBeTruthy();
+    });
+  });
+
+  describe('Set scene size', function() {
+    it('should update all related objects', function() {
+
+       // Check there is a non-zero dom element by default
+       expect(scene.renderer.domElement).toBeDefined();
+       expect(scene.renderer.domElement).toEqual(scene.getDomElement());
+
+       let domWidth = scene.getDomElement().width;
+       let domHeight = scene.getDomElement().height;
+       expect(domHeight).toBeGreaterThan(0);
+
+       // Check properties
+       expect(scene.camera.aspect).toEqual(domWidth / domHeight);
+
+       expect(scene.cameraOrtho.left).toEqual(-domWidth * 0.5);
+       expect(scene.cameraOrtho.right).toEqual(domWidth * 0.5);
+       expect(scene.cameraOrtho.top).toEqual(domHeight * 0.5);
+       expect(scene.cameraOrtho.bottom).toEqual(-domHeight * 0.5);
+
+       expect(scene.renderer.getSize().width).toEqual(domWidth);
+       expect(scene.renderer.getSize().height).toEqual(domHeight);
+
+       // Resize
+       domWidth = 100;
+       domHeight = 50;
+       scene.setSize(domWidth, domHeight);
+
+       // Check properties
+       expect(scene.camera.aspect).toEqual(domWidth / domHeight);
+
+       expect(scene.cameraOrtho.left).toEqual(-domWidth * 0.5);
+       expect(scene.cameraOrtho.right).toEqual(domWidth * 0.5);
+       expect(scene.cameraOrtho.top).toEqual(domHeight * 0.5);
+       expect(scene.cameraOrtho.bottom).toEqual(-domHeight * 0.5);
+
+       expect(scene.renderer.getSize().width).toEqual(domWidth);
+       expect(scene.renderer.getSize().height).toEqual(domHeight);
     });
   });
 });
