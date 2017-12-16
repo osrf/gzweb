@@ -2087,9 +2087,9 @@ GZ3D.Scene.prototype.resetView = function()
  */
 GZ3D.Scene.prototype.showRadialMenu = function(e)
 {
-  if (this.radialMenu)
+  if (!this.radialMenu)
   {
-    this.radialMenu.update();
+    return;
   }
 
   var event = e.originalEvent;
