@@ -5808,6 +5808,10 @@ GZ3D.RadialMenu.prototype.setNumberOfItems = function(number)
 
 /**
  * The scene is where everything is placed, from objects, to lights and cameras.
+ *
+ * Supports radial menu on an orthographic scene when gzradialmenu.js has been
+ * included.
+ *
  * @param shaders GZ3D.Shaders instance, if not provided, custom shaders will
  *                not be set.
  * @constructor
@@ -5862,11 +5866,19 @@ GZ3D.Scene.prototype.init = function()
   this.defaultCameraPosition = new THREE.Vector3(0, -5, 5);
   this.resetView();
 
-  // ortho camera and scene for rendering sprites
-  this.cameraOrtho = new THREE.OrthographicCamera(-width * 0.5, width * 0.5,
-      height*0.5, -height*0.5, 1, 10);
-  this.cameraOrtho.position.z = 10;
-  this.sceneOrtho = new THREE.Scene();
+  // Ortho camera and scene for rendering sprites
+  // Currently only used for the radial menu
+  if (typeof GZ3D.RadialMenu === 'function')
+  {
+    this.cameraOrtho = new THREE.OrthographicCamera(-width * 0.5, width * 0.5,
+        height*0.5, -height*0.5, 1, 10);
+    this.cameraOrtho.position.z = 10;
+    this.sceneOrtho = new THREE.Scene();
+
+    // Radial menu (only triggered by touch)
+    this.radialMenu = new GZ3D.RadialMenu(this.getDomElement());
+    this.sceneOrtho.add(this.radialMenu.menu);
+  }
 
   // Grid
   this.grid = new THREE.GridHelper(20, 20, 0xCCCCCC, 0x4D4D4D);
@@ -5918,13 +5930,6 @@ GZ3D.Scene.prototype.init = function()
   this.controls = new THREE.OrbitControls(this.camera,
       this.getDomElement());
   this.scene.add(this.controls.targetIndicator);
-
-  // Radial menu (only triggered by touch)
-  if (typeof GZ3D.RadialMenu === 'function')
-  {
-    this.radialMenu = new GZ3D.RadialMenu(this.getDomElement());
-    this.sceneOrtho.add(this.radialMenu.menu);
-  }
 
   // Bounding Box
   var indices = new Uint16Array(
@@ -6506,7 +6511,10 @@ GZ3D.Scene.prototype.render = function()
   this.renderer.render(this.scene, this.camera);
 
   this.renderer.clearDepth();
-  this.renderer.render(this.sceneOrtho, this.cameraOrtho);
+  if (this.sceneOrtho && this.cameraOrtho)
+  {
+    this.renderer.render(this.sceneOrtho, this.cameraOrtho);
+  }
 };
 
 /**
@@ -6519,11 +6527,14 @@ GZ3D.Scene.prototype.setSize = function(width, height)
   this.camera.aspect = width / height;
   this.camera.updateProjectionMatrix();
 
-  this.cameraOrtho.left = -width / 2;
-  this.cameraOrtho.right = width / 2;
-  this.cameraOrtho.top = height / 2;
-  this.cameraOrtho.bottom = -height / 2;
-  this.cameraOrtho.updateProjectionMatrix();
+  if (this.cameraOrtho)
+  {
+    this.cameraOrtho.left = -width / 2;
+    this.cameraOrtho.right = width / 2;
+    this.cameraOrtho.top = height / 2;
+    this.cameraOrtho.bottom = -height / 2;
+    this.cameraOrtho.updateProjectionMatrix();
+  }
 
   this.renderer.setSize(width, height);
   this.render();
