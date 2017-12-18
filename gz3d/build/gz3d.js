@@ -1252,7 +1252,7 @@ GZ3D.Gui = function(scene)
   this.emitter.on('notification_popup',
       function (notification, duration)
       {
-        if (this.showNotifications)
+        if (that.showNotifications)
         {
           clearTimeout(notificationTimeout);
           $( '#notification-popup' ).popup('close');
@@ -1378,7 +1378,7 @@ GZ3D.Gui = function(scene)
           if (modelStats[i].name === object)
           {
             modelStats[i].selected = 'selectedTreeItem';
-            if (this.openTreeWhenSelected)
+            if (that.openTreeWhenSelected)
             {
               that.emitter.emit('openTab', 'propertyPanel-'+
                   convertNameId(object), 'treeMenu');
@@ -1394,7 +1394,7 @@ GZ3D.Gui = function(scene)
           if (lightStats[i].name === object)
           {
             lightStats[i].selected = 'selectedTreeItem';
-            if (this.openTreeWhenSelected)
+            if (that.openTreeWhenSelected)
             {
               that.emitter.emit('openTab', 'propertyPanel-' +
                   convertNameId(object), 'treeMenu');
