@@ -1118,7 +1118,7 @@
         iface = new GZ3D.GZIface(scene, gui);
         sdfparser = new GZ3D.SdfParser(scene, gui, iface);
 
-        container = document.getElementById( 'container' );
+        container = document.getElementById('container');
         container.appendChild(scene.getDomElement());
 
         // FPS indicator
@@ -1128,12 +1128,13 @@
         stats.domElement.style.zIndex = 100;
         // container.appendChild( stats.domElement );
 
-        window.addEventListener( 'resize', onWindowResize, false);
+        window.addEventListener('resize', onWindowResize, false);
+        scene.setSize(window.innerWidth, window.innerHeight);
       }
 
       function onWindowResize()
       {
-        scene.setWindowSize(window.innerWidth, window.innerHeight);
+        scene.setSize(window.innerWidth, window.innerHeight);
         $('#clock-touch').popup('close');
       }
 

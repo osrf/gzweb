@@ -5747,7 +5747,6 @@ GZ3D.Scene.prototype.init = function()
   this.renderer = new THREE.WebGLRenderer({antialias: true });
   this.renderer.setPixelRatio(window.devicePixelRatio);
   this.renderer.setClearColor(0xb2b2b2, 1);
-  this.renderer.setSize( window.innerWidth, window.innerHeight);
   this.renderer.autoClear = false;
   // this.renderer.shadowMapEnabled = true;
   // this.renderer.shadowMapSoft = true;
@@ -5757,15 +5756,15 @@ GZ3D.Scene.prototype.init = function()
   this.scene.add(this.ambient);
 
   // camera
-  this.camera = new THREE.PerspectiveCamera(
-      60, window.innerWidth / window.innerHeight, 0.1, 1000 );
+  var width = this.getDomElement().width;
+  var height = this.getDomElement().height;
+  this.camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
   this.defaultCameraPosition = new THREE.Vector3(0, -5, 5);
   this.resetView();
 
   // ortho camera and scene for rendering sprites
-  this.cameraOrtho = new THREE.OrthographicCamera( -window.innerWidth * 0.5,
-      window.innerWidth * 0.5, window.innerHeight*0.5, -window.innerHeight*0.5,
-      1, 10);
+  this.cameraOrtho = new THREE.OrthographicCamera(-width * 0.5, width * 0.5,
+      height*0.5, -height*0.5, 1, 10);
   this.cameraOrtho.position.z = 10;
   this.sceneOrtho = new THREE.Scene();
 
@@ -5821,7 +5820,8 @@ GZ3D.Scene.prototype.init = function()
 
   this.timeDown = null;
 
-  this.controls = new THREE.OrbitControls(this.camera);
+  this.controls = new THREE.OrbitControls(this.camera,
+      this.getDomElement());
   this.scene.add(this.controls.targetIndicator);
 
   this.emitter = new EventEmitter2({ verbose: true });
@@ -6203,8 +6203,8 @@ GZ3D.Scene.prototype.onKeyDown = function(event)
     // + and - for zooming
     if (event.keyCode === 187 || event.keyCode === 189)
     {
-      var pos = new THREE.Vector2(window.innerWidth/2.0,
-          window.innerHeight/2.0);
+      var pos = new THREE.Vector2(this.getDomElement().width/2.0,
+          this.getDomElement().height/2.0);
 
       var intersect = new THREE.Vector3();
       var model = this.getRayCastModel(pos, intersect);
@@ -6268,10 +6268,10 @@ GZ3D.Scene.prototype.onKeyDown = function(event)
 GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
 {
   var vector = new THREE.Vector3(
-      ((pos.x - this.renderer.domElement.offsetLeft)
-      / window.innerWidth) * 2 - 1,
-      -((pos.y - this.renderer.domElement.offsetTop)
-      / window.innerHeight) * 2 + 1, 1);
+      ((pos.x - this.getDomElement().offsetLeft)
+      / this.getDomElement().width) * 2 - 1,
+      -((pos.y - this.getDomElement().offsetTop)
+      / this.getDomElement().height) * 2 + 1, 1);
   vector.unproject(this.camera);
   var ray = new THREE.Raycaster( this.camera.position,
       vector.sub(this.camera.position).normalize() );
@@ -6360,7 +6360,7 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
 };
 
 /**
- * Get dom element
+ * Get the renderer's DOM element
  * @returns {domElement}
  */
 GZ3D.Scene.prototype.getDomElement = function()
@@ -6403,11 +6403,11 @@ GZ3D.Scene.prototype.render = function()
 };
 
 /**
- * Set window size
+ * Set scene size.
  * @param {double} width
  * @param {double} height
  */
-GZ3D.Scene.prototype.setWindowSize = function(width, height)
+GZ3D.Scene.prototype.setSize = function(width, height)
 {
   this.camera.aspect = width / height;
   this.camera.updateProjectionMatrix();
