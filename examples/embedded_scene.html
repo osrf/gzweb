@@ -42,7 +42,7 @@
       if (!Detector.webgl)
         Detector.addGetWebGLMessage();
 
-      var scene, container;
+      var scene, container, playDiv;
 
       // Initialization
       function init()
@@ -62,6 +62,9 @@
         var iface = new GZ3D.GZIface(scene, url);
         var sdfparser = new GZ3D.SdfParser(scene, undefined, iface);
 
+        // Listen to simulation events using the emitter
+        scene.emitter.on('setPaused', serverPaused);
+
         // Configure scene
         scene.grid.visible = true;
 
@@ -77,6 +80,11 @@
         urlHeader.appendChild(document.createTextNode("Connected to " + url));
         urlDiv.appendChild(urlHeader);
 
+        // This will hold a play/pause button according to info coming from the
+        // server
+        playDiv = document.createElement("div");
+        urlDiv.appendChild(playDiv);
+
         animate();
       }
 
@@ -91,6 +99,42 @@
       {
         requestAnimationFrame(animate);
         scene.render();
+      }
+
+      // Callback when server updates play/pause stats
+      function serverPaused(_paused)
+      {
+        if (_paused)
+          setButtonPlay();
+        else
+          setButtonPause();
+      }
+
+      // Callback when user requests to play simulation
+      function userPlay()
+      {
+        // Send commands by using the emitter
+        scene.emitter.emit('pause', false);
+        setButtonPause();
+      }
+
+      // Callback when user requests to pause simulation
+      function userPause()
+      {
+        scene.emitter.emit('pause', true);
+        setButtonPlay();
+      }
+
+      // Update the play/pause button so it says play
+      function setButtonPlay()
+      {
+        playDiv.innerHTML = "<button onclick='userPlay()'>Play!</button>";
+      }
+
+      // Update the play/pause button so it says pause
+      function setButtonPause()
+      {
+        playDiv.innerHTML = "<button onclick='userPause()'>Pause!</button>";
       }
     </script>
 
