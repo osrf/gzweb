@@ -2,7 +2,7 @@
  * The scene is where everything is placed, from objects, to lights and cameras.
  *
  * Supports radial menu on an orthographic scene when gzradialmenu.js has been
- * included.
+ * included (useful for mobile devices).
  *
  * @param shaders GZ3D.Shaders instance, if not provided, custom shaders will
  *                not be set.
