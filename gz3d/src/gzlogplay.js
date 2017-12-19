@@ -43,12 +43,13 @@ var subtractTime = function(timeA, timeB)
 };
 
 /**
- * log playback
+ * Provides an interface to control a running log playback. It sends events to
+ * GzIface and updates some UI elements.
  * @constructor
  */
-GZ3D.LogPlay = function(gui, guiEvents)
+GZ3D.LogPlay = function()
 {
-  this.gui = gui;
+  this.emitter = globalEmitter || new EventEmitter2({verboseMemoryLeak: true});
   this.visible = null;
   this.startTime = null;
   this.endTime = null;
@@ -59,7 +60,7 @@ GZ3D.LogPlay = function(gui, guiEvents)
   var that = this;
 
   // when slide pos changes
-  guiEvents.on('logPlaySlideStop', function (value)
+  this.emitter.on('logPlaySlideStop', function (value)
     {
       if (!that.startTime || !that.endTime)
       {
@@ -76,46 +77,46 @@ GZ3D.LogPlay = function(gui, guiEvents)
       playback.seek.nsec = Math.round((seek - playback.seek.sec) * nsInSec);
 
       // publich playback control command msg
-      that.gui.emitter.emit('logPlayChanged', playback);
+      that.emitter.emit('logPlayChanged', playback);
       that.active = false;
     }
   );
 
-  guiEvents.on('logPlaySlideStart', function ()
+  this.emitter.on('logPlaySlideStart', function ()
     {
       that.active = true;
     }
   );
 
-  guiEvents.on('logPlayRewind', function ()
+  this.emitter.on('logPlayRewind', function ()
     {
       var playback = {};
       playback.rewind = true;
-      that.gui.emitter.emit('logPlayChanged', playback);
+      that.emitter.emit('logPlayChanged', playback);
     }
   );
-  guiEvents.on('logPlayForward', function ()
+  this.emitter.on('logPlayForward', function ()
     {
       var playback = {};
       playback.forward = true;
-      that.gui.emitter.emit('logPlayChanged', playback);
+      that.emitter.emit('logPlayChanged', playback);
     }
   );
-  guiEvents.on('logPlayStepforward', function ()
+  this.emitter.on('logPlayStepforward', function ()
     {
       var playback = {};
       playback.multi_step = 1;
-      that.gui.emitter.emit('logPlayChanged', playback);
+      that.emitter.emit('logPlayChanged', playback);
     }
   );
-  guiEvents.on('logPlayStepback', function ()
+  this.emitter.on('logPlayStepback', function ()
     {
       var playback = {};
       playback.multi_step = -1;
-      that.gui.emitter.emit('logPlayChanged', playback);
+      that.emitter.emit('logPlayChanged', playback);
     }
   );
-  guiEvents.on('paused', function (paused)
+  this.emitter.on('paused', function (paused)
     {
       if (paused)
       {

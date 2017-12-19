@@ -11,7 +11,7 @@
     "deploy_op": ""
   },
   "scripts": {
-    "test": "./node_modules/.bin/eslint gz3d/src/*.js gzbridge/server.js && ./node_modules/karma/bin/karma start --singleRun",
+    "test": "./node_modules/.bin/eslint gz3d/src/*.js gz3d/test/*.js gzbridge/server.js && ./node_modules/karma/bin/karma start --singleRun",
     "update": "grunt build && cd build && cmake ..",
     "start": "if [ $npm_config_port ]; then port=$npm_config_port; fi; cd gzbridge && ./server.js $port",
     "deploy": "if [ $npm_config_deploy_op ]; then ./deploy.sh -$npm_config_deploy_op; else ./deploy.sh; fi;",
