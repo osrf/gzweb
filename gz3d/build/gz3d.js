@@ -2,8 +2,7 @@ var GZ3D = GZ3D || {
   REVISION : '1'
 };
 
-// https://bitbucket.org/osrf/gzweb/issues/136
-var guiEvents = new EventEmitter2({ verbose: true });
+var globalEmitter = new EventEmitter2({verboseMemoryLeak: true});
 
 // Assuming all mobile devices are touch devices.
 var isTouchDevice = /Mobi/.test(navigator.userAgent);
@@ -314,8 +313,8 @@ $(function()
   $('#view-wireframe').buttonMarkup({icon: 'false'});
   $('#view-joints').buttonMarkup({icon: 'false'});
   $('#view-com').buttonMarkup({icon: 'false'});
-  guiEvents.emit('toggle_notifications');
-  guiEvents.emit('show_orbit_indicator');
+  globalEmitter.emit('toggle_notifications');
+  globalEmitter.emit('show_orbit_indicator');
 
   $( '#clock-touch' ).popup('option', 'arrow', 't');
   $('#notification-popup-screen').remove();
@@ -323,7 +322,7 @@ $(function()
 
   if (isWideScreen())
   {
-    guiEvents.emit('openTab', 'mainMenu', 'mainMenu');
+    globalEmitter.emit('openTab', 'mainMenu', 'mainMenu');
   }
 
   if (isTallScreen())
@@ -361,11 +360,11 @@ $(function()
         .css('z-index', '1000');
 
     $('.gzGUI').touchstart(function(event){
-        guiEvents.emit('pointerOnMenu');
+        globalEmitter.emit('pointerOnMenu');
     });
 
     $('.gzGUI').touchend(function(event){
-        guiEvents.emit('pointerOffMenu');
+        globalEmitter.emit('pointerOffMenu');
     });
 
     // long press on canvas
@@ -373,19 +372,19 @@ $(function()
     $('#container')
       .on('touchstart', function (event) {
         $(this).data('checkdown', setTimeout(function () {
-          guiEvents.emit('longpress_container_start',event);
+          globalEmitter.emit('longpress_container_start',event);
         }, press_time_container));
       })
       .on('touchend', function (event) {
         clearTimeout($(this).data('checkdown'));
-        guiEvents.emit('longpress_container_end',event,false);
+        globalEmitter.emit('longpress_container_end',event,false);
       })
       .on('touchmove', function (event) {
         clearTimeout($(this).data('checkdown'));
         $(this).data('checkdown', setTimeout(function () {
-          guiEvents.emit('longpress_container_start',event);
+          globalEmitter.emit('longpress_container_start',event);
         }, press_time_container));
-        guiEvents.emit('longpress_container_move',event);
+        globalEmitter.emit('longpress_container_move',event);
       });
 
     // long press on insert menu item
@@ -395,16 +394,16 @@ $(function()
         var path = $(this).attr('id');
         path = path.substring(14); // after 'insert-entity-'
         $(this).data('checkdown', setTimeout(function () {
-          guiEvents.emit('longpress_insert_start', event, path);
+          globalEmitter.emit('longpress_insert_start', event, path);
         }, press_time_insert));
       })
       .on('touchend', function (event) {
         clearTimeout($(this).data('checkdown'));
-        guiEvents.emit('longpress_insert_end',event,false);
+        globalEmitter.emit('longpress_insert_end',event,false);
       })
       .on('touchmove', function (event) {
         clearTimeout($(this).data('checkdown'));
-        guiEvents.emit('longpress_insert_move',event);
+        globalEmitter.emit('longpress_insert_move',event);
       });
   }
   // Mouse devices
@@ -417,7 +416,7 @@ $(function()
       .click(function(event) {
         var path = $(this).attr('id');
         path = path.substring(14); // after 'insert-entity-'
-        guiEvents.emit('spawn_entity_start', path);
+        globalEmitter.emit('spawn_entity_start', path);
       })
       .on('mousedown', function(event) {
         event.preventDefault();
@@ -483,11 +482,11 @@ $(function()
         .css('z-index', '1000');
 
     $('.gzGUI').mouseenter(function(event){
-        guiEvents.emit('pointerOnMenu');
+        globalEmitter.emit('pointerOnMenu');
     });
 
     $('.gzGUI').mouseleave(function(event){
-        guiEvents.emit('pointerOffMenu');
+        globalEmitter.emit('pointerOffMenu');
     });
 
     // right-click
@@ -496,7 +495,7 @@ $(function()
           event.preventDefault();
           if(event.which === 3)
           {
-            guiEvents.emit('right_click', event);
+            globalEmitter.emit('right_click', event);
           }
         });
 
@@ -513,51 +512,51 @@ $(function()
 
         if($('#'+idTab).css('border-left-color') === tabColors.unselected)
         {
-          guiEvents.emit('openTab', lastOpenMenu[idMenu], idMenu);
+          globalEmitter.emit('openTab', lastOpenMenu[idMenu], idMenu);
         }
         else
         {
-          guiEvents.emit('closeTabs', true);
+          globalEmitter.emit('closeTabs', true);
         }
       });
 
   $('.closePanels').click(function()
       {
-        guiEvents.emit('closeTabs', true);
+        globalEmitter.emit('closeTabs', true);
       });
 
   $('#view-mode').click(function()
       {
-        guiEvents.emit('manipulation_mode', 'view');
+        globalEmitter.emit('manipulation_mode', 'view');
       });
   $('#translate-mode').click(function()
       {
-        guiEvents.emit('manipulation_mode', 'translate');
+        globalEmitter.emit('manipulation_mode', 'translate');
       });
   $('#rotate-mode').click(function()
       {
-        guiEvents.emit('manipulation_mode', 'rotate');
+        globalEmitter.emit('manipulation_mode', 'rotate');
       });
 
   $('[id^="header-insert-"]').click(function()
       {
         var entity = $(this).attr('id');
         entity = entity.substring(14); // after 'header-insert-'
-        guiEvents.emit('closeTabs', false);
-        guiEvents.emit('spawn_entity_start', entity);
+        globalEmitter.emit('closeTabs', false);
+        globalEmitter.emit('spawn_entity_start', entity);
       });
 
   $('#play').click(function()
       {
         if ( $('#playText').html().indexOf('Play') !== -1 )
         {
-          guiEvents.emit('pause', false);
-          guiEvents.emit('notification_popup','Physics engine running');
+          globalEmitter.emit('pause', false);
+          globalEmitter.emit('notification_popup','Physics engine running');
         }
         else
         {
-          guiEvents.emit('pause', true);
-          guiEvents.emit('notification_popup','Physics engine paused');
+          globalEmitter.emit('pause', true);
+          globalEmitter.emit('notification_popup','Physics engine paused');
         }
       });
   $('#clock').click(function()
@@ -579,46 +578,49 @@ $(function()
 
   $('#reset-model').click(function()
       {
-        guiEvents.emit('model_reset');
-        guiEvents.emit('closeTabs', false);
+        globalEmitter.emit('reset', 'model');
+        globalEmitter.emit('closeTabs', false);
       });
   $('#reset-world').click(function()
       {
-        guiEvents.emit('world_reset');
-        guiEvents.emit('closeTabs', false);
+        globalEmitter.emit('reset', 'world');
+        globalEmitter.emit('closeTabs', false);
       });
   $('#reset-view').click(function()
       {
-        guiEvents.emit('view_reset');
-        guiEvents.emit('closeTabs', false);
+        globalEmitter.emit('view_reset');
+        globalEmitter.emit('closeTabs', false);
       });
   $('#view-grid').click(function()
       {
-        guiEvents.emit('show_grid', 'toggle');
-        guiEvents.emit('closeTabs', false);
+        globalEmitter.emit('show_grid', 'toggle');
+        globalEmitter.emit('closeTabs', false);
       });
   $('#view-collisions').click(function()
       {
-        guiEvents.emit('show_collision');
-        guiEvents.emit('closeTabs', false);
+        globalEmitter.emit('show_collision');
+        globalEmitter.emit('closeTabs', false);
       });
   $('#view-orbit-indicator').click(function()
       {
-        guiEvents.emit('show_orbit_indicator');
-        guiEvents.emit('closeTabs', false);
+        globalEmitter.emit('show_orbit_indicator');
+        globalEmitter.emit('closeTabs', false);
       });
-  $( '#snap-to-grid' ).click(function() {
-    guiEvents.emit('snap_to_grid');
-    guiEvents.emit('closeTabs', false);
-  });
-  $( '#open-tree-when-selected' ).click(function() {
-    guiEvents.emit('openTreeWhenSelected');
-    guiEvents.emit('closeTabs', false);
-  });
-  $( '#toggle-notifications' ).click(function() {
-    guiEvents.emit('toggle_notifications');
-    guiEvents.emit('closeTabs', false);
-  });
+  $( '#snap-to-grid' ).click(function()
+      {
+        globalEmitter.emit('snap_to_grid');
+        globalEmitter.emit('closeTabs', false);
+      });
+  $( '#open-tree-when-selected' ).click(function()
+      {
+        globalEmitter.emit('openTreeWhenSelected');
+        globalEmitter.emit('closeTabs', false);
+      });
+  $( '#toggle-notifications' ).click(function()
+      {
+        globalEmitter.emit('toggle_notifications');
+        globalEmitter.emit('closeTabs', false);
+      });
 
   // Disable Esc key to close panel
   $('body').on('keyup', function(event)
@@ -632,19 +634,19 @@ $(function()
   // Object menu
   $( '#view-transparent' ).click(function() {
     $('#model-popup').popup('close');
-    guiEvents.emit('set_view_as','transparent');
+    globalEmitter.emit('set_view_as','transparent');
   });
 
   $( '#view-wireframe' ).click(function() {
     $('#model-popup').popup('close');
-    guiEvents.emit('set_view_as','wireframe');
+    globalEmitter.emit('set_view_as','wireframe');
   });
 
   $( '#view-joints' ).click(function() {
     if ($('#view-joints a').css('color') === 'rgb(255, 255, 255)')
     {
       $('#model-popup').popup('close');
-      guiEvents.emit('view_joints');
+      globalEmitter.emit('view_joints');
     }
   });
 
@@ -652,7 +654,7 @@ $(function()
     if ($('#view-com a').css('color') === 'rgb(255, 255, 255)')
     {
       $('#model-popup').popup('close');
-      guiEvents.emit('view_com');
+      globalEmitter.emit('view_com');
     }
   });
 
@@ -660,53 +662,53 @@ $(function()
     if ($('#view-inertia a').css('color') === 'rgb(255, 255, 255)')
     {
       $('#model-popup').popup('close');
-      guiEvents.emit('view_inertia');
+      globalEmitter.emit('view_inertia');
     }
   });
 
-  $( '#delete-entity' ).click(function() {
-    guiEvents.emit('delete_entity');
+  $( '#delete-entity' ).click(function()
+  {
+    globalEmitter.emit('delete_entity');
   });
-
   $(window).resize(function()
   {
-    guiEvents.emit('resizePanel');
+    globalEmitter.emit('resizePanel');
   });
 
   $('#logplay-slider-input').on('slidestop', function(event, ui)
   {
-    guiEvents.emit('logPlaySlideStop', $('#logplay-slider-input').val());
+    globalEmitter.emit('logPlaySlideStop', $('#logplay-slider-input').val());
   });
   $('#logplay-slider-input').on('slidestart', function(event, ui)
   {
-    guiEvents.emit('logPlaySlideStart');
+    globalEmitter.emit('logPlaySlideStart');
   });
   $('#logplay-rewind').click(function()
       {
-        guiEvents.emit('logPlayRewind');
+        globalEmitter.emit('logPlayRewind');
       });
   $('#logplay-stepback').click(function()
       {
-        guiEvents.emit('logPlayStepback');
+        globalEmitter.emit('logPlayStepback');
       });
   $('#logplay-play').click(function()
       {
         if ( $('#logplay-playText').html().indexOf('Play') !== -1 )
         {
-          guiEvents.emit('pause', false);
+          globalEmitter.emit('pause', false);
         }
         else
         {
-          guiEvents.emit('pause', true);
+          globalEmitter.emit('pause', true);
         }
       });
   $('#logplay-stepforward').click(function()
       {
-        guiEvents.emit('logPlayStepforward');
+        globalEmitter.emit('logPlayStepforward');
       });
   $('#logplay-forward').click(function()
       {
-        guiEvents.emit('logPlayForward');
+        globalEmitter.emit('logPlayForward');
       });
 });
 
@@ -785,20 +787,20 @@ gzangular.controller('treeControl', ['$scope', function($scope)
   $scope.selectEntity = function (name)
   {
     $('#model-popup').popup('close');
-    guiEvents.emit('openTab', 'propertyPanel-' + convertNameId(name),
+    globalEmitter.emit('openTab', 'propertyPanel-' + convertNameId(name),
         'treeMenu');
-    guiEvents.emit('selectEntity', name);
+    globalEmitter.emit('selectEntity', name);
   };
 
   $scope.openEntityMenu = function (event, name)
   {
     $('#model-popup').popup('close');
-    guiEvents.emit('openEntityPopup', event, name);
+    globalEmitter.emit('openEntityPopup', event, name);
   };
 
   $scope.openTab = function (tab)
   {
-    guiEvents.emit('openTab', tab, 'treeMenu');
+    globalEmitter.emit('openTab', tab, 'treeMenu');
   };
 
   $scope.expandTree = function (tree)
@@ -864,25 +866,25 @@ gzangular.controller('treeControl', ['$scope', function($scope)
 
       if (prop === 'pose' && parentProp === 'link')
       {
-        guiEvents.emit('setPoseStats', modelName, subPropName);
+        globalEmitter.emit('setPoseStats', modelName, subPropName);
       }
     }
   };
 
   $scope.changePose = function(prop1, prop2, name, value)
   {
-    guiEvents.emit('setPose', prop1, prop2, convertNameId(name), value);
+    globalEmitter.emit('setPose', prop1, prop2, convertNameId(name), value);
   };
 
   $scope.changeLight = function(prop, name, value)
   {
-    guiEvents.emit('setLight', prop, convertNameId(name), value);
+    globalEmitter.emit('setLight', prop, convertNameId(name), value);
   };
 
   $scope.toggleProperty = function(prop, entity, subEntity)
   {
     // only for links so far
-    guiEvents.emit('toggleProperty', prop, entity, subEntity);
+    globalEmitter.emit('toggleProperty', prop, entity, subEntity);
   };
 }]);
 
@@ -893,12 +895,12 @@ gzangular.controller('insertControl', ['$scope', function($scope)
 
   $scope.spawnEntity = function(path)
   {
-    guiEvents.emit('spawn_entity_start', path);
+    globalEmitter.emit('spawn_entity_start', path);
   };
 
   $scope.openTab = function (tab)
   {
-    guiEvents.emit('openTab', tab, 'insertMenu');
+    globalEmitter.emit('openTab', tab, 'insertMenu');
   };
 }]);
 
@@ -910,26 +912,16 @@ gzangular.controller('insertControl', ['$scope', function($scope)
  */
 GZ3D.Gui = function(scene)
 {
+  this.emitter = globalEmitter || new EventEmitter2({verboseMemoryLeak: true});
   this.scene = scene;
   this.domElement = scene.getDomElement();
-  this.init();
-  this.emitter = new EventEmitter2({verbose: true});
-  this.guiEvents = guiEvents;
-};
-
-/**
- * Initialize GUI
- */
-GZ3D.Gui.prototype.init = function()
-{
   this.spawnState = null;
   this.longPressContainerState = null;
   this.showNotifications = false;
   this.openTreeWhenSelected = false;
   this.modelStatsDirty = false;
 
-  this.logPlay = new GZ3D.LogPlay(
-      this, guiEvents);
+  this.logPlay = new GZ3D.LogPlay();
 
   var that = this;
 
@@ -942,8 +934,8 @@ GZ3D.Gui.prototype.init = function()
     }
   }, 20);
 
-  // On guiEvents, emitter events
-  guiEvents.on('manipulation_mode',
+  // On manipulation
+  this.emitter.on('manipulation_mode',
       function(mode)
       {
         that.scene.setManipulationMode(mode);
@@ -951,11 +943,11 @@ GZ3D.Gui.prototype.init = function()
 
         if (mode === 'view')
         {
-          guiEvents.emit('notification_popup', 'View mode');
+          that.emitter.emit('notification_popup', 'View mode');
         }
         else
         {
-          guiEvents.emit('notification_popup',
+          that.emitter.emit('notification_popup',
               mode.charAt(0).toUpperCase()+
               mode.substring(1)+' mode in '+
               space.charAt(0).toUpperCase()+
@@ -965,7 +957,7 @@ GZ3D.Gui.prototype.init = function()
   );
 
   // Create temp model
-  guiEvents.on('spawn_entity_start', function(entity)
+  this.emitter.on('spawn_entity_start', function(entity)
       {
         // manually trigger view mode
         that.scene.setManipulationMode('view');
@@ -979,20 +971,20 @@ GZ3D.Gui.prototype.init = function()
             {
               that.emitter.emit('entityCreated', obj, entity);
             });
-        guiEvents.emit('notification_popup',
+        that.emitter.emit('notification_popup',
             'Place '+name+' at the desired position');
       }
   );
 
   // Move temp model by touch
-  guiEvents.on('spawn_entity_move', function(event)
+  this.emitter.on('spawn_entity_move', function(event)
       {
         that.spawnState = 'MOVE';
         that.scene.spawnModel.onTouchMove(event,false);
       }
   );
   // Place temp model by touch
-  guiEvents.on('spawn_entity_end', function()
+  this.emitter.on('spawn_entity_end', function()
       {
         if (that.spawnState === 'MOVE')
         {
@@ -1002,50 +994,51 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('world_reset', function()
+  this.emitter.on('reset', function(resetType)
       {
-        that.emitter.emit('reset', 'world');
-        guiEvents.emit('notification_popup','Reset world');
+        if (resetType === 'world')
+        {
+          that.emitter.emit('notification_popup','Reset world');
+        }
+        else if (resetType === 'model')
+        {
+          that.emitter.emit('notification_popup','Reset model poses');
+        }
       }
   );
 
-  guiEvents.on('model_reset', function()
+  this.emitter.on('model_reset', function()
       {
+        // TODO: no need to emit another one
         that.emitter.emit('reset', 'model');
-        guiEvents.emit('notification_popup','Reset model poses');
+        that.emitter.emit('notification_popup','Reset model poses');
       }
   );
 
-  guiEvents.on('view_reset', function()
+  this.emitter.on('view_reset', function()
       {
         that.scene.resetView();
-        guiEvents.emit('notification_popup','Reset view');
+        that.emitter.emit('notification_popup','Reset view');
       }
   );
 
-  guiEvents.on('pause', function(paused)
-      {
-        that.emitter.emit('pause', paused);
-      }
-  );
-
-  guiEvents.on('show_collision', function()
+  this.emitter.on('show_collision', function()
       {
         that.scene.showCollision(!that.scene.showCollisions);
         if(!that.scene.showCollisions)
         {
           $('#view-collisions').buttonMarkup({icon: 'false'});
-          guiEvents.emit('notification_popup','Hiding collisions');
+          that.emitter.emit('notification_popup','Hiding collisions');
         }
         else
         {
           $('#view-collisions').buttonMarkup({icon: 'check'});
-          guiEvents.emit('notification_popup','Viewing collisions');
+          that.emitter.emit('notification_popup','Viewing collisions');
         }
       }
   );
 
-  guiEvents.on('show_grid', function(option)
+  this.emitter.on('show_grid', function(option)
       {
         if (option === 'show')
         {
@@ -1063,34 +1056,34 @@ GZ3D.Gui.prototype.init = function()
         if(!that.scene.grid.visible)
         {
           $('#view-grid').buttonMarkup({icon: 'false'});
-          guiEvents.emit('notification_popup','Hiding grid');
+          that.emitter.emit('notification_popup','Hiding grid');
         }
         else
         {
           $('#view-grid').buttonMarkup({icon: 'check'});
-          guiEvents.emit('notification_popup','Viewing grid');
+          that.emitter.emit('notification_popup','Viewing grid');
         }
       }
   );
 
-   guiEvents.on('show_orbit_indicator', function()
+   this.emitter.on('show_orbit_indicator', function()
       {
         that.scene.controls.showTargetIndicator =
             !that.scene.controls.showTargetIndicator;
         if(!that.scene.controls.showTargetIndicator)
         {
           $('#view-orbit-indicator').buttonMarkup({icon: 'false'});
-          guiEvents.emit('notification_popup','Hiding orbit indicator');
+          that.emitter.emit('notification_popup','Hiding orbit indicator');
         }
         else
         {
           $('#view-orbit-indicator').buttonMarkup({icon: 'check'});
-          guiEvents.emit('notification_popup','Viewing orbit indicator');
+          that.emitter.emit('notification_popup','Viewing orbit indicator');
         }
       }
   );
 
-  guiEvents.on('snap_to_grid',
+  this.emitter.on('snap_to_grid',
       function ()
       {
         if(that.scene.modelManipulator.snapDist === null)
@@ -1098,19 +1091,19 @@ GZ3D.Gui.prototype.init = function()
           $('#snap-to-grid').buttonMarkup({icon: 'check'});
           that.scene.modelManipulator.snapDist = 0.5;
           that.scene.spawnModel.snapDist = that.scene.modelManipulator.snapDist;
-          guiEvents.emit('notification_popup','Snapping to grid');
+          that.emitter.emit('notification_popup','Snapping to grid');
         }
         else
         {
           $('#snap-to-grid').buttonMarkup({icon: 'false'});
           that.scene.modelManipulator.snapDist = null;
           that.scene.spawnModel.snapDist = null;
-          guiEvents.emit('notification_popup','Not snapping to grid');
+          that.emitter.emit('notification_popup','Not snapping to grid');
         }
       }
   );
 
-  guiEvents.on('openTreeWhenSelected', function ()
+  this.emitter.on('openTreeWhenSelected', function ()
       {
         that.openTreeWhenSelected = !that.openTreeWhenSelected;
         if(!that.openTreeWhenSelected)
@@ -1124,7 +1117,7 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('toggle_notifications', function ()
+  this.emitter.on('toggle_notifications', function ()
       {
         that.showNotifications = !that.showNotifications;
         if(!that.showNotifications)
@@ -1139,14 +1132,15 @@ GZ3D.Gui.prototype.init = function()
   );
 
 
-  guiEvents.on('longpress_container_start',
+  this.emitter.on('longpress_container_start',
       function (event)
       {
         if (event.originalEvent.touches.length !== 1 ||
             that.scene.modelManipulator.hovered ||
             that.scene.spawnModel.active)
         {
-          guiEvents.emit('longpress_container_end', event.originalEvent,true);
+          that.emitter.emit('longpress_container_end',
+              event.originalEvent,true);
         }
         else
         {
@@ -1156,7 +1150,7 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('longpress_container_end', function(event,cancel)
+  this.emitter.on('longpress_container_end', function(event,cancel)
       {
         if (that.longPressContainerState !== 'START')
         {
@@ -1195,16 +1189,16 @@ GZ3D.Gui.prototype.init = function()
                 }
                 else if (type === 'transparent')
                 {
-                  guiEvents.emit('set_view_as','transparent');
+                  that.emitter.emit('set_view_as','transparent');
                 }
                 else if (type === 'wireframe')
                 {
-                  guiEvents.emit('set_view_as','wireframe');
+                  that.emitter.emit('set_view_as','wireframe');
                 }
                 else if (type === 'joints')
                 {
                   that.scene.selectEntity(entity);
-                  guiEvents.emit('view_joints');
+                  that.emitter.emit('view_joints');
                 }
 
               });
@@ -1213,11 +1207,11 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('longpress_container_move', function(event)
+  this.emitter.on('longpress_container_move', function(event)
       {
         if (event.originalEvent.touches.length !== 1)
         {
-          guiEvents.emit('longpress_container_end',event.originalEvent,true);
+          that.emitter.emit('longpress_container_end',event.originalEvent,true);
         }
         else
         {
@@ -1233,32 +1227,32 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('longpress_insert_start', function (event, path)
+  this.emitter.on('longpress_insert_start', function (event, path)
       {
         navigator.vibrate(50);
-        guiEvents.emit('spawn_entity_start', path);
+        that.emitter.emit('spawn_entity_start', path);
         event.stopPropagation();
       }
   );
 
-  guiEvents.on('longpress_insert_end', function(event)
+  this.emitter.on('longpress_insert_end', function(event)
       {
-        guiEvents.emit('spawn_entity_end');
+        that.emitter.emit('spawn_entity_end');
       }
   );
 
-  guiEvents.on('longpress_insert_move', function(event)
+  this.emitter.on('longpress_insert_move', function(event)
       {
-        guiEvents.emit('spawn_entity_move', event);
+        that.emitter.emit('spawn_entity_move', event);
         event.stopPropagation();
       }
   );
 
   var notificationTimeout;
-  guiEvents.on('notification_popup',
+  this.emitter.on('notification_popup',
       function (notification, duration)
       {
-        if (this.showNotifications)
+        if (that.showNotifications)
         {
           clearTimeout(notificationTimeout);
           $( '#notification-popup' ).popup('close');
@@ -1278,7 +1272,7 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('right_click', function (event)
+  this.emitter.on('right_click', function (event)
       {
         that.scene.onRightClick(event, function(entity)
             {
@@ -1287,31 +1281,31 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('set_view_as', function (viewAs)
+  this.emitter.on('set_view_as', function (viewAs)
       {
         that.scene.setViewAs(that.scene.selectedEntity, viewAs);
       }
   );
 
-  guiEvents.on('view_joints', function ()
+  this.emitter.on('view_joints', function ()
       {
         that.scene.viewJoints(that.scene.selectedEntity);
       }
   );
 
-  guiEvents.on('view_inertia', function ()
+  this.emitter.on('view_inertia', function ()
       {
         that.scene.viewInertia(that.scene.selectedEntity);
       }
   );
 
-  guiEvents.on('view_com', function ()
+  this.emitter.on('view_com', function ()
       {
         that.scene.viewCOM(that.scene.selectedEntity);
       }
   );
 
-  guiEvents.on('delete_entity', function ()
+  this.emitter.on('delete_entity', function ()
       {
         that.emitter.emit('deleteEntity',that.scene.selectedEntity);
         $('#model-popup').popup('close');
@@ -1319,19 +1313,19 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('pointerOnMenu', function ()
+  this.emitter.on('pointerOnMenu', function ()
       {
         that.scene.pointerOnMenu = true;
       }
   );
 
-  guiEvents.on('pointerOffMenu', function ()
+  this.emitter.on('pointerOffMenu', function ()
       {
         that.scene.pointerOnMenu = false;
       }
   );
 
-  guiEvents.on('openTab', function (id, parentId)
+  this.emitter.on('openTab', function (id, parentId)
       {
         lastOpenMenu[parentId] = id;
 
@@ -1361,11 +1355,11 @@ GZ3D.Gui.prototype.init = function()
                                     w: object.quaternion._w};
         }
 
-        guiEvents.emit('resizePanel');
+        that.emitter.emit('resizePanel');
       }
   );
 
-  guiEvents.on('closeTabs', function (force)
+  this.emitter.on('closeTabs', function (force)
       {
         // Close for narrow viewports, force to always close
         if (force || !isWideScreen())
@@ -1377,16 +1371,16 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('setTreeSelected', function (object)
+  this.emitter.on('setTreeSelected', function (object)
       {
         for (var i = 0; i < modelStats.length; ++i)
         {
           if (modelStats[i].name === object)
           {
             modelStats[i].selected = 'selectedTreeItem';
-            if (this.openTreeWhenSelected)
+            if (that.openTreeWhenSelected)
             {
-              guiEvents.emit('openTab', 'propertyPanel-'+
+              that.emitter.emit('openTab', 'propertyPanel-'+
                   convertNameId(object), 'treeMenu');
             }
           }
@@ -1400,9 +1394,9 @@ GZ3D.Gui.prototype.init = function()
           if (lightStats[i].name === object)
           {
             lightStats[i].selected = 'selectedTreeItem';
-            if (this.openTreeWhenSelected)
+            if (that.openTreeWhenSelected)
             {
-              guiEvents.emit('openTab', 'propertyPanel-' +
+              that.emitter.emit('openTab', 'propertyPanel-' +
                   convertNameId(object), 'treeMenu');
             }
           }
@@ -1415,7 +1409,7 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('setTreeDeselected', function ()
+  this.emitter.on('setTreeDeselected', function ()
       {
         for (var i = 0; i < modelStats.length; ++i)
         {
@@ -1429,14 +1423,14 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('selectEntity', function (name)
+  this.emitter.on('selectEntity', function (name)
       {
         var object = that.scene.getByName(name);
         that.scene.selectEntity(object);
       }
   );
 
-  guiEvents.on('openEntityPopup', function (event, name)
+  this.emitter.on('openEntityPopup', function (event, name)
       {
         if (!isTouchDevice)
         {
@@ -1446,7 +1440,7 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('setPoseStats', function (modelName, linkName)
+  this.emitter.on('setPoseStats', function (modelName, linkName)
       {
         var object;
         if (linkName === undefined)
@@ -1480,7 +1474,7 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('resizePanel', function ()
+  this.emitter.on('resizePanel', function ()
       {
         if ($('.leftPanels').is(':visible'))
         {
@@ -1507,7 +1501,7 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('setPose', function (prop1, prop2, name, value)
+  this.emitter.on('setPose', function (prop1, prop2, name, value)
       {
         if (value === undefined)
         {
@@ -1541,7 +1535,7 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('setLight', function (prop, name, value)
+  this.emitter.on('setLight', function (prop, name, value)
       {
         if (value === undefined)
         {
@@ -1582,12 +1576,66 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('toggleProperty', function (prop, subEntityName)
+  this.emitter.on('toggleProperty', function (prop, subEntityName)
       {
         var entity = that.scene.getByName(subEntityName);
         entity.serverProperties[prop] = !entity.serverProperties[prop];
 
         that.scene.emitter.emit('linkChanged', entity);
+      }
+  );
+
+  this.emitter.on('setLightStats', function (stats, action)
+      {
+        that.setLightStats(stats, action);
+      }
+  );
+
+  this.emitter.on('setModelStats', function (stats, action)
+      {
+        that.setModelStats(stats, action);
+      }
+  );
+
+  this.emitter.on('setSceneStats', function (stats)
+      {
+        that.setSceneStats(stats);
+      }
+  );
+
+  this.emitter.on('setPhysicsStats', function (stats)
+      {
+        that.setPhysicsStats(stats);
+      }
+  );
+
+  this.emitter.on('setPaused', function (stats)
+      {
+        that.setPaused(stats);
+      }
+  );
+
+  this.emitter.on('setLogPlayVisible', function (stats)
+      {
+        that.setLogPlayVisible(stats);
+      }
+  );
+
+  this.emitter.on('setLogPlayStats', function (simTime, startTime, endTime)
+      {
+        that.setLogPlayStats(simTime, startTime, endTime);
+      }
+  );
+
+  this.emitter.on('setRealTime', function (stats)
+      {
+        that.setRealTime(stats);
+      }
+  );
+
+  this.emitter.on('setSimTime', function (stats)
+      {
+        that.setSimTime(stats);
       }
   );
 };
@@ -1612,7 +1660,7 @@ GZ3D.Gui.prototype.setPaused = function(paused)
   // pause'd' event to inidicate simulation pause state has changed
   // this is different from the 'pause' event which indicates user has pressed
   // the play/pause button.
-  guiEvents.emit('paused', paused);
+  this.emitter.emit('paused', paused);
 };
 
 /**
@@ -2037,7 +2085,7 @@ GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
     $('#view-wireframe').css('visibility','collapse');
     $('#view-joints').css('visibility','collapse');
     $('#view-com').css('visibility','collapse');
-    $('#view-inertia').css('visibility','collapse');    
+    $('#view-inertia').css('visibility','collapse');
     $('#model-popup').popup('open',
       {x: event.clientX + emUnits(6),
        y: event.clientY + emUnits(-8)});
@@ -2319,7 +2367,7 @@ GZ3D.Gui.prototype.deleteFromStats = function(type, name)
     {
       if ($('#propertyPanel-'+ convertNameId(name)).is(':visible'))
       {
-        guiEvents.emit('openTab', 'treeMenu', 'treeMenu');
+        this.emitter.emit('openTab', 'treeMenu', 'treeMenu');
       }
 
       list.splice(i, 1);
@@ -2446,19 +2494,25 @@ var formatTime = function(time)
   return timeValue;
 };
 
-//var GAZEBO_MODEL_DATABASE_URI='http://gazebosim.org/models';
-
-GZ3D.GZIface = function(scene, gui, url)
+/**
+ * Class responsible for communication with the backend via a websocket, it
+ * forwards user commands to the server and propagates updates coming from the
+ * server to other classes.
+ * @constructor
+ * @param {GZ3D.Scene} scene - A scene to connect to
+ */
+GZ3D.GZIface = function(scene, url)
 {
+  this.emitter = globalEmitter || new EventEmitter2({verboseMemoryLeak: true});
   this.scene = scene;
   this.url = url || (location.hostname + ':' + location.port);
-  this.gui = gui;
 
   this.isConnected = false;
 
-  this.emitter = new EventEmitter2({ verbose: true });
+  this.material = [];
+  this.entityMaterial = {};
 
-  this.init();
+  this.connect();
   this.visualsToAdd = [];
 
   this.numConnectionTrials = 0;
@@ -2466,17 +2520,11 @@ GZ3D.GZIface = function(scene, gui, url)
   this.timeToSleepBtwTrials = 1000; // wait 1 second between connection trials
 };
 
-GZ3D.GZIface.prototype.init = function()
-{
-  this.material = [];
-  this.entityMaterial = {};
-
-  this.connect();
-};
-
+/**
+ * Attempt to establish websocket connection.
+ */
 GZ3D.GZIface.prototype.connect = function()
 {
-  // connect to websocket
   this.webSocket = new ROSLIB.Ros({
     url : 'ws://' + this.url
   });
@@ -2492,9 +2540,12 @@ GZ3D.GZIface.prototype.connect = function()
   this.numConnectionTrials++;
 };
 
+/**
+ * Callback when the websocket fails to connect.
+ */
 GZ3D.GZIface.prototype.onError = function()
 {
-  // init scene and show popup only for the first connection error
+  // Notify others about connection failure only once
   if (this.numConnectionTrials === 1)
   {
     this.emitter.emit('connectionError');
@@ -2510,6 +2561,9 @@ GZ3D.GZIface.prototype.onError = function()
   }
 };
 
+/**
+ * Callback when the websocket connects successfully.
+ */
 GZ3D.GZIface.prototype.onConnected = function()
 {
   this.isConnected = true;
@@ -2578,7 +2632,7 @@ GZ3D.GZIface.prototype.onConnected = function()
 
     if (message.grid === true)
     {
-      this.gui.guiEvents.emit('show_grid', 'show');
+      this.emitter.emit('show_grid', 'show');
     }
 
     if (message.ambient)
@@ -2607,7 +2661,7 @@ GZ3D.GZIface.prototype.onConnected = function()
       var light = message.light[i];
       var lightObj = this.createLightFromMsg(light);
       this.scene.add(lightObj);
-      this.gui.setLightStats(light, 'update');
+      this.emitter.emit('setLightStats', light, 'update');
     }
 
     for (var j = 0; j < message.model.length; ++j)
@@ -2615,10 +2669,10 @@ GZ3D.GZIface.prototype.onConnected = function()
       var model = message.model[j];
       var modelObj = this.createModelFromMsg(model);
       this.scene.add(modelObj);
-      this.gui.setModelStats(model, 'update');
+      this.emitter.emit('setModelStats', model, 'update');
     }
 
-    this.gui.setSceneStats(message);
+    this.emitter.emit('setSceneStats', message);
     this.sceneTopic.unsubscribe();
   };
   this.sceneTopic.subscribe(sceneUpdate.bind(this));
@@ -2631,10 +2685,9 @@ GZ3D.GZIface.prototype.onConnected = function()
 
   var physicsUpdate = function(message)
   {
-    this.gui.setPhysicsStats(message);
+    this.emitter.emit('setPhysicsStats', message);
   };
   this.physicsTopic.subscribe(physicsUpdate.bind(this));
-
 
   // Update model pose
   var poseTopic = new ROSLIB.Topic({
@@ -2650,7 +2703,7 @@ GZ3D.GZIface.prototype.onConnected = function()
         && entity.parent !== this.scene.modelManipulator.object)
     {
       this.scene.updatePose(entity, message.position, message.orientation);
-      this.gui.setModelStats(message, 'update');
+      this.emitter.emit('setModelStats', message, 'update');
     }
   };
 
@@ -2672,13 +2725,13 @@ GZ3D.GZIface.prototype.onConnected = function()
       {
         if (entity.children[0] instanceof THREE.Light)
         {
-          this.gui.setLightStats({name: message.data}, 'delete');
-          guiEvents.emit('notification_popup', message.data+' deleted');
+          this.emitter.emit('setLightStats', {name: message.data}, 'delete');
+          this.emitter.emit('notification_popup', message.data+' deleted');
         }
         else
         {
-          this.gui.setModelStats({name: message.data}, 'delete');
-          guiEvents.emit('notification_popup', message.data+' deleted');
+          this.emitter.emit('setModelStats', {name: message.data}, 'delete');
+          this.emitter.emit('notification_popup', message.data+' deleted');
         }
         this.scene.remove(entity);
       }
@@ -2702,7 +2755,7 @@ GZ3D.GZIface.prototype.onConnected = function()
       if (modelObj)
       {
         this.scene.add(modelObj);
-        guiEvents.emit('notification_popup', message.name+' inserted');
+        this.emitter.emit('notification_popup', message.name+' inserted');
       }
 
       // visuals may arrive out of order (before the model msg),
@@ -2727,7 +2780,7 @@ GZ3D.GZIface.prototype.onConnected = function()
         i++;
       }
     }
-    this.gui.setModelStats(message, 'update');
+    this.emitter.emit('setModelStats', message, 'update');
   };
 
   modelInfoTopic.subscribe(modelUpdate.bind(this));
@@ -2775,7 +2828,7 @@ GZ3D.GZIface.prototype.onConnected = function()
 
   var worldStatsUpdate = function(message)
   {
-    this.updateStatsGuiFromMsg(message);
+    this.forwardWorldStats(message);
   };
 
   worldStatsTopic.subscribe(worldStatsUpdate.bind(this));
@@ -2806,9 +2859,9 @@ GZ3D.GZIface.prototype.onConnected = function()
         }
       }
 
-      guiEvents.emit('notification_popup', message.name+' inserted');
+      this.emitter.emit('notification_popup', message.name+' inserted');
     }
-    this.gui.setLightStats(message, 'update');
+    this.emitter.emit('setLightStats', message, 'update');
   };
 
   lightFactoryTopic.subscribe(lightCreate.bind(this));
@@ -2827,7 +2880,7 @@ GZ3D.GZIface.prototype.onConnected = function()
         && entity.parent !== this.scene.modelManipulator.object)
     {
       this.scene.updateLight(entity, message);
-      this.gui.setLightStats(message, 'update');
+      this.emitter.emit('setLightStats', message, 'update');
     }
   };
 
@@ -2931,7 +2984,7 @@ GZ3D.GZIface.prototype.onConnected = function()
     }
   };
 
-  this.scene.emitter.on('entityChanged', publishEntityModify);
+  this.emitter.on('entityChanged', publishEntityModify);
 
   // Link messages - for modifying links
   this.linkModifyTopic = new ROSLIB.Topic({
@@ -2959,7 +3012,7 @@ GZ3D.GZIface.prototype.onConnected = function()
     that.linkModifyTopic.publish(modelMsg);
   };
 
-  this.scene.emitter.on('linkChanged', publishLinkModify);
+  this.emitter.on('linkChanged', publishLinkModify);
 
   // Factory messages - for spawning new models
   this.factoryTopic = new ROSLIB.Topic({
@@ -3028,7 +3081,7 @@ GZ3D.GZIface.prototype.onConnected = function()
     that.deleteTopic.publish(modelMsg);
   };
 
-  this.gui.emitter.on('deleteEntity',
+  this.emitter.on('deleteEntity',
       function(entity)
       {
         publishDeleteEntity(entity);
@@ -3056,16 +3109,16 @@ GZ3D.GZIface.prototype.onConnected = function()
     that.worldControlTopic.publish(worldControlMsg);
   };
 
-  this.gui.emitter.on('entityCreated', publishFactory);
+  this.emitter.on('entityCreated', publishFactory);
 
-  this.gui.emitter.on('reset',
+  this.emitter.on('reset',
       function(resetType)
       {
         publishWorldControl(null, resetType);
       }
   );
 
-  this.gui.emitter.on('pause',
+  this.emitter.on('pause',
       function(paused)
       {
         publishWorldControl(paused, null);
@@ -3084,29 +3137,41 @@ GZ3D.GZIface.prototype.onConnected = function()
     that.playbackControlTopic.publish(playbackControl);
   };
 
-  this.gui.emitter.on('logPlayChanged', publishPlaybackControl);
+  this.emitter.on('logPlayChanged', publishPlaybackControl);
 };
 
-GZ3D.GZIface.prototype.updateStatsGuiFromMsg = function(stats)
+/**
+ * Emit events with latest world stats
+ * @param {Object} stats - World statistics message
+ */
+GZ3D.GZIface.prototype.forwardWorldStats = function(stats)
 {
-  this.gui.setPaused(stats.paused);
+  if (stats.paused !== undefined)
+  {
+    this.emitter.emit('setPaused', stats.paused);
+  }
 
   if (stats.log_playback_stats)
   {
-    this.gui.setLogPlayVisible(true);
-    this.gui.setLogPlayStats(stats.sim_time,
+    this.emitter.emit('setLogPlayVisible', true);
+    this.emitter.emit('setLogPlayStats', stats.sim_time,
         stats.log_playback_stats.start_time,
         stats.log_playback_stats.end_time);
   }
   else
   {
-    this.gui.setLogPlayVisible(false);
-    this.gui.setRealTime(stats.real_time);
+    this.emitter.emit('setLogPlayVisible', false);
+    this.emitter.emit('setRealTime', stats.real_time);
   }
 
-  this.gui.setSimTime(stats.sim_time);
+  this.emitter.emit('setSimTime', stats.sim_time);
 };
 
+/**
+ * Create new model based on a message.
+ * @param {Object} model - Model message
+ * @return {Object} Model object
+ */
 GZ3D.GZIface.prototype.createModelFromMsg = function(model)
 {
   var modelObj = new THREE.Object3D();
@@ -3190,6 +3255,11 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
   return modelObj;
 };
 
+/**
+ * Create new visual based on a message.
+ * @param {Object} visual - Visual message
+ * @return {Object} Visual object
+ */
 GZ3D.GZIface.prototype.createVisualFromMsg = function(visual)
 {
   if (visual.geometry)
@@ -3212,6 +3282,11 @@ GZ3D.GZIface.prototype.createVisualFromMsg = function(visual)
   }
 };
 
+/**
+ * Create new light based on a message.
+ * @param {Object} light - Light message
+ * @return {Object} Light object
+ */
 GZ3D.GZIface.prototype.createLightFromMsg = function(light)
 {
   var obj, range, direction;
@@ -3250,6 +3325,11 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
   return obj;
 };
 
+/**
+ * Create new roads based on a message.
+ * @param {Object} roads - Road message
+ * @return {Object} Road object
+ */
 GZ3D.GZIface.prototype.createRoadsFromMsg = function(roads)
 {
   var roadObj = new THREE.Object3D();
@@ -3265,6 +3345,12 @@ GZ3D.GZIface.prototype.createRoadsFromMsg = function(roads)
   return roadObj;
 };
 
+/**
+ * Substitute URI scheme with 'assets' or simply prepend 'assets' if URI
+ * doesn't have a scheme.
+ * @param {string} uri - Full URI including scheme
+ * @return {string} Updated URI
+ */
 GZ3D.GZIface.prototype.parseUri = function(uri)
 {
   var uriPath = 'assets';
@@ -3276,6 +3362,12 @@ GZ3D.GZIface.prototype.parseUri = function(uri)
   return uriPath + '/' + uri.substring(idx);
 };
 
+/**
+ * Create geometry and append it to parent
+ * @param {Object} geom - geometry message
+ * @param {Object} material - material message
+ * @param {Object} parent - parent object (i.e. visual)
+ */
 GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
 {
   var obj;
@@ -3516,6 +3608,11 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
   }
 };
 
+/**
+ * Parse a material message and return an object containing its properties.
+ * @param {Object} material - material message
+ * @return Object containing material properties
+ */
 GZ3D.GZIface.prototype.parseMaterial = function(material)
 {
   if (!material)
@@ -3905,12 +4002,13 @@ var subtractTime = function(timeA, timeB)
 };
 
 /**
- * log playback
+ * Provides an interface to control a running log playback. It sends events to
+ * GzIface and updates some UI elements.
  * @constructor
  */
-GZ3D.LogPlay = function(gui, guiEvents)
+GZ3D.LogPlay = function()
 {
-  this.gui = gui;
+  this.emitter = globalEmitter || new EventEmitter2({verboseMemoryLeak: true});
   this.visible = null;
   this.startTime = null;
   this.endTime = null;
@@ -3921,7 +4019,7 @@ GZ3D.LogPlay = function(gui, guiEvents)
   var that = this;
 
   // when slide pos changes
-  guiEvents.on('logPlaySlideStop', function (value)
+  this.emitter.on('logPlaySlideStop', function (value)
     {
       if (!that.startTime || !that.endTime)
       {
@@ -3938,46 +4036,46 @@ GZ3D.LogPlay = function(gui, guiEvents)
       playback.seek.nsec = Math.round((seek - playback.seek.sec) * nsInSec);
 
       // publich playback control command msg
-      that.gui.emitter.emit('logPlayChanged', playback);
+      that.emitter.emit('logPlayChanged', playback);
       that.active = false;
     }
   );
 
-  guiEvents.on('logPlaySlideStart', function ()
+  this.emitter.on('logPlaySlideStart', function ()
     {
       that.active = true;
     }
   );
 
-  guiEvents.on('logPlayRewind', function ()
+  this.emitter.on('logPlayRewind', function ()
     {
       var playback = {};
       playback.rewind = true;
-      that.gui.emitter.emit('logPlayChanged', playback);
+      that.emitter.emit('logPlayChanged', playback);
     }
   );
-  guiEvents.on('logPlayForward', function ()
+  this.emitter.on('logPlayForward', function ()
     {
       var playback = {};
       playback.forward = true;
-      that.gui.emitter.emit('logPlayChanged', playback);
+      that.emitter.emit('logPlayChanged', playback);
     }
   );
-  guiEvents.on('logPlayStepforward', function ()
+  this.emitter.on('logPlayStepforward', function ()
     {
       var playback = {};
       playback.multi_step = 1;
-      that.gui.emitter.emit('logPlayChanged', playback);
+      that.emitter.emit('logPlayChanged', playback);
     }
   );
-  guiEvents.on('logPlayStepback', function ()
+  this.emitter.on('logPlayStepback', function ()
     {
       var playback = {};
       playback.multi_step = -1;
-      that.gui.emitter.emit('logPlayChanged', playback);
+      that.emitter.emit('logPlayChanged', playback);
     }
   );
-  guiEvents.on('paused', function (paused)
+  this.emitter.on('paused', function (paused)
     {
       if (paused)
       {
@@ -5711,12 +5809,17 @@ GZ3D.RadialMenu.prototype.setNumberOfItems = function(number)
 
 /**
  * The scene is where everything is placed, from objects, to lights and cameras.
+ *
+ * Supports radial menu on an orthographic scene when gzradialmenu.js has been
+ * included (useful for mobile devices).
+ *
  * @param shaders GZ3D.Shaders instance, if not provided, custom shaders will
  *                not be set.
  * @constructor
  */
 GZ3D.Scene = function(shaders)
 {
+  this.emitter = globalEmitter || new EventEmitter2({verboseMemoryLeak: true});
   this.shaders = shaders;
   this.init();
 };
@@ -5749,7 +5852,6 @@ GZ3D.Scene.prototype.init = function()
   this.renderer = new THREE.WebGLRenderer({antialias: true });
   this.renderer.setPixelRatio(window.devicePixelRatio);
   this.renderer.setClearColor(0xb2b2b2, 1);
-  this.renderer.setSize( window.innerWidth, window.innerHeight);
   this.renderer.autoClear = false;
   // this.renderer.shadowMapEnabled = true;
   // this.renderer.shadowMapSoft = true;
@@ -5759,19 +5861,25 @@ GZ3D.Scene.prototype.init = function()
   this.scene.add(this.ambient);
 
   // camera
-  this.camera = new THREE.PerspectiveCamera(60,
-    this.renderer.domElement.width / this.renderer.domElement.height,
-    0.1, 1000 );
+  var width = this.getDomElement().width;
+  var height = this.getDomElement().height;
+  this.camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
   this.defaultCameraPosition = new THREE.Vector3(0, -5, 5);
   this.resetView();
 
-  // ortho camera and scene for rendering sprites
-  this.cameraOrtho = new THREE.OrthographicCamera(
-    -this.renderer.domElement.width * 0.5,
-    this.renderer.domElement.width * 0.5, this.renderer.domElement.height*0.5,
-    -this.renderer.domElement.height*0.5, 1, 10);
-  this.cameraOrtho.position.z = 10;
-  this.sceneOrtho = new THREE.Scene();
+  // Ortho camera and scene for rendering sprites
+  // Currently only used for the radial menu
+  if (typeof GZ3D.RadialMenu === 'function')
+  {
+    this.cameraOrtho = new THREE.OrthographicCamera(-width * 0.5, width * 0.5,
+        height*0.5, -height*0.5, 1, 10);
+    this.cameraOrtho.position.z = 10;
+    this.sceneOrtho = new THREE.Scene();
+
+    // Radial menu (only triggered by touch)
+    this.radialMenu = new GZ3D.RadialMenu(this.getDomElement());
+    this.sceneOrtho.add(this.radialMenu.menu);
+  }
 
   // Grid
   this.grid = new THREE.GridHelper(20, 20, 0xCCCCCC, 0x4D4D4D);
@@ -5829,14 +5937,8 @@ GZ3D.Scene.prototype.init = function()
   this.timeDown = null;
 
   this.controls = new THREE.OrbitControls(this.camera,
-    this.renderer.domElement);
+      this.getDomElement());
   this.scene.add(this.controls.targetIndicator);
-
-  this.emitter = new EventEmitter2({ verbose: true });
-
-  // Radial menu (only triggered by touch)
-  this.radialMenu = new GZ3D.RadialMenu(this.getDomElement());
-  this.sceneOrtho.add(this.radialMenu.menu);
 
   // Bounding Box
   var indices = new Uint16Array(
@@ -6050,7 +6152,7 @@ GZ3D.Scene.prototype.init = function()
 
 GZ3D.Scene.prototype.initScene = function()
 {
-  guiEvents.emit('show_grid', 'show');
+  this.emitter.emit('show_grid', 'show');
 
   // create a sun light
   var obj = this.createLight(3, new THREE.Color(0.8, 0.8, 0.8), 0.9,
@@ -6085,8 +6187,7 @@ GZ3D.Scene.prototype.onPointerDown = function(event)
     if (event.touches.length === 1)
     {
       pos = new THREE.Vector2(
-          event.touches[0].clientX,
-          event.touches[0].clientY);
+          event.touches[0].clientX, event.touches[0].clientY);
     }
     else if (event.touches.length === 2)
     {
@@ -6190,8 +6291,7 @@ GZ3D.Scene.prototype.onMouseScroll = function(event)
 {
   event.preventDefault();
 
-  var pos = new THREE.Vector2(event.clientX,
-    event.clientY);
+  var pos = new THREE.Vector2(event.clientX, event.clientY);
 
   var intersect = new THREE.Vector3();
   var model = this.getRayCastModel(pos, intersect);
@@ -6213,8 +6313,8 @@ GZ3D.Scene.prototype.onKeyDown = function(event)
     // + and - for zooming
     if (event.keyCode === 187 || event.keyCode === 189)
     {
-      var pos = new THREE.Vector2(window.innerWidth/2.0,
-          window.innerHeight/2.0);
+      var pos = new THREE.Vector2(this.getDomElement().width/2.0,
+          this.getDomElement().height/2.0);
 
       var intersect = new THREE.Vector3();
       var model = this.getRayCastModel(pos, intersect);
@@ -6240,7 +6340,7 @@ GZ3D.Scene.prototype.onKeyDown = function(event)
   {
     if (this.selectedEntity)
     {
-      guiEvents.emit('delete_entity');
+      this.emitter.emit('delete_entity');
     }
   }
 
@@ -6277,16 +6377,11 @@ GZ3D.Scene.prototype.onKeyDown = function(event)
  */
 GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
 {
-  // get renderer absolute position.
-  var canvasX = this.renderer.domElement.getBoundingClientRect().top;
-  var canvasY = this.renderer.domElement.getBoundingClientRect().left;
-
-  pos.setX(pos.x - canvasX);
-  pos.setY(pos.y - canvasY);
   var vector = new THREE.Vector3(
-    (pos.x / this.renderer.domElement.width) * 2 - 1,
-    -(pos.y / this.renderer.domElement.height) * 2 + 1, 1);
-
+      ((pos.x - this.getDomElement().offsetLeft)
+      / this.getDomElement().width) * 2 - 1,
+      -((pos.y - this.getDomElement().offsetTop)
+      / this.getDomElement().height) * 2 + 1, 1);
   vector.unproject(this.camera);
   var ray = new THREE.Raycaster( this.camera.position,
       vector.sub(this.camera.position).normalize() );
@@ -6340,7 +6435,7 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
         model = model.parent;
       }
 
-      if (model === this.radialMenu.menu)
+      if (this.radialMenu && model === this.radialMenu.menu)
       {
         continue;
       }
@@ -6375,7 +6470,7 @@ GZ3D.Scene.prototype.getRayCastModel = function(pos, intersect)
 };
 
 /**
- * Get dom element
+ * Get the renderer's DOM element
  * @returns {domElement}
  */
 GZ3D.Scene.prototype.getDomElement = function()
@@ -6394,7 +6489,7 @@ GZ3D.Scene.prototype.render = function()
   // -pointer over menus
   // -spawning
   if (this.modelManipulator.hovered ||
-      this.radialMenu.showing ||
+      (this.radialMenu && this.radialMenu.showing) ||
       this.pointerOnMenu ||
       this.spawnModel.active)
   {
@@ -6408,30 +6503,39 @@ GZ3D.Scene.prototype.render = function()
   }
 
   this.modelManipulator.update();
-  this.radialMenu.update();
+  if (this.radialMenu)
+  {
+    this.radialMenu.update();
+  }
 
   this.renderer.clear();
   this.renderer.render(this.scene, this.camera);
 
   this.renderer.clearDepth();
-  this.renderer.render(this.sceneOrtho, this.cameraOrtho);
+  if (this.sceneOrtho && this.cameraOrtho)
+  {
+    this.renderer.render(this.sceneOrtho, this.cameraOrtho);
+  }
 };
 
 /**
- * Set window size
+ * Set scene size.
  * @param {double} width
  * @param {double} height
  */
-GZ3D.Scene.prototype.setWindowSize = function(width, height)
+GZ3D.Scene.prototype.setSize = function(width, height)
 {
   this.camera.aspect = width / height;
   this.camera.updateProjectionMatrix();
 
-  this.cameraOrtho.left = -width / 2;
-  this.cameraOrtho.right = width / 2;
-  this.cameraOrtho.top = height / 2;
-  this.cameraOrtho.bottom = -height / 2;
-  this.cameraOrtho.updateProjectionMatrix();
+  if (this.cameraOrtho)
+  {
+    this.cameraOrtho.left = -width / 2;
+    this.cameraOrtho.right = width / 2;
+    this.cameraOrtho.top = height / 2;
+    this.cameraOrtho.bottom = -height / 2;
+    this.cameraOrtho.updateProjectionMatrix();
+  }
 
   this.renderer.setSize(width, height);
   this.render();
@@ -7796,6 +7900,11 @@ GZ3D.Scene.prototype.resetView = function()
  */
 GZ3D.Scene.prototype.showRadialMenu = function(e)
 {
+  if (!this.radialMenu)
+  {
+    return;
+  }
+
   var event = e.originalEvent;
 
   var pointer = event.touches ? event.touches[ 0 ] : event;
@@ -8088,7 +8197,7 @@ GZ3D.Scene.prototype.selectEntity = function(object)
       this.selectedEntity = object;
     }
     this.attachManipulator(object, this.manipulationMode);
-    guiEvents.emit('setTreeSelected', object.name);
+    this.emitter.emit('setTreeSelected', object.name);
   }
   else
   {
@@ -8099,7 +8208,7 @@ GZ3D.Scene.prototype.selectEntity = function(object)
     }
     this.hideBoundingBox();
     this.selectedEntity = null;
-    guiEvents.emit('setTreeDeselected');
+    this.emitter.emit('setTreeDeselected');
   }
 };
 
@@ -8777,6 +8886,8 @@ GZ3D.Scene.prototype.createFromSdf = function(sdf)
  **/
 GZ3D.SdfParser = function(scene, gui, gziface)
 {
+  this.emitter = globalEmitter || new EventEmitter2({verboseMemoryLeak: true});
+
   // set the sdf version
   this.SDF_VERSION = 1.5;
   this.MATERIAL_ROOT = 'assets';
@@ -8818,22 +8929,23 @@ GZ3D.SdfParser.prototype.init = function()
   {
     this.usingFilesUrls = true;
     var that = this;
-    this.gziface.emitter.on('connectionError', function() {
-      that.gui.guiEvents.emit('notification_popup',
+    this.emitter.on('connectionError', function() {
+      // init scene and show popup only for the first connection error
+      this.emitter.emit('notification_popup',
               'GzWeb is currently running' +
               'without a server, and materials could not be loaded.' +
               'When connected scene will be reinitialized', 5000);
       that.onConnectionError();
     });
 
-    this.gziface.emitter.on('material', function(mat) {
+    this.emitter.on('material', function(mat) {
       that.materials = mat;
     });
 
-    this.gziface.emitter.on('gzstatus', function(gzstatus) {
+    this.emitter.on('gzstatus', function(gzstatus) {
       if (gzstatus === 'error')
       {
-        that.gui.guiEvents.emit('notification_popup', 'GzWeb is currently ' +
+        this.emitter.emit('notification_popup', 'GzWeb is currently ' +
                 'running without a GzServer,'
                 + 'and Scene is reinitialized.', 5000);
         that.onConnectionError();
@@ -8876,7 +8988,7 @@ GZ3D.SdfParser.prototype.onConnectionError = function()
       that.addModelByType(model, type);
     }
   };
-  this.gui.emitter.on('entityCreated', entityCreated);
+  this.emitter.on('entityCreated', entityCreated);
 
   var deleteEntity = function(entity)
   {
@@ -8886,7 +8998,7 @@ GZ3D.SdfParser.prototype.onConnectionError = function()
     {
       if (obj.children[0] instanceof THREE.Light)
       {
-        that.gui.setLightStats({name: name}, 'delete');
+        that.emitter.emit('setLightStats', {name: name}, 'delete');
       }
       else
       {
@@ -8895,7 +9007,7 @@ GZ3D.SdfParser.prototype.onConnectionError = function()
       that.scene.remove(obj);
     }
   };
-  this.gui.emitter.on('deleteEntity', deleteEntity);
+  this.emitter.on('deleteEntity', deleteEntity);
 };
 
 /**

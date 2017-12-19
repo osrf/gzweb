@@ -304,8 +304,8 @@ $(function()
   $('#view-wireframe').buttonMarkup({icon: 'false'});
   $('#view-joints').buttonMarkup({icon: 'false'});
   $('#view-com').buttonMarkup({icon: 'false'});
-  guiEvents.emit('toggle_notifications');
-  guiEvents.emit('show_orbit_indicator');
+  globalEmitter.emit('toggle_notifications');
+  globalEmitter.emit('show_orbit_indicator');
 
   $( '#clock-touch' ).popup('option', 'arrow', 't');
   $('#notification-popup-screen').remove();
@@ -313,7 +313,7 @@ $(function()
 
   if (isWideScreen())
   {
-    guiEvents.emit('openTab', 'mainMenu', 'mainMenu');
+    globalEmitter.emit('openTab', 'mainMenu', 'mainMenu');
   }
 
   if (isTallScreen())
@@ -351,11 +351,11 @@ $(function()
         .css('z-index', '1000');
 
     $('.gzGUI').touchstart(function(event){
-        guiEvents.emit('pointerOnMenu');
+        globalEmitter.emit('pointerOnMenu');
     });
 
     $('.gzGUI').touchend(function(event){
-        guiEvents.emit('pointerOffMenu');
+        globalEmitter.emit('pointerOffMenu');
     });
 
     // long press on canvas
@@ -363,19 +363,19 @@ $(function()
     $('#container')
       .on('touchstart', function (event) {
         $(this).data('checkdown', setTimeout(function () {
-          guiEvents.emit('longpress_container_start',event);
+          globalEmitter.emit('longpress_container_start',event);
         }, press_time_container));
       })
       .on('touchend', function (event) {
         clearTimeout($(this).data('checkdown'));
-        guiEvents.emit('longpress_container_end',event,false);
+        globalEmitter.emit('longpress_container_end',event,false);
       })
       .on('touchmove', function (event) {
         clearTimeout($(this).data('checkdown'));
         $(this).data('checkdown', setTimeout(function () {
-          guiEvents.emit('longpress_container_start',event);
+          globalEmitter.emit('longpress_container_start',event);
         }, press_time_container));
-        guiEvents.emit('longpress_container_move',event);
+        globalEmitter.emit('longpress_container_move',event);
       });
 
     // long press on insert menu item
@@ -385,16 +385,16 @@ $(function()
         var path = $(this).attr('id');
         path = path.substring(14); // after 'insert-entity-'
         $(this).data('checkdown', setTimeout(function () {
-          guiEvents.emit('longpress_insert_start', event, path);
+          globalEmitter.emit('longpress_insert_start', event, path);
         }, press_time_insert));
       })
       .on('touchend', function (event) {
         clearTimeout($(this).data('checkdown'));
-        guiEvents.emit('longpress_insert_end',event,false);
+        globalEmitter.emit('longpress_insert_end',event,false);
       })
       .on('touchmove', function (event) {
         clearTimeout($(this).data('checkdown'));
-        guiEvents.emit('longpress_insert_move',event);
+        globalEmitter.emit('longpress_insert_move',event);
       });
   }
   // Mouse devices
@@ -407,7 +407,7 @@ $(function()
       .click(function(event) {
         var path = $(this).attr('id');
         path = path.substring(14); // after 'insert-entity-'
-        guiEvents.emit('spawn_entity_start', path);
+        globalEmitter.emit('spawn_entity_start', path);
       })
       .on('mousedown', function(event) {
         event.preventDefault();
@@ -473,11 +473,11 @@ $(function()
         .css('z-index', '1000');
 
     $('.gzGUI').mouseenter(function(event){
-        guiEvents.emit('pointerOnMenu');
+        globalEmitter.emit('pointerOnMenu');
     });
 
     $('.gzGUI').mouseleave(function(event){
-        guiEvents.emit('pointerOffMenu');
+        globalEmitter.emit('pointerOffMenu');
     });
 
     // right-click
@@ -486,7 +486,7 @@ $(function()
           event.preventDefault();
           if(event.which === 3)
           {
-            guiEvents.emit('right_click', event);
+            globalEmitter.emit('right_click', event);
           }
         });
 
@@ -503,51 +503,51 @@ $(function()
 
         if($('#'+idTab).css('border-left-color') === tabColors.unselected)
         {
-          guiEvents.emit('openTab', lastOpenMenu[idMenu], idMenu);
+          globalEmitter.emit('openTab', lastOpenMenu[idMenu], idMenu);
         }
         else
         {
-          guiEvents.emit('closeTabs', true);
+          globalEmitter.emit('closeTabs', true);
         }
       });
 
   $('.closePanels').click(function()
       {
-        guiEvents.emit('closeTabs', true);
+        globalEmitter.emit('closeTabs', true);
       });
 
   $('#view-mode').click(function()
       {
-        guiEvents.emit('manipulation_mode', 'view');
+        globalEmitter.emit('manipulation_mode', 'view');
       });
   $('#translate-mode').click(function()
       {
-        guiEvents.emit('manipulation_mode', 'translate');
+        globalEmitter.emit('manipulation_mode', 'translate');
       });
   $('#rotate-mode').click(function()
       {
-        guiEvents.emit('manipulation_mode', 'rotate');
+        globalEmitter.emit('manipulation_mode', 'rotate');
       });
 
   $('[id^="header-insert-"]').click(function()
       {
         var entity = $(this).attr('id');
         entity = entity.substring(14); // after 'header-insert-'
-        guiEvents.emit('closeTabs', false);
-        guiEvents.emit('spawn_entity_start', entity);
+        globalEmitter.emit('closeTabs', false);
+        globalEmitter.emit('spawn_entity_start', entity);
       });
 
   $('#play').click(function()
       {
         if ( $('#playText').html().indexOf('Play') !== -1 )
         {
-          guiEvents.emit('pause', false);
-          guiEvents.emit('notification_popup','Physics engine running');
+          globalEmitter.emit('pause', false);
+          globalEmitter.emit('notification_popup','Physics engine running');
         }
         else
         {
-          guiEvents.emit('pause', true);
-          guiEvents.emit('notification_popup','Physics engine paused');
+          globalEmitter.emit('pause', true);
+          globalEmitter.emit('notification_popup','Physics engine paused');
         }
       });
   $('#clock').click(function()
@@ -569,46 +569,49 @@ $(function()
 
   $('#reset-model').click(function()
       {
-        guiEvents.emit('model_reset');
-        guiEvents.emit('closeTabs', false);
+        globalEmitter.emit('reset', 'model');
+        globalEmitter.emit('closeTabs', false);
       });
   $('#reset-world').click(function()
       {
-        guiEvents.emit('world_reset');
-        guiEvents.emit('closeTabs', false);
+        globalEmitter.emit('reset', 'world');
+        globalEmitter.emit('closeTabs', false);
       });
   $('#reset-view').click(function()
       {
-        guiEvents.emit('view_reset');
-        guiEvents.emit('closeTabs', false);
+        globalEmitter.emit('view_reset');
+        globalEmitter.emit('closeTabs', false);
       });
   $('#view-grid').click(function()
       {
-        guiEvents.emit('show_grid', 'toggle');
-        guiEvents.emit('closeTabs', false);
+        globalEmitter.emit('show_grid', 'toggle');
+        globalEmitter.emit('closeTabs', false);
       });
   $('#view-collisions').click(function()
       {
-        guiEvents.emit('show_collision');
-        guiEvents.emit('closeTabs', false);
+        globalEmitter.emit('show_collision');
+        globalEmitter.emit('closeTabs', false);
       });
   $('#view-orbit-indicator').click(function()
       {
-        guiEvents.emit('show_orbit_indicator');
-        guiEvents.emit('closeTabs', false);
+        globalEmitter.emit('show_orbit_indicator');
+        globalEmitter.emit('closeTabs', false);
       });
-  $( '#snap-to-grid' ).click(function() {
-    guiEvents.emit('snap_to_grid');
-    guiEvents.emit('closeTabs', false);
-  });
-  $( '#open-tree-when-selected' ).click(function() {
-    guiEvents.emit('openTreeWhenSelected');
-    guiEvents.emit('closeTabs', false);
-  });
-  $( '#toggle-notifications' ).click(function() {
-    guiEvents.emit('toggle_notifications');
-    guiEvents.emit('closeTabs', false);
-  });
+  $( '#snap-to-grid' ).click(function()
+      {
+        globalEmitter.emit('snap_to_grid');
+        globalEmitter.emit('closeTabs', false);
+      });
+  $( '#open-tree-when-selected' ).click(function()
+      {
+        globalEmitter.emit('openTreeWhenSelected');
+        globalEmitter.emit('closeTabs', false);
+      });
+  $( '#toggle-notifications' ).click(function()
+      {
+        globalEmitter.emit('toggle_notifications');
+        globalEmitter.emit('closeTabs', false);
+      });
 
   // Disable Esc key to close panel
   $('body').on('keyup', function(event)
@@ -622,19 +625,19 @@ $(function()
   // Object menu
   $( '#view-transparent' ).click(function() {
     $('#model-popup').popup('close');
-    guiEvents.emit('set_view_as','transparent');
+    globalEmitter.emit('set_view_as','transparent');
   });
 
   $( '#view-wireframe' ).click(function() {
     $('#model-popup').popup('close');
-    guiEvents.emit('set_view_as','wireframe');
+    globalEmitter.emit('set_view_as','wireframe');
   });
 
   $( '#view-joints' ).click(function() {
     if ($('#view-joints a').css('color') === 'rgb(255, 255, 255)')
     {
       $('#model-popup').popup('close');
-      guiEvents.emit('view_joints');
+      globalEmitter.emit('view_joints');
     }
   });
 
@@ -642,7 +645,7 @@ $(function()
     if ($('#view-com a').css('color') === 'rgb(255, 255, 255)')
     {
       $('#model-popup').popup('close');
-      guiEvents.emit('view_com');
+      globalEmitter.emit('view_com');
     }
   });
 
@@ -650,53 +653,53 @@ $(function()
     if ($('#view-inertia a').css('color') === 'rgb(255, 255, 255)')
     {
       $('#model-popup').popup('close');
-      guiEvents.emit('view_inertia');
+      globalEmitter.emit('view_inertia');
     }
   });
 
-  $( '#delete-entity' ).click(function() {
-    guiEvents.emit('delete_entity');
+  $( '#delete-entity' ).click(function()
+  {
+    globalEmitter.emit('delete_entity');
   });
-
   $(window).resize(function()
   {
-    guiEvents.emit('resizePanel');
+    globalEmitter.emit('resizePanel');
   });
 
   $('#logplay-slider-input').on('slidestop', function(event, ui)
   {
-    guiEvents.emit('logPlaySlideStop', $('#logplay-slider-input').val());
+    globalEmitter.emit('logPlaySlideStop', $('#logplay-slider-input').val());
   });
   $('#logplay-slider-input').on('slidestart', function(event, ui)
   {
-    guiEvents.emit('logPlaySlideStart');
+    globalEmitter.emit('logPlaySlideStart');
   });
   $('#logplay-rewind').click(function()
       {
-        guiEvents.emit('logPlayRewind');
+        globalEmitter.emit('logPlayRewind');
       });
   $('#logplay-stepback').click(function()
       {
-        guiEvents.emit('logPlayStepback');
+        globalEmitter.emit('logPlayStepback');
       });
   $('#logplay-play').click(function()
       {
         if ( $('#logplay-playText').html().indexOf('Play') !== -1 )
         {
-          guiEvents.emit('pause', false);
+          globalEmitter.emit('pause', false);
         }
         else
         {
-          guiEvents.emit('pause', true);
+          globalEmitter.emit('pause', true);
         }
       });
   $('#logplay-stepforward').click(function()
       {
-        guiEvents.emit('logPlayStepforward');
+        globalEmitter.emit('logPlayStepforward');
       });
   $('#logplay-forward').click(function()
       {
-        guiEvents.emit('logPlayForward');
+        globalEmitter.emit('logPlayForward');
       });
 });
 
@@ -775,20 +778,20 @@ gzangular.controller('treeControl', ['$scope', function($scope)
   $scope.selectEntity = function (name)
   {
     $('#model-popup').popup('close');
-    guiEvents.emit('openTab', 'propertyPanel-' + convertNameId(name),
+    globalEmitter.emit('openTab', 'propertyPanel-' + convertNameId(name),
         'treeMenu');
-    guiEvents.emit('selectEntity', name);
+    globalEmitter.emit('selectEntity', name);
   };
 
   $scope.openEntityMenu = function (event, name)
   {
     $('#model-popup').popup('close');
-    guiEvents.emit('openEntityPopup', event, name);
+    globalEmitter.emit('openEntityPopup', event, name);
   };
 
   $scope.openTab = function (tab)
   {
-    guiEvents.emit('openTab', tab, 'treeMenu');
+    globalEmitter.emit('openTab', tab, 'treeMenu');
   };
 
   $scope.expandTree = function (tree)
@@ -854,25 +857,25 @@ gzangular.controller('treeControl', ['$scope', function($scope)
 
       if (prop === 'pose' && parentProp === 'link')
       {
-        guiEvents.emit('setPoseStats', modelName, subPropName);
+        globalEmitter.emit('setPoseStats', modelName, subPropName);
       }
     }
   };
 
   $scope.changePose = function(prop1, prop2, name, value)
   {
-    guiEvents.emit('setPose', prop1, prop2, convertNameId(name), value);
+    globalEmitter.emit('setPose', prop1, prop2, convertNameId(name), value);
   };
 
   $scope.changeLight = function(prop, name, value)
   {
-    guiEvents.emit('setLight', prop, convertNameId(name), value);
+    globalEmitter.emit('setLight', prop, convertNameId(name), value);
   };
 
   $scope.toggleProperty = function(prop, entity, subEntity)
   {
     // only for links so far
-    guiEvents.emit('toggleProperty', prop, entity, subEntity);
+    globalEmitter.emit('toggleProperty', prop, entity, subEntity);
   };
 }]);
 
@@ -883,12 +886,12 @@ gzangular.controller('insertControl', ['$scope', function($scope)
 
   $scope.spawnEntity = function(path)
   {
-    guiEvents.emit('spawn_entity_start', path);
+    globalEmitter.emit('spawn_entity_start', path);
   };
 
   $scope.openTab = function (tab)
   {
-    guiEvents.emit('openTab', tab, 'insertMenu');
+    globalEmitter.emit('openTab', tab, 'insertMenu');
   };
 }]);
 
@@ -900,26 +903,16 @@ gzangular.controller('insertControl', ['$scope', function($scope)
  */
 GZ3D.Gui = function(scene)
 {
+  this.emitter = globalEmitter || new EventEmitter2({verboseMemoryLeak: true});
   this.scene = scene;
   this.domElement = scene.getDomElement();
-  this.init();
-  this.emitter = new EventEmitter2({verbose: true});
-  this.guiEvents = guiEvents;
-};
-
-/**
- * Initialize GUI
- */
-GZ3D.Gui.prototype.init = function()
-{
   this.spawnState = null;
   this.longPressContainerState = null;
   this.showNotifications = false;
   this.openTreeWhenSelected = false;
   this.modelStatsDirty = false;
 
-  this.logPlay = new GZ3D.LogPlay(
-      this, guiEvents);
+  this.logPlay = new GZ3D.LogPlay();
 
   var that = this;
 
@@ -932,8 +925,8 @@ GZ3D.Gui.prototype.init = function()
     }
   }, 20);
 
-  // On guiEvents, emitter events
-  guiEvents.on('manipulation_mode',
+  // On manipulation
+  this.emitter.on('manipulation_mode',
       function(mode)
       {
         that.scene.setManipulationMode(mode);
@@ -941,11 +934,11 @@ GZ3D.Gui.prototype.init = function()
 
         if (mode === 'view')
         {
-          guiEvents.emit('notification_popup', 'View mode');
+          that.emitter.emit('notification_popup', 'View mode');
         }
         else
         {
-          guiEvents.emit('notification_popup',
+          that.emitter.emit('notification_popup',
               mode.charAt(0).toUpperCase()+
               mode.substring(1)+' mode in '+
               space.charAt(0).toUpperCase()+
@@ -955,7 +948,7 @@ GZ3D.Gui.prototype.init = function()
   );
 
   // Create temp model
-  guiEvents.on('spawn_entity_start', function(entity)
+  this.emitter.on('spawn_entity_start', function(entity)
       {
         // manually trigger view mode
         that.scene.setManipulationMode('view');
@@ -969,20 +962,20 @@ GZ3D.Gui.prototype.init = function()
             {
               that.emitter.emit('entityCreated', obj, entity);
             });
-        guiEvents.emit('notification_popup',
+        that.emitter.emit('notification_popup',
             'Place '+name+' at the desired position');
       }
   );
 
   // Move temp model by touch
-  guiEvents.on('spawn_entity_move', function(event)
+  this.emitter.on('spawn_entity_move', function(event)
       {
         that.spawnState = 'MOVE';
         that.scene.spawnModel.onTouchMove(event,false);
       }
   );
   // Place temp model by touch
-  guiEvents.on('spawn_entity_end', function()
+  this.emitter.on('spawn_entity_end', function()
       {
         if (that.spawnState === 'MOVE')
         {
@@ -992,50 +985,51 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('world_reset', function()
+  this.emitter.on('reset', function(resetType)
       {
-        that.emitter.emit('reset', 'world');
-        guiEvents.emit('notification_popup','Reset world');
+        if (resetType === 'world')
+        {
+          that.emitter.emit('notification_popup','Reset world');
+        }
+        else if (resetType === 'model')
+        {
+          that.emitter.emit('notification_popup','Reset model poses');
+        }
       }
   );
 
-  guiEvents.on('model_reset', function()
+  this.emitter.on('model_reset', function()
       {
+        // TODO: no need to emit another one
         that.emitter.emit('reset', 'model');
-        guiEvents.emit('notification_popup','Reset model poses');
+        that.emitter.emit('notification_popup','Reset model poses');
       }
   );
 
-  guiEvents.on('view_reset', function()
+  this.emitter.on('view_reset', function()
       {
         that.scene.resetView();
-        guiEvents.emit('notification_popup','Reset view');
+        that.emitter.emit('notification_popup','Reset view');
       }
   );
 
-  guiEvents.on('pause', function(paused)
-      {
-        that.emitter.emit('pause', paused);
-      }
-  );
-
-  guiEvents.on('show_collision', function()
+  this.emitter.on('show_collision', function()
       {
         that.scene.showCollision(!that.scene.showCollisions);
         if(!that.scene.showCollisions)
         {
           $('#view-collisions').buttonMarkup({icon: 'false'});
-          guiEvents.emit('notification_popup','Hiding collisions');
+          that.emitter.emit('notification_popup','Hiding collisions');
         }
         else
         {
           $('#view-collisions').buttonMarkup({icon: 'check'});
-          guiEvents.emit('notification_popup','Viewing collisions');
+          that.emitter.emit('notification_popup','Viewing collisions');
         }
       }
   );
 
-  guiEvents.on('show_grid', function(option)
+  this.emitter.on('show_grid', function(option)
       {
         if (option === 'show')
         {
@@ -1053,34 +1047,34 @@ GZ3D.Gui.prototype.init = function()
         if(!that.scene.grid.visible)
         {
           $('#view-grid').buttonMarkup({icon: 'false'});
-          guiEvents.emit('notification_popup','Hiding grid');
+          that.emitter.emit('notification_popup','Hiding grid');
         }
         else
         {
           $('#view-grid').buttonMarkup({icon: 'check'});
-          guiEvents.emit('notification_popup','Viewing grid');
+          that.emitter.emit('notification_popup','Viewing grid');
         }
       }
   );
 
-   guiEvents.on('show_orbit_indicator', function()
+   this.emitter.on('show_orbit_indicator', function()
       {
         that.scene.controls.showTargetIndicator =
             !that.scene.controls.showTargetIndicator;
         if(!that.scene.controls.showTargetIndicator)
         {
           $('#view-orbit-indicator').buttonMarkup({icon: 'false'});
-          guiEvents.emit('notification_popup','Hiding orbit indicator');
+          that.emitter.emit('notification_popup','Hiding orbit indicator');
         }
         else
         {
           $('#view-orbit-indicator').buttonMarkup({icon: 'check'});
-          guiEvents.emit('notification_popup','Viewing orbit indicator');
+          that.emitter.emit('notification_popup','Viewing orbit indicator');
         }
       }
   );
 
-  guiEvents.on('snap_to_grid',
+  this.emitter.on('snap_to_grid',
       function ()
       {
         if(that.scene.modelManipulator.snapDist === null)
@@ -1088,19 +1082,19 @@ GZ3D.Gui.prototype.init = function()
           $('#snap-to-grid').buttonMarkup({icon: 'check'});
           that.scene.modelManipulator.snapDist = 0.5;
           that.scene.spawnModel.snapDist = that.scene.modelManipulator.snapDist;
-          guiEvents.emit('notification_popup','Snapping to grid');
+          that.emitter.emit('notification_popup','Snapping to grid');
         }
         else
         {
           $('#snap-to-grid').buttonMarkup({icon: 'false'});
           that.scene.modelManipulator.snapDist = null;
           that.scene.spawnModel.snapDist = null;
-          guiEvents.emit('notification_popup','Not snapping to grid');
+          that.emitter.emit('notification_popup','Not snapping to grid');
         }
       }
   );
 
-  guiEvents.on('openTreeWhenSelected', function ()
+  this.emitter.on('openTreeWhenSelected', function ()
       {
         that.openTreeWhenSelected = !that.openTreeWhenSelected;
         if(!that.openTreeWhenSelected)
@@ -1114,7 +1108,7 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('toggle_notifications', function ()
+  this.emitter.on('toggle_notifications', function ()
       {
         that.showNotifications = !that.showNotifications;
         if(!that.showNotifications)
@@ -1129,14 +1123,15 @@ GZ3D.Gui.prototype.init = function()
   );
 
 
-  guiEvents.on('longpress_container_start',
+  this.emitter.on('longpress_container_start',
       function (event)
       {
         if (event.originalEvent.touches.length !== 1 ||
             that.scene.modelManipulator.hovered ||
             that.scene.spawnModel.active)
         {
-          guiEvents.emit('longpress_container_end', event.originalEvent,true);
+          that.emitter.emit('longpress_container_end',
+              event.originalEvent,true);
         }
         else
         {
@@ -1146,7 +1141,7 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('longpress_container_end', function(event,cancel)
+  this.emitter.on('longpress_container_end', function(event,cancel)
       {
         if (that.longPressContainerState !== 'START')
         {
@@ -1185,16 +1180,16 @@ GZ3D.Gui.prototype.init = function()
                 }
                 else if (type === 'transparent')
                 {
-                  guiEvents.emit('set_view_as','transparent');
+                  that.emitter.emit('set_view_as','transparent');
                 }
                 else if (type === 'wireframe')
                 {
-                  guiEvents.emit('set_view_as','wireframe');
+                  that.emitter.emit('set_view_as','wireframe');
                 }
                 else if (type === 'joints')
                 {
                   that.scene.selectEntity(entity);
-                  guiEvents.emit('view_joints');
+                  that.emitter.emit('view_joints');
                 }
 
               });
@@ -1203,11 +1198,11 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('longpress_container_move', function(event)
+  this.emitter.on('longpress_container_move', function(event)
       {
         if (event.originalEvent.touches.length !== 1)
         {
-          guiEvents.emit('longpress_container_end',event.originalEvent,true);
+          that.emitter.emit('longpress_container_end',event.originalEvent,true);
         }
         else
         {
@@ -1223,32 +1218,32 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('longpress_insert_start', function (event, path)
+  this.emitter.on('longpress_insert_start', function (event, path)
       {
         navigator.vibrate(50);
-        guiEvents.emit('spawn_entity_start', path);
+        that.emitter.emit('spawn_entity_start', path);
         event.stopPropagation();
       }
   );
 
-  guiEvents.on('longpress_insert_end', function(event)
+  this.emitter.on('longpress_insert_end', function(event)
       {
-        guiEvents.emit('spawn_entity_end');
+        that.emitter.emit('spawn_entity_end');
       }
   );
 
-  guiEvents.on('longpress_insert_move', function(event)
+  this.emitter.on('longpress_insert_move', function(event)
       {
-        guiEvents.emit('spawn_entity_move', event);
+        that.emitter.emit('spawn_entity_move', event);
         event.stopPropagation();
       }
   );
 
   var notificationTimeout;
-  guiEvents.on('notification_popup',
+  this.emitter.on('notification_popup',
       function (notification, duration)
       {
-        if (this.showNotifications)
+        if (that.showNotifications)
         {
           clearTimeout(notificationTimeout);
           $( '#notification-popup' ).popup('close');
@@ -1268,7 +1263,7 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('right_click', function (event)
+  this.emitter.on('right_click', function (event)
       {
         that.scene.onRightClick(event, function(entity)
             {
@@ -1277,31 +1272,31 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('set_view_as', function (viewAs)
+  this.emitter.on('set_view_as', function (viewAs)
       {
         that.scene.setViewAs(that.scene.selectedEntity, viewAs);
       }
   );
 
-  guiEvents.on('view_joints', function ()
+  this.emitter.on('view_joints', function ()
       {
         that.scene.viewJoints(that.scene.selectedEntity);
       }
   );
 
-  guiEvents.on('view_inertia', function ()
+  this.emitter.on('view_inertia', function ()
       {
         that.scene.viewInertia(that.scene.selectedEntity);
       }
   );
 
-  guiEvents.on('view_com', function ()
+  this.emitter.on('view_com', function ()
       {
         that.scene.viewCOM(that.scene.selectedEntity);
       }
   );
 
-  guiEvents.on('delete_entity', function ()
+  this.emitter.on('delete_entity', function ()
       {
         that.emitter.emit('deleteEntity',that.scene.selectedEntity);
         $('#model-popup').popup('close');
@@ -1309,19 +1304,19 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('pointerOnMenu', function ()
+  this.emitter.on('pointerOnMenu', function ()
       {
         that.scene.pointerOnMenu = true;
       }
   );
 
-  guiEvents.on('pointerOffMenu', function ()
+  this.emitter.on('pointerOffMenu', function ()
       {
         that.scene.pointerOnMenu = false;
       }
   );
 
-  guiEvents.on('openTab', function (id, parentId)
+  this.emitter.on('openTab', function (id, parentId)
       {
         lastOpenMenu[parentId] = id;
 
@@ -1351,11 +1346,11 @@ GZ3D.Gui.prototype.init = function()
                                     w: object.quaternion._w};
         }
 
-        guiEvents.emit('resizePanel');
+        that.emitter.emit('resizePanel');
       }
   );
 
-  guiEvents.on('closeTabs', function (force)
+  this.emitter.on('closeTabs', function (force)
       {
         // Close for narrow viewports, force to always close
         if (force || !isWideScreen())
@@ -1367,16 +1362,16 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('setTreeSelected', function (object)
+  this.emitter.on('setTreeSelected', function (object)
       {
         for (var i = 0; i < modelStats.length; ++i)
         {
           if (modelStats[i].name === object)
           {
             modelStats[i].selected = 'selectedTreeItem';
-            if (this.openTreeWhenSelected)
+            if (that.openTreeWhenSelected)
             {
-              guiEvents.emit('openTab', 'propertyPanel-'+
+              that.emitter.emit('openTab', 'propertyPanel-'+
                   convertNameId(object), 'treeMenu');
             }
           }
@@ -1390,9 +1385,9 @@ GZ3D.Gui.prototype.init = function()
           if (lightStats[i].name === object)
           {
             lightStats[i].selected = 'selectedTreeItem';
-            if (this.openTreeWhenSelected)
+            if (that.openTreeWhenSelected)
             {
-              guiEvents.emit('openTab', 'propertyPanel-' +
+              that.emitter.emit('openTab', 'propertyPanel-' +
                   convertNameId(object), 'treeMenu');
             }
           }
@@ -1405,7 +1400,7 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('setTreeDeselected', function ()
+  this.emitter.on('setTreeDeselected', function ()
       {
         for (var i = 0; i < modelStats.length; ++i)
         {
@@ -1419,14 +1414,14 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('selectEntity', function (name)
+  this.emitter.on('selectEntity', function (name)
       {
         var object = that.scene.getByName(name);
         that.scene.selectEntity(object);
       }
   );
 
-  guiEvents.on('openEntityPopup', function (event, name)
+  this.emitter.on('openEntityPopup', function (event, name)
       {
         if (!isTouchDevice)
         {
@@ -1436,7 +1431,7 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('setPoseStats', function (modelName, linkName)
+  this.emitter.on('setPoseStats', function (modelName, linkName)
       {
         var object;
         if (linkName === undefined)
@@ -1470,7 +1465,7 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('resizePanel', function ()
+  this.emitter.on('resizePanel', function ()
       {
         if ($('.leftPanels').is(':visible'))
         {
@@ -1497,7 +1492,7 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('setPose', function (prop1, prop2, name, value)
+  this.emitter.on('setPose', function (prop1, prop2, name, value)
       {
         if (value === undefined)
         {
@@ -1531,7 +1526,7 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('setLight', function (prop, name, value)
+  this.emitter.on('setLight', function (prop, name, value)
       {
         if (value === undefined)
         {
@@ -1572,12 +1567,66 @@ GZ3D.Gui.prototype.init = function()
       }
   );
 
-  guiEvents.on('toggleProperty', function (prop, subEntityName)
+  this.emitter.on('toggleProperty', function (prop, subEntityName)
       {
         var entity = that.scene.getByName(subEntityName);
         entity.serverProperties[prop] = !entity.serverProperties[prop];
 
         that.scene.emitter.emit('linkChanged', entity);
+      }
+  );
+
+  this.emitter.on('setLightStats', function (stats, action)
+      {
+        that.setLightStats(stats, action);
+      }
+  );
+
+  this.emitter.on('setModelStats', function (stats, action)
+      {
+        that.setModelStats(stats, action);
+      }
+  );
+
+  this.emitter.on('setSceneStats', function (stats)
+      {
+        that.setSceneStats(stats);
+      }
+  );
+
+  this.emitter.on('setPhysicsStats', function (stats)
+      {
+        that.setPhysicsStats(stats);
+      }
+  );
+
+  this.emitter.on('setPaused', function (stats)
+      {
+        that.setPaused(stats);
+      }
+  );
+
+  this.emitter.on('setLogPlayVisible', function (stats)
+      {
+        that.setLogPlayVisible(stats);
+      }
+  );
+
+  this.emitter.on('setLogPlayStats', function (simTime, startTime, endTime)
+      {
+        that.setLogPlayStats(simTime, startTime, endTime);
+      }
+  );
+
+  this.emitter.on('setRealTime', function (stats)
+      {
+        that.setRealTime(stats);
+      }
+  );
+
+  this.emitter.on('setSimTime', function (stats)
+      {
+        that.setSimTime(stats);
       }
   );
 };
@@ -1602,7 +1651,7 @@ GZ3D.Gui.prototype.setPaused = function(paused)
   // pause'd' event to inidicate simulation pause state has changed
   // this is different from the 'pause' event which indicates user has pressed
   // the play/pause button.
-  guiEvents.emit('paused', paused);
+  this.emitter.emit('paused', paused);
 };
 
 /**
@@ -2027,7 +2076,7 @@ GZ3D.Gui.prototype.openEntityPopup = function(event, entity)
     $('#view-wireframe').css('visibility','collapse');
     $('#view-joints').css('visibility','collapse');
     $('#view-com').css('visibility','collapse');
-    $('#view-inertia').css('visibility','collapse');    
+    $('#view-inertia').css('visibility','collapse');
     $('#model-popup').popup('open',
       {x: event.clientX + emUnits(6),
        y: event.clientY + emUnits(-8)});
@@ -2309,7 +2358,7 @@ GZ3D.Gui.prototype.deleteFromStats = function(type, name)
     {
       if ($('#propertyPanel-'+ convertNameId(name)).is(':visible'))
       {
-        guiEvents.emit('openTab', 'treeMenu', 'treeMenu');
+        this.emitter.emit('openTab', 'treeMenu', 'treeMenu');
       }
 
       list.splice(i, 1);
