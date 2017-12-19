@@ -1251,7 +1251,7 @@ GZ3D.Gui = function(scene)
   this.emitter.on('notification_popup',
       function (notification, duration)
       {
-        if (this.showNotifications)
+        if (that.showNotifications)
         {
           clearTimeout(notificationTimeout);
           $( '#notification-popup' ).popup('close');
@@ -1377,7 +1377,7 @@ GZ3D.Gui = function(scene)
           if (modelStats[i].name === object)
           {
             modelStats[i].selected = 'selectedTreeItem';
-            if (this.openTreeWhenSelected)
+            if (that.openTreeWhenSelected)
             {
               that.emitter.emit('openTab', 'propertyPanel-'+
                   convertNameId(object), 'treeMenu');
@@ -1393,7 +1393,7 @@ GZ3D.Gui = function(scene)
           if (lightStats[i].name === object)
           {
             lightStats[i].selected = 'selectedTreeItem';
-            if (this.openTreeWhenSelected)
+            if (that.openTreeWhenSelected)
             {
               that.emitter.emit('openTab', 'propertyPanel-' +
                   convertNameId(object), 'treeMenu');
@@ -5810,7 +5810,7 @@ GZ3D.RadialMenu.prototype.setNumberOfItems = function(number)
  * The scene is where everything is placed, from objects, to lights and cameras.
  *
  * Supports radial menu on an orthographic scene when gzradialmenu.js has been
- * included.
+ * included (useful for mobile devices).
  *
  * @param shaders GZ3D.Shaders instance, if not provided, custom shaders will
  *                not be set.
