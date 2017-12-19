@@ -5,9 +5,9 @@ usage()
 cat << EOF
 OPTIONS:
    -h      Show this message
-   -m      Build a local model database. 
+   -m      Build a local model database.
            Option "local" to use only local models.
-   -c      Create coarse versions of all models in the local database 
+   -c      Create coarse versions of all models in the local database
    -t      Generate a thumbnail for each model
 EOF
 exit
@@ -18,7 +18,7 @@ MODELS=
 LOCAL=
 COARSE=
 THUMBNAIL=
-GetOpts() 
+GetOpts()
 {
   branch=""
   argv=()
@@ -54,7 +54,7 @@ GetOpts()
           argv+=(${opt})
           ;;
     esac
-  done 
+  done
 }
 
 GetOpts $*
@@ -110,13 +110,25 @@ then
     echo -n "Downloading gazebo_models..."
     hg clone https://bitbucket.org/osrf/gazebo_models
 
+    RETVAL=$?
+    if [ $RETVAL -ne 0 ]; then
+      echo There are mercurial clone errors, exiting.
+      exit 1
+    fi
+
     echo "Download complete"
     cd gazebo_models
     mkdir build
     cd build
     echo -n "Installing gazebo_models..."
-    cmake .. -DCMAKE_INSTALL_PREFIX=$DIR/http/client
-    make install > /dev/null 2>&1
+    cmake .. -DCMAKE_INSTALL_PREFIX=$DIR/http/client && make install > /dev/null 2>&1
+
+    RETVAL=$?
+    if [ $RETVAL -ne 0 ]; then
+      echo There are build errors, exiting.
+      exit 1
+    fi
+
     echo "Install complete"
 
     # Remove temp dir
