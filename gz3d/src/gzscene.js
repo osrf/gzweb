@@ -1810,7 +1810,11 @@ GZ3D.Scene.prototype.loadOBJ = function(uri, submesh, centerSubmesh, callback,
 {
   var obj = null;
   var baseUrl = uri.substr(0, uri.lastIndexOf('/') + 1);
+
+  // We need one mtl loader per obj so paths don't get mixed up
   var mtlLoader = new THREE.MTLLoader();
+  mtlLoader.setCrossOrigin('');
+
   var that = this;
   var containerLoaded = function (container)
   {
@@ -1858,10 +1862,93 @@ GZ3D.Scene.prototype.loadOBJ = function(uri, submesh, centerSubmesh, callback,
       loadComplete();
     }
 
+    // Callback when raw .mtl file has been loaded
+    //
+    // Assumptions:
+    //     * Both .obj and .mtl files are under the /meshes dir
+    //     * Textures are under the /materials/textures dir
+    //
+    // Three texture filename patterns are handled. A single .mtl file may
+    // have instances of all of these.
+    // 1. Path relative to the meshes folder, which should always start with
+    //    ../materials/textures/
+    // 2. Gazebo URI in the model:// format, referencing another model
+    //    in the same path as the one being loaded
+    // 2. Just the image filename without a path
+    var mtlRawFileLoaded = function(text)
+    {
+      // Handle model:// URI
+      if (text.indexOf('model://') > 0)
+      {
+        if (mtlLoader.path.indexOf('meshes') < 0)
+        {
+          console.error('Failed to resolve texture URI. MTL file directory [' +
+              mtlLoader.path +
+              '] not supported, it should be in a /meshes directory');
+          console.error(text);
+          return;
+        }
+
+        // Get models path from .mtl file path
+        // This assumes the referenced model is in the same path as the model
+        // being loaded. So this may fail if there are models being loaded
+        // from various paths
+        var path = mtlLoader.path;
+        path = path.substr(0, path.lastIndexOf('/meshes'));
+        path = path.substr(0, path.lastIndexOf('/') + 1);
+
+        // Search and replace
+        text = text.replace(/model:\/\//g, path);
+      }
+
+      // Handle case in which the image filename is given without a path
+      // We expect the texture to be under /materials/textures
+      var lines = text.split('\n');
+      var newText;
+      for (var i in lines)
+      {
+        var line = lines[i];
+
+        if (line === undefined)
+        {
+          continue;
+        }
+
+        // Skip lines without texture filenames
+        if (line.indexOf('map_Ka') < 0 && line.indexOf('map_Kd') < 0)
+        {
+          newText += line += '\n';
+          continue;
+        }
+
+        // Skip lines which already have /materials/textures
+        if (line.indexOf('/materials/textures') > 0)
+        {
+          newText += line += '\n';
+          continue;
+        }
+
+        // Add path to filename
+        var p = mtlLoader.path;
+        p = p.substr(0, p.lastIndexOf('meshes'));
+
+        line = line.replace('map_Ka ', 'map_Ka ' + p + 'materials/textures/');
+        line = line.replace('map_Kd ', 'map_Kd ' + p + 'materials/textures/');
+
+        newText += line += '\n';
+      }
+
+      applyMaterial(mtlLoader.parse(newText));
+    };
+
     for (var i=0; i < container.materialLibraries.length; ++i)
     {
+      // Load raw .mtl file
       var mtlPath = container.materialLibraries[i];
-      mtlLoader.load(mtlPath, applyMaterial);
+
+      var fileLoader = new THREE.FileLoader(mtlLoader.manager);
+      fileLoader.setPath(mtlLoader.path);
+      fileLoader.load(mtlPath, mtlRawFileLoaded);
     }
   };
 
@@ -1869,6 +1956,7 @@ GZ3D.Scene.prototype.loadOBJ = function(uri, submesh, centerSubmesh, callback,
   {
     this.objLoader.load(uri, function(_container)
     {
+      // Assumes .mtl is in the same path as .obj
       mtlLoader.setPath(baseUrl);
       containerLoaded(_container);
     });
@@ -1879,7 +1967,7 @@ GZ3D.Scene.prototype.loadOBJ = function(uri, submesh, centerSubmesh, callback,
     // mtlLoader.parse(files[1]);
     // containerLoaded(_container);
 
-    // this part is to be removed after updateing the mtlLoader.
+    // this part is to be removed after updating the mtlLoader.
     obj = _container;
     this.meshes[uri] = obj;
     obj = obj.clone();
