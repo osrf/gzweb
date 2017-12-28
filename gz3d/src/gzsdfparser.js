@@ -12,7 +12,7 @@ GZ3D.SdfParser = function(scene, gui, gziface)
 
   // set the sdf version
   this.SDF_VERSION = 1.5;
-  this.MATERIAL_ROOT = gziface ? gziface.url + '/assets' : 'assets';
+  this.MATERIAL_ROOT = gziface ? 'http://' + gziface.url + '/assets' : 'assets';
   // true for using URLs to load files.
   // false for using the files loaded in the memory.
   this.usingFilesUrls = false;

@@ -5901,10 +5901,12 @@ GZ3D.Scene.prototype.init = function()
 
   var that = this;
 
-  // Need to use `document` instead of getDomElement in order to get events
-  // outside the webgl div element.
+  // Only capture events inside the webgl div element.
   this.getDomElement().addEventListener( 'mouseup',
       function(event) {that.onPointerUp(event);}, false );
+
+  this.getDomElement().addEventListener( 'mousedown',
+      function(event) {that.onPointerDown(event);}, false );
 
   this.getDomElement().addEventListener( 'DOMMouseScroll',
       function(event) {that.onMouseScroll(event);}, false ); //firefox
@@ -7688,7 +7690,7 @@ GZ3D.Scene.prototype.loadOBJ = function(uri, submesh, centerSubmesh, callback,
       // Handle model:// URI
       if (text.indexOf('model://') > 0)
       {
-        if (mtlLoader.path.indexOf('meshes') < 0)
+        if (mtlLoader.path.indexOf('/meshes/') < 0)
         {
           console.error('Failed to resolve texture URI. MTL file directory [' +
               mtlLoader.path +
@@ -8978,7 +8980,7 @@ GZ3D.SdfParser = function(scene, gui, gziface)
 
   // set the sdf version
   this.SDF_VERSION = 1.5;
-  this.MATERIAL_ROOT = gziface ? gziface.url + '/assets' : 'assets';
+  this.MATERIAL_ROOT = gziface ? 'http://' + gziface.url + '/assets' : 'assets';
   // true for using URLs to load files.
   // false for using the files loaded in the memory.
   this.usingFilesUrls = false;
