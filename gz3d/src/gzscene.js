@@ -35,6 +35,7 @@ GZ3D.Scene.prototype.init = function()
 
   // loaders
   this.textureLoader = new THREE.TextureLoader();
+  this.textureLoader.crossOrigin = '';
   this.colladaLoader = new THREE.ColladaLoader();
   this.objLoader = new THREE.OBJLoader();
   this.stlLoader = new THREE.STLLoader();
@@ -92,13 +93,12 @@ GZ3D.Scene.prototype.init = function()
 
   var that = this;
 
-  // Need to use `document` instead of getDomElement in order to get events
-  // outside the webgl div element.
-  document.addEventListener( 'mouseup',
-      function(event) {that.onPointerUp(event);}, false );
-
+  // Only capture events inside the webgl div element.
   this.getDomElement().addEventListener( 'mouseup',
       function(event) {that.onPointerUp(event);}, false );
+
+  this.getDomElement().addEventListener( 'mousedown',
+      function(event) {that.onPointerDown(event);}, false );
 
   this.getDomElement().addEventListener( 'DOMMouseScroll',
       function(event) {that.onMouseScroll(event);}, false ); //firefox
@@ -106,11 +106,9 @@ GZ3D.Scene.prototype.init = function()
   this.getDomElement().addEventListener( 'mousewheel',
       function(event) {that.onMouseScroll(event);}, false );
 
-  document.addEventListener( 'keydown',
+  this.getDomElement().addEventListener( 'keydown',
       function(event) {that.onKeyDown(event);}, false );
 
-  this.getDomElement().addEventListener( 'mousedown',
-      function(event) {that.onPointerDown(event);}, false );
   this.getDomElement().addEventListener( 'touchstart',
       function(event) {that.onPointerDown(event);}, false );
 
@@ -464,8 +462,12 @@ GZ3D.Scene.prototype.onPointerUp = function(event)
   if (millisecs - this.timeDown < 150)
   {
     this.setManipulationMode('view');
-    $( '#view-mode' ).click();
-    $('input[type="radio"]').checkboxradio('refresh');
+    // TODO: Remove jquery from scene
+    if (typeof GZ3D.Gui === 'function')
+    {
+      $( '#view-mode' ).click();
+      $('input[type="radio"]').checkboxradio('refresh');
+    }
   }
   this.timeDown = null;
 };
@@ -538,20 +540,24 @@ GZ3D.Scene.prototype.onKeyDown = function(event)
   }
 
   // Esc/R/T for changing manipulation modes
-  if (event.keyCode === 27) // Esc
+  // TODO: Remove jquery from scene
+  if (typeof GZ3D.Gui === 'function')
   {
-    $( '#view-mode' ).click();
-    $('input[type="radio"]').checkboxradio('refresh');
-  }
-  if (event.keyCode === 82) // R
-  {
-    $( '#rotate-mode' ).click();
-    $('input[type="radio"]').checkboxradio('refresh');
-  }
-  if (event.keyCode === 84) // T
-  {
-    $( '#translate-mode' ).click();
-    $('input[type="radio"]').checkboxradio('refresh');
+    if (event.keyCode === 27) // Esc
+    {
+      $( '#view-mode' ).click();
+      $('input[type="radio"]').checkboxradio('refresh');
+    }
+    if (event.keyCode === 82) // R
+    {
+      $( '#rotate-mode' ).click();
+      $('input[type="radio"]').checkboxradio('refresh');
+    }
+    if (event.keyCode === 84) // T
+    {
+      $( '#translate-mode' ).click();
+      $('input[type="radio"]').checkboxradio('refresh');
+    }
   }
 };
 
@@ -1604,6 +1610,8 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
 {
   var dae;
   var mesh = null;
+  var that = this;
+
   /*
   // Crashes: issue #36
   if (this.meshes[uri])
@@ -1616,18 +1624,16 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
   }
   */
 
-  var loader = new THREE.ColladaLoader();
-
   if (!filestring)
   {
-    loader.load(uri, function(collada)
+    this.colladaLoader.load(uri, function(collada)
     {
       meshReady(collada);
     });
   }
   else
   {
-    loader.parse(filestring, function(collada)
+    this.colladaLoader.parse(filestring, function(collada)
     {
       meshReady(collada);
     }, undefined);
@@ -1644,10 +1650,10 @@ GZ3D.Scene.prototype.loadCollada = function(uri, submesh, centerSubmesh,
 
     dae = collada.scene;
     dae.updateMatrix();
-    this.scene.prepareColladaMesh(dae);
-    this.scene.meshes[uri] = dae;
+    that.prepareColladaMesh(dae);
+    that.meshes[uri] = dae;
     dae = dae.clone();
-    this.scene.useSubMesh(dae, submesh, centerSubmesh);
+    that.useSubMesh(dae, submesh, centerSubmesh);
 
     dae.name = uri;
     callback(dae);
@@ -1806,7 +1812,11 @@ GZ3D.Scene.prototype.loadOBJ = function(uri, submesh, centerSubmesh, callback,
 {
   var obj = null;
   var baseUrl = uri.substr(0, uri.lastIndexOf('/') + 1);
+
+  // We need one mtl loader per obj so paths don't get mixed up
   var mtlLoader = new THREE.MTLLoader();
+  mtlLoader.setCrossOrigin('');
+
   var that = this;
   var containerLoaded = function (container)
   {
@@ -1814,9 +1824,9 @@ GZ3D.Scene.prototype.loadOBJ = function(uri, submesh, centerSubmesh, callback,
     var loadComplete = function()
     {
       obj = container;
-      this.scene.meshes[uri] = obj;
+      that.meshes[uri] = obj;
       obj = obj.clone();
-      this.scene.useSubMesh(obj, submesh, centerSubmesh);
+      that.useSubMesh(obj, submesh, centerSubmesh);
 
       obj.name = uri;
       callback(obj);
@@ -1854,10 +1864,93 @@ GZ3D.Scene.prototype.loadOBJ = function(uri, submesh, centerSubmesh, callback,
       loadComplete();
     }
 
+    // Callback when raw .mtl file has been loaded
+    //
+    // Assumptions:
+    //     * Both .obj and .mtl files are under the /meshes dir
+    //     * Textures are under the /materials/textures dir
+    //
+    // Three texture filename patterns are handled. A single .mtl file may
+    // have instances of all of these.
+    // 1. Path relative to the meshes folder, which should always start with
+    //    ../materials/textures/
+    // 2. Gazebo URI in the model:// format, referencing another model
+    //    in the same path as the one being loaded
+    // 2. Just the image filename without a path
+    var mtlRawFileLoaded = function(text)
+    {
+      // Handle model:// URI
+      if (text.indexOf('model://') > 0)
+      {
+        if (mtlLoader.path.indexOf('/meshes/') < 0)
+        {
+          console.error('Failed to resolve texture URI. MTL file directory [' +
+              mtlLoader.path +
+              '] not supported, it should be in a /meshes directory');
+          console.error(text);
+          return;
+        }
+
+        // Get models path from .mtl file path
+        // This assumes the referenced model is in the same path as the model
+        // being loaded. So this may fail if there are models being loaded
+        // from various paths
+        var path = mtlLoader.path;
+        path = path.substr(0, path.lastIndexOf('/meshes'));
+        path = path.substr(0, path.lastIndexOf('/') + 1);
+
+        // Search and replace
+        text = text.replace(/model:\/\//g, path);
+      }
+
+      // Handle case in which the image filename is given without a path
+      // We expect the texture to be under /materials/textures
+      var lines = text.split('\n');
+      var newText;
+      for (var i in lines)
+      {
+        var line = lines[i];
+
+        if (line === undefined)
+        {
+          continue;
+        }
+
+        // Skip lines without texture filenames
+        if (line.indexOf('map_Ka') < 0 && line.indexOf('map_Kd') < 0)
+        {
+          newText += line += '\n';
+          continue;
+        }
+
+        // Skip lines which already have /materials/textures
+        if (line.indexOf('/materials/textures') > 0)
+        {
+          newText += line += '\n';
+          continue;
+        }
+
+        // Add path to filename
+        var p = mtlLoader.path;
+        p = p.substr(0, p.lastIndexOf('meshes'));
+
+        line = line.replace('map_Ka ', 'map_Ka ' + p + 'materials/textures/');
+        line = line.replace('map_Kd ', 'map_Kd ' + p + 'materials/textures/');
+
+        newText += line += '\n';
+      }
+
+      applyMaterial(mtlLoader.parse(newText));
+    };
+
     for (var i=0; i < container.materialLibraries.length; ++i)
     {
+      // Load raw .mtl file
       var mtlPath = container.materialLibraries[i];
-      mtlLoader.load(mtlPath, applyMaterial);
+
+      var fileLoader = new THREE.FileLoader(mtlLoader.manager);
+      fileLoader.setPath(mtlLoader.path);
+      fileLoader.load(mtlPath, mtlRawFileLoaded);
     }
   };
 
@@ -1865,6 +1958,7 @@ GZ3D.Scene.prototype.loadOBJ = function(uri, submesh, centerSubmesh, callback,
   {
     this.objLoader.load(uri, function(_container)
     {
+      // Assumes .mtl is in the same path as .obj
       mtlLoader.setPath(baseUrl);
       containerLoaded(_container);
     });
@@ -1875,7 +1969,7 @@ GZ3D.Scene.prototype.loadOBJ = function(uri, submesh, centerSubmesh, callback,
     // mtlLoader.parse(files[1]);
     // containerLoaded(_container);
 
-    // this part is to be removed after updateing the mtlLoader.
+    // this part is to be removed after updating the mtlLoader.
     obj = _container;
     this.meshes[uri] = obj;
     obj = obj.clone();
@@ -1898,15 +1992,16 @@ GZ3D.Scene.prototype.loadSTL = function(uri, submesh, centerSubmesh,
   callback)
 {
   var mesh = null;
+  var that = this;
   this.stlLoader.load(uri, function(geometry)
   {
     mesh = new THREE.Mesh( geometry );
     mesh.castShadow = true;
     mesh.receiveShadow = true;
 
-    this.scene.meshes[uri] = mesh;
+    that.meshes[uri] = mesh;
     mesh = mesh.clone();
-    this.scene.useSubMesh(mesh, submesh, centerSubmesh);
+    that.useSubMesh(mesh, submesh, centerSubmesh);
 
     mesh.name = uri;
     callback(mesh);
