@@ -65,13 +65,13 @@ cd $DIR
 # Install node modules
 npm install
 
-#
+# Assemble javascript files
+grunt build
+
 # build the c++ server component
-#
 rm -rf build
 mkdir build
 cd build
-
 
 # Run cmake and check for the exit code
 cmake ..
