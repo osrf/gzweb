@@ -1,6 +1,7 @@
 syntax: glob
 
 build
+gz3d/build
 build_*
 .DS_Store
 *.*~
