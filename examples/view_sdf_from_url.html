@@ -5,10 +5,21 @@
     <title>View SDF from URL</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0, initial-scale=1.0">
-    <script src="../gz3d/build/SDFViewer.js"></script>
+    <script src="../gz3d/build/gz3d.iface.full.js"></script>
+    <style>
+      body {
+        padding: 2em;
+        font-family: helvetica;
+      }
+      #container {
+        padding: 2em;
+        height: 50em;
+        width: 80%;
+      }
+    </style>
   </head>
 
-  <body style="font-family=helvetica">
+  <body>
 
     <div>
       <div>
@@ -58,7 +69,7 @@
 
       function onWindowResize()
       {
-        scene.setWindowSize(container.clientWidth, container.clientHeight);
+        scene.setSize(container.clientWidth, container.clientHeight);
       }
 
       function animate()

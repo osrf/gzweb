@@ -3,21 +3,32 @@ module.exports = function(grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
     concat: {
-      build: {
+      // All gz*.js files
+      build_src: {
         src  : ['gz3d/src/*.js'],
         dest : 'gz3d/build/gz3d.js'
       },
-      build_sdfviewer: {
-        src: [
-        'gz3d/client/js/include/three.js', 'gz3d/client/js/include/three.compat.js',
-        'gz3d/client/js/include/OrbitControls.js', 'gz3d/client/js/include/Detector.js',
-        'gz3d/client/js/include/eventemitter2.js', 'gz3d/client/js/include/ColladaLoader.js',
-        'gz3d/client/js/include/OBJLoader.js', 'gz3d/client/js/include/MTLLoader.js',
-        'gz3d/client/js/include/STLLoader.js', 'gz3d/client/js/include/xml2json.js',
-        'gz3d/src/gz*.js', '!gz3d/src/gziface.js', '!gz3d/src/gzgui.js'
+      // Self-contained file which can be embedded into other sites.
+      //
+      // .iface Means it provides a websocket interface to the backend
+      // .full Means it brings all the necessary dependencies
+      build_iface_full: {
+        src  : ['gz3d/client/js/include/three.js',
+                'gz3d/client/js/include/three.compat.js',
+                'gz3d/client/js/include/*.js',
+                '!gz3d/client/js/include/three.min.js',
+                '!gz3d/client/js/include/stats.min.js',
+                '!gz3d/client/js/include/roslib.min.js',
+                '!gz3d/client/js/include/jquery-1.9.1.js',
+                '!gz3d/client/js/include/jquery.mobile-1.4.0.min.js',
+                '!gz3d/client/js/include/',
+                'gz3d/src/gz*.js',
+                '!gz3d/src/gzgui.js',
+                '!gz3d/src/gzlogplay.js',
+                '!gz3d/src/gzradialmenu.js',
         ],
-        dest: 'gz3d/build/SDFViewer.js'
-      },
+        dest : 'gz3d/build/gz3d.iface.full.js'
+      }
     },
     jshint: {
       options: {
@@ -32,9 +43,13 @@ module.exports = function(grunt) {
       options: {
         report: 'min'
       },
-      build: {
+      build_src: {
         src: 'gz3d/build/gz3d.js',
         dest: 'gz3d/build/gz3d.min.js'
+      },
+      build_iface_full: {
+        src: 'gz3d/build/gz3d.iface.full.js',
+        dest: 'gz3d/build/gz3d.iface.full.min.js'
       }
     },
     watch: {

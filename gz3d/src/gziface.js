@@ -1124,7 +1124,7 @@ GZ3D.GZIface.prototype.parseMaterial = function(material)
     return null;
   }
 
-  var uriPath = 'assets';
+  var uriPath = 'http://' + this.url + '/assets';
   var texture;
   var normalMap;
   var textureUri;
