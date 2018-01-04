@@ -106,7 +106,7 @@ GZ3D.Scene.prototype.init = function()
   this.getDomElement().addEventListener( 'mousewheel',
       function(event) {that.onMouseScroll(event);}, false );
 
-  this.getDomElement().addEventListener( 'keydown',
+  document.addEventListener( 'keydown',
       function(event) {that.onKeyDown(event);}, false );
 
   this.getDomElement().addEventListener( 'touchstart',
