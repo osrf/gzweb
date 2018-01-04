@@ -1116,6 +1116,8 @@
 
         window.addEventListener('resize', onWindowResize, false);
         scene.setSize(window.innerWidth, window.innerHeight);
+
+        window.addEventListener('keydown', scene.onKeyDown, false);
       }
 
       function onWindowResize()
