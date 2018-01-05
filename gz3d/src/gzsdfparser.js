@@ -82,8 +82,8 @@ GZ3D.SdfParser.prototype.init = function()
 
 /**
  * Pushes Urls into the customUrls array where the parser looks for assets.
- * this array should be usedd if the assets files hierarchy is different than
- * that of gzweb.
+ * If `usingFilesUrls` is true, resources will only be taken from this array.
+ * TODO: Find a less intrusive way to support custom URLs (issue #147)
  */
 GZ3D.SdfParser.prototype.addUrl = function(url)
 {
@@ -297,8 +297,8 @@ GZ3D.SdfParser.prototype.parseBool = function(boolStr)
  * Parses SDF material element which is going to be used by THREE library
  * It matches material scripts with the material objects which are
  * already parsed by gzbridge and saved by SDFParser.
- * In case of using custom Urls for the textures, the URLs should be added
- * to the customUrls array to be loaded.
+ * If `usingFilesUrls` is true, the texture URLs will be loaded from the
+ * to the customUrls array.
  * @param {object} material - SDF material object
  * @returns {object} material - material object which has the followings:
  * texture, normalMap, ambient, diffuse, specular, opacity
@@ -801,6 +801,9 @@ GZ3D.SdfParser.prototype.spawnFromSDF = function(sdf)
 GZ3D.SdfParser.prototype.loadSDF = function(modelName)
 {
   var sdf = this.loadModel(modelName);
+  if (!sdf) {
+    return;
+  }
   return this.spawnFromSDF(sdf);
 };
 
@@ -1090,42 +1093,49 @@ GZ3D.SdfParser.prototype.createCylinderSDF = function(translation, euler)
 };
 
 /**
- * Loads SDF of the model. It first constructs the url of the model
- * according to modelname
- * @param {string} modelName - name of the model, the customUrls is not empty
- * the modelName parm wouldn't be used, the function will search for the
- * URL that has the 'model.sdf' and loads it.
- * @returns {XMLDocument} modelDOM - SDF DOM object of the loaded model
+ * Loads a model from an SDF file.
+ * @param {string} modelName - Either the name of a model in the path, or the
+ * full URL to an SDF file.
  */
 GZ3D.SdfParser.prototype.loadModel = function(modelName)
 {
-  var modelFile = '', found;
+  var modelFile = '';
 
-  if (this.customUrls.length !== 0)
+  if (modelName === undefined)
   {
-    for (var k = 0; k < this.customUrls.length; k++)
-    {
-      if (this.customUrls[k].indexOf('.sdf') > -1)
-      {
-        modelFile = this.customUrls[k];
-        this.customUrls.splice(k, 1);
-        found = true;
-        break;
-      }
-    }
+    console.log('Must provide either a model name or the URL of an SDF file');
+    return;
   }
-  else if (modelName !== undefined)
+
+  // In case it is a full URL
+  if (modelName.indexOf('http') > -1 && modelName.indexOf('.sdf') > -1)
+  {
+    modelFile = modelName;
+  }
+  // In case it is just the model name, look for it on the default URL
+  else
   {
     modelFile = this.MATERIAL_ROOT + '/' + modelName + '/model.sdf';
-  }
-  else if (modelName === undefined || !found)
-  {
-    console.error('Must provide either `this.customUrls` or `modelName`');
   }
 
   var xhttp = new XMLHttpRequest();
   xhttp.overrideMimeType('text/xml');
   xhttp.open('GET', modelFile, false);
-  xhttp.send();
+
+  try
+  {
+    xhttp.send();
+  }
+  catch(err)
+  {
+    console.log('Failed to get URL [' + modelFile + ']: ' + err.message);
+    return;
+  }
+
+  if (xhttp.status !== 200)
+  {
+    console.log('Failed to get URL [' + modelFile + ']');
+    return;
+  }
   return xhttp.responseXML;
 };
