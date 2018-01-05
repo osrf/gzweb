@@ -4,7 +4,6 @@
   <head>
     <title>View SDF from URL</title>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0, initial-scale=1.0">
     <script src="../gz3d/build/gz3d.js"></script>
     <style>
       body {
@@ -13,28 +12,60 @@
       }
       #container {
         padding: 2em;
-        height: 50em;
+        height: 30em;
         width: 80%;
+      }
+      button {
+        width: 8%;
+      }
+      input {
+        width: 90%;
       }
     </style>
   </head>
 
   <body>
 
+    <h2>
+      View SDF from URL
+    </h2>
+
+    <p>
+      This example shows how to visualize an SDF file on the browser by passing the URL of its resources.
+    </p>
+    <p>
+      The SDF parsing happens completely on the browser, so there is no need for a GzWeb server to be runnning in the backend.
+    </p>
+
+    <p>
+      You can test it as follows:
+    </p>
+
+    <ol>
+      <li>Add full URLs to all resources needed by the model (meshes, textures, etc), one by one, if any</li>
+      <li>Fill the full URL to the model's SDF file</li>
+      <li>Press "Load model!"</li>
+    </ol>
+
     <div>
       <div>
-        <input type="text" id="url-input" style="width: 90%"></input>
-        <button onclick="addURL()" style="width: 8%">Add URL</button>
+        <h4>Resources URLs</h4>
+        <input type="text" id="resources-input"></input>
+        <button onclick="addURL()" id="add-button">Add URL</button>
       </div>
-      <div id="url-list" style="font-size: 0.8em; padding-bottom: 2em;">
+      <div id="resource-list">
       </div>
-      <center>
-        <button onclick="loadModel()" style="min-width: 50%; height: 3em;">Load model!</button>
-      </center>
+      <div>
+        <h4>SDF model URL</h4>
+        <input type="text" id="sdf-input"></input>
+        <button onclick="loadModel()" id="load-button">Load model!</button>
+      </div>
+      <div id="sdf-display">
+      </div>
     </div>
 
     <center>
-      <div id="container" style="max-width: 80%; max-height: 50em; margin: 2em">
+      <div id="container">
       </div>
     </center>
 
@@ -44,52 +75,73 @@
 
       var scene;
       var sdfparser;
-      var urlInput;
-      var urlList;
+      var resourcesInput;
+      var sdfInput;
+      var resourceList;
 
       init();
       animate();
 
+      // Initialization
       function init()
       {
+        // Initialize objects
         var shaders = new GZ3D.Shaders();
         scene = new GZ3D.Scene(shaders);
         sdfparser = new GZ3D.SdfParser(scene);
         sdfparser.usingFilesUrls = true;
 
+        // Append to dom
         var container = document.getElementById('container');
         container.appendChild(scene.getDomElement());
 
-        urlInput = document.getElementById('url-input');
-        urlList = document.getElementById('url-list');
-
+        // Handle window resize
         window.addEventListener('resize', onWindowResize, false);
         onWindowResize();
+
+        // Get DOM elements
+        resourcesInput = document.getElementById('resources-input');
+        sdfInput = document.getElementById('sdf-input');
+        resourceList = document.getElementById('resource-list');
+
+        animate();
       }
 
+      // Callback when window is resized
       function onWindowResize()
       {
         scene.setSize(container.clientWidth, container.clientHeight);
       }
 
+      // Recursively called animation loop
       function animate()
       {
         requestAnimationFrame(animate);
         scene.render();
       }
 
+      // Callback when Load Model is pressed
       function loadModel()
       {
-        console.log('loading');
-        var obj = sdfparser.loadSDF();
+        var obj = sdfparser.loadSDF(sdfInput.value);
         scene.add(obj);
+
+        // Hide inputs
+        resourcesInput.style.display = 'none';
+        sdfInput.style.display = 'none';
+        document.getElementById('add-button').style.display = 'none';
+        document.getElementById('load-button').style.display = 'none';
+
+        sdfDisplay = document.getElementById('sdf-display');
+        sdfDisplay.innerHTML = sdfDisplay.innerHTML + "<br>" + sdfInput.value;
       }
 
+      // Callback when Add URL is pressed
       function addURL()
       {
-        sdfparser.addUrl(urlInput.value);
+        sdfparser.addUrl(resourcesInput.value);
 
-        urlList.innerHTML = urlList.innerHTML + "<br>" + urlInput.value;
+        resourceList.innerHTML = resourceList.innerHTML + "<br>" + resourcesInput.value;
       }
     </script>
 
