@@ -248,6 +248,16 @@ GZ3D.SdfParser.prototype.spawnLightFromSDF = function(sdfObj)
  */
 GZ3D.SdfParser.prototype.parsePose = function(poseStr)
 {
+  var pose = {
+    'position': new THREE.Vector3(),
+    'orientation': new THREE.Quaternion()
+  };
+
+  if (typeof poseStr !== 'string' && !(poseStr instanceof String))
+  {
+    return pose;
+  }
+
   var values = poseStr.split(/\s+/);
 
   var position = new THREE.Vector3(parseFloat(values[0]),
@@ -259,10 +269,8 @@ GZ3D.SdfParser.prototype.parsePose = function(poseStr)
           parseFloat(values[5]), 'ZYX');
   quaternion.setFromEuler(euler);
 
-  var pose = {
-    'position': position,
-    'orientation': quaternion
-  };
+  pose.position =  position;
+  pose.orientation = quaternion;
 
   return pose;
 };
