@@ -137,22 +137,36 @@ describe('Sdf Parser tests', function() {
   describe('Add a model to the scene using custom urls', function() {
     it('should add a model to the scene and then remove it', function() {
 
+      // Tell it to use custom URLs
       sdfparser.usingFilesUrls = true;
-      sdfparser.addUrl(utilsPath + 'house_2/meshes/house_2.dae');
 
-      var obj = sdfparser.loadSDF(utilsPath +
-          'house_2/model.sdf');
+      // Check there are no custom URLs yet
+      expect(sdfparser.customUrls.length).toEqual(0);
+
+      // Try to add invalid URL
+      sdfparser.addUrl('banana');
+      expect(sdfparser.customUrls.length).toEqual(0);
+
+      // Add valid URL
+      sdfparser.addUrl(utilsPath + 'house_2/meshes/house_2.dae');
+      expect(sdfparser.customUrls.length).toEqual(1);
+
+      // Load SDF
+      var obj = sdfparser.loadSDF(utilsPath + 'house_2/model.sdf');
+
       expect(obj).not.toEqual(undefined);
       expect(obj.children.length).toEqual(1);
       expect(obj.children[0].name).toEqual('link');
       expect(obj.children[0].children.length).toEqual(1);
       expect(obj.children[0].children[0].name).toEqual('visual');
 
+      // Add to scene
       scene.add(obj);
 
       model = scene.getByName('House 2');
       expect(model).not.toEqual(undefined);
 
+      // Remove from scene
       scene.remove(model);
 
       model = scene.getByName('House 2');

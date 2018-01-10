@@ -87,6 +87,12 @@ GZ3D.SdfParser.prototype.init = function()
  */
 GZ3D.SdfParser.prototype.addUrl = function(url)
 {
+  if (url === undefined || url.indexOf('http') !== 0)
+  {
+    console.log('Trying to add invalid URL');
+    return;
+  }
+
   this.customUrls.push(url);
 };
 
@@ -1116,7 +1122,8 @@ GZ3D.SdfParser.prototype.loadModel = function(modelName)
   }
 
   // In case it is a full URL
-  if (modelName.indexOf('http') > -1 && modelName.indexOf('.sdf') > -1)
+  if (modelName.indexOf('http') === 0 &&
+      modelName.indexOf('.sdf') === modelName.length - 4)
   {
     modelFile = modelName;
   }

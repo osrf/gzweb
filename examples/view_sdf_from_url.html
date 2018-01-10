@@ -19,7 +19,7 @@
         width: 8%;
       }
       input {
-        width: 90%;
+        width: 85%;
       }
     </style>
   </head>
@@ -31,7 +31,7 @@
     </h2>
 
     <p>
-      This example shows how to visualize an SDF file on the browser by passing the URL of its resources.
+      This example shows how to visualize an SDF file on the browser by passing the URLs of its resources.
     </p>
     <p>
       The SDF parsing happens completely on the browser, so there is no need for a GzWeb server to be runnning in the backend.
@@ -42,9 +42,12 @@
     </p>
 
     <ol>
-      <li>Add full URLs to all resources needed by the model (meshes, textures, etc), one by one, if any</li>
-      <li>Fill the full URL to the model's SDF file</li>
-      <li>Press "Load model!"</li>
+      <li>Under "Resources URLs", type the URL to a resource needed by the model
+          (like meshes, textures, etc). If no resources are missing, skip to step 4.</li>
+      <li>Click "Add URL"</li>
+      <li>Go back to step 1</li>
+      <li>Under "SDF model URL", fill the full URL to the model's SDF file</li>
+      <li>Click "Load model!"</li>
     </ol>
 
     <div>
@@ -124,6 +127,11 @@
       function loadModel()
       {
         var obj = sdfparser.loadSDF(sdfInput.value);
+        if (!obj)
+        {
+          alert('Failed to load model, check the URL and try again');
+          return;
+        }
         scene.add(obj);
 
         // Hide inputs
