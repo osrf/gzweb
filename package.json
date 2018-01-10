@@ -42,7 +42,7 @@
     "jasmine-jquery": "^2.1.1",
     "jsdoc": "^3.5.5",
     "karma": "^1.7.0",
-    "karma-chrome-launcher": "^2.2.0",
+    "karma-firefox-launcher": "^2.2.0",
     "karma-coverage": "^1.1.1",
     "karma-htmlfile-reporter": "^0.3.5",
     "karma-jasmine": "^1.1.0",
