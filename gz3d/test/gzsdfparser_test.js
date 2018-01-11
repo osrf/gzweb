@@ -1,5 +1,7 @@
 describe('Sdf Parser tests', function() {
 
+  const utilsPath = 'http://localhost:9876/base/gz3d/test/utils/';
+
   var scene;
   var gui;
   var sdfparser;
@@ -113,6 +115,62 @@ describe('Sdf Parser tests', function() {
       expect(expectedRot.x).toBeCloseTo(rotation.x, 3);
       expect(expectedRot.y).toBeCloseTo(rotation.y, 3);
       expect(expectedRot.z).toBeCloseTo(rotation.z, 3);
+    });
+  });
+
+  describe('Load without URL or file name', function() {
+    it('should not break.', function() {
+
+      var obj = sdfparser.loadSDF();
+      expect(obj).toEqual(undefined);
+    });
+  });
+
+  describe('Load inexistent URL', function() {
+    it('should not break.', function() {
+
+      var obj = sdfparser.loadSDF('http://banana.sdf');
+      expect(obj).toEqual(undefined);
+    });
+  });
+
+  describe('Add a model to the scene using custom urls', function() {
+    it('should add a model to the scene and then remove it', function() {
+
+      // Tell it to use custom URLs
+      sdfparser.usingFilesUrls = true;
+
+      // Check there are no custom URLs yet
+      expect(sdfparser.customUrls.length).toEqual(0);
+
+      // Try to add invalid URL
+      sdfparser.addUrl('banana');
+      expect(sdfparser.customUrls.length).toEqual(0);
+
+      // Add valid URL
+      sdfparser.addUrl(utilsPath + 'house_2/meshes/house_2.dae');
+      expect(sdfparser.customUrls.length).toEqual(1);
+
+      // Load SDF
+      var obj = sdfparser.loadSDF(utilsPath + 'house_2/model.sdf');
+
+      expect(obj).not.toEqual(undefined);
+      expect(obj.children.length).toEqual(1);
+      expect(obj.children[0].name).toEqual('link');
+      expect(obj.children[0].children.length).toEqual(1);
+      expect(obj.children[0].children[0].name).toEqual('visual');
+
+      // Add to scene
+      scene.add(obj);
+
+      model = scene.getByName('House 2');
+      expect(model).not.toEqual(undefined);
+
+      // Remove from scene
+      scene.remove(model);
+
+      model = scene.getByName('House 2');
+      expect(model).toEqual(undefined);
     });
   });
 

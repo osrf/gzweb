@@ -35,6 +35,9 @@ GZ3D.SdfParser = function(scene, gui, gziface)
   this.meshes = {};
   this.mtls = {};
   this.textures = {};
+
+  // Should contain model files URLs if not using gzweb model files hierarchy.
+  this.customUrls = [];
 };
 
 /**
@@ -75,6 +78,22 @@ GZ3D.SdfParser.prototype.init = function()
   {
     this.scene.initScene();
   }
+};
+
+/**
+ * Pushes Urls into the customUrls array where the parser looks for assets.
+ * If `usingFilesUrls` is true, resources will only be taken from this array.
+ * TODO: Find a less intrusive way to support custom URLs (issue #147)
+ */
+GZ3D.SdfParser.prototype.addUrl = function(url)
+{
+  if (url === undefined || url.indexOf('http') !== 0)
+  {
+    console.log('Trying to add invalid URL');
+    return;
+  }
+
+  this.customUrls.push(url);
 };
 
 /**
@@ -235,6 +254,16 @@ GZ3D.SdfParser.prototype.spawnLightFromSDF = function(sdfObj)
  */
 GZ3D.SdfParser.prototype.parsePose = function(poseStr)
 {
+  var pose = {
+    'position': new THREE.Vector3(),
+    'orientation': new THREE.Quaternion()
+  };
+
+  if (typeof poseStr !== 'string' && !(poseStr instanceof String))
+  {
+    return pose;
+  }
+
   var values = poseStr.split(/\s+/);
 
   var position = new THREE.Vector3(parseFloat(values[0]),
@@ -246,10 +275,8 @@ GZ3D.SdfParser.prototype.parsePose = function(poseStr)
           parseFloat(values[5]), 'ZYX');
   quaternion.setFromEuler(euler);
 
-  var pose = {
-    'position': position,
-    'orientation': quaternion
-  };
+  pose.position =  position;
+  pose.orientation = quaternion;
 
   return pose;
 };
@@ -283,7 +310,9 @@ GZ3D.SdfParser.prototype.parseBool = function(boolStr)
 /**
  * Parses SDF material element which is going to be used by THREE library
  * It matches material scripts with the material objects which are
- * already parsed by gzbridge and saved by SDFParser
+ * already parsed by gzbridge and saved by SDFParser.
+ * If `usingFilesUrls` is true, the texture URLs will be loaded from the
+ * to the customUrls array.
  * @param {object} material - SDF material object
  * @returns {object} material - material object which has the followings:
  * texture, normalMap, ambient, diffuse, specular, opacity
@@ -356,7 +385,23 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
           }
           else
           {
-            texture = this.MATERIAL_ROOT + '/' + textureUri + '/' + mat.texture;
+            if (this.customUrls.length !== 0)
+            {
+              for (var k = 0; k < this.customUrls.length; k++)
+              {
+                if (this.customUrls[k].indexOf(mat.texture) > -1)
+                {
+                  texture = this.customUrls[k];
+                  this.customUrls.splice(k, 1);
+                  break;
+                }
+              }
+            }
+            else
+            {
+              texture = this.MATERIAL_ROOT + '/' + textureUri + '/' +
+                mat.texture;
+            }
           }
         }
       }
@@ -398,8 +443,23 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
       }
       else
       {
-        normalMap = this.MATERIAL_ROOT + '/' + mapUri + '/' +
-          normalMapName + '.png';
+        if (this.customUrls.length !== 0)
+        {
+          for (var j = 0; j < this.customUrls.length; j++)
+          {
+            if (this.customUrls[j].indexOf(normalMapName + '.png') > -1)
+            {
+              normalMap = this.customUrls[j];
+              this.customUrls.splice(j, 1);
+              break;
+            }
+          }
+        }
+        else
+        {
+          normalMap = this.MATERIAL_ROOT + '/' + mapUri + '/' +
+            normalMapName + '.png';
+        }
       }
 
     }
@@ -446,7 +506,9 @@ GZ3D.SdfParser.prototype.parseSize = function(sizeStr)
  * object.
  * @param {object} geom - SDF geometry object which determines the geometry
  *  of the object and can have following properties: box, cylinder, sphere,
- *   plane, mesh
+ *  plane, mesh.
+ *  Note that in case of using custom Urls for the meshs, the URLS should be
+ *  added to the array cistomUrls to be used instead of the default Url.
  * @param {object} mat - SDF material object which is going to be parsed
  * by createMaterial function
  * @param {object} parent - parent 3D object
@@ -507,10 +569,10 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
       var ext = modelUri.substr(-4).toLowerCase();
       var materialName = parent.name + '::' + modelUri;
       this.entityMaterial[materialName] = material;
+      var meshFileName = meshUri.substring(meshUri.lastIndexOf('/') + 1);
 
       if (!this.usingFilesUrls)
       {
-        var meshFileName = meshUri.substring(meshUri.lastIndexOf('/') + 1);
         var meshFile = this.meshes[meshFileName];
         if (ext === '.obj')
         {
@@ -547,7 +609,19 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
       }
       else
       {
-        that.scene.loadMeshFromUri(modelUri, submesh, centerSubmesh,
+        if (this.customUrls.length !== 0)
+        {
+          for (var k = 0; k < this.customUrls.length; k++)
+          {
+            if (this.customUrls[k].indexOf(meshFileName) > -1)
+            {
+              modelUri = this.customUrls[k];
+              this.customUrls.splice(k, 1);
+              break;
+            }
+          }
+        }
+        this.scene.loadMeshFromUri(modelUri, submesh, centerSubmesh,
           function (mesh)
           {
             if (material)
@@ -741,6 +815,9 @@ GZ3D.SdfParser.prototype.spawnFromSDF = function(sdf)
 GZ3D.SdfParser.prototype.loadSDF = function(modelName)
 {
   var sdf = this.loadModel(modelName);
+  if (!sdf) {
+    return;
+  }
   return this.spawnFromSDF(sdf);
 };
 
@@ -1030,18 +1107,50 @@ GZ3D.SdfParser.prototype.createCylinderSDF = function(translation, euler)
 };
 
 /**
- * Loads SDF of the model. It first constructs the url of the model
- * according to modelname
- * @param {string} modelName - name of the model
- * @returns {XMLDocument} modelDOM - SDF DOM object of the loaded model
+ * Loads a model from an SDF file.
+ * @param {string} modelName - Either the name of a model in the path, or the
+ * full URL to an SDF file.
  */
 GZ3D.SdfParser.prototype.loadModel = function(modelName)
 {
-  var modelFile = this.MATERIAL_ROOT + '/' + modelName + '/model.sdf';
+  var modelFile = '';
+
+  if (modelName === undefined)
+  {
+    console.log('Must provide either a model name or the URL of an SDF file');
+    return;
+  }
+
+  // In case it is a full URL
+  if (modelName.indexOf('http') === 0 &&
+      modelName.indexOf('.sdf') === modelName.length - 4)
+  {
+    modelFile = modelName;
+  }
+  // In case it is just the model name, look for it on the default URL
+  else
+  {
+    modelFile = this.MATERIAL_ROOT + '/' + modelName + '/model.sdf';
+  }
 
   var xhttp = new XMLHttpRequest();
   xhttp.overrideMimeType('text/xml');
   xhttp.open('GET', modelFile, false);
-  xhttp.send();
+
+  try
+  {
+    xhttp.send();
+  }
+  catch(err)
+  {
+    console.log('Failed to get URL [' + modelFile + ']: ' + err.message);
+    return;
+  }
+
+  if (xhttp.status !== 200)
+  {
+    console.log('Failed to get URL [' + modelFile + ']');
+    return;
+  }
   return xhttp.responseXML;
 };
