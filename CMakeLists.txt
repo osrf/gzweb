@@ -35,7 +35,7 @@ endif (NOT CMAKE_BUILD_TYPE)
 # find gazebo
 include (FindPkgConfig)
 if (PKG_CONFIG_FOUND)
-  pkg_check_modules(GAZEBO gazebo>=1.9.0 REQUIRED)
+  find_package(gazebo REQUIRED)
   pkg_check_modules(JANSSON jansson REQUIRED)
 
   # Find GNU Triangulation Surface Library
