@@ -1,4 +1,4 @@
-image: gazebo:libgazebo8
+image: gazebo:libgazebo7
 
 pipelines:
   default:
