@@ -18,6 +18,7 @@
 #include <gts.h>
 #include <tinyxml.h>
 #include <math.h>
+#include <gazebo/gazebo_config.h>
 #include <gazebo/common/Mesh.hh>
 #include <gazebo/common/Material.hh>
 #include <gazebo/common/ColladaLoader.hh>
@@ -535,7 +536,11 @@ void ExportEffects(TiXmlElement *_libraryEffectsXml,
     techniqueXml->LinkEndChild(phongXml);
 
     // ambient
+#if GAZEBO_MAJOR_VERSION >= 9
+    unsigned int RGBAcolor = material->Ambient().AsRGBA();
+#else
     unsigned int RGBAcolor = material->GetAmbient().GetAsRGBA();
+#endif
     float r = ((RGBAcolor >> 24) & 0xFF) / 255.0f;
     float g = ((RGBAcolor >> 16) & 0xFF) / 255.0f;
     float b = ((RGBAcolor >> 8) & 0xFF) / 255.0f;
@@ -550,7 +555,11 @@ void ExportEffects(TiXmlElement *_libraryEffectsXml,
     ambientXml->LinkEndChild(colorXml);
 
     // emission
+#if GAZEBO_MAJOR_VERSION >= 9
+    RGBAcolor = material->Emissive().AsRGBA();
+#else
     RGBAcolor = material->GetEmissive().GetAsRGBA();
+#endif
     r = ((RGBAcolor >> 24) & 0xFF) / 255.0f;
     g = ((RGBAcolor >> 16) & 0xFF) / 255.0f;
     b = ((RGBAcolor >> 8) & 0xFF) / 255.0f;
@@ -578,7 +587,11 @@ void ExportEffects(TiXmlElement *_libraryEffectsXml,
     }
     else
     {
+#if GAZEBO_MAJOR_VERSION >= 9
+      RGBAcolor = material->Diffuse().AsRGBA();
+#else
       RGBAcolor = material->GetDiffuse().GetAsRGBA();
+#endif
       r = ((RGBAcolor >> 24) & 0xFF) / 255.0f;
       g = ((RGBAcolor >> 16) & 0xFF) / 255.0f;
       b = ((RGBAcolor >> 8) & 0xFF) / 255.0f;
@@ -591,7 +604,11 @@ void ExportEffects(TiXmlElement *_libraryEffectsXml,
     }
 
     // specular
+#if GAZEBO_MAJOR_VERSION >= 9
+    RGBAcolor = material->Specular().AsRGBA();
+#else
     RGBAcolor = material->GetSpecular().GetAsRGBA();
+#endif
     r = ((RGBAcolor >> 24) & 0xFF) / 255.0f;
     g = ((RGBAcolor >> 16) & 0xFF) / 255.0f;
     b = ((RGBAcolor >> 8) & 0xFF) / 255.0f;
@@ -1267,10 +1284,17 @@ int main(int argc, char **argv)
     gazebo::common::Material *outMaterial = new gazebo::common::Material();
 
     outMaterial->SetTextureImage(inMaterial->GetTextureImage());
+#if GAZEBO_MAJOR_VERSION >= 9
+    outMaterial->SetAmbient(inMaterial->Ambient());
+    outMaterial->SetDiffuse(inMaterial->Diffuse());
+    outMaterial->SetSpecular(inMaterial->Specular());
+    outMaterial->SetEmissive(inMaterial->Emissive());
+#else
     outMaterial->SetAmbient(inMaterial->GetAmbient());
     outMaterial->SetDiffuse(inMaterial->GetDiffuse());
     outMaterial->SetSpecular(inMaterial->GetSpecular());
     outMaterial->SetEmissive(inMaterial->GetEmissive());
+#endif
     outMaterial->SetTransparency(inMaterial->GetTransparency());
     outMaterial->SetShininess(inMaterial->GetShininess());
 
