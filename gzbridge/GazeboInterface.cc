@@ -15,6 +15,8 @@
  *
 */
 
+#include <gazebo/gazebo_config.h>
+
 #include "pb2json.hh"
 #include "OgreMaterialParser.hh"
 #include "GazeboInterface.hh"
@@ -330,13 +332,20 @@ void GazeboInterface::ProcessMessages()
               atof(get_value(msg, "msg:direction:z").c_str()));
             gazebo::msgs::Set(lightMsg.mutable_direction(), direction);
 
+#if GAZEBO_MAJOR_VERSION >= 9
+            ignition::math::Color diffuse(
+#else
             gazebo::common::Color diffuse(
+#endif
                 atof(get_value(msg, "msg:diffuse:r").c_str()),
                 atof(get_value(msg, "msg:diffuse:g").c_str()),
                 atof(get_value(msg, "msg:diffuse:b").c_str()), 1);
             gazebo::msgs::Set(lightMsg.mutable_diffuse(), diffuse);
-
+#if GAZEBO_MAJOR_VERSION >= 9
+            ignition::math::Color specular(
+#else
             gazebo::common::Color specular(
+#endif
                 atof(get_value(msg, "msg:specular:r").c_str()),
                 atof(get_value(msg, "msg:specular:g").c_str()),
                 atof(get_value(msg, "msg:specular:b").c_str()), 1);
@@ -370,11 +379,20 @@ void GazeboInterface::ProcessMessages()
               gazebo::msgs::Set(lightMsg.mutable_direction(),
                   ignition::math::Vector3d(0,0,-1));
             }
-
             gazebo::msgs::Set(lightMsg.mutable_diffuse(),
+
+#if GAZEBO_MAJOR_VERSION >= 9
+                ignition::math::Color(0.5, 0.5, 0.5, 1));
+#else
                 gazebo::common::Color(0.5, 0.5, 0.5, 1));
+#endif
             gazebo::msgs::Set(lightMsg.mutable_specular(),
+
+#if GAZEBO_MAJOR_VERSION >= 9
+                ignition::math::Color(0.1, 0.1, 0.1, 1));
+#else
                 gazebo::common::Color(0.1, 0.1, 0.1, 1));
+#endif
             lightMsg.set_attenuation_constant(0.5);
             lightMsg.set_attenuation_linear(0.01);
             lightMsg.set_attenuation_quadratic(0.001);

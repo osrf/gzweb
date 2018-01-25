@@ -18,6 +18,7 @@
 #include <gts.h>
 #include <tinyxml.h>
 #include <math.h>
+#include <gazebo/gazebo_config.h>
 #include <gazebo/common/Mesh.hh>
 #include <gazebo/common/Material.hh>
 #include <gazebo/common/ColladaLoader.hh>
