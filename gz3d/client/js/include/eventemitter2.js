@@ -1,4 +1,11 @@
-;!function(exports, undefined) {
+/*!
+ * EventEmitter2
+ * https://github.com/hij1nx/EventEmitter2
+ *
+ * Copyright (c) 2013 hij1nx
+ * Licensed under the MIT license.
+ */
+;!function(undefined) {
 
   var isArray = Array.isArray ? Array.isArray : function _isArray(obj) {
     return Object.prototype.toString.call(obj) === "[object Array]";
@@ -14,25 +21,56 @@
 
   function configure(conf) {
     if (conf) {
-
       this._conf = conf;
 
       conf.delimiter && (this.delimiter = conf.delimiter);
-      conf.maxListeners && (this._events.maxListeners = conf.maxListeners);
+      this._maxListeners = conf.maxListeners !== undefined ? conf.maxListeners : defaultMaxListeners;
+
       conf.wildcard && (this.wildcard = conf.wildcard);
-      conf.newListener && (this.newListener = conf.newListener);
+      conf.newListener && (this._newListener = conf.newListener);
+      conf.removeListener && (this._removeListener = conf.removeListener);
+      conf.verboseMemoryLeak && (this.verboseMemoryLeak = conf.verboseMemoryLeak);
 
       if (this.wildcard) {
         this.listenerTree = {};
+      }
+    } else {
+      this._maxListeners = defaultMaxListeners;
+    }
+  }
+
+  function logPossibleMemoryLeak(count, eventName) {
+    var errorMsg = '(node) warning: possible EventEmitter memory ' +
+        'leak detected. ' + count + ' listeners added. ' +
+        'Use emitter.setMaxListeners() to increase limit.';
+
+    if(this.verboseMemoryLeak){
+      errorMsg += ' Event name: ' + eventName + '.';
+    }
+
+    if(typeof process !== 'undefined' && process.emitWarning){
+      var e = new Error(errorMsg);
+      e.name = 'MaxListenersExceededWarning';
+      e.emitter = this;
+      e.count = count;
+      process.emitWarning(e);
+    } else {
+      console.error(errorMsg);
+
+      if (console.trace){
+        console.trace();
       }
     }
   }
 
   function EventEmitter(conf) {
     this._events = {};
-    this.newListener = false;
+    this._newListener = false;
+    this._removeListener = false;
+    this.verboseMemoryLeak = false;
     configure.call(this, conf);
   }
+  EventEmitter.EventEmitter2 = EventEmitter; // backwards compatibility for exporting EventEmitter property
 
   //
   // Attention, function return type now is array, always !
@@ -161,7 +199,7 @@
     var tree = this.listenerTree;
     var name = type.shift();
 
-    while (name) {
+    while (name !== undefined) {
 
       if (!tree[name]) {
         tree[name] = {};
@@ -174,30 +212,20 @@
         if (!tree._listeners) {
           tree._listeners = listener;
         }
-        else if(typeof tree._listeners === 'function') {
-          tree._listeners = [tree._listeners, listener];
-        }
-        else if (isArray(tree._listeners)) {
+        else {
+          if (typeof tree._listeners === 'function') {
+            tree._listeners = [tree._listeners];
+          }
 
           tree._listeners.push(listener);
 
-          if (!tree._listeners.warned) {
-
-            var m = defaultMaxListeners;
-
-            if (typeof this._events.maxListeners !== 'undefined') {
-              m = this._events.maxListeners;
-            }
-
-            if (m > 0 && tree._listeners.length > m) {
-
-              tree._listeners.warned = true;
-              console.error('(node) warning: possible EventEmitter memory ' +
-                            'leak detected. %d listeners added. ' +
-                            'Use emitter.setMaxListeners() to increase limit.',
-                            tree._listeners.length);
-              console.trace();
-            }
+          if (
+            !tree._listeners.warned &&
+            this._maxListeners > 0 &&
+            tree._listeners.length > this._maxListeners
+          ) {
+            tree._listeners.warned = true;
+            logPossibleMemoryLeak.call(this, tree._listeners.length, name);
           }
         }
         return true;
@@ -205,7 +233,7 @@
       name = type.shift();
     }
     return true;
-  };
+  }
 
   // By default EventEmitters will print a warning if more than
   // 10 listeners are added to it. This is a useful default which
@@ -217,20 +245,38 @@
   EventEmitter.prototype.delimiter = '.';
 
   EventEmitter.prototype.setMaxListeners = function(n) {
-    this._events || init.call(this);
-    this._events.maxListeners = n;
-    if (!this._conf) this._conf = {};
-    this._conf.maxListeners = n;
+    if (n !== undefined) {
+      this._maxListeners = n;
+      if (!this._conf) this._conf = {};
+      this._conf.maxListeners = n;
+    }
   };
 
   EventEmitter.prototype.event = '';
 
+
   EventEmitter.prototype.once = function(event, fn) {
-    this.many(event, 1, fn);
+    return this._once(event, fn, false);
+  };
+
+  EventEmitter.prototype.prependOnceListener = function(event, fn) {
+    return this._once(event, fn, true);
+  };
+
+  EventEmitter.prototype._once = function(event, fn, prepend) {
+    this._many(event, 1, fn, prepend);
     return this;
   };
 
   EventEmitter.prototype.many = function(event, ttl, fn) {
+    return this._many(event, ttl, fn, false);
+  }
+
+  EventEmitter.prototype.prependMany = function(event, ttl, fn) {
+    return this._many(event, ttl, fn, true);
+  }
+
+  EventEmitter.prototype._many = function(event, ttl, fn, prepend) {
     var self = this;
 
     if (typeof fn !== 'function') {
@@ -241,12 +287,12 @@
       if (--ttl === 0) {
         self.off(event, listener);
       }
-      fn.apply(this, arguments);
-    };
+      return fn.apply(this, arguments);
+    }
 
     listener._origin = fn;
 
-    this.on(event, listener);
+    this._on(event, listener, prepend);
 
     return self;
   };
@@ -257,92 +303,243 @@
 
     var type = arguments[0];
 
-    if (type === 'newListener' && !this.newListener) {
-      if (!this._events.newListener) { return false; }
-    }
-
-    // Loop through the *_all* functions and invoke them.
-    if (this._all) {
-      var l = arguments.length;
-      var args = new Array(l - 1);
-      for (var i = 1; i < l; i++) args[i - 1] = arguments[i];
-      for (i = 0, l = this._all.length; i < l; i++) {
-        this.event = type;
-        this._all[i].apply(this, args);
-      }
-    }
-
-    // If there is no 'error' event listener then throw.
-    if (type === 'error') {
-
-      if (!this._all &&
-        !this._events.error &&
-        !(this.wildcard && this.listenerTree.error)) {
-
-        if (arguments[1] instanceof Error) {
-          throw arguments[1]; // Unhandled 'error' event
-        } else {
-          throw new Error("Uncaught, unspecified 'error' event.");
-        }
+    if (type === 'newListener' && !this._newListener) {
+      if (!this._events.newListener) {
         return false;
       }
     }
 
+    var al = arguments.length;
+    var args,l,i,j;
     var handler;
 
-    if(this.wildcard) {
+    if (this._all && this._all.length) {
+      handler = this._all.slice();
+      if (al > 3) {
+        args = new Array(al);
+        for (j = 0; j < al; j++) args[j] = arguments[j];
+      }
+
+      for (i = 0, l = handler.length; i < l; i++) {
+        this.event = type;
+        switch (al) {
+        case 1:
+          handler[i].call(this, type);
+          break;
+        case 2:
+          handler[i].call(this, type, arguments[1]);
+          break;
+        case 3:
+          handler[i].call(this, type, arguments[1], arguments[2]);
+          break;
+        default:
+          handler[i].apply(this, args);
+        }
+      }
+    }
+
+    if (this.wildcard) {
       handler = [];
       var ns = typeof type === 'string' ? type.split(this.delimiter) : type.slice();
       searchListenerTree.call(this, handler, ns, this.listenerTree, 0);
+    } else {
+      handler = this._events[type];
+      if (typeof handler === 'function') {
+        this.event = type;
+        switch (al) {
+        case 1:
+          handler.call(this);
+          break;
+        case 2:
+          handler.call(this, arguments[1]);
+          break;
+        case 3:
+          handler.call(this, arguments[1], arguments[2]);
+          break;
+        default:
+          args = new Array(al - 1);
+          for (j = 1; j < al; j++) args[j - 1] = arguments[j];
+          handler.apply(this, args);
+        }
+        return true;
+      } else if (handler) {
+        // need to make copy of handlers because list can change in the middle
+        // of emit call
+        handler = handler.slice();
+      }
     }
-    else {
+
+    if (handler && handler.length) {
+      if (al > 3) {
+        args = new Array(al - 1);
+        for (j = 1; j < al; j++) args[j - 1] = arguments[j];
+      }
+      for (i = 0, l = handler.length; i < l; i++) {
+        this.event = type;
+        switch (al) {
+        case 1:
+          handler[i].call(this);
+          break;
+        case 2:
+          handler[i].call(this, arguments[1]);
+          break;
+        case 3:
+          handler[i].call(this, arguments[1], arguments[2]);
+          break;
+        default:
+          handler[i].apply(this, args);
+        }
+      }
+      return true;
+    } else if (!this._all && type === 'error') {
+      if (arguments[1] instanceof Error) {
+        throw arguments[1]; // Unhandled 'error' event
+      } else {
+        throw new Error("Uncaught, unspecified 'error' event.");
+      }
+      return false;
+    }
+
+    return !!this._all;
+  };
+
+  EventEmitter.prototype.emitAsync = function() {
+
+    this._events || init.call(this);
+
+    var type = arguments[0];
+
+    if (type === 'newListener' && !this._newListener) {
+        if (!this._events.newListener) { return Promise.resolve([false]); }
+    }
+
+    var promises= [];
+
+    var al = arguments.length;
+    var args,l,i,j;
+    var handler;
+
+    if (this._all) {
+      if (al > 3) {
+        args = new Array(al);
+        for (j = 1; j < al; j++) args[j] = arguments[j];
+      }
+      for (i = 0, l = this._all.length; i < l; i++) {
+        this.event = type;
+        switch (al) {
+        case 1:
+          promises.push(this._all[i].call(this, type));
+          break;
+        case 2:
+          promises.push(this._all[i].call(this, type, arguments[1]));
+          break;
+        case 3:
+          promises.push(this._all[i].call(this, type, arguments[1], arguments[2]));
+          break;
+        default:
+          promises.push(this._all[i].apply(this, args));
+        }
+      }
+    }
+
+    if (this.wildcard) {
+      handler = [];
+      var ns = typeof type === 'string' ? type.split(this.delimiter) : type.slice();
+      searchListenerTree.call(this, handler, ns, this.listenerTree, 0);
+    } else {
       handler = this._events[type];
     }
 
     if (typeof handler === 'function') {
       this.event = type;
-      if (arguments.length === 1) {
-        handler.call(this);
+      switch (al) {
+      case 1:
+        promises.push(handler.call(this));
+        break;
+      case 2:
+        promises.push(handler.call(this, arguments[1]));
+        break;
+      case 3:
+        promises.push(handler.call(this, arguments[1], arguments[2]));
+        break;
+      default:
+        args = new Array(al - 1);
+        for (j = 1; j < al; j++) args[j - 1] = arguments[j];
+        promises.push(handler.apply(this, args));
       }
-      else if (arguments.length > 1)
-        switch (arguments.length) {
-          case 2:
-            handler.call(this, arguments[1]);
-            break;
-          case 3:
-            handler.call(this, arguments[1], arguments[2]);
-            break;
-          // slower
-          default:
-            var l = arguments.length;
-            var args = new Array(l - 1);
-            for (var i = 1; i < l; i++) args[i - 1] = arguments[i];
-            handler.apply(this, args);
-        }
-      return true;
-    }
-    else if (handler) {
-      var l = arguments.length;
-      var args = new Array(l - 1);
-      for (var i = 1; i < l; i++) args[i - 1] = arguments[i];
-
-      var listeners = handler.slice();
-      for (var i = 0, l = listeners.length; i < l; i++) {
+    } else if (handler && handler.length) {
+      handler = handler.slice();
+      if (al > 3) {
+        args = new Array(al - 1);
+        for (j = 1; j < al; j++) args[j - 1] = arguments[j];
+      }
+      for (i = 0, l = handler.length; i < l; i++) {
         this.event = type;
-        listeners[i].apply(this, args);
+        switch (al) {
+        case 1:
+          promises.push(handler[i].call(this));
+          break;
+        case 2:
+          promises.push(handler[i].call(this, arguments[1]));
+          break;
+        case 3:
+          promises.push(handler[i].call(this, arguments[1], arguments[2]));
+          break;
+        default:
+          promises.push(handler[i].apply(this, args));
+        }
       }
-      return (listeners.length > 0) || this._all;
-    }
-    else {
-      return this._all;
+    } else if (!this._all && type === 'error') {
+      if (arguments[1] instanceof Error) {
+        return Promise.reject(arguments[1]); // Unhandled 'error' event
+      } else {
+        return Promise.reject("Uncaught, unspecified 'error' event.");
+      }
     }
 
+    return Promise.all(promises);
   };
 
   EventEmitter.prototype.on = function(type, listener) {
+    return this._on(type, listener, false);
+  };
 
+  EventEmitter.prototype.prependListener = function(type, listener) {
+    return this._on(type, listener, true);
+  };
+
+  EventEmitter.prototype.onAny = function(fn) {
+    return this._onAny(fn, false);
+  };
+
+  EventEmitter.prototype.prependAny = function(fn) {
+    return this._onAny(fn, true);
+  };
+
+  EventEmitter.prototype.addListener = EventEmitter.prototype.on;
+
+  EventEmitter.prototype._onAny = function(fn, prepend){
+    if (typeof fn !== 'function') {
+      throw new Error('onAny only accepts instances of Function');
+    }
+
+    if (!this._all) {
+      this._all = [];
+    }
+
+    // Add the function to the event listener collection.
+    if(prepend){
+      this._all.unshift(fn);
+    }else{
+      this._all.push(fn);
+    }
+
+    return this;
+  }
+
+  EventEmitter.prototype._on = function(type, listener, prepend) {
     if (typeof type === 'function') {
-      this.onAny(type);
+      this._onAny(type, listener);
       return this;
     }
 
@@ -353,9 +550,10 @@
 
     // To avoid recursion in the case that type == "newListeners"! Before
     // adding it to the listeners, first emit "newListeners".
-    this.emit('newListener', type, listener);
+    if (this._newListener)
+       this.emit('newListener', type, listener);
 
-    if(this.wildcard) {
+    if (this.wildcard) {
       growListenerTree.call(this, type, listener);
       return this;
     }
@@ -364,53 +562,32 @@
       // Optimize the case of one listener. Don't need the extra array object.
       this._events[type] = listener;
     }
-    else if(typeof this._events[type] === 'function') {
-      // Adding the second element, need to change to array.
-      this._events[type] = [this._events[type], listener];
-    }
-    else if (isArray(this._events[type])) {
-      // If we've already got an array, just append.
-      this._events[type].push(listener);
+    else {
+      if (typeof this._events[type] === 'function') {
+        // Change to array.
+        this._events[type] = [this._events[type]];
+      }
+
+      // If we've already got an array, just add
+      if(prepend){
+        this._events[type].unshift(listener);
+      }else{
+        this._events[type].push(listener);
+      }
 
       // Check for listener leak
-      if (!this._events[type].warned) {
-
-        var m = defaultMaxListeners;
-
-        if (typeof this._events.maxListeners !== 'undefined') {
-          m = this._events.maxListeners;
-        }
-
-        if (m > 0 && this._events[type].length > m) {
-
-          this._events[type].warned = true;
-          console.error('(node) warning: possible EventEmitter memory ' +
-                        'leak detected. %d listeners added. ' +
-                        'Use emitter.setMaxListeners() to increase limit.',
-                        this._events[type].length);
-          console.trace();
-        }
+      if (
+        !this._events[type].warned &&
+        this._maxListeners > 0 &&
+        this._events[type].length > this._maxListeners
+      ) {
+        this._events[type].warned = true;
+        logPossibleMemoryLeak.call(this, this._events[type].length, type);
       }
     }
+
     return this;
-  };
-
-  EventEmitter.prototype.onAny = function(fn) {
-
-    if(!this._all) {
-      this._all = [];
-    }
-
-    if (typeof fn !== 'function') {
-      throw new Error('onAny only accepts instances of Function');
-    }
-
-    // Add the function to the event listener collection.
-    this._all.push(fn);
-    return this;
-  };
-
-  EventEmitter.prototype.addListener = EventEmitter.prototype.on;
+  }
 
   EventEmitter.prototype.off = function(type, listener) {
     if (typeof listener !== 'function') {
@@ -447,7 +624,7 @@
         }
 
         if (position < 0) {
-          return this;
+          continue;
         }
 
         if(this.wildcard) {
@@ -465,6 +642,10 @@
             delete this._events[type];
           }
         }
+        if (this._removeListener)
+          this.emit("removeListener", type, listener);
+
+        return this;
       }
       else if (handlers === listener ||
         (handlers.listener && handlers.listener === listener) ||
@@ -475,8 +656,30 @@
         else {
           delete this._events[type];
         }
+        if (this._removeListener)
+          this.emit("removeListener", type, listener);
       }
     }
+
+    function recursivelyGarbageCollect(root) {
+      if (root === undefined) {
+        return;
+      }
+      var keys = Object.keys(root);
+      for (var i in keys) {
+        var key = keys[i];
+        var obj = root[key];
+        if ((obj instanceof Function) || (typeof obj !== "object") || (obj === null))
+          continue;
+        if (Object.keys(obj).length > 0) {
+          recursivelyGarbageCollect(root[key]);
+        }
+        if (Object.keys(obj).length === 0) {
+          delete root[key];
+        }
+      }
+    }
+    recursivelyGarbageCollect(this.listenerTree);
 
     return this;
   };
@@ -488,10 +691,17 @@
       for(i = 0, l = fns.length; i < l; i++) {
         if(fn === fns[i]) {
           fns.splice(i, 1);
+          if (this._removeListener)
+            this.emit("removeListenerAny", fn);
           return this;
         }
       }
     } else {
+      fns = this._all;
+      if (this._removeListener) {
+        for(i = 0, l = fns.length; i < l; i++)
+          this.emit("removeListenerAny", fns[i]);
+      }
       this._all = [];
     }
     return this;
@@ -505,7 +715,7 @@
       return this;
     }
 
-    if(this.wildcard) {
+    if (this.wildcard) {
       var ns = typeof type === 'string' ? type.split(this.delimiter) : type.slice();
       var leafs = searchListenerTree.call(this, null, ns, this.listenerTree, 0);
 
@@ -514,15 +724,14 @@
         leaf._listeners = null;
       }
     }
-    else {
-      if (!this._events[type]) return this;
+    else if (this._events) {
       this._events[type] = null;
     }
     return this;
   };
 
   EventEmitter.prototype.listeners = function(type) {
-    if(this.wildcard) {
+    if (this.wildcard) {
       var handlers = [];
       var ns = typeof type === 'string' ? type.split(this.delimiter) : type.slice();
       searchListenerTree.call(this, handlers, ns, this.listenerTree, 0);
@@ -538,6 +747,14 @@
     return this._events[type];
   };
 
+  EventEmitter.prototype.eventNames = function(){
+    return Object.keys(this._events);
+  }
+
+  EventEmitter.prototype.listenerCount = function(type) {
+    return this.listeners(type).length;
+  };
+
   EventEmitter.prototype.listenersAny = function() {
 
     if(this._all) {
@@ -550,11 +767,16 @@
   };
 
   if (typeof define === 'function' && define.amd) {
+     // AMD. Register as an anonymous module.
     define(function() {
       return EventEmitter;
     });
-  } else {
-    exports.EventEmitter2 = EventEmitter;
+  } else if (typeof exports === 'object') {
+    // CommonJS
+    module.exports = EventEmitter;
   }
-
-}(typeof process !== 'undefined' && typeof process.title !== 'undefined' && typeof exports !== 'undefined' ? exports : window);
+  else {
+    // Browser global.
+    window.EventEmitter2 = EventEmitter;
+  }
+}();

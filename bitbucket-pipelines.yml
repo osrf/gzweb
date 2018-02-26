@@ -5,11 +5,8 @@ pipelines:
     - step:
         script:
           - apt update
-          # Node 6
-          - apt install -y curl
-          - curl -sL https://deb.nodesource.com/setup_6.x | bash -
           # Dependencies
-          - apt install -y libjansson-dev nodejs libboost-dev imagemagick libtinyxml-dev mercurial cmake build-essential wget
+          - apt install -y libjansson-dev libboost-dev imagemagick libtinyxml-dev mercurial cmake build-essential wget nodejs npm nodejs-legacy
           - npm install -g grunt
           # Chrome
           - echo 'deb http://dl.google.com/linux/chrome/deb/ stable main' > /etc/apt/sources.list.d/chrome.list

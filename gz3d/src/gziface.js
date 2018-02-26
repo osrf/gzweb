@@ -1,15 +1,22 @@
-//var GAZEBO_MODEL_DATABASE_URI='http://gazebosim.org/models';
-
-GZ3D.GZIface = function(scene, gui)
+/**
+ * Class responsible for communication with the backend via a websocket, it
+ * forwards user commands to the server and propagates updates coming from the
+ * server to other classes.
+ * @constructor
+ * @param {GZ3D.Scene} scene - A scene to connect to
+ */
+GZ3D.GZIface = function(scene, url)
 {
+  this.emitter = globalEmitter || new EventEmitter2({verboseMemoryLeak: true});
   this.scene = scene;
-  this.gui = gui;
+  this.url = url || (location.hostname + ':' + location.port);
 
   this.isConnected = false;
 
-  this.emitter = new EventEmitter2({ verbose: true });
+  this.material = [];
+  this.entityMaterial = {};
 
-  this.init();
+  this.connect();
   this.visualsToAdd = [];
 
   this.numConnectionTrials = 0;
@@ -17,19 +24,13 @@ GZ3D.GZIface = function(scene, gui)
   this.timeToSleepBtwTrials = 1000; // wait 1 second between connection trials
 };
 
-GZ3D.GZIface.prototype.init = function()
-{
-  this.material = [];
-  this.entityMaterial = {};
-
-  this.connect();
-};
-
+/**
+ * Attempt to establish websocket connection.
+ */
 GZ3D.GZIface.prototype.connect = function()
 {
-  // connect to websocket
   this.webSocket = new ROSLIB.Ros({
-    url : 'ws://' + location.hostname + ':7681'
+    url : 'ws://' + this.url
   });
 
   var that = this;
@@ -43,12 +44,15 @@ GZ3D.GZIface.prototype.connect = function()
   this.numConnectionTrials++;
 };
 
+/**
+ * Callback when the websocket fails to connect.
+ */
 GZ3D.GZIface.prototype.onError = function()
 {
-  // init scene and show popup only for the first connection error
+  // Notify others about connection failure only once
   if (this.numConnectionTrials === 1)
   {
-    this.emitter.emit('error');
+    this.emitter.emit('connectionError');
   }
 
   var that = this;
@@ -61,6 +65,9 @@ GZ3D.GZIface.prototype.onError = function()
   }
 };
 
+/**
+ * Callback when the websocket connects successfully.
+ */
 GZ3D.GZIface.prototype.onConnected = function()
 {
   this.isConnected = true;
@@ -129,7 +136,7 @@ GZ3D.GZIface.prototype.onConnected = function()
 
     if (message.grid === true)
     {
-      this.gui.guiEvents.emit('show_grid', 'show');
+      this.emitter.emit('show_grid', 'show');
     }
 
     if (message.ambient)
@@ -158,7 +165,7 @@ GZ3D.GZIface.prototype.onConnected = function()
       var light = message.light[i];
       var lightObj = this.createLightFromMsg(light);
       this.scene.add(lightObj);
-      this.gui.setLightStats(light, 'update');
+      this.emitter.emit('setLightStats', light, 'update');
     }
 
     for (var j = 0; j < message.model.length; ++j)
@@ -166,10 +173,10 @@ GZ3D.GZIface.prototype.onConnected = function()
       var model = message.model[j];
       var modelObj = this.createModelFromMsg(model);
       this.scene.add(modelObj);
-      this.gui.setModelStats(model, 'update');
+      this.emitter.emit('setModelStats', model, 'update');
     }
 
-    this.gui.setSceneStats(message);
+    this.emitter.emit('setSceneStats', message);
     this.sceneTopic.unsubscribe();
   };
   this.sceneTopic.subscribe(sceneUpdate.bind(this));
@@ -182,10 +189,9 @@ GZ3D.GZIface.prototype.onConnected = function()
 
   var physicsUpdate = function(message)
   {
-    this.gui.setPhysicsStats(message);
+    this.emitter.emit('setPhysicsStats', message);
   };
   this.physicsTopic.subscribe(physicsUpdate.bind(this));
-
 
   // Update model pose
   var poseTopic = new ROSLIB.Topic({
@@ -201,7 +207,7 @@ GZ3D.GZIface.prototype.onConnected = function()
         && entity.parent !== this.scene.modelManipulator.object)
     {
       this.scene.updatePose(entity, message.position, message.orientation);
-      this.gui.setModelStats(message, 'update');
+      this.emitter.emit('setModelStats', message, 'update');
     }
   };
 
@@ -223,13 +229,13 @@ GZ3D.GZIface.prototype.onConnected = function()
       {
         if (entity.children[0] instanceof THREE.Light)
         {
-          this.gui.setLightStats({name: message.data}, 'delete');
-          guiEvents.emit('notification_popup', message.data+' deleted');
+          this.emitter.emit('setLightStats', {name: message.data}, 'delete');
+          this.emitter.emit('notification_popup', message.data+' deleted');
         }
         else
         {
-          this.gui.setModelStats({name: message.data}, 'delete');
-          guiEvents.emit('notification_popup', message.data+' deleted');
+          this.emitter.emit('setModelStats', {name: message.data}, 'delete');
+          this.emitter.emit('notification_popup', message.data+' deleted');
         }
         this.scene.remove(entity);
       }
@@ -253,7 +259,7 @@ GZ3D.GZIface.prototype.onConnected = function()
       if (modelObj)
       {
         this.scene.add(modelObj);
-        guiEvents.emit('notification_popup', message.name+' inserted');
+        this.emitter.emit('notification_popup', message.name+' inserted');
       }
 
       // visuals may arrive out of order (before the model msg),
@@ -278,7 +284,7 @@ GZ3D.GZIface.prototype.onConnected = function()
         i++;
       }
     }
-    this.gui.setModelStats(message, 'update');
+    this.emitter.emit('setModelStats', message, 'update');
   };
 
   modelInfoTopic.subscribe(modelUpdate.bind(this));
@@ -326,7 +332,7 @@ GZ3D.GZIface.prototype.onConnected = function()
 
   var worldStatsUpdate = function(message)
   {
-    this.updateStatsGuiFromMsg(message);
+    this.forwardWorldStats(message);
   };
 
   worldStatsTopic.subscribe(worldStatsUpdate.bind(this));
@@ -357,9 +363,9 @@ GZ3D.GZIface.prototype.onConnected = function()
         }
       }
 
-      guiEvents.emit('notification_popup', message.name+' inserted');
+      this.emitter.emit('notification_popup', message.name+' inserted');
     }
-    this.gui.setLightStats(message, 'update');
+    this.emitter.emit('setLightStats', message, 'update');
   };
 
   lightFactoryTopic.subscribe(lightCreate.bind(this));
@@ -378,7 +384,7 @@ GZ3D.GZIface.prototype.onConnected = function()
         && entity.parent !== this.scene.modelManipulator.object)
     {
       this.scene.updateLight(entity, message);
-      this.gui.setLightStats(message, 'update');
+      this.emitter.emit('setLightStats', message, 'update');
     }
   };
 
@@ -435,7 +441,7 @@ GZ3D.GZIface.prototype.onConnected = function()
     var entityMsg =
     {
       name : entity.name,
-      id : entity.userData,
+      id : entity.userData.id,
       createEntity : 0,
       position :
       {
@@ -468,9 +474,11 @@ GZ3D.GZIface.prototype.onConnected = function()
       };
       entityMsg.direction = entity.direction;
       entityMsg.range = entity.children[0].distance;
-      entityMsg.attenuation_constant = entity.serverProperties.attenuation_constant;
+      entityMsg.attenuation_constant =
+        entity.serverProperties.attenuation_constant;
       entityMsg.attenuation_linear = entity.serverProperties.attenuation_linear;
-      entityMsg.attenuation_quadratic = entity.serverProperties.attenuation_quadratic;
+      entityMsg.attenuation_quadratic =
+        entity.serverProperties.attenuation_quadratic;
 
       that.lightModifyTopic.publish(entityMsg);
     }
@@ -480,7 +488,7 @@ GZ3D.GZIface.prototype.onConnected = function()
     }
   };
 
-  this.scene.emitter.on('entityChanged', publishEntityModify);
+  this.emitter.on('entityChanged', publishEntityModify);
 
   // Link messages - for modifying links
   this.linkModifyTopic = new ROSLIB.Topic({
@@ -494,11 +502,11 @@ GZ3D.GZIface.prototype.onConnected = function()
     var modelMsg =
     {
       name : entity.parent.name,
-      id : entity.parent.userData,
+      id : entity.parent.userData.id,
       link:
       {
         name: entity.name,
-        id: entity.userData,
+        id: entity.userData.id,
         self_collide: entity.serverProperties.self_collide,
         gravity: entity.serverProperties.gravity,
         kinematic: entity.serverProperties.kinematic
@@ -508,7 +516,7 @@ GZ3D.GZIface.prototype.onConnected = function()
     that.linkModifyTopic.publish(modelMsg);
   };
 
-  this.scene.emitter.on('linkChanged', publishLinkModify);
+  this.emitter.on('linkChanged', publishLinkModify);
 
   // Factory messages - for spawning new models
   this.factoryTopic = new ROSLIB.Topic({
@@ -577,7 +585,7 @@ GZ3D.GZIface.prototype.onConnected = function()
     that.deleteTopic.publish(modelMsg);
   };
 
-  this.gui.emitter.on('deleteEntity',
+  this.emitter.on('deleteEntity',
       function(entity)
       {
         publishDeleteEntity(entity);
@@ -605,16 +613,16 @@ GZ3D.GZIface.prototype.onConnected = function()
     that.worldControlTopic.publish(worldControlMsg);
   };
 
-  this.gui.emitter.on('entityCreated', publishFactory);
+  this.emitter.on('entityCreated', publishFactory);
 
-  this.gui.emitter.on('reset',
+  this.emitter.on('reset',
       function(resetType)
       {
         publishWorldControl(null, resetType);
       }
   );
 
-  this.gui.emitter.on('pause',
+  this.emitter.on('pause',
       function(paused)
       {
         publishWorldControl(paused, null);
@@ -633,34 +641,46 @@ GZ3D.GZIface.prototype.onConnected = function()
     that.playbackControlTopic.publish(playbackControl);
   };
 
-  this.gui.emitter.on('logPlayChanged', publishPlaybackControl);
+  this.emitter.on('logPlayChanged', publishPlaybackControl);
 };
 
-GZ3D.GZIface.prototype.updateStatsGuiFromMsg = function(stats)
+/**
+ * Emit events with latest world stats
+ * @param {Object} stats - World statistics message
+ */
+GZ3D.GZIface.prototype.forwardWorldStats = function(stats)
 {
-  this.gui.setPaused(stats.paused);
+  if (stats.paused !== undefined)
+  {
+    this.emitter.emit('setPaused', stats.paused);
+  }
 
   if (stats.log_playback_stats)
   {
-    this.gui.setLogPlayVisible(true);
-    this.gui.setLogPlayStats(stats.sim_time,
+    this.emitter.emit('setLogPlayVisible', true);
+    this.emitter.emit('setLogPlayStats', stats.sim_time,
         stats.log_playback_stats.start_time,
         stats.log_playback_stats.end_time);
   }
   else
   {
-    this.gui.setLogPlayVisible(false);
-    this.gui.setRealTime(stats.real_time);
+    this.emitter.emit('setLogPlayVisible', false);
+    this.emitter.emit('setRealTime', stats.real_time);
   }
 
-  this.gui.setSimTime(stats.sim_time);
+  this.emitter.emit('setSimTime', stats.sim_time);
 };
 
+/**
+ * Create new model based on a message.
+ * @param {Object} model - Model message
+ * @return {Object} Model object
+ */
 GZ3D.GZIface.prototype.createModelFromMsg = function(model)
 {
   var modelObj = new THREE.Object3D();
   modelObj.name = model.name;
-  modelObj.userData = model.id;
+  modelObj.userData.id = model.id;
   if (model.pose)
   {
     this.scene.setPose(modelObj, model.pose.position, model.pose.orientation);
@@ -670,13 +690,36 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
     var link = model.link[j];
     var linkObj = new THREE.Object3D();
     linkObj.name = link.name;
-    linkObj.userData = link.id;
+    linkObj.userData.id = link.id;
     linkObj.serverProperties =
         {
           self_collide: link.self_collide,
           gravity: link.gravity,
           kinematic: link.kinematic
         };
+
+    if (link.inertial)
+    {
+      var inertialPose, inertialMass, inertia = {};
+      linkObj.userData.inertial = {};
+      inertialPose = link.inertial.pose;
+      inertialMass = link.inertial.mass;
+      inertia.ixx = link.inertial.ixx;
+      inertia.ixy = link.inertial.ixy;
+      inertia.ixz = link.inertial.ixz;
+      inertia.iyy = link.inertial.iyy;
+      inertia.iyz = link.inertial.iyz;
+      inertia.izz = link.inertial.izz;
+      linkObj.userData.inertial.inertia = inertia;
+      if (inertialMass)
+      {
+        linkObj.userData.inertial.mass = inertialMass;
+      }
+      if (inertialPose)
+      {
+        linkObj.userData.inertial.pose = inertialPose;
+      }
+    }
 
     if (link.pose)
     {
@@ -716,6 +759,11 @@ GZ3D.GZIface.prototype.createModelFromMsg = function(model)
   return modelObj;
 };
 
+/**
+ * Create new visual based on a message.
+ * @param {Object} visual - Visual message
+ * @return {Object} Visual object
+ */
 GZ3D.GZIface.prototype.createVisualFromMsg = function(visual)
 {
   if (visual.geometry)
@@ -738,6 +786,11 @@ GZ3D.GZIface.prototype.createVisualFromMsg = function(visual)
   }
 };
 
+/**
+ * Create new light based on a message.
+ * @param {Object} light - Light message
+ * @return {Object} Light object
+ */
 GZ3D.GZIface.prototype.createLightFromMsg = function(light)
 {
   var obj, range, direction;
@@ -759,7 +812,8 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
   }
 
   // equation taken from
-  // http://wiki.blender.org/index.php/Doc:2.6/Manual/Lighting/Lights/Light_Attenuation
+  // eslint-disable-next-line
+  // https://docs.blender.org/manual/en/dev/render/blender_render/lighting/lights/light_attenuation.html
   var E = 1;
   var D = 1;
   var r = 1;
@@ -775,6 +829,11 @@ GZ3D.GZIface.prototype.createLightFromMsg = function(light)
   return obj;
 };
 
+/**
+ * Create new roads based on a message.
+ * @param {Object} roads - Road message
+ * @return {Object} Road object
+ */
 GZ3D.GZIface.prototype.createRoadsFromMsg = function(roads)
 {
   var roadObj = new THREE.Object3D();
@@ -790,6 +849,12 @@ GZ3D.GZIface.prototype.createRoadsFromMsg = function(roads)
   return roadObj;
 };
 
+/**
+ * Substitute URI scheme with 'assets' or simply prepend 'assets' if URI
+ * doesn't have a scheme.
+ * @param {string} uri - Full URI including scheme
+ * @return {string} Updated URI
+ */
 GZ3D.GZIface.prototype.parseUri = function(uri)
 {
   var uriPath = 'assets';
@@ -801,12 +866,19 @@ GZ3D.GZIface.prototype.parseUri = function(uri)
   return uriPath + '/' + uri.substring(idx);
 };
 
+/**
+ * Create geometry and append it to parent
+ * @param {Object} geom - geometry message
+ * @param {Object} material - material message
+ * @param {Object} parent - parent object (i.e. visual)
+ */
 GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
 {
   var obj;
   var uriPath = 'assets';
   var that = this;
   var mat = this.parseMaterial(material);
+
   if (geom.box)
   {
     obj = this.scene.createBox(geom.box.size.x, geom.box.size.y,
@@ -828,159 +900,105 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
   }
   else if (geom.polyline)
   {
-    var sign = function(p1, p2, p3)
+    var pointWithinPoints = function(point, points)
     {
-        return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
-    }
-
-    var pointInTriangle = function (pt, v1, v2, v3)
-    {
-        var b1, b2, b3;
-        b1 = sign(pt, v1, v2) < 0;
-        b2 = sign(pt, v2, v3) < 0;
-        b3 = sign(pt, v3, v1) < 0;
-        return ((b1 == b2) && (b2 == b3));
-    }
-
-    var isPreHole = function(trigs, point, _vertices)
-    {
-      if (point === undefined || trigs === undefined)
+      var maxx=-Infinity, minx=Infinity, maxy=-Infinity, miny=Infinity;
+      for (var ind = 0; ind < points.length; ind++)
+      {
+        if(points[ind].x<minx)
+        {
+          minx = points[ind].x;
+        }
+        if(points[ind].y<miny)
+        {
+          miny = points[ind].y;
+        }
+        if(points[ind].x>maxx)
+        {
+          maxx = points[ind].x;
+        }
+        if(points[ind].y>maxy)
+        {
+          maxy = points[ind].y;
+        }
+      }
+      if(point.x>minx && point.x<maxx && point.y<maxy && point.y>miny)
+      {
+        return true;
+      }
+      else
       {
         return false;
       }
-      for (var t = 0; t < trigs.length; t++)
-      {
-        var p1 = _vertices[triangles[t][0]];
-        var p2 = _vertices[triangles[t][1]];
-        var p3 = _vertices[triangles[t][2]];
-        if (pointInTriangle(point, p1, p2, p3))
-        {
-          return true;
-        }
-      }
-      return false;
     }
-    var helperGeometry_1, helperGeometry_2;
-    var len = geom.polyline.length;
-    var geometry, polymaterial, mesh;
 
+    var len = geom.polyline.length;
+    var geometry, mesh, shape, options;
+
+    // reading polylines
     var vs = new Array(len);
+    var heights = new Array(len);
     for (var m = 0; m < len; m++) {
       var polyline = geom.polyline[m];
       var points = polyline.point;
       var height = polyline.height;
-      var vectors = new Array(points.length);
-      for (var j = 0; j < points.length; j++) {
+      var pointsLen = points.length;
+      var vectors = new Array();
+      for (var j = 0; j < pointsLen; j++)
+      {
         var p = points[j];
         vectors[j] = new THREE.Vector3(p.x, p.y, 0);
       }
+      heights[m] = height;
       vs[m] = vectors;
     }
 
-    var holes = [];
-    var holed = false;
-    var vertices = [];
-    var pre_len = 1;
-    for (var n=0; n<len; ++n)
+    // Array to hold the indices of shapes that have holes.
+    var indices = [];
+    for(var p=0; p<vs.length; p++)
     {
-      for (var r = 0; r < vs[n].length; r++)
+      for(var n=0; n<vs.length; n++)
       {
-        vertices.push(vs[n][r]);
-      }
-      pre_len = r;
-    }
-    var triangles;
-    var intersect;
-    geometry = new THREE.Geometry();
-    material = new THREE.MeshBasicMaterial();
+        // If a polyline is within another polyline, then it is a hole.
+        if (pointWithinPoints(vs[p][0], vs[n])){
+          shape = new THREE.Shape(vs[n]);
+          shape.holes.push(new THREE.Shape(vs[p]));
 
-    var holding = false;
-
-    for (var k = 0; k < len; k++)
-    {
-      if (holding)
-      {
-        if (isPreHole(triangles, vs[0][k], vs[k-1]) )
-        {
-          var holePoints = vs[k];
-          var hole = new THREE.Path();
-          hole.fromPoints(holePoints);
-          var shape = new THREE.Shape(geometry.vertices);
-          shape.holes.push(new THREE.Shape(holePoints));
-          var points = shape.extractPoints();
-          var options = {
-            amount: 0.1,
-            bevelEnabled: false,
-            curveSegments: 40,
-            material: 0,
-            extrudeMaterial: 1
-          };
-          var _geo = new THREE.ExtrudeGeometry(shape, options);
-          material = [
-            new THREE.MeshPhongMaterial({
-              color: 0xf00fff,
-              shading: THREE.FlatShading
-            }), // front
-            new THREE.MeshPhongMaterial({
-              color: 0xf00fff,
-              shading: THREE.SmoothShading
-            }) // side
-          ];
-          mesh = new THREE.Mesh(_geo, material);
-          parent.add(mesh);
-          // break;
-
-          // triangles = THREE.ShapeUtils.triangulateShape( geometry.vertices, points.holes );
-          // for (var c = 0; c < vs[k].length; c++)
-          // {
-          //   geometry.vertices.push(vs[k][c]);
-          // }
-          // for( var i = 0; i < triangles.length; i++ )
-          // {
-          //   geometry.faces.push( new THREE.Face3( triangles[i][0], triangles[i][1], triangles[i][2] ));
-          // }
-          // mesh = new THREE.Mesh( geometry, material );
-          holed = true;
-          holding = false;
-          // parent.add(mesh);
-        }
-        else
-        {
-          if (triangles)
-          {
-            for( var i = 0; i < triangles.length; i++ )
-            {
-              geometry.faces.push( new THREE.Face3( triangles[i][0], triangles[i][1], triangles[i][2] ));
-            }
-            mesh = new THREE.Mesh( geometry, material );
-            parent.add(mesh);
-            holding = false;
-          }
-          geometry.vertices = vs[k];
-          triangles = THREE.ShapeUtils.triangulateShape( geometry.vertices, holes );
-          holed = false;
-          holding = true;
-        }
-      }
-      else
-      {
-        geometry.vertices = vs[k];
-        triangles = THREE.ShapeUtils.triangulateShape( geometry.vertices, holes );
-        holding = true;
-        if (k === len-1)
-        {
-          var shape = new THREE.Shape(geometry.vertices);
-          var options = {
-            amount: 0.1,
-            bevelEnabled: false,
-            curveSegments: 40,
-            material: 0,
-            extrudeMaterial: 1
+          options = {
+              amount: heights[n],
+              bevelEnabled: false,
+              curveSegments: 40,
+              material: 0,
+              extrudeMaterial: 1
           };
           geometry = new THREE.ExtrudeGeometry(shape, options);
-          mesh = new THREE.Mesh(geometry, material);
+          mesh = new THREE.Mesh(geometry);
+          this.scene.setMaterial(mesh, mat);
           parent.add(mesh);
+
+          indices.push(n);
+          indices.push(p);
         }
+      }
+    }
+
+    for (var i = 0; i < vs.length; i++)
+    {
+      if(indices.indexOf(i)==-1)
+      {
+        shape = new THREE.Shape(vs[i]);
+
+        options = {
+          amount: heights[i],
+          bevelEnabled: false,
+          curveSegments: 40,
+          material: 0,
+          extrudeMaterial: 1
+        };
+        geometry = new THREE.ExtrudeGeometry(shape, options);
+        mesh = new THREE.Mesh( geometry );
+        this.scene.setMaterial(mesh, mat);
+        parent.add(mesh);
       }
     }
   }
@@ -1076,28 +1094,46 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
           }
         }
 
+        var ext = modelUri.substr(-4).toLowerCase();
         var materialName = parent.name + '::' + modelUri;
         this.entityMaterial[materialName] = mat;
 
-        this.scene.loadMesh(modelUri, submesh,
-            centerSubmesh, function(dae) {
-              if (that.entityMaterial[materialName])
+        modelUri = 'http://' + this.url + '/' + modelUri;
+
+        this.scene.loadMeshFromUri(modelUri, submesh, centerSubmesh,
+          function(mesh) {
+            if (mat)
+            {
+              // Because the stl mesh doesn't have any children we cannot set
+              // the materials like other mesh types.
+              if (modelUri.indexOf('.stl') === -1)
               {
                 var allChildren = [];
-                dae.getDescendants(allChildren);
+                mesh.getDescendants(allChildren);
                 for (var c = 0; c < allChildren.length; ++c)
                 {
                   if (allChildren[c] instanceof THREE.Mesh)
                   {
-                    that.scene.setMaterial(allChildren[c],
-                        that.entityMaterial[materialName]);
+                    that.scene.setMaterial(allChildren[c], mat);
                     break;
                   }
                 }
               }
-              parent.add(dae);
-              loadGeom(parent);
-            });
+              else
+              {
+                that.scene.setMaterial(mesh, mat);
+              }
+            }
+            else
+            {
+              if (ext === '.stl')
+              {
+                that.scene.setMaterial(mesh, {'ambient': [1,1,1,1]});
+              }
+            }
+            parent.add(mesh);
+            loadGeom(parent);
+        });
       }
     }
   }
@@ -1180,6 +1216,11 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
   }
 };
 
+/**
+ * Parse a material message and return an object containing its properties.
+ * @param {Object} material - material message
+ * @return Object containing material properties
+ */
 GZ3D.GZIface.prototype.parseMaterial = function(material)
 {
   if (!material)
@@ -1187,7 +1228,7 @@ GZ3D.GZIface.prototype.parseMaterial = function(material)
     return null;
   }
 
-  var uriPath = 'assets';
+  var uriPath = 'http://' + this.url + '/assets';
   var texture;
   var normalMap;
   var textureUri;

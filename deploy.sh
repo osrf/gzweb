@@ -5,9 +5,9 @@ usage()
 cat << EOF
 OPTIONS:
    -h      Show this message
-   -m      Build a local model database. 
+   -m      Build a local model database.
            Option "local" to use only local models.
-   -c      Create coarse versions of all models in the local database 
+   -c      Create coarse versions of all models in the local database
    -t      Generate a thumbnail for each model
 EOF
 exit
@@ -18,7 +18,7 @@ MODELS=
 LOCAL=
 COARSE=
 THUMBNAIL=
-GetOpts() 
+GetOpts()
 {
   branch=""
   argv=()
@@ -54,7 +54,7 @@ GetOpts()
           argv+=(${opt})
           ;;
     esac
-  done 
+  done
 }
 
 GetOpts $*
@@ -65,13 +65,13 @@ cd $DIR
 # Install node modules
 npm install
 
-#
+# Assemble javascript files
+$DIR/node_modules/.bin/grunt build
+
 # build the c++ server component
-#
 rm -rf build
 mkdir build
 cd build
-
 
 # Run cmake and check for the exit code
 cmake ..
@@ -108,15 +108,27 @@ then
   if [[ -z $LOCAL ]]
   then
     echo -n "Downloading gazebo_models..."
-    hg clone https://bitbucket.org/osrf/gazebo_models
+    hg clone https://bitbucket.org/osrf/gazebo_models -b default
+
+    RETVAL=$?
+    if [ $RETVAL -ne 0 ]; then
+      echo There are mercurial clone errors, exiting.
+      exit 1
+    fi
 
     echo "Download complete"
     cd gazebo_models
     mkdir build
     cd build
     echo -n "Installing gazebo_models..."
-    cmake .. -DCMAKE_INSTALL_PREFIX=$DIR/http/client
-    make install > /dev/null 2>&1
+    cmake .. -DCMAKE_INSTALL_PREFIX=$DIR/http/client && make install > /dev/null 2>&1
+
+    RETVAL=$?
+    if [ $RETVAL -ne 0 ]; then
+      echo There are build errors, exiting.
+      exit 1
+    fi
+
     echo "Install complete"
 
     # Remove temp dir
@@ -134,10 +146,11 @@ then
   ./webify_models_v2.py $DIR/http/client/assets
 
 else
+  mkdir -p $DIR/http/client/assets
   echo "Not cloning the model repo"
 fi
 
-if [[ $MODELS ]] || [[ $THUMBNAIL ]]
+if [[ $THUMBNAIL ]]
 then
   echo "Generating a thumbnail for each model. Make sure gazebo is not running"
   ./tools/gzthumbnails.sh

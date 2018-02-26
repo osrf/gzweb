@@ -8,9 +8,14 @@
  **/
 GZ3D.SdfParser = function(scene, gui, gziface)
 {
+  this.emitter = globalEmitter || new EventEmitter2({verboseMemoryLeak: true});
+
   // set the sdf version
   this.SDF_VERSION = 1.5;
-  this.MATERIAL_ROOT = 'assets';
+  this.MATERIAL_ROOT = gziface ? 'http://' + gziface.url + '/assets' : 'assets';
+  // true for using URLs to load files.
+  // false for using the files loaded in the memory.
+  this.usingFilesUrls = false;
 
   // set the xml parser function
   this.parseXML = function(xmlStr) {
@@ -26,7 +31,13 @@ GZ3D.SdfParser = function(scene, gui, gziface)
   // cache materials if more than one model needs them
   this.materials = [];
   this.entityMaterial = {};
+  // store meshes when loading meshes from memory.
+  this.meshes = {};
+  this.mtls = {};
+  this.textures = {};
 
+  // Should contain model files URLs if not using gzweb model files hierarchy.
+  this.customUrls = [];
 };
 
 /**
@@ -36,25 +47,29 @@ GZ3D.SdfParser = function(scene, gui, gziface)
  */
 GZ3D.SdfParser.prototype.init = function()
 {
-  if(this.gziface)
+  if (this.gziface)
   {
+    this.usingFilesUrls = true;
     var that = this;
-    this.gziface.emitter.on('error', function() {
-      that.gui.guiEvents.emit('notification_popup', 'GzWeb is currently running' +
+    this.emitter.on('connectionError', function() {
+      // init scene and show popup only for the first connection error
+      that.emitter.emit('notification_popup',
+              'GzWeb is currently running' +
               'without a server, and materials could not be loaded.' +
               'When connected scene will be reinitialized', 5000);
       that.onConnectionError();
     });
 
-    this.gziface.emitter.on('material', function(mat) {
+    this.emitter.on('material', function(mat) {
       that.materials = mat;
     });
 
-    this.gziface.emitter.on('gzstatus', function(gzstatus) {
+    this.emitter.on('gzstatus', function(gzstatus) {
       if (gzstatus === 'error')
       {
-        that.gui.guiEvents.emit('notification_popup', 'GzWeb is currently ' +
-                'running without a GzServer, and Scene is reinitialized.', 5000);
+        that.emitter.emit('notification_popup', 'GzWeb is currently ' +
+                'running without a GzServer,'
+                + 'and Scene is reinitialized.', 5000);
         that.onConnectionError();
       }
     });
@@ -66,11 +81,28 @@ GZ3D.SdfParser.prototype.init = function()
 };
 
 /**
+ * Pushes Urls into the customUrls array where the parser looks for assets.
+ * If `usingFilesUrls` is true, resources will only be taken from this array.
+ * TODO: Find a less intrusive way to support custom URLs (issue #147)
+ */
+GZ3D.SdfParser.prototype.addUrl = function(url)
+{
+  if (url === undefined || url.indexOf('http') !== 0)
+  {
+    console.log('Trying to add invalid URL');
+    return;
+  }
+
+  this.customUrls.push(url);
+};
+
+/**
  * Event callback function for gziface connection error which occurs
  * when gziface cannot connect to gzbridge websocket
  * this is due to 2 reasons:
  * 1 - gzbridge websocket might not be run yet
- * 2 - gzbridge websocket is trying to connect to gzserver which is not running currenly
+ * 2 - gzbridge websocket is trying to connect to
+ *       gzserver which is not running currenly
  */
 GZ3D.SdfParser.prototype.onConnectionError = function()
 {
@@ -84,7 +116,7 @@ GZ3D.SdfParser.prototype.onConnectionError = function()
       that.addModelByType(model, type);
     }
   };
-  this.gui.emitter.on('entityCreated', entityCreated);
+  this.emitter.on('entityCreated', entityCreated);
 
   var deleteEntity = function(entity)
   {
@@ -94,7 +126,7 @@ GZ3D.SdfParser.prototype.onConnectionError = function()
     {
       if (obj.children[0] instanceof THREE.Light)
       {
-        that.gui.setLightStats({name: name}, 'delete');
+        that.emitter.emit('setLightStats', {name: name}, 'delete');
       }
       else
       {
@@ -103,7 +135,7 @@ GZ3D.SdfParser.prototype.onConnectionError = function()
       that.scene.remove(obj);
     }
   };
-  this.gui.emitter.on('deleteEntity', deleteEntity);
+  this.emitter.on('deleteEntity', deleteEntity);
 };
 
 /**
@@ -214,13 +246,24 @@ GZ3D.SdfParser.prototype.spawnLightFromSDF = function(sdfObj)
 /**
  * Parses a string which is a 3D vector
  * @param {string} poseStr - string which denotes the pose of the object
- * where every value should be separated with single white space and first three denotes
- * x,y,z and values of the pose, and following three denotes euler rotation around x,y,z
+ * where every value should be separated with single white space and
+ * first three denotes x,y,z and values of the pose,
+ * and following three denotes euler rotation around x,y,z
  * @returns {object} pose - pose object having position (x,y,z)(THREE.Vector3)
  * and orientation (THREE.Quaternion) properties
  */
 GZ3D.SdfParser.prototype.parsePose = function(poseStr)
 {
+  var pose = {
+    'position': new THREE.Vector3(),
+    'orientation': new THREE.Quaternion()
+  };
+
+  if (typeof poseStr !== 'string' && !(poseStr instanceof String))
+  {
+    return pose;
+  }
+
   var values = poseStr.split(/\s+/);
 
   var position = new THREE.Vector3(parseFloat(values[0]),
@@ -232,10 +275,8 @@ GZ3D.SdfParser.prototype.parsePose = function(poseStr)
           parseFloat(values[5]), 'ZYX');
   quaternion.setFromEuler(euler);
 
-  var pose = {
-    'position': position,
-    'orientation': quaternion
-  };
+  pose.position =  position;
+  pose.orientation = quaternion;
 
   return pose;
 };
@@ -269,7 +310,9 @@ GZ3D.SdfParser.prototype.parseBool = function(boolStr)
 /**
  * Parses SDF material element which is going to be used by THREE library
  * It matches material scripts with the material objects which are
- * already parsed by gzbridge and saved by SDFParser
+ * already parsed by gzbridge and saved by SDFParser.
+ * If `usingFilesUrls` is true, the texture URLs will be loaded from the
+ * to the customUrls array.
  * @param {object} material - SDF material object
  * @returns {object} material - material object which has the followings:
  * texture, normalMap, ambient, diffuse, specular, opacity
@@ -335,7 +378,31 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
               }
             }
           }
-          texture = this.MATERIAL_ROOT + '/' + textureUri + '/' + mat.texture;
+          // Map texture name to the corresponding texture.
+          if (!this.usingFilesUrls)
+          {
+            texture = this.textures[mat.texture];
+          }
+          else
+          {
+            if (this.customUrls.length !== 0)
+            {
+              for (var k = 0; k < this.customUrls.length; k++)
+              {
+                if (this.customUrls[k].indexOf(mat.texture) > -1)
+                {
+                  texture = this.customUrls[k];
+                  this.customUrls.splice(k, 1);
+                  break;
+                }
+              }
+            }
+            else
+            {
+              texture = this.MATERIAL_ROOT + '/' + textureUri + '/' +
+                mat.texture;
+            }
+          }
         }
       }
       else
@@ -368,9 +435,33 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
         startIndex = 0;
       }
       var normalMapName = material.normal_map.substr(startIndex,
-              material.normal_map.lastIndexOf('.') - startIndex);
-      normalMap = this.MATERIAL_ROOT + '/' + mapUri + '/' +
-          normalMapName + '.png';
+        material.normal_map.lastIndexOf('.') - startIndex);
+      // Map texture name to the corresponding texture.
+      if (!this.usingFilesUrls)
+      {
+        normalMap = this.textures[normalMapName + '.png'];
+      }
+      else
+      {
+        if (this.customUrls.length !== 0)
+        {
+          for (var j = 0; j < this.customUrls.length; j++)
+          {
+            if (this.customUrls[j].indexOf(normalMapName + '.png') > -1)
+            {
+              normalMap = this.customUrls[j];
+              this.customUrls.splice(j, 1);
+              break;
+            }
+          }
+        }
+        else
+        {
+          normalMap = this.MATERIAL_ROOT + '/' + mapUri + '/' +
+            normalMapName + '.png';
+        }
+      }
+
     }
   }
 
@@ -415,7 +506,9 @@ GZ3D.SdfParser.prototype.parseSize = function(sizeStr)
  * object.
  * @param {object} geom - SDF geometry object which determines the geometry
  *  of the object and can have following properties: box, cylinder, sphere,
- *   plane, mesh
+ *  plane, mesh.
+ *  Note that in case of using custom Urls for the meshs, the URLS should be
+ *  added to the array cistomUrls to be used instead of the default Url.
  * @param {object} mat - SDF material object which is going to be parsed
  * by createMaterial function
  * @param {object} parent - parent 3D object
@@ -427,6 +520,7 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
   var size, normal;
 
   var material = this.createMaterial(mat);
+
   if (geom.box)
   {
     size = this.parseSize(geom.box.size);
@@ -449,99 +543,245 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
 
   else if (geom.polyline)
   {
-    // var helperGeometry_1, helperGeometry_2;
-    // var len = geom.polyline.length;
-    // var geometry, polymaterial, mesh;
+    var pointWithinPoints = function(point, points)
+    {
+      var maxx=-Infinity, minx=Infinity, maxy=-Infinity, miny=Infinity;
+      for (var ind = 0; ind < points.length; ind++)
+      {
+        if(points[ind].x<minx)
+        {
+          minx = points[ind].x;
+        }
+        if(points[ind].y<miny)
+        {
+          miny = points[ind].y;
+        }
+        if(points[ind].x>maxx)
+        {
+          maxx = points[ind].x;
+        }
+        if(points[ind].y>maxy)
+        {
+          maxy = points[ind].y;
+        }
+      }
+      if(point.x>minx && point.x<maxx && point.y<maxy && point.y>miny)
+      {
+        return true;
+      }
+      else
+      {
+        return false;
+      }
+    }
 
-    // var vs = new Array(len);
-    // for (var m = 0; m < len; m++) {
-    //   var polyline = geom.polyline[m];
-    //   var points = polyline.point;
-    //   var height = polyline.height;
-    //   var vectors = new Array(points.length);
-    //   for (var j = 0; j < points.length; j++) {
-    //     var p = points[j];
-    //     vectors[j] = new THREE.Vector3(p.x, p.y, 0);
-    //   }
-    //   vs[m] = vectors;
-    // }
+    var len = geom.polyline.length;
+    var geometry, mesh, shape, options;
 
-    // var holes = [];
-    // var vertices = [];
-    // var trig_vertices = [];
-    // for (var n=0; n<len; ++n)
-    // {
-    //   for (var r = 0; r < vs[n].length; r++)
-    //   {
-    //     trig_vertices[r] = [vs[n][r].x, vs[n][r].y];
-    //     vertices.push(vs[n][r]);
-    //   }
-    // }
-    // var triangles;
-    // geometry = new THREE.Geometry();
-    // material = new THREE.MeshBasicMaterial();
+    // reading polylines
+    if (len != undefined)
+    {
+      var vs = new Array(len);
+      var heights = new Array(len);
+      for (var m = 0; m < len; m++) {
+        var polyline = geom.polyline[m];
+        var points = polyline.point;
+        var height = polyline.height;
+        var pointsLen = points.length;
+        var vectors = new Array();
+        for (var j = 0; j < pointsLen; j++)
+        {
+          var values = points[j].split(/\s+/);
+          vectors[j] = new THREE.Vector3(parseFloat(values[0]), parseFloat(values[1]), 0);
+        }
+        heights[m] = height;
+        vs[m] = vectors;
+      }
+    }
+    else
+    {
+      len = 1;
+      var vs = new Array(len);
+      var heights = new Array(len);
+      for (var m = 0; m < len; m++) {
+        var polyline = geom.polyline;
+        var points = polyline.point;
+        var height = polyline.height;
+        var pointsLen = points.length;
+        var vectors = new Array();
+        for (var j = 0; j < pointsLen; j++)
+        {
+          var values = points[j].split(/\s+/);
+          vectors[j] = new THREE.Vector3(parseFloat(values[0]), parseFloat(values[1]), 0);
+        }
+        heights[m] = height;
+        vs[m] = vectors;
+      }
+    }
 
-    // geometry.vertices = vertices;
+    // Array to hold the indices of shapes that have holes.
+    var indices = [];
+    for(var p=0; p<vs.length; p++)
+    {
+      for(var n=0; n<vs.length; n++)
+      {
+        // If a polyline is within another polyline, then it is a hole.
+        if (pointWithinPoints(vs[p][0], vs[n])){
+          shape = new THREE.Shape(vs[n]);
+          shape.holes.push(new THREE.Shape(vs[p]));
 
-    // // console.time('triangulate');
-    // // triangles = Delaunay.triangulate(trig_vertices);
-    // // console.timeEnd('triangulate');
+          options = {
+              amount: heights[n],
+              bevelEnabled: false,
+              curveSegments: 40,
+              material: 0,
+              extrudeMaterial: 1
+          };
+          geometry = new THREE.ExtrudeGeometry(shape, options);
+          mesh = new THREE.Mesh(geometry);
+          this.scene.setMaterial(mesh, material);
+          parent.add(mesh);
 
-    // triangles = THREE.ShapeUtils.triangulateShape( vertices, holes );
+          indices.push(n);
+          indices.push(p);
+        }
+      }
+    }
 
-    // for( var i = 0; i < triangles.length; i++ ){
+    for (var i = 0; i < vs.length; i++)
+    {
+      if(indices.indexOf(i)==-1)
+      {
+        shape = new THREE.Shape(vs[i]);
 
-    //     geometry.faces.push( new THREE.Face3( triangles[i][0], triangles[i][1], triangles[i][2] ));
-    // }
-
-    // mesh = new THREE.Mesh( geometry, material );
-    // parent.add(mesh);
-    // var polylines = new Array();
+        options = {
+          amount: heights[i],
+          bevelEnabled: false,
+          curveSegments: 40,
+          material: 0,
+          extrudeMaterial: 1
+        };
+        geometry = new THREE.ExtrudeGeometry(shape, options);
+        mesh = new THREE.Mesh( geometry );
+        this.scene.setMaterial(mesh, material);
+        parent.add(mesh);
+      }
+    }
   }
   else if (geom.mesh)
   {
+    var meshUri = geom.mesh.uri;
+    var submesh;
+    var centerSubmesh;
+
+
+    if (geom.mesh.submesh)
     {
-      var meshUri = geom.mesh.uri;
-      var submesh;
-      var centerSubmesh;
-      if (geom.mesh.submesh)
+      submesh = geom.mesh.submesh.name;
+      centerSubmesh = this.parseBool(geom.mesh.submesh.center);
+    }
+
+    var uriType = meshUri.substring(0, meshUri.indexOf('://'));
+    if (uriType === 'file' || uriType === 'model')
+    {
+      var modelName = meshUri.substring(meshUri.indexOf('://') + 3);
+      if (geom.mesh.scale)
       {
-        submesh = geom.mesh.submesh.name;
-        centerSubmesh = this.parseBool(geom.mesh.submesh.center);
+        var scale = this.parseScale(geom.mesh.scale);
+        parent.scale.x = scale.x;
+        parent.scale.y = scale.y;
+        parent.scale.z = scale.z;
       }
 
-      var uriType = meshUri.substring(0, meshUri.indexOf('://'));
-      if (uriType === 'file' || uriType === 'model')
+      var modelUri = this.MATERIAL_ROOT + '/' + modelName;
+      var ext = modelUri.substr(-4).toLowerCase();
+      var materialName = parent.name + '::' + modelUri;
+      this.entityMaterial[materialName] = material;
+      var meshFileName = meshUri.substring(meshUri.lastIndexOf('/') + 1);
+
+      if (!this.usingFilesUrls)
       {
-        var modelName = meshUri.substring(meshUri.indexOf('://') + 3);
-        if (geom.mesh.scale)
+        var meshFile = this.meshes[meshFileName];
+        if (ext === '.obj')
         {
-          var scale = this.parseScale(geom.mesh.scale);
-          parent.scale.x = scale.x;
-          parent.scale.y = scale.y;
-          parent.scale.z = scale.z;
-        }
-
-        var modelUri = this.MATERIAL_ROOT + '/' + modelName;
-        var materialName = parent.name + '::' + modelUri;
-        this.entityMaterial[materialName] = material;
-
-        this.scene.loadMesh(modelUri, submesh, centerSubmesh, function(dae){
-          if (that.entityMaterial[materialName])
-          {
-            var allChildren = [];
-            dae.getDescendants(allChildren);
-            for (var c = 0; c < allChildren.length; ++c)
+          var mtlFile = this.mtls[meshFileName.split('.')[0]+'.mtl'];
+          that.scene.loadMeshFromString(modelUri, submesh,centerSubmesh,
+            function(obj)
             {
-              if (allChildren[c] instanceof THREE.Mesh)
+              parent.add(obj);
+              loadGeom(parent);
+            }, [meshFile, mtlFile]);
+        }
+        else if (ext === '.dae')
+        {
+          that.scene.loadMeshFromString(modelUri, submesh, centerSubmesh,
+            function(dae)
+            {
+              if (material)
               {
-                that.scene.setMaterial(allChildren[c],
-                        that.entityMaterial[materialName]);
-                break;
+                var allChildren = [];
+                dae.getDescendants(allChildren);
+                for (var c = 0; c < allChildren.length; ++c)
+                {
+                  if (allChildren[c] instanceof THREE.Mesh)
+                  {
+                    that.scene.setMaterial(allChildren[c], material);
+                    break;
+                  }
+                }
               }
+              parent.add(dae);
+              loadGeom(parent);
+            }, [meshFile]);
+        }
+      }
+      else
+      {
+        if (this.customUrls.length !== 0)
+        {
+          for (var k = 0; k < this.customUrls.length; k++)
+          {
+            if (this.customUrls[k].indexOf(meshFileName) > -1)
+            {
+              modelUri = this.customUrls[k];
+              this.customUrls.splice(k, 1);
+              break;
             }
           }
-          parent.add(dae);
+        }
+        this.scene.loadMeshFromUri(modelUri, submesh, centerSubmesh,
+          function (mesh)
+          {
+            if (material)
+            {
+              // Because the stl mesh doesn't have any children we cannot set
+              // the materials like other mesh types.
+              if (ext !== '.stl')
+              {
+                var allChildren = [];
+                mesh.getDescendants(allChildren);
+                for (var c = 0; c < allChildren.length; ++c)
+                {
+                  if (allChildren[c] instanceof THREE.Mesh)
+                  {
+                    that.scene.setMaterial(allChildren[c], material);
+                    break;
+                  }
+                }
+              }
+              else
+              {
+                that.scene.setMaterial(mesh, material);
+              }
+            }
+            else
+            {
+              if (ext === '.stl')
+              {
+                that.scene.setMaterial(mesh, {'ambient': [1,1,1,1]});
+              }
+            }
+          parent.add(mesh);
           loadGeom(parent);
         });
       }
@@ -703,6 +943,9 @@ GZ3D.SdfParser.prototype.spawnFromSDF = function(sdf)
 GZ3D.SdfParser.prototype.loadSDF = function(modelName)
 {
   var sdf = this.loadModel(modelName);
+  if (!sdf) {
+    return;
+  }
   return this.spawnFromSDF(sdf);
 };
 
@@ -760,6 +1003,29 @@ GZ3D.SdfParser.prototype.createLink = function(link)
   var linkPose, visualObj;
   var linkObj = new THREE.Object3D();
   linkObj.name = link['@name'];
+
+  if (link.inertial)
+  {
+    var inertialPose, inertialMass, inertia = {};
+    linkObj.userData.inertial = {};
+    inertialPose = link.inertial.pose;
+    inertialMass = link.inertial.mass;
+    inertia.ixx = link.inertial.ixx;
+    inertia.ixy = link.inertial.ixy;
+    inertia.ixz = link.inertial.ixz;
+    inertia.iyy = link.inertial.iyy;
+    inertia.iyz = link.inertial.iyz;
+    inertia.izz = link.inertial.izz;
+    linkObj.userData.inertial.inertia = inertia;
+    if (inertialMass)
+    {
+      linkObj.userData.inertial.mass = inertialMass;
+    }
+    if (inertialPose)
+    {
+      linkObj.userData.inertial.pose = inertialPose;
+    }
+  }
 
   if (link.pose)
   {
@@ -969,18 +1235,50 @@ GZ3D.SdfParser.prototype.createCylinderSDF = function(translation, euler)
 };
 
 /**
- * Loads SDF of the model. It first constructs the url of the model
- * according to modelname
- * @param {string} modelName - name of the model
- * @returns {XMLDocument} modelDOM - SDF DOM object of the loaded model
+ * Loads a model from an SDF file.
+ * @param {string} modelName - Either the name of a model in the path, or the
+ * full URL to an SDF file.
  */
 GZ3D.SdfParser.prototype.loadModel = function(modelName)
 {
-  var modelFile = this.MATERIAL_ROOT + '/' + modelName + '/model.sdf';
+  var modelFile = '';
+
+  if (modelName === undefined)
+  {
+    console.log('Must provide either a model name or the URL of an SDF file');
+    return;
+  }
+
+  // In case it is a full URL
+  if (modelName.indexOf('http') === 0 &&
+      modelName.indexOf('.sdf') === modelName.length - 4)
+  {
+    modelFile = modelName;
+  }
+  // In case it is just the model name, look for it on the default URL
+  else
+  {
+    modelFile = this.MATERIAL_ROOT + '/' + modelName + '/model.sdf';
+  }
 
   var xhttp = new XMLHttpRequest();
   xhttp.overrideMimeType('text/xml');
   xhttp.open('GET', modelFile, false);
-  xhttp.send();
+
+  try
+  {
+    xhttp.send();
+  }
+  catch(err)
+  {
+    console.log('Failed to get URL [' + modelFile + ']: ' + err.message);
+    return;
+  }
+
+  if (xhttp.status !== 200)
+  {
+    console.log('Failed to get URL [' + modelFile + ']');
+    return;
+  }
   return xhttp.responseXML;
 };
