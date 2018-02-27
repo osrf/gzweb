@@ -13,7 +13,7 @@ GZ3D.SpawnModel = function(scene, domElement)
 
   // Material for simple shapes being spawned (grey transparent)
   this.spawnedShapeMaterial = new THREE.MeshPhongMaterial(
-      {color:0xffffff, shading: THREE.SmoothShading} );
+      {color:0xffffff, flatShading: THREE.SmoothShading} );
   this.spawnedShapeMaterial.transparent = true;
   this.spawnedShapeMaterial.opacity = 0.5;
 };

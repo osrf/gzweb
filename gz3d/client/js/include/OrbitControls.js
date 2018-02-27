@@ -42,7 +42,7 @@ THREE.OrbitControls = function (object, domElement)
   this.targetIndicator = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 20),
       new THREE.MeshPhongMaterial({emissive: 0x333300,
       color: 0xffff00,
-      shading: THREE.SmoothShading}));
+      flatShading: THREE.SmoothShading}));
   this.targetIndicator.visible = false;
   this.showTargetIndicator = false;
   // center is old, deprecated; use "target" instead

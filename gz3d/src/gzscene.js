@@ -89,7 +89,7 @@ GZ3D.Scene.prototype.init = function()
       this, this.getDomElement());
 
   this.simpleShapesMaterial = new THREE.MeshPhongMaterial(
-      {color:0xffffff, shading: THREE.SmoothShading} );
+      {color:0xffffff, flatShading: THREE.SmoothShading} );
 
   var that = this;
 
