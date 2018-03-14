@@ -473,13 +473,14 @@ void GazeboInterface::ProcessMessages()
               atof(get_value(msg, "msg:orientation:z").c_str()));
           ignition::math::Vector3d rpy = quat.Euler();
 
-          if(type == "box" || type == "sphere" || type == "cylinder")
+          if (type == "box" || type == "sphere" || type == "cylinder")
           {
             std::stringstream geom;
             if (type == "box")
             {
+              ignition::math::Vector3d size = ignition::math::Vector3d::One;
               geom  << "<box>"
-                    <<   "<size>1.0 1.0 1.0</size>"
+                    <<   "<size>" << size << "</size>"
                     << "</box>";
             }
             else if (type == "sphere")
@@ -525,6 +526,11 @@ void GazeboInterface::ProcessMessages()
                 << "</model>"
                 << "</sdf>";
           }
+          else if (type == "sdf")
+          {
+            std::string sdfStr = get_value(msg, "msg:sdf");
+            newModelStr << sdfStr;
+          }
           else
           {
             newModelStr << "<sdf version ='" << SDF_VERSION << "'>"
@@ -540,8 +546,11 @@ void GazeboInterface::ProcessMessages()
           }
 
           // Spawn the model in the physics server
-          factoryMsg.set_sdf(newModelStr.str());
-          this->factoryPub->Publish(factoryMsg);
+          if (!newModelStr.str().empty())
+          {
+            factoryMsg.set_sdf(newModelStr.str());
+            this->factoryPub->Publish(factoryMsg);
+          }
         }
         else if (topic == this->worldControlTopic)
         {
