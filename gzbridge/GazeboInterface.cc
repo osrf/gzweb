@@ -346,7 +346,6 @@ void GazeboInterface::ProcessMessages()
               gazebo::msgs::Set(linkMsg->mutable_pose(), linkPose);
             }
           }
-          // std::cerr << modelMsg.DebugString() << std::endl;
           this->modelPub->Publish(modelMsg);
         }
         else if (topic == this->lightFactoryTopic ||

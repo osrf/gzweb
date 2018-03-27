@@ -298,7 +298,7 @@ namespace gzweb {
     return "";
   }
 
-   std::string get_value(const std::string &_msg, const std::string &_key)
+  std::string get_value(const std::string &_msg, const std::string &_key)
   {
     json_t *root;
     json_error_t error;
@@ -313,6 +313,8 @@ namespace gzweb {
   {
     /// \brief Pointer to internal json object
     public: json_t *json = nullptr;
+
+    /// \brief True if we should decrement ref count on internal json obj
     public: bool decref = true;
   };
 }
