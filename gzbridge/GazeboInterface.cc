@@ -237,13 +237,21 @@ void GazeboInterface::ProcessMessages()
     {
       std::string msg = msgs[i];
 
-      std::string operation = get_value(msg, "op");
+      JsonObj jsonObj(msg);
+      JsonObj msgObj = jsonObj.Object("msg");
+      if (!msgObj)
+      {
+        std::cerr << "No msg key in json object" << std::endl;
+        continue;
+      }
+
+      std::string operation = jsonObj.Object("op").String();
       // ignore "advertise" messages (responsible for announcing the
       // availability of topics) as we currently don't make use of them.
       if (operation == "advertise")
         continue;
 
-      std::string topic = get_value(msg.c_str(), "topic");
+      std::string topic = jsonObj.Object("topic").String();
 
       // Process subscribe requests
       if (!topic.empty())
@@ -275,14 +283,6 @@ void GazeboInterface::ProcessMessages()
         }
         else if (topic == this->modelModifyTopic)
         {
-          JsonObj jsonObj(msg);
-          JsonObj msgObj = jsonObj.Object("msg");
-          if (!msgObj)
-          {
-            std::cerr << "No msg key in json object" << std::endl;
-            continue;
-          }
-
           std::string name = msgObj.Object("name").String();
           if (name == "")
             continue;
@@ -605,15 +605,17 @@ void GazeboInterface::ProcessMessages()
         else if (topic == this->worldControlTopic)
         {
           gazebo::msgs::WorldControl worldControlMsg;
-          std::string pause = get_value(msg, "msg:pause");
-          std::string reset = get_value(msg, "msg:reset");
-          if (!pause.empty())
+          JsonObj pauseObj = msgObj.Object("pause");
+          if (pauseObj)
           {
-            int pauseValue = atoi(pause.c_str());
-            worldControlMsg.set_pause(pauseValue);
+            bool pause = pauseObj.Bool();
+            worldControlMsg.set_pause(pause);
           }
-          if (!reset.empty())
+
+          JsonObj resetObj = msgObj.Object("reset");
+          if (resetObj)
           {
+            std::string reset = resetObj.String();
             if (reset == "model")
             {
               worldControlMsg.mutable_reset()->set_all(false);
@@ -625,7 +627,27 @@ void GazeboInterface::ProcessMessages()
               worldControlMsg.mutable_reset()->set_all(true);
             }
           }
-          if (!pause.empty() || !reset.empty())
+
+          JsonObj multiStepObj = msgObj.Object("multi_step");
+          if (multiStepObj)
+          {
+            unsigned int steps = static_cast<unsigned int>(multiStepObj.Number());
+            worldControlMsg.set_multi_step(steps);
+          }
+          JsonObj stepObj = msgObj.Object("step");
+          if (stepObj)
+          {
+            bool step = static_cast<bool>(stepObj.Number());
+            worldControlMsg.set_step(step);
+          }
+          JsonObj seedObj = msgObj.Object("seed");
+          if (seedObj)
+          {
+            unsigned int seed = static_cast<unsigned int>(seedObj.Number());
+            worldControlMsg.set_step(seed);
+          }
+
+          if (pauseObj || resetObj || multiStepObj || stepObj || seedObj)
             this->worldControlPub->Publish(worldControlMsg);
         }
         else if (topic == this->materialTopic)
