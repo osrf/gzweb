@@ -238,12 +238,6 @@ void GazeboInterface::ProcessMessages()
       std::string msg = msgs[i];
 
       JsonObj jsonObj(msg);
-      JsonObj msgObj = jsonObj.Object("msg");
-      if (!msgObj)
-      {
-        std::cerr << "No msg key in json object" << std::endl;
-        continue;
-      }
 
       std::string operation = jsonObj.Object("op").String();
       // ignore "advertise" messages (responsible for announcing the
@@ -283,6 +277,13 @@ void GazeboInterface::ProcessMessages()
         }
         else if (topic == this->modelModifyTopic)
         {
+          JsonObj msgObj = jsonObj.Object("msg");
+          if (!msgObj)
+          {
+            std::cerr << "No msg key in json object" << std::endl;
+            continue;
+          }
+
           std::string name = msgObj.Object("name").String();
           if (name == "")
             continue;
@@ -604,6 +605,13 @@ void GazeboInterface::ProcessMessages()
         }
         else if (topic == this->worldControlTopic)
         {
+          JsonObj msgObj = jsonObj.Object("msg");
+          if (!msgObj)
+          {
+            std::cerr << "No msg key in json object" << std::endl;
+            continue;
+          }
+
           gazebo::msgs::WorldControl worldControlMsg;
           JsonObj pauseObj = msgObj.Object("pause");
           if (pauseObj)
