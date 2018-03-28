@@ -170,6 +170,21 @@ namespace gzweb
     private: bool FilterPoses(const TimedPose &_previous,
         const TimedPose &_current);
 
+    /// \brief Set whether to enable pose filtering.
+    /// \param[in] _filter True to enable filtering. Defaults to True.
+    /// \param[in] _fullRate True to enable receiving all pose msgs from gazebo,
+    /// which are published at 1000 Hz by default. The msgs will come from
+    /// the gazebo topic: ~/pose/local/info. Defaults to false.
+    public: void SetPoseFilter(const bool _filter,
+        const bool _fullRate = false);
+
+    public: void SetPoseFilterMinimumDistanceSquared(double _m);
+    public: double GetPoseFilterMinimumDistanceSquared();
+    public: void SetPoseFilterMinimumQuaternionSquared(double _m);
+    public: double GetPoseFilterMinimumQuaternionSquared();
+    public: void SetPoseFilterMinimumMsgAge(double _m);
+    public: double GetPoseFilterMinimumMsgAge();
+
     /// \brief Incoming messages.
     public: std::vector<std::string> incoming;
 
@@ -284,9 +299,11 @@ namespace gzweb
     /// \def PoseMsgs_L.
     /// \brief List of messages.
     typedef std::list<gazebo::msgs::Pose> PoseMsgs_L;
+    typedef std::list<gazebo::msgs::PosesStamped> PosesMsgs_L;
 
     /// \brief List of pose message to process.
     private: PoseMsgs_L poseMsgs;
+    private: PosesMsgs_L posesMsgs;
 
     /// \def LightMsgs_L.
     /// \brief List of light messages.
@@ -458,12 +475,12 @@ namespace gzweb
     /// \brief True if there is a client connection.
     private: bool isConnected = false;
 
-    public: void SetPoseFilterMinimumDistanceSquared(double _m);
-    public: double GetPoseFilterMinimumDistanceSquared();
-    public: void SetPoseFilterMinimumQuaternionSquared(double _m);
-    public: double GetPoseFilterMinimumQuaternionSquared();
-    public: void SetPoseFilterMinimumMsgAge(double _m);
-    public: double GetPoseFilterMinimumMsgAge();
+    /// \brief Flag to indicate if pose filter is enabled
+    private: bool poseFilter = true;
+
+    /// \brief Flag to indicate if pose messages should be republished at full
+    /// rate
+    private: bool fullPoseRate = false;
   };
 }
 

@@ -152,6 +152,7 @@ GazeboInterface::~GazeboInterface()
 
   this->modelMsgs.clear();
   this->poseMsgs.clear();
+  this->posesMsgs.clear();
   this->requestMsgs.clear();
   this->lightFactoryMsgs.clear();
   this->lightModifyMsgs.clear();
@@ -834,7 +835,7 @@ void GazeboInterface::ProcessMessages()
     this->statsMsgs.clear();
 
     // Forward all the pose messages.
-    auto pIter = this->poseMsgs.begin();
+/*    auto pIter = this->poseMsgs.begin();
     while (pIter != this->poseMsgs.end())
     {
       msg = this->PackOutgoingTopicMsg(this->poseTopic,
@@ -843,6 +844,22 @@ void GazeboInterface::ProcessMessages()
       ++pIter;
     }
     this->poseMsgs.clear();
+  }
+*/
+    for (auto &p : this->posesMsgs)
+    {
+/*      for (int i = 0; i < p.pose_size(); ++i)
+      {
+        msg = this->PackOutgoingTopicMsg(this->poseTopic,
+            pb2json(p.pose(i)));
+        this->Send(msg);
+      }
+*/
+      msg = this->PackOutgoingTopicMsg(this->poseTopic,
+          pb2json(p));
+      this->Send(msg);
+    }
+    this->posesMsgs.clear();
   }
 }
 
@@ -909,6 +926,7 @@ bool GazeboInterface::FilterPoses(const TimedPose &_old,
     // double ratio =  100.0 * this->skippedMsgCount  / this->messageWindowSize;
     // std::cout << "Message filter: " << ratio << " %" << std::endl;
     // std::cout << "Message count : " << this->skippedMsgCount;
+
     this->skippedMsgCount = 0;
     this->messageCount = 0;
   }
@@ -967,50 +985,80 @@ void GazeboInterface::OnPoseMsg(ConstPosesStampedPtr &_msg)
     return;
 
   std::lock_guard<std::recursive_mutex> lock(this->receiveMutex);
-  PoseMsgs_L::iterator iter;
 
-  for (int i = 0; i < _msg->pose_size(); ++i)
+
+  /*
+  if (!this->poseFilter && this->poseFullRate)
   {
-    // Find an old model message, and remove them
-    for (iter = this->poseMsgs.begin(); iter != this->poseMsgs.end(); ++iter)
+    this->posesMsgs.push_back(*_msg.get())
+  }
+  */
+
+  gazebo::msgs::PosesStamped posesStamped;
+
+  // If no filter is needed, just push the msgs
+  if (!this->poseFilter)
+  {
+    posesStamped = *_msg.get();
+  }
+  else
+  {
+    *posesStamped.mutable_time() = _msg->time();
+
+//  PoseMsgs_L::iterator iter;
+    for (int i = 0; i < _msg->pose_size(); ++i)
     {
-      if ((*iter).name() == _msg->pose(i).name())
+  /*    if (!this->poseFullRate)
       {
-        this->poseMsgs.erase(iter);
-        break;
+        for (auto &ps : this->posesMsgs)
+        {
+          // Find an old model message, and remove them
+          for (unsigned int i = 0, auto it : pose.pose();
+              it != ps.end(); i < ps.pose_size() ++i)
+          {
+            if (it.name() == _msg->pose(i).name())
+            {
+              this->poseMsgs.erase(iter);
+              break;
+            }
+          }
+        }
       }
-    }
-    bool filtered = false;
+  */
 
-    std::string name = _msg->pose(i).name();
+      bool filtered = false;
+      std::string name = _msg->pose(i).name();
+      ignition::math::Pose3d pose = gazebo::msgs::ConvertIgn(_msg->pose(i));
+      gazebo::common::Time time = gazebo::msgs::Convert(_msg->time());
+      PoseMsgsFilter_M::iterator it = this->poseMsgsFilterMap.find(name);
 
-    ignition::math::Pose3d pose = gazebo::msgs::ConvertIgn(_msg->pose(i));
-    gazebo::common::Time time = gazebo::msgs::Convert(_msg->time());
+      TimedPose currentPose;
+      currentPose.first = time;
+      currentPose.second = pose;
 
-    PoseMsgsFilter_M::iterator it = this->poseMsgsFilterMap.find(name);
-
-    TimedPose currentPose;
-    currentPose.first = time;
-    currentPose.second = pose;
-
-    if (it == this->poseMsgsFilterMap.end())
-    {
-      std::pair<PoseMsgsFilter_M::iterator, bool> r;
-      r = this->poseMsgsFilterMap.insert(make_pair(name, currentPose));
-    }
-    else
-    {
-      TimedPose oldPose = it->second;
-      filtered = this->FilterPoses(oldPose, currentPose);
-      if (!filtered)
+      if (it == this->poseMsgsFilterMap.end())
       {
-        // update the map
-        it->second.first = currentPose.first;
-        it->second.second = currentPose.second;
-        this->poseMsgs.push_back(_msg->pose(i));
+        std::pair<PoseMsgsFilter_M::iterator, bool> r;
+        r = this->poseMsgsFilterMap.insert(make_pair(name, currentPose));
+      }
+      else
+      {
+        TimedPose oldPose = it->second;
+        filtered = this->FilterPoses(oldPose, currentPose);
+        if (!filtered)
+        {
+          // update the map
+          it->second.first = currentPose.first;
+          it->second.second = currentPose.second;
+
+          auto p = posesStamped.add_pose();
+          *p = _msg->pose(i);
+          // this->poseMsgs.push_back(_msg->pose(i));
+        }
       }
     }
   }
+  this->posesMsgs.push_back(posesStamped);
 }
 
 /////////////////////////////////////////////////
@@ -1249,6 +1297,26 @@ bool GazeboInterface::IsConnected()
 {
   std::lock_guard<std::mutex> lock(this->connectionMutex);
   return this->isConnected;
+}
+
+/////////////////////////////////////////////////
+void GazeboInterface::SetPoseFilter(const bool _filter, const bool _fullRate)
+{
+  this->poseFilter = _filter;
+
+  // subscribe to /pose/local/info in full rate is requested
+  if (this->fullPoseRate != _fullRate)
+  {
+    this->fullPoseRate = _fullRate;
+    std::string localStr;
+    if (this->fullPoseRate)
+      localStr = "/local";
+
+    std::string newPoseTopic = "~/pose" + localStr + "/info";
+    this->poseSub.reset();
+    this->poseSub = this->node->Subscribe(newPoseTopic,
+        &GazeboInterface::OnPoseMsg, this);
+  }
 }
 
 /////////////////////////////////////////////////

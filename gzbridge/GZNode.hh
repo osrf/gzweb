@@ -53,6 +53,10 @@ namespace gzweb
     private: static void GetMaterialScriptsMessage(
         const FunctionCallbackInfo<Value>& args);
 
+    /// \brief Set whether to enable pose filtering.
+    private: static void SetPoseFilter(
+        const FunctionCallbackInfo<Value>& args);
+
     private: static void SetPoseMsgFilterMinimumDistanceSquared(
         const FunctionCallbackInfo<Value>& args);
 
@@ -78,7 +82,6 @@ namespace gzweb
     private: GazeboInterface* gzIface = nullptr;
 
     private: bool isGzServerConnected = false;
-
   };
 }
 

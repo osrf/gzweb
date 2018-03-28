@@ -70,6 +70,8 @@ void GZNode::Init(Handle<Object> exports)
   NODE_SET_PROTOTYPE_METHOD(tpl, "setPoseMsgFilterMinimumAge",
       SetPoseMsgFilterMinimumAge);
 
+  NODE_SET_PROTOTYPE_METHOD(tpl, "setPoseFilter", SetPoseFilter);
+
   NODE_SET_PROTOTYPE_METHOD(tpl, "getMessages", GetMessages);
 
   NODE_SET_PROTOTYPE_METHOD(tpl, "request", Request);
@@ -172,6 +174,27 @@ void GZNode::GetMaterialScriptsMessage(const FunctionCallbackInfo<Value>& args)
   msg += "}";
 
   args.GetReturnValue().Set(String::NewFromUtf8(isolate ,msg.c_str()));
+}
+
+/////////////////////////////////////////////////
+void GZNode::SetPoseFilter(const FunctionCallbackInfo<Value>& args)
+{
+  GZNode *obj = ObjectWrap::Unwrap<GZNode>(args.This());
+
+  Local<Boolean> v1 = Local<Boolean>::Cast(args[0]);
+  bool value1 = v1->Value();
+  if (args.Length() > 1)
+  {
+    Local<Boolean> v2 = Local<Boolean>::Cast(args[1]);
+    bool value2 = v2->Value();
+    obj->gzIface->SetPoseFilter(value1, value2);
+  }
+  else
+  {
+    obj->gzIface->SetPoseFilter(value1);
+  }
+
+  return;
 }
 
 /////////////////////////////////////////////////

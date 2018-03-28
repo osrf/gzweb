@@ -202,12 +202,31 @@ GZ3D.GZIface.prototype.onConnected = function()
 
   var poseUpdate = function(message)
   {
-    var entity = this.scene.getByName(message.name);
-    if (entity && entity !== this.scene.modelManipulator.object
-        && entity.parent !== this.scene.modelManipulator.object)
+    // individiual pose msgs received
+    if (message.position && message.orientation)
     {
-      this.scene.updatePose(entity, message.position, message.orientation);
-      this.emitter.emit('setModelStats', message, 'update');
+      var entity = this.scene.getByName(message.name);
+      if (entity && entity !== this.scene.modelManipulator.object
+          && entity.parent !== this.scene.modelManipulator.object)
+      {
+        this.scene.updatePose(entity, message.position, message.orientation);
+        this.emitter.emit('setModelStats', message, 'update');
+      }
+    }
+    // pose msgs grouped by timestamp
+    else if (message.pose)
+    {
+      for (var i = 0; i < message.pose.length; ++i)
+      {
+        var m = message.pose[i];
+        var entity = this.scene.getByName(m.name);
+        if (entity && entity !== this.scene.modelManipulator.object
+            && entity.parent !== this.scene.modelManipulator.object)
+        {
+          this.scene.updatePose(entity, m.position, m.orientation);
+          this.emitter.emit('setModelStats', m, 'update');
+        }
+      }
     }
   };
 

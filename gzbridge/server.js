@@ -8,6 +8,9 @@ const fs = require('fs');
 const path = require('path');
 const gzbridge = require('./build/Debug/gzbridge');
 
+// parse args
+const argv = require('minimist')(process.argv.slice(2));
+
 /**
  * Path from where the static site is served
  */
@@ -15,8 +18,25 @@ const staticBasePath = './../http/client';
 
 /**
  * Port to serve from, defaults to 8080
+ * Arguments:
+ *   -p [port_number] Port number to serve from.
+ * Backward compatibility:
+ *   npm start [port_number] is also supported.
  */
-const port = process.argv[2] || 8080;
+const portArg = isNaN(process.argv[2]) ? undefined : process.argv[2];
+const port = argv.p || portArg || 8080;
+
+/**
+ * Pose message filter settings. By default, filters are applied If no
+ * arguments are given. The messages are filtered by time and pose delta.
+ * Arguments:
+ *   -t Forward throttled messages from gazebo (60Hz).
+ *      No additional filters are applied.
+ *   -a Forward all messages at gazebo physics update rate (1000Hz).
+ *      This overrides all pose message filter settings.
+ */
+const poseFullRate = argv.a;
+const poseFilter = !argv.a && !argv.t;
 
 /**
  * Array of websocket connections currently active, if it is empty, there are no
@@ -80,19 +100,32 @@ let gzNode = new gzbridge.GZNode();
 if (gzNode.getIsGzServerConnected())
 {
   gzNode.loadMaterialScripts(staticBasePath + '/assets');
-  gzNode.setPoseMsgFilterMinimumAge(0.02);
-  gzNode.setPoseMsgFilterMinimumDistanceSquared(0.00001);
-  gzNode.setPoseMsgFilterMinimumQuaternionSquared(0.00001);
 
   console.log('--------------------------------------------------------------');
   console.log('Gazebo transport node connected to gzserver.');
-  console.log('Pose message filter parameters between successive messages: ');
-  console.log('  minimum seconds: ' +
-      gzNode.getPoseMsgFilterMinimumAge());
-  console.log('  minimum XYZ distance squared: ' +
-      gzNode.getPoseMsgFilterMinimumDistanceSquared());
-  console.log('  minimum Quartenion distance squared:'
-      + ' ' + gzNode.getPoseMsgFilterMinimumQuaternionSquared());
+
+  if (poseFilter)
+  {
+    gzNode.setPoseMsgFilterMinimumAge(0.02);
+    gzNode.setPoseMsgFilterMinimumDistanceSquared(0.00001);
+    gzNode.setPoseMsgFilterMinimumQuaternionSquared(0.00001);
+
+    console.log('Pose message filter parameters between successive messages: ');
+    console.log('  minimum seconds: ' +
+        gzNode.getPoseMsgFilterMinimumAge());
+    console.log('  minimum XYZ distance squared: ' +
+        gzNode.getPoseMsgFilterMinimumDistanceSquared());
+    console.log('  minimum Quartenion distance squared:'
+        + ' ' + gzNode.getPoseMsgFilterMinimumQuaternionSquared());
+  }
+  else
+  {
+    gzNode.setPoseFilter(poseFilter, poseFullRate);
+    if (!poseFullRate)
+      console.log('Pose message filter disabled. Messages are throttled by server.');
+    else
+      console.log('Pose message filter disabled. Messages are published at full rate.');
+  }
   console.log('--------------------------------------------------------------');
 }
 else
