@@ -176,8 +176,8 @@ wsServer.on('request', function(request) {
   // Handle messages received from client
   connection.on('message', function(message) {
     if (message.type === 'utf8') {
-      console.log(new Date() + ' Received Message: ' + message.utf8Data +
-          ' from ' + request.origin + ' ' + connection.remoteAddress);
+      // console.log(new Date() + ' Received Message: ' + message.utf8Data +
+      //     ' from ' + request.origin + ' ' + connection.remoteAddress);
       gzNode.request(message.utf8Data);
     }
     else if (message.type === 'binary') {
