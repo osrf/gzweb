@@ -348,7 +348,7 @@ JsonObj::JsonObj(const JsonObj &_other)
 JsonObj::~JsonObj()
 {
   if (this->dataPtr->decref)
-  json_decref(this->dataPtr->json);
+    json_decref(this->dataPtr->json);
 }
 
 //////////////////////////////////////////////////

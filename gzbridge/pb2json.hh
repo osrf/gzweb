@@ -50,7 +50,7 @@ namespace gzweb
     public: JsonObj(const std::string &_str);
 
     /// \brief Copy constructor
-    /// \param[in] _other Othher JsonObj
+    /// \param[in] _other Other JsonObj
     public: JsonObj(const JsonObj &_other);
 
     /// \brief Destructor
@@ -58,31 +58,32 @@ namespace gzweb
 
     /// \brief Get child json object
     /// \param[in] _key Json key
-    /// \return JsonObj
+    /// \return JsonObj, false if key not found.
     public: JsonObj Object(const std::string &_key) const;
 
     /// \brief Get number value
-    /// \return double value
+    /// \return Double value, zero if value is not a number.
     public: double Number() const;
 
     /// \brief Get bool value
-    /// \return bool value
+    /// \return Bool value, always false if value is not a bool.
     public: bool Bool() const;
 
     /// \brief Get string value
-    /// \return string value
+    /// \return String value, empty if value is not a string.
     public: std::string String() const;
 
-    /// \brief Get array json object at specified index
+    /// \brief If this object is an array, get json object at specified
+    /// array index.
     /// \param[in] _index Index in the array
-    /// \return JsonObj
+    /// \return JsonObj array, false if not an array.
     public: JsonObj ArrayObject(const unsigned int _index) const;
 
-    /// \brief Get the size of the array
-    /// \return Size of array
+    /// \brief If this object is an array, get the size of the array
+    /// \return Size of array, 0u if not an array.
     public: unsigned int ArraySize() const;
 
-    /// \brief bool operator
+    /// \brief Bool operator
     /// \return True if pointer to json object is not null
     public: operator bool() const;
 
