@@ -550,6 +550,11 @@ void GazeboInterface::ProcessMessages()
             factoryMsg.set_sdf(newModelStr.str());
             this->factoryPub->Publish(factoryMsg);
           }
+          else
+          {
+            std::cerr << "Empty model SDF string when publishing to ~/factory"
+                      << std::endl;
+          }
         }
         else if (topic == this->worldControlTopic)
         {
