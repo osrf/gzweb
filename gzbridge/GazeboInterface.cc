@@ -293,7 +293,8 @@ void GazeboInterface::ProcessMessages()
           JsonObj posObj = msgObj.Object("position");
           if (!posObj)
           {
-            std::cerr << "No position key in json object" << std::endl;
+            std::cerr << "model pose msg is missing 'position' field"
+                      << std::endl;
             continue;
           }
 
@@ -301,6 +302,12 @@ void GazeboInterface::ProcessMessages()
           double posY = posObj.Object("y").Number();
           double posZ = posObj.Object("z").Number();
           JsonObj quatObj = msgObj.Object("orientation");
+          if (!quatObj)
+          {
+            std::cerr << "model pose msg is missing 'orientation' field"
+                      << std::endl;
+            continue;
+          }
           double quatW = quatObj.Object("w").Number();
           double quatX = quatObj.Object("x").Number();
           double quatY = quatObj.Object("y").Number();
@@ -326,10 +333,22 @@ void GazeboInterface::ProcessMessages()
               unsigned int linkId =
                   static_cast<unsigned int>(linkObj.Object("id").Number());
               JsonObj linkPosObj = linkObj.Object("position");
+              if (!linkPosObj)
+              {
+                std::cerr << "link pose msg is missing 'position' field"
+                          << std::endl;
+                continue;
+              }
               double linkPosX = linkPosObj.Object("x").Number();
               double linkPosY = linkPosObj.Object("y").Number();
               double linkPosZ = linkPosObj.Object("z").Number();
               JsonObj linkQuatObj = linkObj.Object("orientation");
+              if (!linkQuatObj)
+              {
+                std::cerr << "link pose msg is missing 'orientation' field"
+                          << std::endl;
+                continue;
+              }
               double linkQuatW = linkQuatObj.Object("w").Number();
               double linkQuatX = linkQuatObj.Object("x").Number();
               double linkQuatY = linkQuatObj.Object("y").Number();
