@@ -525,6 +525,11 @@ void GazeboInterface::ProcessMessages()
                 << "</model>"
                 << "</sdf>";
           }
+          else if (type == "sdf")
+          {
+            std::string sdfStr = get_value(msg, "msg:sdf");
+            newModelStr << sdfStr;
+          }
           else
           {
             newModelStr << "<sdf version ='" << SDF_VERSION << "'>"
@@ -540,8 +545,16 @@ void GazeboInterface::ProcessMessages()
           }
 
           // Spawn the model in the physics server
-          factoryMsg.set_sdf(newModelStr.str());
-          this->factoryPub->Publish(factoryMsg);
+          if (!newModelStr.str().empty())
+          {
+            factoryMsg.set_sdf(newModelStr.str());
+            this->factoryPub->Publish(factoryMsg);
+          }
+          else
+          {
+            std::cerr << "Empty model SDF string when publishing to ~/factory"
+                      << std::endl;
+          }
         }
         else if (topic == this->worldControlTopic)
         {
