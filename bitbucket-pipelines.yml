@@ -24,3 +24,9 @@ pipelines:
           - npm run update
           # Check docs can be generated
           - npm run docs
+          # Test gzbridge C++ code
+          - cd gzbridge
+          - mkdir build_test
+          - cd build_test
+          - cmake ..
+          - make && make test
