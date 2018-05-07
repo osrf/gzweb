@@ -25,6 +25,7 @@ if (UNIX)
   target_link_libraries(gzbridge pthread)
 endif()
 
+enable_testing()
 
 add_subdirectory(test)
 
