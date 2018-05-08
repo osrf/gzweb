@@ -179,6 +179,8 @@ GazeboInterface::~GazeboInterface()
     this->runThread->join();
   if (this->serviceThread)
     this->serviceThread->join();
+
+  delete this->materialParser;
 }
 
 /////////////////////////////////////////////////
@@ -273,21 +275,47 @@ void GazeboInterface::ProcessMessages()
         }
         else if (topic == this->modelModifyTopic)
         {
-          std::string name = get_value(msg, "msg:name");
-          int id = atoi(get_value(msg, "msg:id").c_str());
+          JsonObj jsonObj(msg);
+          JsonObj msgObj = jsonObj.Object("msg");
+          if (!msgObj)
+          {
+            std::cerr << "No msg key in json object" << std::endl;
+            continue;
+          }
 
+          std::string name = msgObj.Object("name").String();
           if (name == "")
             continue;
 
-          ignition::math::Vector3d pos(
-            atof(get_value(msg, "msg:position:x").c_str()),
-            atof(get_value(msg, "msg:position:y").c_str()),
-            atof(get_value(msg, "msg:position:z").c_str()));
-          ignition::math::Quaterniond quat(
-            atof(get_value(msg, "msg:orientation:w").c_str()),
-            atof(get_value(msg, "msg:orientation:x").c_str()),
-            atof(get_value(msg, "msg:orientation:y").c_str()),
-            atof(get_value(msg, "msg:orientation:z").c_str()));
+          unsigned int id =
+              static_cast<unsigned int>(msgObj.Object("id").Number());
+
+          JsonObj posObj = msgObj.Object("position");
+          if (!posObj)
+          {
+            std::cerr << "model pose msg is missing 'position' field"
+                      << std::endl;
+            continue;
+          }
+
+          double posX = posObj.Object("x").Number();
+          double posY = posObj.Object("y").Number();
+          double posZ = posObj.Object("z").Number();
+          JsonObj quatObj = msgObj.Object("orientation");
+          if (!quatObj)
+          {
+            std::cerr << "model pose msg is missing 'orientation' field"
+                      << std::endl;
+            continue;
+          }
+          double quatW = quatObj.Object("w").Number();
+          double quatX = quatObj.Object("x").Number();
+          double quatY = quatObj.Object("y").Number();
+          double quatZ = quatObj.Object("z").Number();
+
+          ignition::math::Vector3d pos(posX, posY, posZ);
+          ignition::math::Quaterniond quat(quatW, quatX, quatY, quatZ);
+
           ignition::math::Pose3d pose(pos, quat);
 
           gazebo::msgs::Model modelMsg;
@@ -295,6 +323,48 @@ void GazeboInterface::ProcessMessages()
           modelMsg.set_name(name);
           gazebo::msgs::Set(modelMsg.mutable_pose(), pose);
 
+          JsonObj linksObj = msgObj.Object("link");
+          if (linksObj)
+          {
+            for (unsigned int i = 0; i < linksObj.ArraySize(); ++i)
+            {
+              JsonObj linkObj = linksObj.ArrayObject(i);
+              std::string linkName = linkObj.Object("name").String();
+              unsigned int linkId =
+                  static_cast<unsigned int>(linkObj.Object("id").Number());
+              JsonObj linkPosObj = linkObj.Object("position");
+              if (!linkPosObj)
+              {
+                std::cerr << "link pose msg is missing 'position' field"
+                          << std::endl;
+                continue;
+              }
+              double linkPosX = linkPosObj.Object("x").Number();
+              double linkPosY = linkPosObj.Object("y").Number();
+              double linkPosZ = linkPosObj.Object("z").Number();
+              JsonObj linkQuatObj = linkObj.Object("orientation");
+              if (!linkQuatObj)
+              {
+                std::cerr << "link pose msg is missing 'orientation' field"
+                          << std::endl;
+                continue;
+              }
+              double linkQuatW = linkQuatObj.Object("w").Number();
+              double linkQuatX = linkQuatObj.Object("x").Number();
+              double linkQuatY = linkQuatObj.Object("y").Number();
+              double linkQuatZ = linkQuatObj.Object("z").Number();
+
+              ignition::math::Vector3d linkPos(linkPosX, linkPosY, linkPosZ);
+              ignition::math::Quaterniond linkQuat(
+                  linkQuatW, linkQuatX, linkQuatY, linkQuatZ);
+              ignition::math::Pose3d linkPose(linkPos, linkQuat);
+
+              gazebo::msgs::Link *linkMsg = modelMsg.add_link();
+              linkMsg->set_id(linkId);
+              linkMsg->set_name(linkName);
+              gazebo::msgs::Set(linkMsg->mutable_pose(), linkPose);
+            }
+          }
           this->modelPub->Publish(modelMsg);
         }
         else if (topic == this->lightFactoryTopic ||
