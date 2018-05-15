@@ -3,8 +3,11 @@
  */
 GZ3D.Ogre2Json = function()
 {
+  // Keeps the whole material file as an Object
+  this.materialObj = {};
+
+  // Keeps all materials in the format needed by GZ3D.SdfParser
   this.materials = {};
-  this.fullJson = {};
 };
 
 /**
@@ -81,11 +84,25 @@ GZ3D.Ogre2Json.prototype.Parse = function(_str)
     return false;
   }
 
-  // Arrange materials array
-  this.materials['Beer/Diffuse'] =
+  // Arrange materials array so that GZ3d.SdfParser can consume it
+  for (var matName in this.fullJson)
   {
-    texture: 'beer.png',
-  };
+    var matValue = this.fullJson[matName];
+    if (typeof matValue !== 'object')
+    {
+      console.err('Failed to parse material [' + matName + ']');
+      continue;
+    }
+
+    var texture = _.get(this.fullJson, matName + '.technique.pass.texture_unit.texture');
+    if (texture !== undefined)
+    {
+      this.materials[matName] =
+      {
+        'texture': texture
+      };
+    }
+  }
 
   return true;
 };
