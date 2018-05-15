@@ -78,6 +78,7 @@
 
       var scene;
       var sdfparser;
+      var ogre2json;
       var resourcesInput;
       var sdfInput;
       var resourceList;
@@ -93,6 +94,8 @@
         scene = new GZ3D.Scene(shaders);
         sdfparser = new GZ3D.SdfParser(scene);
         sdfparser.usingFilesUrls = true;
+
+        ogre2json = new GZ3D.Ogre2Json();
 
         // Append to dom
         var container = document.getElementById('container');
@@ -126,6 +129,9 @@
       // Callback when Load Model is pressed
       function loadModel()
       {
+        sdfparser.materials =
+            Object.assign({}, sdfparser.materials, ogre2json.materials);
+
         var obj = sdfparser.loadSDF(sdfInput.value);
         if (!obj)
         {
@@ -147,7 +153,23 @@
       // Callback when Add URL is pressed
       function addURL()
       {
-        sdfparser.addUrl(resourcesInput.value);
+        var url = resourcesInput.value;
+
+        if (url.length === 0)
+        {
+          return;
+        }
+        else if (url.indexOf('.material') > 0)
+        {
+          if (!ogre2json.LoadFromUrl(url))
+          {
+            alert('Failed to load material file.');
+          }
+        }
+        else
+        {
+          sdfparser.addUrl(url);
+        }
 
         resourceList.innerHTML = resourceList.innerHTML + "<br>" + resourcesInput.value;
       }
