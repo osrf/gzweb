@@ -14,7 +14,7 @@ describe('GzOgre2Json tests', function() {
       depth_check off
       depth_write on
 
-      texture_unit
+      texture_unit tex
       {
         texture beer.png
         filtering anistropic
@@ -283,6 +283,130 @@ material Dumpster/Specular
 
       expect(o2j.Parse("banana")).not.toBeTruthy();
       expect(o2j.Parse("{}")).not.toBeTruthy();
+    });
+
+    it('should ignore comments', function() {
+
+      let o2j = new GZ3D.Ogre2Json();
+      const str = `material FireStation/Diffuse
+{
+  // inline comment
+  receive_shadows off   // another comment
+  /* property value */
+  transparency_casts_shadows on /* more comments */
+}
+`;
+
+      // Parse
+      expect(o2j.Parse(str)).toBeTruthy();
+
+      // Check materialObj
+      expect(o2j.materialObj).toBeDefined();
+      expect(o2j.materialObj.length).toEqual(1);
+
+      expect(o2j.materialObj
+                 [0]
+                 ['FireStation/Diffuse']
+            ).toBeDefined();
+
+      expect(o2j.materialObj
+                 [0]
+                 ['FireStation/Diffuse']
+                 ['receive_shadows']
+            ).toBeDefined();
+
+      expect(o2j.materialObj
+                 [0]
+                 ['FireStation/Diffuse']
+                 ['property']
+            ).not.toBeDefined();
+
+      expect(o2j.materialObj
+                 [0]
+                 ['FireStation/Diffuse']
+                 ['transparency_casts_shadows']
+            ).toBeDefined();
+    });
+
+    it('should handle programs', function() {
+
+      let o2j = new GZ3D.Ogre2Json();
+      const str = `material OakTree/Branch
+{
+}
+
+vertex_program caster_vp_glsl glsl
+{
+  source caster_vp.glsl
+}
+
+material OakTree/Bark
+{
+}
+
+fragment_program caster_fp_glsl glsl
+{
+  source caster_fp.glsl
+}
+`;
+
+      // Parse
+      expect(o2j.Parse(str)).toBeTruthy();
+
+      // Check materialObj
+      expect(o2j.materialObj).toBeDefined();
+      expect(o2j.materialObj.length).toEqual(4);
+
+      // Check materials exist
+      expect(o2j.materialObj[0]['OakTree/Branch']).toBeDefined();
+      expect(o2j.materialObj[2]['OakTree/Bark']).toBeDefined();
+
+      // Check programs exist
+      expect(o2j.materialObj[1]['vertex_program_caster_vp_glsl_glsl'])
+          .toBeDefined();
+      expect(o2j.materialObj[3]['fragment_program_caster_fp_glsl_glsl'])
+          .toBeDefined();
+    });
+
+    it('should handle program refs', function() {
+
+      let o2j = new GZ3D.Ogre2Json();
+      const str = `material OakTree/shadow_caster_alpha
+{
+  technique
+  {
+    pass
+    {
+      vertex_program_ref caster_vp_glsl
+      {
+      }
+
+      fragment_program_ref caster_fp_glsl
+      {
+      }
+    }
+  }
+}
+`;
+
+      // Parse
+      expect(o2j.Parse(str)).toBeTruthy();
+
+      // Check refs
+      expect(o2j.materialObj
+          [0]['OakTree/shadow_caster_alpha']
+          ['technique']
+          ['pass']
+          ['vertex_program_ref_caster_vp_glsl']
+          ).toBeDefined();
+
+      // Check refs
+      expect(o2j.materialObj
+          [0]['OakTree/shadow_caster_alpha']
+          ['technique']
+          ['pass']
+          ['fragment_program_ref_caster_fp_glsl']
+          ).toBeDefined();
     });
   });
 

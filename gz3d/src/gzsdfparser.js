@@ -41,7 +41,7 @@ GZ3D.SdfParser = function(scene, gui, gziface)
 
   var that = this;
   this.emitter.on('material', function(mat) {
-    that.materials = mat;
+    that.materials = Object.assign(this.material, mat);
   });
 };
 

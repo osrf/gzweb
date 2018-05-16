@@ -40,8 +40,12 @@ GZ3D.Ogre2Json.prototype.Parse = function(_str)
 {
   var str = _str;
 
+  // Remove leading and trailing whitespaces per line
+  str = str.replace(/^\s+/gm,'');
+  str = str.replace(/\s+$/gm,'');
+
   // Remove "material " and properly add commas if more than one
-  str = str.replace(/material /g, function(match, offset)
+  str = str.replace(/^material /gm, function(match, offset)
       {
         if (offset === 0)
         {
@@ -53,9 +57,43 @@ GZ3D.Ogre2Json.prototype.Parse = function(_str)
         }
       });
 
-  // Remove leading and trailing whitespaces per line
+  // Handle vertex and fragment programs
+  str = str.replace(/^vertex_program .*$|^fragment_program .*$/gm,
+    function(match, offset)
+      {
+        var underscores = match.replace(/ /g, '_');
+        if (offset === 0)
+        {
+          return underscores;
+        }
+        else
+        {
+          return '},{' + underscores;
+        }
+      });
+
+  // Handle vertex and fragment programs refs
+  str = str.replace(/^vertex_program_ref.*$|^fragment_program_ref.*$/gm,
+    function(match, offset)
+      {
+        return match.replace(/ /g, '_');
+      });
+
+  // Strip name from named texture_unit
+  str = str.replace(/^texture_unit.*$/gm, function(match, offset)
+      {
+        return 'texture_unit';
+      });
+
+  // Remove comments
+  str = str.replace(/(\/\*[\w\'\s\r\n\*]*\*\/)|(\/\/.*$)/gm, '');
+
+  // Remove leading and trailing whitespaces per line (again)
   str = str.replace(/^\s+/gm,'');
   str = str.replace(/\s+$/gm,'');
+
+  // Remove double-quotes
+  str = str.replace(/"/gm, '');
 
   // If line has more than one space, it has an array
   str = str.replace(/(.* .*){2,}/g, function(match)
@@ -120,7 +158,7 @@ GZ3D.Ogre2Json.prototype.Parse = function(_str)
     return false;
   }
 
-  // Arrange materials array so that GZ3d.SdfParser can consume it
+  // Arrange materials array so that GZ3D.SdfParser can consume it
   for (var material in this.materialObj)
   {
     for (var matName in this.materialObj[material])
