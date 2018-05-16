@@ -35,17 +35,16 @@ GZ3D.Ogre2Json.prototype.LoadFromUrl = function(_url)
  */
 GZ3D.Ogre2Json.prototype.Parse = function(_str)
 {
-  if (_str.indexOf('material') !== 0)
-  {
-    console.error('Missing "material" in:');
-    console.error(_str);
-    return false;
-  }
-
   var str = _str;
 
-  // Remove initial "material "
-  str = str.replace('material ','');
+  // Remove "material " and properly add commas if more than one
+  str = str.replace(/material /g, function(match, offset)
+      {
+        if (offset === 0)
+          return '';
+        else
+          return '},{';
+      });
 
   // Remove leading and trailing whitespaces per line
   str = str.replace(/^\s+/gm,'');
@@ -74,10 +73,22 @@ GZ3D.Ogre2Json.prototype.Parse = function(_str)
 
   // Add key-value separators
   str = str.replace(/\s/g, ': ');
-  str = str.replace(/{/g, ': {');
+  str = str.replace(/{/g, function(match, offset, full)
+      {
+         // Don't add if preceeded by comma
+         if (full[offset-1] === ',')
+         {
+           return '{';
+         }
+         else
+         {
+           return ': {';
+         }
+      });
+
 
   // Add surrounding brackets
-  str = '{' + str + '}';
+  str = '[{' + str + '}]';
 
   // Wrap keys and values with double quotes
   str = str.replace(/([\w/\.]+)/g, '"$&"');
@@ -100,22 +111,27 @@ GZ3D.Ogre2Json.prototype.Parse = function(_str)
   }
 
   // Arrange materials array so that GZ3d.SdfParser can consume it
-  for (var matName in this.fullJson)
+  for (var material in this.fullJson)
   {
-    var matValue = this.fullJson[matName];
-    if (typeof matValue !== 'object')
+    for (var matName in this.fullJson[material])
     {
-      console.error('Failed to parse material [' + matName + ']');
-      continue;
-    }
+      var matValue = this.fullJson[material][matName];
 
-    var texture = _.get(this.fullJson, matName + '.technique.pass.texture_unit.texture');
-    if (texture !== undefined)
-    {
-      this.materials[matName] =
+      if (typeof matValue !== 'object')
       {
-        'texture': texture
-      };
+        console.error('Failed to parse material [' + matName + ']');
+        continue;
+      }
+
+      var texture = _.get(this.fullJson[material],
+          matName + '.technique.pass.texture_unit.texture');
+      if (texture !== undefined)
+      {
+        this.materials[matName] =
+        {
+          'texture': texture
+        };
+      }
     }
   }
 
