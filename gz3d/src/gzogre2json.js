@@ -72,6 +72,9 @@ GZ3D.Ogre2Json.prototype.Parse = function(_str)
         }
       });
 
+  // Ignore import lines
+  str = str.replace(/^import .*$/gm, '');
+
   // Handle vertex and fragment programs refs
   str = str.replace(/^vertex_program_ref.*$|^fragment_program_ref.*$/gm,
     function(match, offset)
