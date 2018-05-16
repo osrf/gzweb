@@ -48,7 +48,7 @@ GZ3D.Ogre2Json.prototype.Parse = function(_str)
 
   // Remove leading and trailing whitespaces per line
   str = str.replace(/^\s+/gm,'');
-  str = str.replace(/\s+\Z/gm,'');
+  str = str.replace(/\s+$/gm,'');
 
   // If line has more than one space, it has an array
   str = str.replace(/(.* .*){2,}/g, function(match)
