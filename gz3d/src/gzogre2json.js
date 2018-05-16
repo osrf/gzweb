@@ -130,14 +130,70 @@ GZ3D.Ogre2Json.prototype.Parse = function(_str)
         continue;
       }
 
+      this.materials[matName] = {};
+
+      // Ambient
+      var ambient = _.get(this.materialObj[material],
+          matName + '.technique.pass.ambient');
+      if (ambient !== undefined)
+      {
+        this.materials[matName]['ambient'] = ambient.map(Number);
+      }
+
+      // Diffuse
+      var diffuse = _.get(this.materialObj[material],
+          matName + '.technique.pass.diffuse');
+      if (diffuse !== undefined)
+      {
+        this.materials[matName]['diffuse'] = diffuse.map(Number);
+      }
+
+      // Specular
+      var specular = _.get(this.materialObj[material],
+          matName + '.technique.pass.specular');
+      if (specular !== undefined)
+      {
+        this.materials[matName]['specular'] = specular.map(Number);
+      }
+
+      // Emissive
+      var emissive = _.get(this.materialObj[material],
+          matName + '.technique.pass.emissive');
+      if (emissive !== undefined)
+      {
+        this.materials[matName]['emissive'] = emissive.map(Number);
+      }
+
+      // Depth write
+      var depthWrite = _.get(this.materialObj[material],
+          matName + '.technique.pass.depth_write');
+      if (depthWrite !== undefined)
+      {
+        this.materials[matName]['depth_write'] = depthWrite !== 'off';
+      }
+
+      // Depth check
+      var depthCheck = _.get(this.materialObj[material],
+          matName + '.technique.pass.depth_check');
+      if (depthCheck !== undefined)
+      {
+        this.materials[matName]['depth_check'] = depthCheck !== 'off';
+      }
+
+      // Texture
       var texture = _.get(this.materialObj[material],
           matName + '.technique.pass.texture_unit.texture');
       if (texture !== undefined)
       {
-        this.materials[matName] =
-        {
-          'texture': texture
-        };
+        this.materials[matName]['texture'] = texture;
+      }
+
+      // Scale
+      var scale = _.get(this.materialObj[material],
+          matName + '.technique.pass.texture_unit.scale');
+      if (scale !== undefined)
+      {
+        this.materials[matName]['scale'] = scale.map(Number);
       }
     }
   }

@@ -11,6 +11,9 @@ describe('GzOgre2Json tests', function() {
   {
     pass
     {
+      depth_check off
+      depth_write on
+
       texture_unit
       {
         texture beer.png
@@ -28,94 +31,46 @@ describe('GzOgre2Json tests', function() {
       // Check materialObj
       expect(o2j.materialObj).toBeDefined();
       expect(o2j.materialObj.length).toEqual(1);
-      expect(o2j.materialObj
-                 [0]
-                 ['Beer/Diffuse']
-            ).toBeDefined();
-      expect(o2j.materialObj
-                 [0]
-                 ['Beer/Diffuse']
-                 ['technique']
-            ).toBeDefined();
-      expect(o2j.materialObj
-                 [0]
-                 ['Beer/Diffuse']
-                 ['technique']
-                 ['pass']
-            ).toBeDefined();
-      expect(o2j.materialObj
-                 [0]
-                 ['Beer/Diffuse']
-                 ['technique']
-                 ['pass']
-                 ['texture_unit']
-            ).toBeDefined();
 
-      expect(o2j.materialObj
-                 [0]
-                 ['Beer/Diffuse']
-                 ['technique']
-                 ['pass']
-                 ['texture_unit']
-                 ['texture']
-            ).toBeDefined();
-      expect(o2j.materialObj
-                 [0]
-                 ['Beer/Diffuse']
-                 ['technique']
-                 ['pass']
-                 ['texture_unit']
-                 ['texture']
-            ).toEqual('beer.png');
+      var pass = o2j.materialObj
+          [0]
+          ['Beer/Diffuse']
+          ['technique']
+          ['pass'];
+      expect(pass).toBeDefined();
 
-      expect(o2j.materialObj
-                 [0]
-                 ['Beer/Diffuse']
-                 ['technique']
-                 ['pass']
-                 ['texture_unit']
-                 ['filtering']
-            ).toBeDefined();
-      expect(o2j.materialObj
-                 [0]
-                 ['Beer/Diffuse']
-                 ['technique']
-                 ['pass']
-                 ['texture_unit']
-                 ['filtering']
-            ).toEqual('anistropic');
+      expect(pass['depth_check']).toBeDefined();
+      expect(pass['depth_check']).toEqual('off');
 
-      expect(o2j.materialObj
-                 [0]
-                 ['Beer/Diffuse']
-                 ['technique']
-                 ['pass']
-                 ['texture_unit']
-                 ['max_anisotropy']
-            ).toBeDefined();
-      expect(o2j.materialObj
-                 [0]
-                 ['Beer/Diffuse']
-                 ['technique']
-                 ['pass']
-                 ['texture_unit']
-                 ['max_anisotropy']
-            ).toEqual('16');
+      expect(pass['depth_write']).toBeDefined();
+      expect(pass['depth_write']).toEqual('on');
+
+      var textUnit = pass['texture_unit'];
+      expect(textUnit).toBeDefined();
+
+      expect(textUnit['texture']).toBeDefined();
+      expect(textUnit['texture']).toEqual('beer.png');
+
+      expect(textUnit['filtering']).toBeDefined();
+      expect(textUnit['filtering']).toEqual('anistropic');
+
+      expect(textUnit['max_anisotropy']).toBeDefined();
+      expect(textUnit['max_anisotropy']).toEqual('16');
 
       // Check materials
       expect(o2j.materials).toBeDefined();
-      expect(o2j.materials
-                 ['Beer/Diffuse']
-            ).toBeDefined();
-      expect(o2j.materials
-                 ['Beer/Diffuse']
-                 ['texture']
-            ).toBeDefined();
-      expect(o2j.materials
-                 ['Beer/Diffuse']
-                 ['texture']
-            ).toEqual('beer.png');
 
+      const mat = o2j.materials['Beer/Diffuse'];
+      expect(mat).toBeDefined();
+
+      expect(mat['texture']).toBeDefined();
+      expect(mat['texture']).toEqual('beer.png');
+
+      expect(mat['depth_check']).toBeDefined();
+      expect(mat['depth_check']).toEqual(false);
+
+      expect(mat['depth_write']).toBeDefined();
+      expect(mat['depth_write']).toEqual(true);
     });
 
     it('should parse array properties', function() {
@@ -129,6 +84,8 @@ describe('GzOgre2Json tests', function() {
     {
       ambient 0.7 0.8 0.9 1.0
       emissive 0.2 0.3 0.4
+      specular 1.0 0.9 0.8 0.7
+      diffuse 0.0 0.0 0.0 1.0
 
       texture_unit
       {
@@ -147,56 +104,56 @@ describe('GzOgre2Json tests', function() {
       expect(o2j.materialObj).toBeDefined();
       expect(o2j.materialObj.length).toEqual(1);
 
-      const ambient = o2j.materialObj
+      const pass = o2j.materialObj
                  [0]
                  ['many_arrays']
                  ['technique']
-                 ['pass']
-                 ['ambient']
-      expect(ambient).toBeDefined();
-      expect(ambient.length).toEqual(4);
-      expect(ambient[0]).toEqual("0.7");
-      expect(ambient[1]).toEqual("0.8");
-      expect(ambient[2]).toEqual("0.9");
-      expect(ambient[3]).toEqual("1.0");
+                 ['pass'];
+      expect(pass).toBeDefined();
 
-      const emissive = o2j.materialObj
-                 [0]
-                 ['many_arrays']
-                 ['technique']
-                 ['pass']
-                 ['emissive']
-      expect(emissive).toBeDefined();
-      expect(emissive.length).toEqual(3);
-      expect(emissive[0]).toEqual("0.2");
-      expect(emissive[1]).toEqual("0.3");
-      expect(emissive[2]).toEqual("0.4");
+      expect(pass['ambient']).toBeDefined();
+      expect(pass['ambient'].length).toEqual(4);
+      expect(pass['ambient']).toEqual(['0.7', '0.8', '0.9', '1.0']);
 
-      const scale = o2j.materialObj
-                 [0]
-                 ['many_arrays']
-                 ['technique']
-                 ['pass']
-                 ['texture_unit']
-                 ['scale']
-      expect(scale).toBeDefined();
-      expect(scale.length).toEqual(2);
-      expect(scale[0]).toEqual("0.3");
-      expect(scale[1]).toEqual("0.4");
+      expect(pass['emissive']).toBeDefined();
+      expect(pass['emissive'].length).toEqual(3);
+      expect(pass['emissive']).toEqual(['0.2', '0.3', '0.4']);
+
+      expect(pass['specular']).toBeDefined();
+      expect(pass['specular'].length).toEqual(4);
+      expect(pass['specular']).toEqual(['1.0', '0.9', '0.8', '0.7']);
+
+      expect(pass['diffuse']).toBeDefined();
+      expect(pass['diffuse'].length).toEqual(4);
+      expect(pass['diffuse']).toEqual(['0.0', '0.0', '0.0', '1.0']);
+
+      expect(pass['texture_unit']['scale']).toBeDefined();
+      expect(pass['texture_unit']['scale'].length).toEqual(2);
+      expect(pass['texture_unit']['scale']).toEqual(['0.3', '0.4']);
 
       // Check materials
       expect(o2j.materials).toBeDefined();
-      expect(o2j.materials
-                 ['many_arrays']
-            ).toBeDefined();
-      expect(o2j.materials
-                 ['many_arrays']
-                 ['texture']
-            ).toBeDefined();
-      expect(o2j.materials
-                 ['many_arrays']
-                 ['texture']
-            ).toEqual('coupling_hexagon.png');
+
+      var mat = o2j.materials['many_arrays'];
+      expect(mat).toBeDefined();
+
+      expect(mat['texture']).toBeDefined();
+      expect(mat['texture']).toEqual('coupling_hexagon.png');
+
+      expect(mat['scale']).toBeDefined();
+      expect(mat['scale']).toEqual([0.3, 0.4]);
+
+      expect(mat['ambient']).toBeDefined();
+      expect(mat['ambient']).toEqual([0.7, 0.8, 0.9, 1.0]);
+
+      expect(mat['emissive']).toBeDefined();
+      expect(mat['emissive']).toEqual([0.2, 0.3, 0.4]);
+
+      expect(mat['specular']).toBeDefined();
+      expect(mat['specular']).toEqual([1.0, 0.9, 0.8, 0.7]);
+
+      expect(mat['diffuse']).toBeDefined();
+      expect(mat['diffuse']).toEqual([0.0, 0.0, 0.0, 1.0]);
     });
 
     it('should parse multiple properties', function() {
@@ -318,6 +275,14 @@ material Dumpster/Specular
                  ['FireStation/Diffuse']
                  ['texture']
             ).toEqual('FireStation_Diffuse.png');
+    });
+
+    it('should gracefully handle malformed materials', function() {
+
+      let o2j = new GZ3D.Ogre2Json();
+
+      expect(o2j.Parse("banana")).not.toBeTruthy();
+      expect(o2j.Parse("{}")).not.toBeTruthy();
     });
   });
 
