@@ -6,7 +6,8 @@
     "THREE": true,
     "ColladaLoader2": true,
     "requestAnimationFrame": true,
-    "xml2json": true
+    "xml2json": true,
+    "_": true
   },
   "curly": true,
   "eqeqeq": true,

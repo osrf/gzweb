@@ -4,7 +4,7 @@
 GZ3D.Ogre2Json = function()
 {
   // Keeps the whole material file as an Object
-  this.materialObj = {};
+  this.materialObj = [];
 
   // Keeps all materials in the format needed by GZ3D.SdfParser
   this.materials = {};
@@ -41,9 +41,13 @@ GZ3D.Ogre2Json.prototype.Parse = function(_str)
   str = str.replace(/material /g, function(match, offset)
       {
         if (offset === 0)
+        {
           return '';
+        }
         else
+        {
           return '},{';
+        }
       });
 
   // Remove leading and trailing whitespaces per line
@@ -102,7 +106,7 @@ GZ3D.Ogre2Json.prototype.Parse = function(_str)
   // Parse JSON
   try
   {
-    this.fullJson = JSON.parse(str);
+    this.materialObj = JSON.parse(str);
   }
   catch(e)
   {
@@ -114,11 +118,11 @@ GZ3D.Ogre2Json.prototype.Parse = function(_str)
   }
 
   // Arrange materials array so that GZ3d.SdfParser can consume it
-  for (var material in this.fullJson)
+  for (var material in this.materialObj)
   {
-    for (var matName in this.fullJson[material])
+    for (var matName in this.materialObj[material])
     {
-      var matValue = this.fullJson[material][matName];
+      var matValue = this.materialObj[material][matName];
 
       if (typeof matValue !== 'object')
       {
@@ -126,7 +130,7 @@ GZ3D.Ogre2Json.prototype.Parse = function(_str)
         continue;
       }
 
-      var texture = _.get(this.fullJson[material],
+      var texture = _.get(this.materialObj[material],
           matName + '.technique.pass.texture_unit.texture');
       if (texture !== undefined)
       {
