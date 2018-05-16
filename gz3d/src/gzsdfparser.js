@@ -29,7 +29,7 @@ GZ3D.SdfParser = function(scene, gui, gziface)
   this.init();
 
   // cache materials if more than one model needs them
-  this.materials = [];
+  this.materials = {};
   this.entityMaterial = {};
   // store meshes when loading meshes from memory.
   this.meshes = {};
@@ -41,7 +41,7 @@ GZ3D.SdfParser = function(scene, gui, gziface)
 
   var that = this;
   this.emitter.on('material', function(mat) {
-    that.materials = Object.assign(this.material, mat);
+    that.materials = Object.assign(that.materials, mat);
   });
 };
 
