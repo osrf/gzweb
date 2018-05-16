@@ -129,9 +129,6 @@
       // Callback when Load Model is pressed
       function loadModel()
       {
-        sdfparser.materials =
-            Object.assign({}, sdfparser.materials, ogre2json.materials);
-
         var obj = sdfparser.loadSDF(sdfInput.value);
         if (!obj)
         {

@@ -38,6 +38,11 @@ GZ3D.SdfParser = function(scene, gui, gziface)
 
   // Should contain model files URLs if not using gzweb model files hierarchy.
   this.customUrls = [];
+
+  var that = this;
+  this.emitter.on('material', function(mat) {
+    that.materials = mat;
+  });
 };
 
 /**
@@ -58,10 +63,6 @@ GZ3D.SdfParser.prototype.init = function()
               'without a server, and materials could not be loaded.' +
               'When connected scene will be reinitialized', 5000);
       that.onConnectionError();
-    });
-
-    this.emitter.on('material', function(mat) {
-      that.materials = mat;
     });
 
     this.emitter.on('gzstatus', function(gzstatus) {

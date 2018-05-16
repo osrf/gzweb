@@ -1,8 +1,11 @@
 /**
+ * Converts an Ogre material script into JSON
  * @constructor
  */
 GZ3D.Ogre2Json = function()
 {
+  this.emitter = globalEmitter || new EventEmitter2({verboseMemoryLeak: true});
+
   // Keeps the whole material file as an Object
   this.materialObj = [];
 
@@ -198,5 +201,7 @@ GZ3D.Ogre2Json.prototype.Parse = function(_str)
     }
   }
 
+  // Notify others
+  this.emitter.emit('material', this.materials);
   return true;
 };
