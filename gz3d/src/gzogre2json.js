@@ -96,6 +96,9 @@ GZ3D.Ogre2Json.prototype.Parse = function(_str)
   // Remove comma from last property in a sequence
   str = str.replace(/,}/g, '}');
 
+  // Add comma between sibling objects
+  str = str.replace(/}"/g, '},"');
+
   // Parse JSON
   try
   {
