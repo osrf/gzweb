@@ -37,8 +37,8 @@ GZ3D.Ogre2Json.prototype.Parse = function(_str)
 {
   if (_str.indexOf('material') !== 0)
   {
-    console.err('Missing "material" in:');
-    console.err(_str);
+    console.error('Missing "material" in:');
+    console.error(_str);
     return false;
   }
 
@@ -50,6 +50,21 @@ GZ3D.Ogre2Json.prototype.Parse = function(_str)
   // Remove leading and trailing whitespaces per line
   str = str.replace(/^\s+/gm,'');
   str = str.replace(/\s+\Z/gm,'');
+
+  // If line has more than one space, it has an array
+  str = str.replace(/(.* .*){2,}/g, function(match)
+      {
+        var parts = match.split(' ');
+
+        var res = parts[0] + ' [';
+        for (var i = 1; i < (parts.length - 1); i++)
+        {
+          res += parts[i] + ',';
+        }
+        res += parts[parts.length-1] + ']';
+
+        return res;
+      });
 
   // Add comma to end of lines that have space
   str = str.replace(/(.* .*)/g,'$&,');
@@ -68,7 +83,7 @@ GZ3D.Ogre2Json.prototype.Parse = function(_str)
   str = str.replace(/([\w/\.]+)/g, '"$&"');
 
   // Remove comma from last property in a sequence
-  str = str.replace(/",}/g, '"}');
+  str = str.replace(/,}/g, '}');
 
   // Parse JSON
   try
@@ -77,10 +92,10 @@ GZ3D.Ogre2Json.prototype.Parse = function(_str)
   }
   catch(e)
   {
-    console.err('Failed to parse JSON. Original string:');
-    console.err(_str);
-    console.err('Modified string:');
-    console.err(str);
+    console.error('Failed to parse JSON. Original string:');
+    console.error(_str);
+    console.error('Modified string:');
+    console.error(str);
     return false;
   }
 
@@ -90,7 +105,7 @@ GZ3D.Ogre2Json.prototype.Parse = function(_str)
     var matValue = this.fullJson[matName];
     if (typeof matValue !== 'object')
     {
-      console.err('Failed to parse material [' + matName + ']');
+      console.error('Failed to parse material [' + matName + ']');
       continue;
     }
 
