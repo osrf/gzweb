@@ -39,6 +39,7 @@ module.exports = function(config) {
       'gz3d/test/fixture/*.html',
       'gz3d/test/*.js',
       {pattern: 'gz3d/test/utils/beer/*', included: false, served: true, watched: false, nocache: true},
+      {pattern: 'gz3d/test/utils/beer/materials/scripts/*', included: false, served: true, watched: false, nocache: true},
       {pattern: 'gz3d/test/utils/walkway_metal_straight/*', included: false, served: true, watched: false, nocache: true},
       {pattern: 'gz3d/test/utils/walkway_metal_straight/meshes/*', included: false, served: true, watched: false, nocache: true},
       {pattern: 'gz3d/test/utils/house_2/*', included: false, served: true, watched: false, nocache: true},

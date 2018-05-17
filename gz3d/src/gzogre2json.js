@@ -16,20 +16,29 @@ GZ3D.Ogre2Json = function()
 /**
  * Load materials from a .material file
  * @param _url Full URL to .material file
+ * @returns A promise where:
+ *          * resolve: returns a boolean indicating success
+ *          * reject: returns the HTTP status text
  */
 GZ3D.Ogre2Json.prototype.LoadFromUrl = function(_url)
 {
-  var that = this;
-
-  var fileLoaded = function(_text)
-  {
-    that.Parse(_text);
-  };
-
   var fileLoader = new THREE.FileLoader();
-  fileLoader.load(_url, fileLoaded);
+  var xhr = fileLoader.load(_url, function(){});
 
-  return true;
+  return new Promise((resolve, reject) =>
+    {
+        xhr.onload = () =>
+        {
+          if (xhr.status === 200)
+          {
+            resolve(this.Parse(xhr.responseText));
+          }
+          else
+          {
+            reject(xhr.statusText);
+          }
+        };
+    });
 };
 
 /**

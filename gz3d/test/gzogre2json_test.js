@@ -1,5 +1,7 @@
 describe('GzOgre2Json tests', function() {
 
+  const utilsPath = 'http://localhost:9876/base/gz3d/test/utils/';
+
   describe('Parse material strings', function() {
 
     it('should parse deep properties', function() {
@@ -407,6 +409,40 @@ fragment_program caster_fp_glsl glsl
           ['pass']
           ['fragment_program_ref_caster_fp_glsl']
           ).toBeDefined();
+    });
+  });
+
+  describe('Loading from URL', function() {
+
+    it('should load existing material', function(done) {
+
+      let o2j = new GZ3D.Ogre2Json();
+      o2j.LoadFromUrl(utilsPath + 'beer/materials/scripts/beer.material')
+        .then((success) =>
+          {
+            expect(success).toEqual(true);
+            expect(o2j.materials['Beer/Diffuse']).toBeDefined();
+            done();
+          })
+        .catch(() =>
+          {
+            fail();
+          })
+    });
+
+    it('should fail to load inexistent material', function(done) {
+
+      let o2j = new GZ3D.Ogre2Json();
+      o2j.LoadFromUrl(utilsPath + 'bad/bad.material')
+        .then(() =>
+          {
+            fail();
+          })
+        .catch((error) =>
+          {
+            expect(error).toEqual('Not Found');
+            done();
+          })
     });
   });
 

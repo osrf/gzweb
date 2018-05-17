@@ -158,10 +158,18 @@
         }
         else if (url.indexOf('.material') > 0)
         {
-          if (!ogre2json.LoadFromUrl(url))
-          {
-            alert('Failed to load material file.');
-          }
+          ogre2json.LoadFromUrl(url)
+            .then((success) =>
+              {
+                if (!success)
+                {
+                  alert('Failed to load material file.');
+                }
+              })
+            .catch((error) =>
+              {
+                alert('Failed to load material file: ' + error);
+              })
         }
         else
         {
