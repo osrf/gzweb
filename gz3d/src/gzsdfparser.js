@@ -393,7 +393,6 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
                 if (this.customUrls[k].indexOf(mat.texture) > -1)
                 {
                   texture = this.customUrls[k];
-                  this.customUrls.splice(k, 1);
                   break;
                 }
               }
