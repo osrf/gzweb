@@ -444,6 +444,21 @@ fragment_program caster_fp_glsl glsl
             done();
           })
     });
+
+    it('should fail to load malformed material', function(done) {
+
+      let o2j = new GZ3D.Ogre2Json();
+      o2j.LoadFromUrl(utilsPath + 'beer/materials/scripts/bad.material')
+        .then((success) =>
+          {
+            expect(success).toEqual(false);
+            done();
+          })
+        .catch(() =>
+          {
+            fail();
+          })
+    });
   });
 
 });
