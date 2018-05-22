@@ -251,6 +251,14 @@ GZ3D.Ogre2Json.prototype.Parse = function(_str)
       {
         this.materials[matName]['scale'] = scale.map(Number);
       }
+
+      // Opacity
+      var alphaOpEx = _.get(this.materialObj[material],
+          matName + '.technique.pass.texture_unit.alpha_op_ex');
+      if (alphaOpEx !== undefined)
+      {
+        this.materials[matName]['opacity'] = Number(alphaOpEx[3]);
+      }
     }
   }
 

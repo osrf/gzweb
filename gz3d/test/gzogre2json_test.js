@@ -93,6 +93,7 @@ describe('GzOgre2Json tests', function() {
       {
         texture coupling_hexagon.png
         scale 0.3 0.4
+        alpha_op_ex source1 src_manual src_current 0.5
       }
     }
   }
@@ -133,6 +134,11 @@ describe('GzOgre2Json tests', function() {
       expect(pass['texture_unit']['scale'].length).toEqual(2);
       expect(pass['texture_unit']['scale']).toEqual(['0.3', '0.4']);
 
+      expect(pass['texture_unit']['alpha_op_ex']).toBeDefined();
+      expect(pass['texture_unit']['alpha_op_ex'].length).toEqual(4);
+      expect(pass['texture_unit']['alpha_op_ex']).toEqual(['source1',
+          'src_manual', 'src_current', '0.5']);
+
       // Check materials
       expect(o2j.materials).toBeDefined();
 
@@ -156,6 +162,9 @@ describe('GzOgre2Json tests', function() {
 
       expect(mat['diffuse']).toBeDefined();
       expect(mat['diffuse']).toEqual([0.0, 0.0, 0.0, 1.0]);
+
+      expect(mat['opacity']).toBeDefined();
+      expect(mat['opacity']).toEqual(0.5);
     });
 
     it('should parse multiple properties', function() {
