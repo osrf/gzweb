@@ -416,6 +416,27 @@ fragment_program caster_fp_glsl glsl
           ['fragment_program_ref_caster_fp_glsl']
           ).toBeDefined();
     });
+
+    it('should ignore material aliases', function() {
+
+      let o2j = new GZ3D.Ogre2Json();
+      const str = `material Gazebo/Gray : Gazebo/Grey
+{
+}
+`;
+
+      // Parse
+      expect(o2j.Parse(str)).toBeTruthy();
+
+      // Check refs
+      expect(o2j.materialObj
+          [0]['Gazebo/Gray']
+          ).toBeDefined();
+
+      expect(o2j.materialObj
+          [0]['Gazebo/Gray']
+          ).toEqual({});
+    });
   });
 
   describe('Loading from URL', function() {

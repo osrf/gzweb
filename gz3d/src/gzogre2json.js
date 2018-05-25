@@ -59,6 +59,12 @@ GZ3D.Ogre2Json.prototype.Parse = function(_str)
   str = str.replace(/^\s+/gm, '');
   str = str.replace(/\s+$/gm, '');
 
+  // Remove material alias (material Name : AnotherName {})
+  str = str.replace(/^material (.*):(.*)$/gm, function(match, p1, p2)
+      {
+        return 'material ' + p1;
+      });
+
   // Remove "material " and properly add commas if more than one
   str = str.replace(/^material /gm, function(match, offset)
       {
