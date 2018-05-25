@@ -84,7 +84,7 @@ describe('GzOgre2Json tests', function() {
   {
     pass
     {
-      ambient 0.7 0.8 0.9 1.0
+      ambient 0.7   0.8   0.9    1.0
       emissive 0.2 0.3 0.4
       specular 1.0 0.9 0.8 0.7
       diffuse 0.0 0.0 0.0 1.0
@@ -379,12 +379,11 @@ fragment_program caster_fp_glsl glsl
           .toBeDefined();
     });
 
-    it('should handle program refs', function() {
+    it('should handle program refs and inline {}', function() {
 
       let o2j = new GZ3D.Ogre2Json();
       const str = `material OakTree/shadow_caster_alpha
-{
-  technique
+{ technique
   {
     pass
     {
@@ -392,9 +391,7 @@ fragment_program caster_fp_glsl glsl
       {
       }
 
-      fragment_program_ref caster_fp_glsl
-      {
-      }
+      fragment_program_ref caster_fp_glsl {}
     }
   }
 }

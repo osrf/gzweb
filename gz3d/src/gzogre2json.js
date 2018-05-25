@@ -52,9 +52,12 @@ GZ3D.Ogre2Json.prototype.Parse = function(_str)
 {
   var str = _str;
 
+  // { and } in new lines
+  str = str.replace(/{|}/gm, '\r\n$&\r\n');
+
   // Remove leading and trailing whitespaces per line
-  str = str.replace(/^\s+/gm,'');
-  str = str.replace(/\s+$/gm,'');
+  str = str.replace(/^\s+/gm, '');
+  str = str.replace(/\s+$/gm, '');
 
   // Remove "material " and properly add commas if more than one
   str = str.replace(/^material /gm, function(match, offset)
@@ -100,6 +103,18 @@ GZ3D.Ogre2Json.prototype.Parse = function(_str)
         return 'texture_unit';
       });
 
+  // Strip name from named pass
+  str = str.replace(/^pass.*$/gm, function(match, offset)
+      {
+        return 'pass';
+      });
+
+  // Strip name from named technique
+  str = str.replace(/^technique.*$/gm, function(match, offset)
+      {
+        return 'technique';
+      });
+
   // Remove comments
   str = str.replace(/(\/\*[\w\'\s\r\n\*]*\*\/)|(\/\/.*$)/gm, '');
 
@@ -113,7 +128,7 @@ GZ3D.Ogre2Json.prototype.Parse = function(_str)
   // If line has more than one space, it has an array
   str = str.replace(/(.* .*){2,}/g, function(match)
       {
-        var parts = match.split(' ');
+        var parts = match.split(/\s+/g);
 
         var res = parts[0] + ' [';
         for (var i = 1; i < (parts.length - 1); i++)
