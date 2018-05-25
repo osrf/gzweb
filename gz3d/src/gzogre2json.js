@@ -255,7 +255,7 @@ GZ3D.Ogre2Json.prototype.Parse = function(_str)
       // Opacity
       var alphaOpEx = _.get(this.materialObj[material],
           matName + '.technique.pass.texture_unit.alpha_op_ex');
-      if (alphaOpEx !== undefined)
+      if (alphaOpEx !== undefined && alphaOpEx.length === 4)
       {
         this.materials[matName]['opacity'] = Number(alphaOpEx[3]);
       }
