@@ -85,7 +85,7 @@ describe('GzOgre2Json tests', function() {
     pass
     {
       ambient 0.7   0.8   0.9    1.0
-      emissive 0.2 0.3 0.4
+      emissive vertexcolour
       specular 1.0 0.9 0.8 0.7
       diffuse 0.0 0.0 0.0 1.0
 
@@ -119,8 +119,7 @@ describe('GzOgre2Json tests', function() {
       expect(pass['ambient']).toEqual(['0.7', '0.8', '0.9', '1.0']);
 
       expect(pass['emissive']).toBeDefined();
-      expect(pass['emissive'].length).toEqual(3);
-      expect(pass['emissive']).toEqual(['0.2', '0.3', '0.4']);
+      expect(pass['emissive']).toEqual('vertexcolour');
 
       expect(pass['specular']).toBeDefined();
       expect(pass['specular'].length).toEqual(4);
@@ -154,8 +153,7 @@ describe('GzOgre2Json tests', function() {
       expect(mat['ambient']).toBeDefined();
       expect(mat['ambient']).toEqual([0.7, 0.8, 0.9, 1.0]);
 
-      expect(mat['emissive']).toBeDefined();
-      expect(mat['emissive']).toEqual([0.2, 0.3, 0.4]);
+      expect(mat['emissive']).not.toBeDefined();
 
       expect(mat['specular']).toBeDefined();
       expect(mat['specular']).toEqual([1.0, 0.9, 0.8, 0.7]);
@@ -305,6 +303,10 @@ material Dumpster/Specular
   receive_shadows off   // another comment
   /* property value */
   transparency_casts_shadows on /* more comments */
+  /*technique
+    {
+      something/smth
+    }*/
 }
 `;
 

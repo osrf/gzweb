@@ -122,7 +122,7 @@ GZ3D.Ogre2Json.prototype.Parse = function(_str)
       });
 
   // Remove comments
-  str = str.replace(/(\/\*[\w\'\s\r\n\*]*\*\/)|(\/\/.*$)/gm, '');
+  str = str.replace(/(\/\*[\s\S]*?\*\/)|(\/\/.*$)/gm, '');
 
   // Remove leading and trailing whitespaces per line (again)
   str = str.replace(/^\s+/gm,'');
@@ -212,7 +212,7 @@ GZ3D.Ogre2Json.prototype.Parse = function(_str)
       // Ambient
       var ambient = _.get(this.materialObj[material],
           matName + '.technique.pass.ambient');
-      if (ambient !== undefined)
+      if (ambient !== undefined && Array.isArray(ambient))
       {
         this.materials[matName]['ambient'] = ambient.map(Number);
       }
@@ -220,7 +220,7 @@ GZ3D.Ogre2Json.prototype.Parse = function(_str)
       // Diffuse
       var diffuse = _.get(this.materialObj[material],
           matName + '.technique.pass.diffuse');
-      if (diffuse !== undefined)
+      if (diffuse !== undefined && Array.isArray(diffuse))
       {
         this.materials[matName]['diffuse'] = diffuse.map(Number);
       }
@@ -228,7 +228,7 @@ GZ3D.Ogre2Json.prototype.Parse = function(_str)
       // Specular
       var specular = _.get(this.materialObj[material],
           matName + '.technique.pass.specular');
-      if (specular !== undefined)
+      if (specular !== undefined && Array.isArray(specular))
       {
         this.materials[matName]['specular'] = specular.map(Number);
       }
@@ -236,7 +236,7 @@ GZ3D.Ogre2Json.prototype.Parse = function(_str)
       // Emissive
       var emissive = _.get(this.materialObj[material],
           matName + '.technique.pass.emissive');
-      if (emissive !== undefined)
+      if (emissive !== undefined && Array.isArray(emissive))
       {
         this.materials[matName]['emissive'] = emissive.map(Number);
       }
@@ -268,7 +268,7 @@ GZ3D.Ogre2Json.prototype.Parse = function(_str)
       // Scale
       var scale = _.get(this.materialObj[material],
           matName + '.technique.pass.texture_unit.scale');
-      if (scale !== undefined)
+      if (scale !== undefined && Array.isArray(scale))
       {
         this.materials[matName]['scale'] = scale.map(Number);
       }
@@ -276,7 +276,8 @@ GZ3D.Ogre2Json.prototype.Parse = function(_str)
       // Opacity
       var alphaOpEx = _.get(this.materialObj[material],
           matName + '.technique.pass.texture_unit.alpha_op_ex');
-      if (alphaOpEx !== undefined && alphaOpEx.length === 4)
+      if (alphaOpEx !== undefined && Array.isArray(alphaOpEx) &&
+          alphaOpEx.length === 4)
       {
         this.materials[matName]['opacity'] = Number(alphaOpEx[3]);
       }
