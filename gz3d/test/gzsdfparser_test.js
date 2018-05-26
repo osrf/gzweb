@@ -174,6 +174,31 @@ describe('Sdf Parser tests', function() {
     });
   });
 
+  describe('Material event', function() {
+    it('should concatenate several materials', function() {
+
+      // Starts empty
+      expect(sdfparser.materials).toBeDefined();
+      expect(sdfparser.materials).toEqual({});
+
+      // Add material
+      sdfparser.emitter.emit('material', {'Material1': {}});
+      expect(sdfparser.materials['Material1']).toBeDefined();
+
+      // Add another material
+      sdfparser.emitter.emit('material', {'Material2': {}});
+      expect(sdfparser.materials['Material1']).toBeDefined();
+      expect(sdfparser.materials['Material2']).toBeDefined();
+
+      // Add multiple materials
+      sdfparser.emitter.emit('material', {'Material3': {}, 'Material4': {}});
+      expect(sdfparser.materials['Material1']).toBeDefined();
+      expect(sdfparser.materials['Material2']).toBeDefined();
+      expect(sdfparser.materials['Material3']).toBeDefined();
+      expect(sdfparser.materials['Material4']).toBeDefined();
+    });
+  });
+
   // TODO: test sdfParser.createMaterial
   // have to be able to load the materials with no gzserver
   // or an another solution
