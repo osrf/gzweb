@@ -72,9 +72,9 @@
               </a>
               <a ng-repeat="category in categories" ng-click="openTab('insertMenu-'+category.path)" data-role="button" class="insertMenuItem insertMenuCategoryItem" title="{{category.title}}">
                 {{category.title}}<br>
-                <img src="/assets/{{category.examplePath1}}/thumbnails/0.png">
-                <img src="/assets/{{category.examplePath2}}/thumbnails/0.png">
-                <img src="/assets/{{category.examplePath3}}/thumbnails/0.png">
+                <img src="assets/{{category.examplePath1}}/thumbnails/0.png">
+                <img src="assets/{{category.examplePath2}}/thumbnails/0.png">
+                <img src="assets/{{category.examplePath3}}/thumbnails/0.png">
               </a>
             </div>
           </div>
@@ -126,7 +126,7 @@
             <div class="panelContent">
               <a ng-repeat="model in category.models" id="insert-entity-{{model.modelPath}}" ng-mousedown="spawnEntity(model.modelPath)" data-role="button" class="insertMenuItem" title="{{model.modelTitle}}">
               {{model.modelTitle}}<br>
-              <img src="/assets/{{model.modelPath}}/thumbnails/0.png">
+              <img src="assets/{{model.modelPath}}/thumbnails/0.png">
             </a>
             </div>
           </div>

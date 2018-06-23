@@ -2027,7 +2027,7 @@ GZ3D.Gui.prototype.findModelThumbnail = function(instanceName)
       var path = modelList[i].models[j].modelPath;
       if(instanceName.indexOf(path) >= 0)
       {
-        return '/assets/'+path+'/thumbnails/0.png';
+        return 'assets/'+path+'/thumbnails/0.png';
       }
     }
   }
