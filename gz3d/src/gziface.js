@@ -9,7 +9,8 @@ GZ3D.GZIface = function(scene, url)
 {
   this.emitter = globalEmitter || new EventEmitter2({verboseMemoryLeak: true});
   this.scene = scene;
-  this.url = url || (location.hostname + ':' + location.port + location.pathname);
+  this.url = url ||
+      (location.hostname + ':' + location.port + location.pathname);
   this.protocol = location.protocol;
   this.secure = location.protocol === 'https:';
 
