@@ -780,7 +780,7 @@ GZ3D.SdfParser.prototype.createVisual = function(visual)
  */
 GZ3D.SdfParser.prototype.spawnFromSDF = function(sdf)
 {
-  //parse sdfXML
+  // Parse sdfXML
   var sdfXML;
   if ((typeof sdf) === 'string')
   {
@@ -791,11 +791,16 @@ GZ3D.SdfParser.prototype.spawnFromSDF = function(sdf)
     sdfXML = sdf;
   }
 
-  //convert SDF XML to Json string and parse JSON string to object
-  //TODO: we need better xml 2 json object convertor
-  var myjson = xml2json(sdfXML, '\t');
-  var sdfObj = JSON.parse(myjson).sdf;
+  // Convert SDF XML to Json string and parse JSON string to object
+  // TODO: we need better xml 2 json object convertor
+  var sdfJson = xml2json(sdfXML, '\t');
+  var sdfObj = JSON.parse(sdfJson).sdf;
   // it is easier to manipulate json object
+
+  if (!sdfObj) {
+    console.error('Failed to parse model: ', sdfJson);
+    return;
+  }
 
   if (sdfObj.model)
   {
