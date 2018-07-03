@@ -133,6 +133,7 @@
       // Take a screenshot and display it in a list below the scene
       function onScreenshot()
       {
+        scene.render();
         var imgDisplay = scene.getDomElement().toDataURL(mimeImg);
         var imgDownload = imgDisplay.replace(mimeImg, mimeDownload)
 
