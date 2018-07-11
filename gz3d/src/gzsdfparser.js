@@ -324,7 +324,10 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
   var textureUri, texture, mat;
   var ambient, diffuse, specular, opacity, normalMap, scale;
 
-  if (!material) { return null; }
+  if (!material)
+  {
+    return null;
+  }
 
   var script = material.script;
   if (script)
@@ -581,6 +584,12 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
           that.scene.loadMeshFromString(modelUri, submesh,centerSubmesh,
             function(obj)
             {
+              if (!obj)
+              {
+                console.error('Failed to load mesh.');
+                return;
+              }
+
               parent.add(obj);
               loadGeom(parent);
             }, [meshFile, mtlFile]);
@@ -590,6 +599,12 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
           that.scene.loadMeshFromString(modelUri, submesh, centerSubmesh,
             function(dae)
             {
+              if (!dae)
+              {
+                console.error('Failed to load mesh.');
+                return;
+              }
+
               if (material)
               {
                 var allChildren = [];
@@ -625,6 +640,12 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
         this.scene.loadMeshFromUri(modelUri, submesh, centerSubmesh,
           function (mesh)
           {
+            if (!mesh)
+            {
+              console.error('Failed to load mesh.');
+              return;
+            }
+
             if (material)
             {
               // Because the stl mesh doesn't have any children we cannot set
@@ -861,7 +882,10 @@ GZ3D.SdfParser.prototype.spawnModelFromSDF = function(sdfObj)
   for (i = 0; i < sdfObj.model.link.length; ++i)
   {
     linkObj = this.createLink(sdfObj.model.link[i]);
-    modelObj.add(linkObj);
+    if (linkObj)
+    {
+      modelObj.add(linkObj);
+    }
   }
 
   //  this.scene.add(modelObj);
