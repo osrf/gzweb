@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <title>[GzWeb] Screenshots</title>
+    <meta charset="utf-8">
+    <script src="../gz3d/build/gz3d.js"></script>
+    <style>
+      body {
+        padding: 2em;
+        font-family: sans;
+      }
+      #container {
+        padding: 2em;
+        height: 30em;
+        width: 80%;
+        margin: auto;
+        margin-bottom: 2em;
+      }
+      .listItem {
+        width: 10em;
+        margin: 2em;
+        text-align: center;
+        position: relative;
+        float: left;
+      }
+      img {
+        width: 100%;
+      }
+      .downloadText {
+        visibility:hidden;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #424242;
+      }
+
+      a {
+        text-decoration: none;
+      }
+
+      a:hover .downloadText {
+        visibility:visible;
+      }
+      a:hover img {
+        opacity: 0.5;
+      }
+    </style>
+  </head>
+
+  <body>
+
+    <h2>
+      Screenshots
+    </h2>
+
+    <p>
+      This example shows how to take screenshots of the current camera view,
+      display them as images and download them as files.
+    </p>
+    <button onclick="onScreenshot()" id="add-button">Take screenshot</button>
+
+    <center id="container">
+    </center>
+
+    <div id="images">
+    </div>
+
+    <script>
+      if (!Detector.webgl)
+        Detector.addGetWebGLMessage();
+
+      var mimeImg = "image/png";
+      var mimeDownload = "image/octet-stream";
+
+      var scene;
+      var sdfparser;
+      var ogre2json;
+      var container;
+      var imagesDom;
+
+      init();
+      animate();
+
+      // Initialization
+      function init()
+      {
+        // Initialize objects
+        var shaders = new GZ3D.Shaders();
+        scene = new GZ3D.Scene(shaders);
+        sdfparser = new GZ3D.SdfParser(scene);
+        sdfparser.usingFilesUrls = true;
+
+        ogre2json = new GZ3D.Ogre2Json();
+
+        // Append to dom
+        container = document.getElementById('container');
+        container.appendChild(scene.getDomElement());
+
+        imagesDom = document.getElementById('images');
+
+        // Handle window resize
+        window.addEventListener('resize', onWindowResize, false);
+        onWindowResize();
+
+        // Load model - hardcoded to double pendulum for simplicity
+        var obj = sdfparser.loadSDF(
+          "https://api.ignitionfuel.org/1.0/openrobotics/models/Double%20pendulum%20with%20base/1/files/model.sdf");
+        if (!obj)
+        {
+          alert('Failed to load model');
+          return;
+        }
+        scene.add(obj);
+
+        animate();
+      }
+
+      // Callback when window is resized
+      function onWindowResize()
+      {
+        scene.setSize(container.clientWidth, container.clientHeight);
+      }
+
+      // Recursively called animation loop
+      function animate()
+      {
+        requestAnimationFrame(animate);
+        scene.render();
+      }
+
+      // Take a screenshot and display it in a list below the scene
+      function onScreenshot()
+      {
+        scene.render();
+        var imgDisplay = scene.getDomElement().toDataURL(mimeImg);
+        var imgDownload = imgDisplay.replace(mimeImg, mimeDownload)
+
+        imagesDom.innerHTML = imagesDom.innerHTML +
+            '<div class="listItem">' +
+              '<a href="' + imgDownload + '" download="screenshot.png">' +
+                '<img src="' + imgDisplay + '"/>' +
+                '<p class="downloadText">download</p>' +
+              '</a>' +
+            '</div>';
+      }
+    </script>
+
+  </body>
+</html>
