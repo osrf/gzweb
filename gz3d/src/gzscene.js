@@ -39,7 +39,7 @@ GZ3D.Scene.prototype.init = function()
   this.colladaLoader = new THREE.ColladaLoader();
   this.stlLoader = new THREE.STLLoader();
 
-  this.renderer = new THREE.WebGLRenderer({antialias: true });
+  this.renderer = new THREE.WebGLRenderer({antialias: true});
   this.renderer.setPixelRatio(window.devicePixelRatio);
   this.renderer.setClearColor(0xb2b2b2, 1);
   this.renderer.autoClear = false;
