@@ -1580,14 +1580,24 @@ GZ3D.Scene.prototype.loadMeshFromString = function(uri, submesh, centerSubmesh,
     return;
   }
 
-  // load urdf model
+  // load mesh
   if (uriFile.substr(-4).toLowerCase() === '.dae')
   {
     // loadCollada just accepts one file, which is the dae file as string
+    if (files.length < 1 || !files[0])
+    {
+      console.error('Missing DAE file');
+      return;
+    }
     return this.loadCollada(uri, submesh, centerSubmesh, callback, files[0]);
   }
   else if (uriFile.substr(-4).toLowerCase() === '.obj')
   {
+    if (files.length < 2 || !files[0] || !files[1])
+    {
+      console.error('Missing either OBJ or MTL file');
+      return;
+    }
     var gzObjLoader = new GZ3D.OBJLoader(this, uri, submesh, centerSubmesh,
         callback, files);
     return gzObjLoader.loadOBJ();
@@ -2968,6 +2978,11 @@ GZ3D.Scene.prototype.createFromSdf = function(sdf)
   var sdfObj = JSON.parse(myjson).sdf;
 
   var mesh = this.spawnModel.sdfParser.spawnFromSDF(sdf);
+  if (!mesh)
+  {
+    return;
+  }
+
   obj.name = mesh.name;
   obj.add(mesh);
 

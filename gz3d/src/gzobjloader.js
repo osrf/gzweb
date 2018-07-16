@@ -9,7 +9,7 @@
  * @param {} _submesh
  * @param {} _centerSubmesh
  * @param {function} _callback
- * @param {array} _files -optional- the obj and the mtl files as a strings
+ * @param {array} _files -optional- the obj [0] and the mtl [1] files as a strings
  * to be parsed by the loaders, if provided the uri will not be used just
  * as a url, no XMLHttpRequest will be made.
  */
@@ -25,7 +25,10 @@ GZ3D.OBJLoader = function(_scene, _uri, _submesh, _centerSubmesh, _callback,
   this.files = _files;
 
   // True if raw files were provided
-  this.usingRawFiles = (this.files && this.files.length === 2);
+  this.usingRawFiles = (this.files &&
+                        this.files.length === 2 &&
+                        this.files[0] &&
+                        this.files[1]);
 
   // Loaders
   this.objLoader = new THREE.OBJLoader();
@@ -130,6 +133,11 @@ GZ3D.OBJLoader.prototype.applyMaterial = function(_mtlCreator)
  */
 GZ3D.OBJLoader.prototype.loadMTL = function(_text)
 {
+  if (!_text)
+  {
+    return;
+  }
+
   // Handle model:// URI
   if (_text.indexOf('model://') > 0)
   {
@@ -157,6 +165,13 @@ GZ3D.OBJLoader.prototype.loadMTL = function(_text)
   // Handle case in which the image filename is given without a path
   // We expect the texture to be under /materials/textures
   var lines = _text.split('\n');
+
+  if (lines.length === 0)
+  {
+    console.error('Empty or no MTL file');
+    return;
+  }
+
   var newText;
   for (var i in lines)
   {
