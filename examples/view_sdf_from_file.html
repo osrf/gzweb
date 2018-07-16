@@ -201,9 +201,9 @@
               console.error('Failed to load model', sdfFile);
             }
           })
-          .catch((error) =>
+          .catch((_error) =>
           {
-            console.error('Failed to load file!');
+            console.error(_error);
           });
       }
 

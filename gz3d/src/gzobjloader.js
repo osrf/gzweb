@@ -141,7 +141,12 @@ GZ3D.OBJLoader.prototype.loadMTL = function(_text)
   // Handle model:// URI
   if (_text.indexOf('model://') > 0)
   {
-    if (this.mtlLoader.path.indexOf('/meshes/') < 0)
+    // If there's no path, remove model://
+    if (!this.mtlLoader.path || this.mtlLoader.path.length === 0)
+    {
+      _text = _text.replace(/model:\/\//g, '');
+    }
+    else if (this.mtlLoader.path.indexOf('/meshes/') < 0)
     {
       console.error('Failed to resolve texture URI. MTL file directory [' +
           this.mtlLoader.path +
@@ -149,17 +154,19 @@ GZ3D.OBJLoader.prototype.loadMTL = function(_text)
       console.error(_text);
       return;
     }
+    else
+    {
+      // Get models path from .mtl file path
+      // This assumes the referenced model is in the same path as the model
+      // being loaded. So this may fail if there are models being loaded
+      // from various paths
+      var path = this.mtlLoader.path;
+      path = path.substr(0, path.lastIndexOf('/meshes'));
+      path = path.substr(0, path.lastIndexOf('/') + 1);
 
-    // Get models path from .mtl file path
-    // This assumes the referenced model is in the same path as the model
-    // being loaded. So this may fail if there are models being loaded
-    // from various paths
-    var path = this.mtlLoader.path;
-    path = path.substr(0, path.lastIndexOf('/meshes'));
-    path = path.substr(0, path.lastIndexOf('/') + 1);
-
-    // Search and replace
-    _text = _text.replace(/model:\/\//g, path);
+      // Search and replace
+      _text = _text.replace(/model:\/\//g, path);
+    }
   }
 
   // Handle case in which the image filename is given without a path
