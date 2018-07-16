@@ -9,7 +9,7 @@
  * @param {} _submesh
  * @param {} _centerSubmesh
  * @param {function} _callback
- * @param {array} _files -optional- the obj [0] and the mtl [1] files as a strings
+ * @param {array} _files -optional- the obj [0] and the mtl [1] files as strings
  * to be parsed by the loaders, if provided the uri will not be used just
  * as a url, no XMLHttpRequest will be made.
  */

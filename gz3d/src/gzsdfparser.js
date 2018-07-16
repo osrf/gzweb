@@ -578,10 +578,23 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
       if (!this.usingFilesUrls)
       {
         var meshFile = this.meshes[meshFileName];
+        if (!meshFile)
+        {
+          console.error('Missing mesh file [' + meshFileName + ']');
+          return;
+        }
+
         if (ext === '.obj')
         {
-          var mtlFile = this.mtls[meshFileName.split('.')[0]+'.mtl'];
-          that.scene.loadMeshFromString(modelUri, submesh,centerSubmesh,
+          var mtlFileName = meshFileName.split('.')[0]+'.mtl';
+          var mtlFile = this.mtls[mtlFileName];
+          if (!mtlFile)
+          {
+            console.error('Missing MTL file [' + mtlFileName + ']');
+            return;
+          }
+
+          that.scene.loadMeshFromString(modelUri, submesh, centerSubmesh,
             function(obj)
             {
               if (!obj)

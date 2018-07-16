@@ -1488,7 +1488,7 @@ GZ3D.Scene.prototype.loadMeshFromUri = function(uri, submesh, centerSubmesh,
     return;
   }
 
-  // load urdf model
+  // load meshes
   if (uriFile.substr(-4).toLowerCase() === '.dae')
   {
     return this.loadCollada(uri, submesh, centerSubmesh, callback);
@@ -1505,6 +1505,7 @@ GZ3D.Scene.prototype.loadMeshFromUri = function(uri, submesh, centerSubmesh,
   }
   else if (uriFile.substr(-5).toLowerCase() === '.urdf')
   {
+    console.error('Attempting to load URDF file, but it\'s not supported.');
     /*var urdfModel = new ROSLIB.UrdfModel({
       string : uri
     });

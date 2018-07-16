@@ -2,6 +2,19 @@ describe('Gzscene tests', function() {
 
   const utilsPath = 'http://localhost:9876/base/gz3d/test/utils/';
 
+  // Returns a file from the utils directory as text
+  function fileAsText(_path)
+  {
+    var fullPath = utilsPath + _path;
+
+    var xhttp = new XMLHttpRequest();
+    xhttp.overrideMimeType('text/plain');
+    xhttp.open('GET', fullPath, false);
+    xhttp.send();
+
+    return xhttp.responseText;
+  }
+
   let shaders;
   let scene;
   let gui;
@@ -328,14 +341,11 @@ describe('Gzscene tests', function() {
 
   describe('Spawn a model', function() {
     it('should add a model to the scene and then removes it', function() {
-      var sdf, model;
-      var xhttp = new XMLHttpRequest();
-      xhttp.overrideMimeType('text/xml');
-      xhttp.open('GET',
-          utilsPath + 'beer/model.sdf', false);
-      xhttp.send();
-      sdf = xhttp.responseXML;
-      model = sdfparser.spawnFromSDF(sdf);
+
+      var sdf = fileAsText('beer/model.sdf');
+      expect(sdf).not.toEqual(null);
+
+      var model = sdfparser.spawnFromSDF(sdf);
       scene.add(model);
 
       model = scene.getByName('beer');
@@ -347,37 +357,56 @@ describe('Gzscene tests', function() {
     });
   });
 
-  describe('Spawn a model with an obj mesh', function() {
-    it('should add a model to the scene and then removes it', function() {
-      var sdf, model;
-      var xhttp = new XMLHttpRequest();
-      xhttp.overrideMimeType('text/xml');
-      xhttp.open('GET',
-          utilsPath + 'walkway_metal_straight/model.sdf', false);
-      xhttp.send();
-      sdf = xhttp.responseXML;
-      model = sdfparser.spawnFromSDF(sdf);
+  describe('Spawn a model with an obj mesh using sdfparser.spawnFromSDF',
+    function() {
+    it('should add a model to the scene and then remove it', function() {
+
+      // Get files
+      var sdf = fileAsText('walkway_metal_straight/model.sdf');
+      expect(sdf).not.toEqual(null);
+
+      var obj = fileAsText('walkway_metal_straight/meshes/mesh.obj');
+      expect(obj).not.toEqual(null);
+
+      var mtl = fileAsText('walkway_metal_straight/meshes/mesh.mtl');
+      expect(mtl).not.toEqual(null);
+
+      // Add to parser
+      sdfparser.meshes['mesh.obj'] = obj;
+      sdfparser.mtls['mesh.mtl'] = mtl;
+
+      // Check model doesn't exist yet
+      model = scene.getByName('walkway_metal_straight');
+      expect(model).toEqual(undefined);
+
+      // Create model
+      var model = sdfparser.spawnFromSDF(sdf);
       scene.add(model);
 
       model = scene.getByName('walkway_metal_straight');
       expect(model).not.toEqual(undefined);
 
+      var mesh = scene.getByName('Walkway_Straight');
+      expect(mesh).not.toEqual(undefined);
+
+      // Remove model
       scene.remove(model);
+
       model = scene.getByName('walkway_metal_straight');
       expect(model).toEqual(undefined);
+
+      // Clean up
+      sdfparser.meshes = {};
+      sdfparser.mtls = {};
     });
   });
 
   describe('Spawn a model with a collada mesh', function() {
     it('should add a model to the scene and then removes it', function() {
-      var sdf, model;
-      var xhttp = new XMLHttpRequest();
-      xhttp.overrideMimeType('text/xml');
-      xhttp.open('GET',
-          utilsPath + 'house_2/model.sdf', false);
-      xhttp.send();
-      sdf = xhttp.responseXML;
-      model = sdfparser.spawnFromSDF(sdf);
+      var sdf = fileAsText('house_2/model.sdf');
+      expect(sdf).not.toEqual(null);
+
+      var model = sdfparser.spawnFromSDF(sdf);
       scene.add(model);
 
       model = scene.getByName('House 2');
@@ -392,17 +421,13 @@ describe('Gzscene tests', function() {
   describe('Spawn a model with no mesh using the file api', function() {
     it('should add a model to the scene using its files and then remove it',
     function() {
-      var sdf, model, obj;
-      var xhttp = new XMLHttpRequest();
-      xhttp.overrideMimeType('text/xml');
-      xhttp.open('GET', utilsPath + 'beer/model.sdf', false);
-      xhttp.send();
-      sdf = xhttp.responseXML;
+      var sdf = fileAsText('beer/model.sdf');
+      expect(sdf).not.toEqual(null);
 
-      model = scene.getByName('beer');
+      var model = scene.getByName('beer');
       expect(model).toEqual(undefined);
 
-      obj = scene.createFromSdf(sdf);
+      var obj = scene.createFromSdf(sdf);
       scene.add(obj);
       model = scene.getByName('beer');
 
@@ -413,61 +438,59 @@ describe('Gzscene tests', function() {
     });
   });
 
-  describe('Spawn a model with obj mesh using the file api', function() {
+  describe('Spawn a model with obj mesh using scene.createFromSdf', function() {
     it('should add a model to the scene using its files and then remove it',
       function() {
-      var sdf, obj, mtl, model, modelName, xhttp_1, xhttp_2, xhttp_3;
-      xhttp_1 = new XMLHttpRequest();
-      xhttp_1.overrideMimeType('text/xml');
-      xhttp_1.open('GET',
-          utilsPath + 'walkway_metal_straight/model.sdf', false);
-      xhttp_1.send();
-      sdf = xhttp_1.responseXML;
 
-      xhttp_2 = new XMLHttpRequest();
-      xhttp_2.overrideMimeType('text/plain');
-      xhttp_2.open('GET', utilsPath + 'walkway_metal_straight/meshes/mesh.obj',
-          false);
-      xhttp_2.send();
-      obj = xhttp_2.responseText;
+      // Get files
+      var sdf = fileAsText('walkway_metal_straight/model.sdf');
+      expect(sdf).not.toEqual(null);
+
+      var obj = fileAsText('walkway_metal_straight/meshes/mesh.obj');
+      expect(obj).not.toEqual(null);
+
+      var mtl = fileAsText('walkway_metal_straight/meshes/mesh.mtl');
+      expect(mtl).not.toEqual(null);
+
+      // Add to parser
       sdfparser.meshes['mesh.obj'] = obj;
+      sdfparser.mtls['mesh.mtl'] = mtl;
 
-      xhttp_3 = new XMLHttpRequest();
-      xhttp_3.overrideMimeType('text/xml');
-      xhttp_3.open('GET', utilsPath + 'walkway_metal_straight/meshes/mesh.mtl',
-          false);
-      xhttp_3.send();
-      mtl = xhttp_3.responseText;
-      sdfparser.meshes['mesh.mtl'] = mtl;
-
-      model = scene.getByName('walkway_metal_straight');
+      // Check model doesn't exist yet
+      var model = scene.getByName('walkway_metal_straight');
       expect(model).toEqual(undefined);
 
-      obj = scene.createFromSdf(sdf);
+      // Create model
+      var obj = scene.createFromSdf(sdf);
       scene.add(obj);
-      model = scene.getByName('walkway_metal_straight');
 
+      model = scene.getByName('walkway_metal_straight');
       expect(model).not.toEqual(undefined);
+
+      var mesh = scene.getByName('Walkway_Straight');
+      expect(mesh).not.toEqual(undefined);
+
+      // Remove model
       scene.remove(model);
+
       model = scene.getByName('walkway_metal_straight');
       expect(model).toEqual(undefined);
+
+      // Clean up
+      sdfparser.meshes = {};
+      sdfparser.mtls = {};
     });
   });
 
   describe('Spawn a model where the mesh files are undefined', function() {
     it('should add a model to the scene using its files and then remove it',
       function() {
-      var sdf, model, xhttp_1;
-      xhttp_1 = new XMLHttpRequest();
-      xhttp_1.overrideMimeType('text/xml');
-      xhttp_1.open('GET', utilsPath + 'walkway_metal_straight/model.sdf',
-          false);
-      xhttp_1.send();
-      sdf = xhttp_1.responseXML;
+
+      var sdf = fileAsText('walkway_metal_straight/model.sdf');
+      expect(sdf).not.toEqual(null);
 
       sdfparser.meshes['mesh.obj'] = undefined;
-
-      sdfparser.meshes['mesh.mtl'] = undefined;
+      sdfparser.mtls['mesh.mtl'] = undefined;
 
       model = scene.getByName('walkway_metal_straight');
       expect(model).toEqual(undefined);
@@ -485,55 +508,50 @@ describe('Gzscene tests', function() {
 
   describe('Spawn a model where all the files are undefined', function() {
     it('shouldnt add amodel to the scene', function() {
-      var model;
 
       sdfparser.meshes['mesh.obj'] = undefined;
 
       sdfparser.meshes['mesh.mtl'] = undefined;
 
-      model = scene.getByName('walkway_metal_straight');
+      var model = scene.getByName('walkway_metal_straight');
       expect(model).toEqual(undefined);
 
-      obj = scene.createFromSdf(undefined);
+      var obj = scene.createFromSdf(undefined);
 
       expect(obj).toEqual(undefined);
     });
   });
 
-    describe('Spawn a model with a collada mesh', function() {
-      it('should add a model to the scene and then removes it', function() {
-        var sdf, model;
-        var xhttp = new XMLHttpRequest();
-        xhttp.overrideMimeType('text/xml');
-        xhttp.open('GET', utilsPath + 'house_2/model.sdf', false);
-        xhttp.send();
-        sdf = xhttp.responseXML;
-        model = sdfparser.spawnFromSDF(sdf);
-        scene.add(model);
+  describe('Spawn a model with a collada mesh', function() {
+    it('should add a model to the scene and then removes it', function() {
 
-        model = scene.getByName('House 2');
-        expect(model).not.toEqual(undefined);
+      var sdf = fileAsText('house_2/model.sdf');
+      expect(sdf).not.toEqual(null);
 
-        scene.remove(model);
-        model = scene.getByName('House 2');
-        expect(model).toEqual(undefined);
-      });
+      var model = sdfparser.spawnFromSDF(sdf);
+      scene.add(model);
+
+      model = scene.getByName('House 2');
+      expect(model).not.toEqual(undefined);
+
+      scene.remove(model);
+      model = scene.getByName('House 2');
+      expect(model).toEqual(undefined);
     });
+  });
 
   // Test inertia visualizations
   describe('Test inertia visuals', function() {
     it('Should toggle inertia visualizations', function() {
-      var sdf, object, visual, model, xhttp;
-      xhttp = new XMLHttpRequest();
-      xhttp.overrideMimeType('text/xml');
-      xhttp.open('GET', utilsPath + 'beer/model.sdf', false);
-      xhttp.send();
-      sdf = xhttp.responseXML;
-      model = sdfparser.spawnFromSDF(sdf);
+
+      var sdf = fileAsText('beer/model.sdf');
+      expect(sdf).not.toEqual(null);
+
+      var model = sdfparser.spawnFromSDF(sdf);
       scene.add(model);
 
       // no visuals intially
-      visual = model.getObjectByName('INERTIA_VISUAL');
+      var visual = model.getObjectByName('INERTIA_VISUAL');
       expect(visual).toEqual(undefined);
 
       // if there was no selected entity it shouldn't break
