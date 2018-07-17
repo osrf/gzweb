@@ -197,8 +197,16 @@ GZ3D.OBJLoader.prototype.loadMTL = function(_text)
     }
 
     // Skip lines which already have /materials/textures
-    if (line.indexOf('/materials/textures') > 0)
+    if (line.indexOf('/materials/textures') > 0 && !this.usingRawFiles)
     {
+      newText += line += '\n';
+      continue;
+    }
+
+    // Remove ../ from raw files
+    if (line.indexOf('../materials/textures') > 0 && this.usingRawFiles)
+    {
+      line = line.replace('../', '');
       newText += line += '\n';
       continue;
     }
