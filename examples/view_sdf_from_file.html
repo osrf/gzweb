@@ -163,19 +163,23 @@
               const fileContent = result[1];
 
               // Keep the last occurence of .sdf file, ignore all others
-              if (fileName.endsWith('.sdf'))
+              if (fileName.toLowerCase().endsWith('.sdf'))
               {
                 sdfFile = fileContent;
               }
-              else if (fileName.endsWith('.dae') || fileName.endsWith('.obj'))
+              else if (fileName.toLowerCase().endsWith('.dae') ||
+                       fileName.toLowerCase().endsWith('.obj') ||
+                       fileName.toLowerCase().endsWith('.stl'))
               {
                 sdfparser.meshes[fileName] = fileContent;
               }
-              else if (fileName.endsWith('.mtl'))
+              else if (fileName.toLowerCase().endsWith('.mtl'))
               {
                 sdfparser.mtls[fileName] = fileContent;
               }
-              else if (fileName.endsWith('.png'))
+              else if (fileName.toLowerCase().endsWith('.png') ||
+                       fileName.toLowerCase().endsWith('.jpg') ||
+                       fileName.toLowerCase().endsWith('.jpeg'))
               {
                 THREE.Cache.add(fileName, fileContent);
               }
