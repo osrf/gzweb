@@ -61,7 +61,7 @@
       <div>
         <h4>SDF URL</h4>
         <input type="text" id="sdf-input"></input>
-        <button onclick="loadModel()" id="load-button">Load SDF!</button>
+        <button onclick="loadSDF()" id="load-button">Load SDF!</button>
       </div>
       <div id="sdf-display">
       </div>
@@ -126,8 +126,8 @@
         scene.render();
       }
 
-      // Callback when Load Model is pressed
-      function loadModel()
+      // Callback when Load SDF is pressed
+      function loadSDF()
       {
         var obj = sdfparser.loadSDF(sdfInput.value);
         if (!obj)
