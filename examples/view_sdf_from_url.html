@@ -42,12 +42,12 @@
     </p>
 
     <ol>
-      <li>Under "Resources URLs", type the URL to a resource needed by the model
+      <li>Under "Resources URLs", type the URL to a resource needed by the SDF
           (like meshes, textures, etc). If no resources are missing, skip to step 4.</li>
       <li>Click "Add URL"</li>
       <li>Go back to step 1</li>
-      <li>Under "SDF model URL", fill the full URL to the model's SDF file</li>
-      <li>Click "Load model!"</li>
+      <li>Under "SDF URL", fill the full URL to the SDF file</li>
+      <li>Click "Load SDF!"</li>
     </ol>
 
     <div>
@@ -59,9 +59,9 @@
       <div id="resource-list">
       </div>
       <div>
-        <h4>SDF model URL</h4>
+        <h4>SDF URL</h4>
         <input type="text" id="sdf-input"></input>
-        <button onclick="loadModel()" id="load-button">Load model!</button>
+        <button onclick="loadModel()" id="load-button">Load SDF!</button>
       </div>
       <div id="sdf-display">
       </div>
@@ -132,7 +132,7 @@
         var obj = sdfparser.loadSDF(sdfInput.value);
         if (!obj)
         {
-          alert('Failed to load model, check the URL and try again');
+          alert('Failed to load SDF, check the URL and try again');
           return;
         }
         scene.add(obj);

@@ -186,61 +186,63 @@ GZ3D.SdfParser.prototype.parse3DVector = function(vectorStr)
 GZ3D.SdfParser.prototype.spawnLightFromSDF = function(sdfObj)
 {
   var light = sdfObj.light;
-  var lightObj;
-  var color = new THREE.Color();
-  var diffuseColor = this.parseColor(light.diffuse);
-  color.r = diffuseColor.r;
-  color.g = diffuseColor.g;
-  color.b = diffuseColor.b;
+  var name = light['@name'];
+  var diffuse = this.parseColor(light.diffuse);
+  var specular = this.parseColor(light.specular);
+  var pose = this.parsePose(light.pose);
+  var castShadows = this.parseBool(light.cast_shadows);
+  var distance = null;
+  var attConst = null;
+  var attLin = null;
+  var attQuad= null;
+  var direction = null;
+  var type = 1;
+
+  if (light.attenuation)
+  {
+    if (light.attenuation.range)
+    {
+      distance = light.attenuation.range;
+    }
+    if (light.attenuation.constant)
+    {
+      attConst = light.attenuation.constant;
+    }
+    if (light.attenuation.linear)
+    {
+      attLin= light.attenuation.linear;
+    }
+    if (light.attenuation.quadratic)
+    {
+      attQuad= light.attenuation.quadratic;
+    }
+  }
+  // equation taken from
+  // eslint-disable-next-line
+  // https://docs.blender.org/manual/en/dev/render/blender_render/lighting/lights/light_attenuation.html
+  var E = 1;
+  var D = 1;
+  var r = 1;
+  var L = attLin;
+  var Q = attQuad;
+  var intensity = E*(D/(D+L*r))*(Math.pow(D,2)/(Math.pow(D,2)+Q*Math.pow(r,2)));
 
   if (light['@type'] === 'point')
   {
-    lightObj = new THREE.AmbientLight(color.getHex());
-    lightObj.distance = light.range;
-    this.scene.setPose(lightObj, light.pose.position, light.pose.orientation);
+    type = 1;
   }
   if (light['@type'] === 'spot')
   {
-    lightObj = new THREE.SpotLight(color.getHex());
-    lightObj.distance = light.range;
-    this.scene.setPose(lightObj, light.pose.position, light.pose.orientation);
+    type = 2;
   }
   else if (light['@type'] === 'directional')
   {
-    lightObj = new THREE.DirectionalLight(color.getHex());
-
-    var direction = this.parse3DVector(light.direction);
-    var dir = new THREE.Vector3(direction.x, direction.y, direction.z);
-    var target = dir;
-    var negDir = dir.negate();
-    negDir.normalize();
-    var factor = 10;
-    var pose = this.parsePose(light.pose);
-    pose.position.x += factor * negDir.x;
-    pose.position.y += factor * negDir.y;
-    pose.position.z += factor * negDir.z;
-
-    target.x -= pose.position.x;
-    target.y -= pose.position.y;
-    target.z -= pose.position.z;
-
-    lightObj.target.position = target;
-    lightObj.shadow.camera.near = 1;
-    lightObj.shadow.camera.far = 50;
-    lightObj.shadow.mapSize.width = 4094;
-    lightObj.shadow.mapSize.height = 4094;
-    lightObj.shadow.camera.bottom = -100;
-    lightObj.shadow.camera.left = -100;
-    lightObj.shadow.camera.right = 100;
-    lightObj.shadow.cameraTop = 100;
-    lightObj.shadow.bias = 0.0001;
-
-    lightObj.position.set(negDir.x, negDir.y, negDir.z);
-    this.scene.setPose(lightObj, pose.position, pose.orientation);
+    type = 3;
+    direction = this.parse3DVector(light.direction);
   }
-  lightObj.intensity = parseFloat(light.attenuation.constant);
-  lightObj.castShadow = this.parseBool(light.cast_shadows);
-  lightObj.name = light['@name'];
+  var lightObj = this.scene.createLight(type, diffuse, intensity, pose,
+      distance, castShadows, name, direction, specular,
+      attConst, attLin, attQuad);
 
   return lightObj;
 };
@@ -832,7 +834,7 @@ GZ3D.SdfParser.prototype.spawnFromSDF = function(sdf)
   // it is easier to manipulate json object
 
   if (!sdfObj) {
-    console.error('Failed to parse model: ', sdfJson);
+    console.error('Failed to parse SDF: ', sdfJson);
     return;
   }
 
@@ -844,17 +846,48 @@ GZ3D.SdfParser.prototype.spawnFromSDF = function(sdf)
   {
     return this.spawnLightFromSDF(sdfObj);
   }
+  else if (sdfObj.world)
+  {
+    return this.spawnWorldFromSDF(sdfObj);
+  }
 };
 
 /**
- * Loads SDF file according to given model name
- * @param {string} modelName - name of the model
- * @returns {THREE.Object3D} modelObject - 3D object which is created
- * according to SDF model.
+ * Loads SDF file according to given name.
+ * @param {string} sdfName - ether name of model / world or the filename
+ * @returns {THREE.Object3D} sdfObject - 3D object which is created
+ * according to SDF.
  */
-GZ3D.SdfParser.prototype.loadSDF = function(modelName)
+GZ3D.SdfParser.prototype.loadSDF = function(sdfName)
 {
-  var sdf = this.loadModel(modelName);
+  var lowerCaseName = sdfName.toLowerCase();
+  var filename = null;
+
+  // In case it is a full URL
+  if (lowerCaseName.indexOf('http') === 0)
+  {
+    filename = lowerCaseName;
+  }
+  // In case it is just the model/world name, look for it on the default URL
+  else
+  {
+    if (lowerCaseName.endsWith('.world'))
+    {
+      filename = this.MATERIAL_ROOT + '/worlds/' + sdfName + '.world';
+    }
+    else if (lowerCaseName.endsWith('.sdf'))
+    {
+      filename = this.MATERIAL_ROOT + '/' + sdfName + '/model.sdf';
+    }
+  }
+
+  if (!filename)
+  {
+    console.log('Error: unable to load ' + sdfName + ' - file not found');
+    return;
+  }
+
+  var sdf = this.fileFromUrl(filename);
   if (!sdf) {
     return;
   }
@@ -905,6 +938,111 @@ GZ3D.SdfParser.prototype.spawnModelFromSDF = function(sdfObj)
   return modelObj;
 
 };
+
+/**
+ * Creates 3D object from parsed world SDF
+ * @param {object} sdfObj - parsed SDF object
+ * @returns {THREE.Object3D} worldObject - 3D object which is created
+ * according to SDF world object.
+ */
+GZ3D.SdfParser.prototype.spawnWorldFromSDF = function(sdfObj)
+{
+  var worldObj = new THREE.Object3D();
+
+  // remove default sun before adding objects
+  // we will let the world file create its own light
+  var sun = this.scene.getByName('sun');
+  if (sun)
+  {
+    this.scene.remove(sun);
+  }
+
+  // parse includes
+  if (sdfObj.world.include)
+  {
+    // convert object to array
+    if (!(sdfObj.world.include instanceof Array))
+    {
+      sdfObj.world.include = [sdfObj.world.include];
+    }
+
+    var modelPrefix = 'model://';
+    var urlPrefix = 'http';
+    for (var i = 0; i < sdfObj.world.include.length; ++i)
+    {
+      var incObj = sdfObj.world.include[i];
+      if (incObj.uri && incObj.uri.startsWith(modelPrefix))
+      {
+        var modelName = incObj.uri.substr(modelPrefix.length);
+        for (var u = 0; u < this.customUrls.length; ++u)
+        {
+          var urlObj = new URL(this.customUrls[u]);
+          if (urlObj.pathname.indexOf(modelName) > 0 &&
+              urlObj.pathname.toLowerCase().endsWith('.sdf'))
+          {
+            var incSDF = this.fileFromUrl(this.customUrls[u]);
+            if (!incSDF)
+            {
+              console.log('Failed to spawn model: ' + modelName);
+            }
+            else
+            {
+              var obj = this.spawnFromSDF(incSDF);
+              if (incObj.name)
+              {
+                obj.name = incObj.name;
+              }
+              if (incObj.pose)
+              {
+                var pose = this.parsePose(incObj.pose);
+                this.scene.setPose(obj, pose.position, pose.orientation);
+              }
+              worldObj.add(obj);
+            }
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  // parse models
+  if (sdfObj.world.model)
+  {
+    // convert object to array
+    if (!(sdfObj.world.model instanceof Array))
+    {
+      sdfObj.world.model = [sdfObj.world.model];
+    }
+
+    for (var j = 0; j < sdfObj.world.model.length; ++j)
+    {
+      var tmpModelObj = {model: sdfObj.world.model[j]};
+      var modelObj = this.spawnModelFromSDF(tmpModelObj);
+      worldObj.add(modelObj);
+    }
+  }
+
+  // parse lights
+  if (sdfObj.world.light)
+  {
+    // convert object to array
+    if (!(sdfObj.world.light instanceof Array))
+    {
+      sdfObj.world.light = [sdfObj.world.light];
+    }
+
+    for (var k = 0; k < sdfObj.world.light.length; ++k)
+    {
+      var tmpLightObj = {light: sdfObj.world.light[k]};
+      var lightObj = this.spawnLightFromSDF(tmpLightObj);
+      worldObj.add(lightObj);
+    }
+  }
+
+  return worldObj;
+};
+
 
 /**
  * Creates a link 3D object of the model. A model consists of links
@@ -1150,35 +1288,14 @@ GZ3D.SdfParser.prototype.createCylinderSDF = function(translation, euler)
 };
 
 /**
- * Loads a model from an SDF file.
- * @param {string} modelName - Either the name of a model in the path, or the
- * full URL to an SDF file.
+ * Download an SDF file from url.
+ * @param {string} filename - full URL to an SDF file.
  */
-GZ3D.SdfParser.prototype.loadModel = function(modelName)
+GZ3D.SdfParser.prototype.fileFromUrl = function(filename)
 {
-  var modelFile = '';
-
-  if (modelName === undefined)
-  {
-    console.log('Must provide either a model name or the URL of an SDF file');
-    return;
-  }
-
-  // In case it is a full URL
-  if (modelName.indexOf('http') === 0 &&
-      modelName.indexOf('.sdf') === modelName.length - 4)
-  {
-    modelFile = modelName;
-  }
-  // In case it is just the model name, look for it on the default URL
-  else
-  {
-    modelFile = this.MATERIAL_ROOT + '/' + modelName + '/model.sdf';
-  }
-
   var xhttp = new XMLHttpRequest();
   xhttp.overrideMimeType('text/xml');
-  xhttp.open('GET', modelFile, false);
+  xhttp.open('GET', filename, false);
 
   try
   {
@@ -1186,13 +1303,13 @@ GZ3D.SdfParser.prototype.loadModel = function(modelName)
   }
   catch(err)
   {
-    console.log('Failed to get URL [' + modelFile + ']: ' + err.message);
+    console.log('Failed to get URL [' + filename + ']: ' + err.message);
     return;
   }
 
   if (xhttp.status !== 200)
   {
-    console.log('Failed to get URL [' + modelFile + ']');
+    console.log('Failed to get URL [' + filename + ']');
     return;
   }
   return xhttp.responseXML;
