@@ -534,11 +534,13 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
   }
   else if (geom.cylinder)
   {
-    obj = this.scene.createCylinder(geom.cylinder.radius, geom.cylinder.length);
+    var radius = parseFloat(geom.cylinder.radius);
+    var length = parseFloat(geom.cylinder.length);
+    obj = this.scene.createCylinder(radius, length);
   }
   else if (geom.sphere)
   {
-    obj = this.scene.createSphere(geom.sphere.radius);
+    obj = this.scene.createSphere(parseFloat(geom.sphere.radius));
   }
   else if (geom.plane)
   {
@@ -863,7 +865,7 @@ GZ3D.SdfParser.prototype.loadSDF = function(sdfName)
   if (!sdfName)
   {
     var m = 'Must provide either a model/world name or the URL of an SDF file';
-    console.log(m);
+    console.error(m);
     return;
   }
   var lowerCaseName = sdfName.toLowerCase();
@@ -940,9 +942,25 @@ GZ3D.SdfParser.prototype.spawnModelFromSDF = function(sdfObj)
     }
   }
 
-  //  this.scene.add(modelObj);
-  return modelObj;
+  //convert nested model objects to model array
+  if (sdfObj.model.model)
+  {
+    if (!(sdfObj.model.model instanceof Array))
+    {
+      sdfObj.model.model = [sdfObj.model.model];
+    }
+    for (i = 0; i < sdfObj.model.model.length; ++i)
+    {
+      var tmpModelObj = {model:sdfObj.model.model[i]};
+      var nestedModelObj = this.spawnModelFromSDF(tmpModelObj);
+      if (nestedModelObj)
+      {
+        modelObj.add(nestedModelObj);
+      }
+    }
+  }
 
+  return modelObj;
 };
 
 /**
@@ -1111,22 +1129,21 @@ GZ3D.SdfParser.prototype.createLink = function(link)
 
   if (link.collision)
   {
-    if (link.collision.visual)
+    if (!(link.collision instanceof Array))
     {
-      if (!(link.collision.visual instanceof Array))
-      {
-        link.collision.visual = [link.collision.visual];
-      }
+      link.collision = [link.collision];
+    }
 
-      for (var j = 0; j < link.collision.visual.length; ++j)
+    for (var j = 0; j < link.collision.length; ++j)
+    {
+      visualObj = this.createVisual(link.collision[j]);
+      if (visualObj && !visualObj.parent)
       {
-        visualObj = this.createVisual(link.collision.visual[j]);
-        if (visualObj && !visualObj.parent)
-        {
-          linkObj.add(visualObj);
-        }
+        visualObj.castShadow = false;
+        visualObj.receiveShadow = false;
+        visualObj.visible = this.scene.showCollisions;
+        linkObj.add(visualObj);
       }
-
     }
   }
 
@@ -1294,14 +1311,14 @@ GZ3D.SdfParser.prototype.createCylinderSDF = function(translation, euler)
 };
 
 /**
- * Download an SDF file from url.
- * @param {string} filename - full URL to an SDF file.
+ * Download a file from url.
+ * @param {string} url - full URL to an SDF file.
  */
-GZ3D.SdfParser.prototype.fileFromUrl = function(filename)
+GZ3D.SdfParser.prototype.fileFromUrl = function(url)
 {
   var xhttp = new XMLHttpRequest();
   xhttp.overrideMimeType('text/xml');
-  xhttp.open('GET', filename, false);
+  xhttp.open('GET', url, false);
 
   try
   {
@@ -1309,13 +1326,13 @@ GZ3D.SdfParser.prototype.fileFromUrl = function(filename)
   }
   catch(err)
   {
-    console.log('Failed to get URL [' + filename + ']: ' + err.message);
+    console.log('Failed to get URL [' + url + ']: ' + err.message);
     return;
   }
 
   if (xhttp.status !== 200)
   {
-    console.log('Failed to get URL [' + filename + ']');
+    console.log('Failed to get URL [' + url + ']');
     return;
   }
   return xhttp.responseXML;
