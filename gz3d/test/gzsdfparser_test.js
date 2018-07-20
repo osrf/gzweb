@@ -87,12 +87,25 @@ describe('Sdf Parser tests', function() {
         '</light>'+
       '</sdf>';
 
-      obj3D = sdfparser.spawnFromSDF(sdfLight);
+      var obj = sdfparser.spawnFromSDF(sdfLight);
+      lightPosition = {x:0, y:0, z:10};
+      lightRotation = {x:0, y:0, z:0};
+      expect(obj.position.x).toEqual(lightPosition.x);
+      expect(obj.position.y).toEqual(lightPosition.y);
+      expect(obj.position.z).toEqual(lightPosition.z);
+      rot = obj.rotation.reorder('ZYX');
+      expect(rot.x).toBeCloseTo(lightRotation.x, 3);
+      expect(rot.y).toBeCloseTo(lightRotation.y, 3);
+      expect(rot.z).toBeCloseTo(lightRotation.z, 3);
+
+      // children[0] is the light object and children[1] is the visual
+      // representation of the light object
+      obj3D = obj.children[0];
       expect(obj3D.color.r).toEqual(0.8);
       expect(obj3D.color.g).toEqual(0.8);
       expect(obj3D.color.b).toEqual(0.8);
       // expect(obj3D.color.a).toEqual(1);
-      expect(obj3D.intensity).toEqual(0.9);
+      expect(obj3D.intensity).toBeGreaterThan(0.0);
       expect(obj3D.type).toEqual('DirectionalLight');
       expect(obj3D.name).toEqual('sun');
     });
@@ -117,6 +130,86 @@ describe('Sdf Parser tests', function() {
       expect(expectedRot.z).toBeCloseTo(rotation.z, 3);
     });
   });
+
+  describe('Spawn a world from SDF', function() {
+    it('Should create a world THREE.Object3D', function() {
+      var sdfWorld, obj3D;
+
+      sdfWorld = '<?xml version="1.0" ?>'+
+      '<sdf version="1.6">'+
+        '<world name="default">'+
+          '<model name="box">' +
+            '<pose>0 1 0.5 1.2 0 0</pose>' +
+            '<link name="link">' +
+              '<collision name="collision">' +
+                '<geometry>' +
+                  '<box>' +
+                    '<size>1 1 1</size>' +
+                  '</box>' +
+                '</geometry>' +
+              '</collision>' +
+              '<visual name="visual">' +
+                '<geometry>' +
+                  '<box>' +
+                    '<size>1 1 1</size>' +
+                  '</box>' +
+                '</geometry>' +
+              '</visual>' +
+            '</link>' +
+          '</model>' +
+          '<light type="point" name="test_light">'+
+            '<cast_shadows>true</cast_shadows>'+
+            '<pose>-3 1 10 0 1 0</pose>'+
+            '<diffuse>0.1 0.2 0.8 1</diffuse>'+
+            '<specular>0.2 0.0 0.9 1</specular>'+
+            '<attenuation>'+
+              '<range>8.3</range>'+
+              '<constant>0.2</constant>'+
+              '<linear>0.001</linear>'+
+              '<quadratic>0.002</quadratic>'+
+            '</attenuation>'+
+          '</light>'+
+        '</world' +
+      '</sdf>';
+
+      var obj = sdfparser.spawnFromSDF(sdfWorld);
+      // there should only be one model and one light in the world
+      expect(obj.children.length).toEqual(2);
+      // verify model
+      obj3D = obj.children[0];
+      expect(obj3D.name).toEqual('box');
+      modelPosition = {x:0, y:1, z:0.5};
+      modelRotation = {x:1.2, y:0, z:0};
+      expect(obj3D.position.x).toEqual(modelPosition.x);
+      expect(obj3D.position.y).toEqual(modelPosition.y);
+      expect(obj3D.position.z).toEqual(modelPosition.z);
+      rot = obj3D.rotation.reorder('ZYX');
+      expect(rot.x).toBeCloseTo(modelRotation.x, 3);
+      expect(rot.y).toBeCloseTo(modelRotation.y, 3);
+      expect(rot.z).toBeCloseTo(modelRotation.z, 3);
+
+      // verify light
+      obj3D = obj.children[1];
+      expect(obj3D.name).toEqual('test_light');
+      lightPosition = {x:-3, y:1, z:10};
+      lightRotation = {x:0, y:1, z:0};
+      expect(obj3D.position.x).toEqual(lightPosition.x);
+      expect(obj3D.position.y).toEqual(lightPosition.y);
+      expect(obj3D.position.z).toEqual(lightPosition.z);
+      rot = obj3D.rotation.reorder('ZYX');
+      expect(rot.x).toBeCloseTo(lightRotation.x, 3);
+      expect(rot.y).toBeCloseTo(lightRotation.y, 3);
+      expect(rot.z).toBeCloseTo(lightRotation.z, 3);
+      var lightObj = obj3D.children[0];
+      expect(lightObj.color.r).toEqual(0.1);
+      expect(lightObj.color.g).toEqual(0.2);
+      expect(lightObj.color.b).toEqual(0.8);
+      expect(lightObj.intensity).toBeGreaterThan(0.0);
+      expect(lightObj.type).toEqual('PointLight');
+      expect(lightObj.distance).toEqual(8.3);
+    });
+  });
+
 
   describe('Load without URL or file name', function() {
     it('should not break.', function() {

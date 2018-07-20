@@ -202,19 +202,19 @@ GZ3D.SdfParser.prototype.spawnLightFromSDF = function(sdfObj)
   {
     if (light.attenuation.range)
     {
-      distance = light.attenuation.range;
+      distance = parseFloat(light.attenuation.range);
     }
     if (light.attenuation.constant)
     {
-      attConst = light.attenuation.constant;
+      attConst = parseFloat(light.attenuation.constant);
     }
     if (light.attenuation.linear)
     {
-      attLin= light.attenuation.linear;
+      attLin = parseFloat(light.attenuation.linear);
     }
     if (light.attenuation.quadratic)
     {
-      attQuad= light.attenuation.quadratic;
+      attQuad = parseFloat(light.attenuation.quadratic);
     }
   }
   // equation taken from
@@ -860,6 +860,12 @@ GZ3D.SdfParser.prototype.spawnFromSDF = function(sdf)
  */
 GZ3D.SdfParser.prototype.loadSDF = function(sdfName)
 {
+  if (!sdfName)
+  {
+    var m = 'Must provide either a model/world name or the URL of an SDF file';
+    console.log(m);
+    return;
+  }
   var lowerCaseName = sdfName.toLowerCase();
   var filename = null;
 
