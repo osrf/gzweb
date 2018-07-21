@@ -87,12 +87,25 @@ describe('Sdf Parser tests', function() {
         '</light>'+
       '</sdf>';
 
-      obj3D = sdfparser.spawnFromSDF(sdfLight);
+      var obj = sdfparser.spawnFromSDF(sdfLight);
+      lightPosition = {x:0, y:0, z:10};
+      lightRotation = {x:0, y:0, z:0};
+      expect(obj.position.x).toEqual(lightPosition.x);
+      expect(obj.position.y).toEqual(lightPosition.y);
+      expect(obj.position.z).toEqual(lightPosition.z);
+      rot = obj.rotation.reorder('ZYX');
+      expect(rot.x).toBeCloseTo(lightRotation.x, 3);
+      expect(rot.y).toBeCloseTo(lightRotation.y, 3);
+      expect(rot.z).toBeCloseTo(lightRotation.z, 3);
+
+      // children[0] is the light object and children[1] is the visual
+      // representation of the light object
+      obj3D = obj.children[0];
       expect(obj3D.color.r).toEqual(0.8);
       expect(obj3D.color.g).toEqual(0.8);
       expect(obj3D.color.b).toEqual(0.8);
       // expect(obj3D.color.a).toEqual(1);
-      expect(obj3D.intensity).toEqual(0.9);
+      expect(obj3D.intensity).toBeGreaterThan(0.0);
       expect(obj3D.type).toEqual('DirectionalLight');
       expect(obj3D.name).toEqual('sun');
     });
@@ -117,6 +130,186 @@ describe('Sdf Parser tests', function() {
       expect(expectedRot.z).toBeCloseTo(rotation.z, 3);
     });
   });
+
+  describe('Spawn a world from SDF', function() {
+    it('Should create a world THREE.Object3D', function() {
+      var sdfWorld, obj3D;
+
+      sdfWorld = '<?xml version="1.0" ?>'+
+      '<sdf version="1.6">'+
+        '<world name="default">'+
+          '<include>'+
+            '<name>test_beer</name>'+
+            '<pose>-3 -9 -1 0 0 0.2</pose>'+
+            '<uri>model://beer</uri>'+
+          '</include>'+
+          '<model name="box">' +
+            '<pose>0 1 0.5 1.2 0 0</pose>' +
+            '<link name="link">' +
+              '<collision name="collision">' +
+                '<geometry>' +
+                  '<box>' +
+                    '<size>1 1 1</size>' +
+                  '</box>' +
+                '</geometry>' +
+              '</collision>' +
+              '<visual name="visual">' +
+                '<geometry>' +
+                  '<box>' +
+                    '<size>1 1 1</size>' +
+                  '</box>' +
+                '</geometry>' +
+              '</visual>' +
+            '</link>' +
+            '<model name="nested_sphere">' +
+              '<pose>2 4 3.5 -0.3 0 0</pose>' +
+              '<link name="nested_link">' +
+                '<collision name="nested_collision">' +
+                  '<geometry>' +
+                    '<sphere>' +
+                      '<radius>0.5</radius>' +
+                    '</sphere>' +
+                  '</geometry>' +
+                '</collision>' +
+                '<visual name="nested_visual">' +
+                  '<geometry>' +
+                    '<sphere>' +
+                      '<radius>0.5</radius>' +
+                    '</sphere>' +
+                  '</geometry>' +
+                '</visual>' +
+              '</link>' +
+            '</model>' +
+          '</model>' +
+          '<light type="point" name="test_light">'+
+            '<cast_shadows>true</cast_shadows>'+
+            '<pose>-3 1 10 0 1 0</pose>'+
+            '<diffuse>0.1 0.2 0.8 1</diffuse>'+
+            '<specular>0.2 0.0 0.9 1</specular>'+
+            '<attenuation>'+
+              '<range>8.3</range>'+
+              '<constant>0.2</constant>'+
+              '<linear>0.001</linear>'+
+              '<quadratic>0.002</quadratic>'+
+            '</attenuation>'+
+          '</light>'+
+        '</world' +
+      '</sdf>';
+
+      // setup new sdfparser for this test
+      worldSdfparser = new GZ3D.SdfParser(scene, gui);
+      worldSdfparser.usingFileUrls = true
+      worldSdfparser.addUrl(utilsPath + 'beer/model.sdf');
+
+      obj = worldSdfparser.spawnFromSDF(sdfWorld);
+      // there should only be two models and one light
+      expect(obj.children.length).toEqual(3);
+
+      // verify included mdoel
+      var obj3D = obj.children[0];
+      expect(obj3D.name).toEqual('test_beer');
+      includePosition = {x:-3, y:-9, z:-1};
+      includeRotation = {x:0, y:0, z:0.2};
+      expect(obj3D.position.x).toEqual(includePosition.x);
+      expect(obj3D.position.y).toEqual(includePosition.y);
+      expect(obj3D.position.z).toEqual(includePosition.z);
+      var rot = obj3D.rotation.reorder('ZYX');
+      expect(rot.x).toBeCloseTo(includeRotation.x, 3);
+      expect(rot.y).toBeCloseTo(includeRotation.y, 3);
+      expect(rot.z).toBeCloseTo(includeRotation.z, 3);
+
+      // verify model
+      obj3D = obj.children[1];
+      expect(obj3D.name).toEqual('box');
+      modelPosition = {x:0, y:1, z:0.5};
+      modelRotation = {x:1.2, y:0, z:0};
+      expect(obj3D.position.x).toEqual(modelPosition.x);
+      expect(obj3D.position.y).toEqual(modelPosition.y);
+      expect(obj3D.position.z).toEqual(modelPosition.z);
+      rot = obj3D.rotation.reorder('ZYX');
+      expect(rot.x).toBeCloseTo(modelRotation.x, 3);
+      expect(rot.y).toBeCloseTo(modelRotation.y, 3);
+      expect(rot.z).toBeCloseTo(modelRotation.z, 3);
+
+      // verify link
+      var linkObj3D = obj3D.children[0];
+      expect(linkObj3D.name).toEqual('link');
+
+      // verify visual
+      var visualObj3D = linkObj3D.children[0];
+      expect(visualObj3D.name).toEqual('visual');
+      mesh = visualObj3D.children[0];
+      expect(mesh.type).toEqual('Mesh');
+      expect(mesh.geometry.type).toEqual('BoxGeometry');
+      expect(mesh.geometry.parameters.width).toEqual(1);
+      expect(mesh.geometry.parameters.height).toEqual(1);
+      expect(mesh.geometry.parameters.depth).toEqual(1);
+
+      // verify collision
+      var colObj3D = linkObj3D.children[1];
+      expect(colObj3D.name).toEqual('collision');
+      var mesh = colObj3D.children[0];
+      expect(mesh.type).toEqual('Mesh');
+      expect(mesh.geometry.type).toEqual('BoxGeometry');
+      expect(mesh.geometry.parameters.width).toEqual(1);
+      expect(mesh.geometry.parameters.height).toEqual(1);
+      expect(mesh.geometry.parameters.depth).toEqual(1);
+
+      // verify nested model
+      nestedObj3D = obj3D.children[1];
+      expect(nestedObj3D.name).toEqual('nested_sphere');
+      nestedModelPosition = {x:2, y:4, z:3.5};
+      nestedModelRotation = {x:-0.3, y:0, z:0};
+      expect(nestedObj3D.position.x).toEqual(nestedModelPosition.x);
+      expect(nestedObj3D.position.y).toEqual(nestedModelPosition.y);
+      expect(nestedObj3D.position.z).toEqual(nestedModelPosition.z);
+      rot = nestedObj3D.rotation.reorder('ZYX');
+      expect(rot.x).toBeCloseTo(nestedModelRotation.x, 3);
+      expect(rot.y).toBeCloseTo(nestedModelRotation.y, 3);
+      expect(rot.z).toBeCloseTo(nestedModelRotation.z, 3);
+
+      // verify nested link
+      var nestedLinkObj3D = nestedObj3D.children[0];
+      expect(nestedLinkObj3D.name).toEqual('nested_link');
+
+      // verify visual
+      var nestedVisualObj3D = nestedLinkObj3D.children[0];
+      expect(nestedVisualObj3D.name).toEqual('nested_visual');
+      mesh = nestedVisualObj3D.children[0];
+      expect(mesh.type).toEqual('Mesh');
+      expect(mesh.geometry.type).toEqual('SphereGeometry');
+      expect(mesh.geometry.parameters.radius).toEqual(0.5);
+
+      // verify collision
+      var nestedColObj3D = nestedLinkObj3D.children[1];
+      expect(nestedColObj3D.name).toEqual('nested_collision');
+      mesh = nestedColObj3D.children[0];
+      expect(mesh.type).toEqual('Mesh');
+      expect(mesh.geometry.type).toEqual('SphereGeometry');
+      expect(mesh.geometry.parameters.radius).toEqual(0.5);
+
+      // verify light
+      obj3D = obj.children[2];
+      expect(obj3D.name).toEqual('test_light');
+      lightPosition = {x:-3, y:1, z:10};
+      lightRotation = {x:0, y:1, z:0};
+      expect(obj3D.position.x).toEqual(lightPosition.x);
+      expect(obj3D.position.y).toEqual(lightPosition.y);
+      expect(obj3D.position.z).toEqual(lightPosition.z);
+      rot = obj3D.rotation.reorder('ZYX');
+      expect(rot.x).toBeCloseTo(lightRotation.x, 3);
+      expect(rot.y).toBeCloseTo(lightRotation.y, 3);
+      expect(rot.z).toBeCloseTo(lightRotation.z, 3);
+      var lightObj = obj3D.children[0];
+      expect(lightObj.color.r).toEqual(0.1);
+      expect(lightObj.color.g).toEqual(0.2);
+      expect(lightObj.color.b).toEqual(0.8);
+      expect(lightObj.intensity).toBeGreaterThan(0.0);
+      expect(lightObj.type).toEqual('PointLight');
+      expect(lightObj.distance).toEqual(8.3);
+    });
+  });
+
 
   describe('Load without URL or file name', function() {
     it('should not break.', function() {
@@ -157,8 +350,9 @@ describe('Sdf Parser tests', function() {
       expect(obj).not.toEqual(undefined);
       expect(obj.children.length).toEqual(1);
       expect(obj.children[0].name).toEqual('link');
-      expect(obj.children[0].children.length).toEqual(1);
+      expect(obj.children[0].children.length).toEqual(2);
       expect(obj.children[0].children[0].name).toEqual('visual');
+      expect(obj.children[0].children[1].name).toEqual('collision');
 
       // Add to scene
       scene.add(obj);
