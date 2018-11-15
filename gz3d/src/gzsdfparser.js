@@ -874,16 +874,16 @@ GZ3D.SdfParser.prototype.loadSDF = function(sdfName)
   // In case it is a full URL
   if (lowerCaseName.indexOf('http') === 0)
   {
-    filename = lowerCaseName;
+    filename = sdfName;
   }
   // In case it is just the model/world name, look for it on the default URL
   else
   {
     if (lowerCaseName.endsWith('.world'))
     {
-      filename = this.MATERIAL_ROOT + '/worlds/' + sdfName + '.world';
+      filename = this.MATERIAL_ROOT + '/worlds/' + sdfName;
     }
-    else if (lowerCaseName.endsWith('.sdf'))
+    else
     {
       filename = this.MATERIAL_ROOT + '/' + sdfName + '/model.sdf';
     }
