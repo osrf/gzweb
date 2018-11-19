@@ -20,10 +20,11 @@ if sys.platform == 'darwin':
 
 path = sys.argv[1]
 
-files = os.listdir(path)
+# Unused
+# files = os.listdir(path)
 
 find_cmd = ['find', path, '-name','*']
-files = subprocess.check_output(find_cmd).split()
+files = subprocess.check_output(find_cmd).split('\n')
 
 for file in files:
   try:
