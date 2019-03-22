@@ -456,7 +456,6 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
             if (this.customUrls[j].indexOf(normalMapName + '.png') > -1)
             {
               normalMap = this.customUrls[j];
-              this.customUrls.splice(j, 1);
               break;
             }
           }
@@ -649,7 +648,6 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
             if (this.customUrls[k].indexOf(meshFileName) > -1)
             {
               modelUri = this.customUrls[k];
-              this.customUrls.splice(k, 1);
               break;
             }
           }
