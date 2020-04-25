@@ -20,7 +20,7 @@ set (CPACK_PACKAGE_VERSION_MINOR "${GZWEB_MINOR_VERSION}")
 set (CPACK_PACKAGE_VERSION_PATCH "${GZWEB_PATCH_VERSION}")
 list (APPEND CPACK_SOURCE_GENERATOR "TBZ2")
 list (APPEND CPACK_SOURCE_IGNORE_FILES ";TODO;/.hg/;.hgignore;.swp$;/build/")
-set (CPACK_SOURCE_PACKAGE_FILE_NAME "@PROJECT_NAME@-@GZWEB_VERSION_FULL@")
+set (CPACK_SOURCE_PACKAGE_FILE_NAME "${PROJECT_NAME}-${GZWEB_VERSION_FULL}")
 include (CPack)
 
 
@@ -35,7 +35,7 @@ endif (NOT CMAKE_BUILD_TYPE)
 # find gazebo
 include (FindPkgConfig)
 if (PKG_CONFIG_FOUND)
-  pkg_check_modules(GAZEBO gazebo>=1.9.0 REQUIRED)
+  find_package(gazebo REQUIRED)
   pkg_check_modules(JANSSON jansson REQUIRED)
 
   # Find GNU Triangulation Surface Library

@@ -3,13 +3,20 @@
  * and defines a DOM parser function to parse SDF XML files
  * @param {object} scene - the gz3d scene object
  * @param {object} gui - the gz3d gui object
- * @param {object} gziface - the gz3d gziface object
- */
+ * @param {object} gziface [optional] - the gz3d gziface object, if not gziface
+ * object was provided, sdfParser wont try to connect to gzserver.
+ **/
 GZ3D.SdfParser = function(scene, gui, gziface)
 {
+  this.emitter = globalEmitter || new EventEmitter2({verboseMemoryLeak: true});
+
   // set the sdf version
   this.SDF_VERSION = 1.5;
-  this.MATERIAL_ROOT = 'assets';
+  this.MATERIAL_ROOT = gziface ?
+      gziface.protocol + '//' + gziface.url + '/assets' : 'assets';
+  // true for using URLs to load files.
+  // false for using the files loaded in the memory.
+  this.usingFilesUrls = false;
 
   // set the xml parser function
   this.parseXML = function(xmlStr) {
@@ -23,36 +30,72 @@ GZ3D.SdfParser = function(scene, gui, gziface)
   this.init();
 
   // cache materials if more than one model needs them
-  this.materials = [];
+  this.materials = {};
   this.entityMaterial = {};
+  // store meshes when loading meshes from memory.
+  this.meshes = {};
+  this.mtls = {};
+  this.textures = {};
 
+  // Should contain model files URLs if not using gzweb model files hierarchy.
+  this.customUrls = [];
+
+  var that = this;
+  this.emitter.on('material', function(mat) {
+    that.materials = Object.assign(that.materials, mat);
+  });
 };
 
 /**
- * Initializes SDF parser by connecting relevant events from gziface
+ * Initializes SDF parser by connecting relevant events from gziface,
+ * if gziface was not provided, just initialize the scene and don't listen
+ * on gziface events.
  */
 GZ3D.SdfParser.prototype.init = function()
 {
-  var that = this;
-  this.gziface.emitter.on('error', function() {
-    that.gui.guiEvents.emit('notification_popup', 'GzWeb is currently running' +
-            'without a server, and materials could not be loaded.' +
-            'When connected scene will be reinitialized', 5000);
-    that.onConnectionError();
-  });
-
-  this.gziface.emitter.on('material', function(mat) {
-    that.materials = mat;
-  });
-
-  this.gziface.emitter.on('gzstatus', function(gzstatus) {
-    if (gzstatus === 'error')
-    {
-      that.gui.guiEvents.emit('notification_popup', 'GzWeb is currently ' +
-              'running without a GzServer, and Scene is reinitialized.', 5000);
+  if (this.gziface)
+  {
+    this.usingFilesUrls = true;
+    var that = this;
+    this.emitter.on('connectionError', function() {
+      // init scene and show popup only for the first connection error
+      that.emitter.emit('notification_popup',
+              'GzWeb is currently running' +
+              'without a server, and materials could not be loaded.' +
+              'When connected scene will be reinitialized', 5000);
       that.onConnectionError();
-    }
-  });
+    });
+
+    this.emitter.on('gzstatus', function(gzstatus) {
+      if (gzstatus === 'error')
+      {
+        that.emitter.emit('notification_popup', 'GzWeb is currently ' +
+                'running without a GzServer,'
+                + 'and Scene is reinitialized.', 5000);
+        that.onConnectionError();
+      }
+    });
+  }
+  else
+  {
+    this.scene.initScene();
+  }
+};
+
+/**
+ * Pushes Urls into the customUrls array where the parser looks for assets.
+ * If `usingFilesUrls` is true, resources will only be taken from this array.
+ * TODO: Find a less intrusive way to support custom URLs (issue #147)
+ */
+GZ3D.SdfParser.prototype.addUrl = function(url)
+{
+  if (url === undefined || url.indexOf('http') !== 0)
+  {
+    console.log('Trying to add invalid URL');
+    return;
+  }
+
+  this.customUrls.push(url);
 };
 
 /**
@@ -60,7 +103,8 @@ GZ3D.SdfParser.prototype.init = function()
  * when gziface cannot connect to gzbridge websocket
  * this is due to 2 reasons:
  * 1 - gzbridge websocket might not be run yet
- * 2 - gzbridge websocket is trying to connect to gzserver which is not running currenly
+ * 2 - gzbridge websocket is trying to connect to
+ *       gzserver which is not running currenly
  */
 GZ3D.SdfParser.prototype.onConnectionError = function()
 {
@@ -74,7 +118,7 @@ GZ3D.SdfParser.prototype.onConnectionError = function()
       that.addModelByType(model, type);
     }
   };
-  this.gui.emitter.on('entityCreated', entityCreated);
+  this.emitter.on('entityCreated', entityCreated);
 
   var deleteEntity = function(entity)
   {
@@ -84,7 +128,7 @@ GZ3D.SdfParser.prototype.onConnectionError = function()
     {
       if (obj.children[0] instanceof THREE.Light)
       {
-        that.gui.setLightStats({name: name}, 'delete');
+        that.emitter.emit('setLightStats', {name: name}, 'delete');
       }
       else
       {
@@ -93,7 +137,7 @@ GZ3D.SdfParser.prototype.onConnectionError = function()
       that.scene.remove(obj);
     }
   };
-  this.gui.emitter.on('deleteEntity', deleteEntity);
+  this.emitter.on('deleteEntity', deleteEntity);
 };
 
 /**
@@ -142,61 +186,63 @@ GZ3D.SdfParser.prototype.parse3DVector = function(vectorStr)
 GZ3D.SdfParser.prototype.spawnLightFromSDF = function(sdfObj)
 {
   var light = sdfObj.light;
-  var lightObj;
-  var color = new THREE.Color();
-  var diffuseColor = this.parseColor(light.diffuse);
-  color.r = diffuseColor.r;
-  color.g = diffuseColor.g;
-  color.b = diffuseColor.b;
+  var name = light['@name'];
+  var diffuse = this.parseColor(light.diffuse);
+  var specular = this.parseColor(light.specular);
+  var pose = this.parsePose(light.pose);
+  var castShadows = this.parseBool(light.cast_shadows);
+  var distance = null;
+  var attConst = null;
+  var attLin = null;
+  var attQuad= null;
+  var direction = null;
+  var type = 1;
+
+  if (light.attenuation)
+  {
+    if (light.attenuation.range)
+    {
+      distance = parseFloat(light.attenuation.range);
+    }
+    if (light.attenuation.constant)
+    {
+      attConst = parseFloat(light.attenuation.constant);
+    }
+    if (light.attenuation.linear)
+    {
+      attLin = parseFloat(light.attenuation.linear);
+    }
+    if (light.attenuation.quadratic)
+    {
+      attQuad = parseFloat(light.attenuation.quadratic);
+    }
+  }
+  // equation taken from
+  // eslint-disable-next-line
+  // https://docs.blender.org/manual/en/dev/render/blender_render/lighting/lights/light_attenuation.html
+  var E = 1;
+  var D = 1;
+  var r = 1;
+  var L = attLin;
+  var Q = attQuad;
+  var intensity = E*(D/(D+L*r))*(Math.pow(D,2)/(Math.pow(D,2)+Q*Math.pow(r,2)));
 
   if (light['@type'] === 'point')
   {
-    lightObj = new THREE.AmbientLight(color.getHex());
-    lightObj.distance = light.range;
-    this.scene.setPose(lightObj, light.pose.position, light.pose.orientation);
+    type = 1;
   }
   if (light['@type'] === 'spot')
   {
-    lightObj = new THREE.SpotLight(color.getHex());
-    lightObj.distance = light.range;
-    this.scene.setPose(lightObj, light.pose.position, light.pose.orientation);
+    type = 2;
   }
   else if (light['@type'] === 'directional')
   {
-    lightObj = new THREE.DirectionalLight(color.getHex());
-
-    var direction = this.parse3DVector(light.direction);
-    var dir = new THREE.Vector3(direction.x, direction.y, direction.z);
-    var target = dir;
-    var negDir = dir.negate();
-    negDir.normalize();
-    var factor = 10;
-    var pose = this.parsePose(light.pose);
-    pose.position.x += factor * negDir.x;
-    pose.position.y += factor * negDir.y;
-    pose.position.z += factor * negDir.z;
-
-    target.x -= pose.position.x;
-    target.y -= pose.position.y;
-    target.z -= pose.position.z;
-
-    lightObj.target.position = target;
-    lightObj.shadow.camera.near = 1;
-    lightObj.shadow.camera.far = 50;
-    lightObj.shadow.mapSize.width = 4094;
-    lightObj.shadow.mapSize.height = 4094;
-    lightObj.shadow.camera.bottom = -100;
-    lightObj.shadow.camera.left = -100;
-    lightObj.shadow.camera.right = 100;
-    lightObj.shadow.cameraTop = 100;
-    lightObj.shadow.bias = 0.0001;
-
-    lightObj.position.set(negDir.x, negDir.y, negDir.z);
-    this.scene.setPose(lightObj, pose.position, pose.orientation);
+    type = 3;
+    direction = this.parse3DVector(light.direction);
   }
-  lightObj.intensity = parseFloat(light.attenuation.constant);
-  lightObj.castShadow = this.parseBool(light.cast_shadows);
-  lightObj.name = light['@name'];
+  var lightObj = this.scene.createLight(type, diffuse, intensity, pose,
+      distance, castShadows, name, direction, specular,
+      attConst, attLin, attQuad);
 
   return lightObj;
 };
@@ -204,13 +250,24 @@ GZ3D.SdfParser.prototype.spawnLightFromSDF = function(sdfObj)
 /**
  * Parses a string which is a 3D vector
  * @param {string} poseStr - string which denotes the pose of the object
- * where every value should be separated with single white space and first three denotes
- * x,y,z and values of the pose, and following three denotes euler rotation around x,y,z
+ * where every value should be separated with single white space and
+ * first three denotes x,y,z and values of the pose,
+ * and following three denotes euler rotation around x,y,z
  * @returns {object} pose - pose object having position (x,y,z)(THREE.Vector3)
  * and orientation (THREE.Quaternion) properties
  */
 GZ3D.SdfParser.prototype.parsePose = function(poseStr)
 {
+  var pose = {
+    'position': new THREE.Vector3(),
+    'orientation': new THREE.Quaternion()
+  };
+
+  if (typeof poseStr !== 'string' && !(poseStr instanceof String))
+  {
+    return pose;
+  }
+
   var values = poseStr.split(/\s+/);
 
   var position = new THREE.Vector3(parseFloat(values[0]),
@@ -222,10 +279,8 @@ GZ3D.SdfParser.prototype.parsePose = function(poseStr)
           parseFloat(values[5]), 'ZYX');
   quaternion.setFromEuler(euler);
 
-  var pose = {
-    'position': position,
-    'orientation': quaternion
-  };
+  pose.position =  position;
+  pose.orientation = quaternion;
 
   return pose;
 };
@@ -259,7 +314,9 @@ GZ3D.SdfParser.prototype.parseBool = function(boolStr)
 /**
  * Parses SDF material element which is going to be used by THREE library
  * It matches material scripts with the material objects which are
- * already parsed by gzbridge and saved by SDFParser
+ * already parsed by gzbridge and saved by SDFParser.
+ * If `usingFilesUrls` is true, the texture URLs will be loaded from the
+ * to the customUrls array.
  * @param {object} material - SDF material object
  * @returns {object} material - material object which has the followings:
  * texture, normalMap, ambient, diffuse, specular, opacity
@@ -269,7 +326,10 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
   var textureUri, texture, mat;
   var ambient, diffuse, specular, opacity, normalMap, scale;
 
-  if (!material) { return null; }
+  if (!material)
+  {
+    return null;
+  }
 
   var script = material.script;
   if (script)
@@ -325,7 +385,30 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
               }
             }
           }
-          texture = this.MATERIAL_ROOT + '/' + textureUri + '/' + mat.texture;
+          // Map texture name to the corresponding texture.
+          if (!this.usingFilesUrls)
+          {
+            texture = this.textures[mat.texture];
+          }
+          else
+          {
+            if (this.customUrls.length !== 0)
+            {
+              for (var k = 0; k < this.customUrls.length; k++)
+              {
+                if (this.customUrls[k].indexOf(mat.texture) > -1)
+                {
+                  texture = this.customUrls[k];
+                  break;
+                }
+              }
+            }
+            else
+            {
+              texture = this.MATERIAL_ROOT + '/' + textureUri + '/' +
+                mat.texture;
+            }
+          }
         }
       }
       else
@@ -358,9 +441,32 @@ GZ3D.SdfParser.prototype.createMaterial = function(material)
         startIndex = 0;
       }
       var normalMapName = material.normal_map.substr(startIndex,
-              material.normal_map.lastIndexOf('.') - startIndex);
-      normalMap = this.MATERIAL_ROOT + '/' + mapUri + '/' +
-          normalMapName + '.png';
+        material.normal_map.lastIndexOf('.') - startIndex);
+      // Map texture name to the corresponding texture.
+      if (!this.usingFilesUrls)
+      {
+        normalMap = this.textures[normalMapName + '.png'];
+      }
+      else
+      {
+        if (this.customUrls.length !== 0)
+        {
+          for (var j = 0; j < this.customUrls.length; j++)
+          {
+            if (this.customUrls[j].indexOf(normalMapName + '.png') > -1)
+            {
+              normalMap = this.customUrls[j];
+              break;
+            }
+          }
+        }
+        else
+        {
+          normalMap = this.MATERIAL_ROOT + '/' + mapUri + '/' +
+            normalMapName + '.png';
+        }
+      }
+
     }
   }
 
@@ -405,7 +511,9 @@ GZ3D.SdfParser.prototype.parseSize = function(sizeStr)
  * object.
  * @param {object} geom - SDF geometry object which determines the geometry
  *  of the object and can have following properties: box, cylinder, sphere,
- *   plane, mesh
+ *  plane, mesh.
+ *  Note that in case of using custom Urls for the meshs, the URLS should be
+ *  added to the array cistomUrls to be used instead of the default Url.
  * @param {object} mat - SDF material object which is going to be parsed
  * by createMaterial function
  * @param {object} parent - parent 3D object
@@ -417,6 +525,7 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
   var size, normal;
 
   var material = this.createMaterial(mat);
+
   if (geom.box)
   {
     size = this.parseSize(geom.box.size);
@@ -424,11 +533,13 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
   }
   else if (geom.cylinder)
   {
-    obj = this.scene.createCylinder(geom.cylinder.radius, geom.cylinder.length);
+    var radius = parseFloat(geom.cylinder.radius);
+    var length = parseFloat(geom.cylinder.length);
+    obj = this.scene.createCylinder(radius, length);
   }
   else if (geom.sphere)
   {
-    obj = this.scene.createSphere(geom.sphere.radius);
+    obj = this.scene.createSphere(parseFloat(geom.sphere.radius));
   }
   else if (geom.plane)
   {
@@ -438,48 +549,148 @@ GZ3D.SdfParser.prototype.createGeom = function(geom, mat, parent)
   }
   else if (geom.mesh)
   {
+    var meshUri = geom.mesh.uri;
+    var submesh;
+    var centerSubmesh;
+
+
+    if (geom.mesh.submesh)
     {
-      var meshUri = geom.mesh.uri;
-      var submesh;
-      var centerSubmesh;
-      if (geom.mesh.submesh)
+      submesh = geom.mesh.submesh.name;
+      centerSubmesh = this.parseBool(geom.mesh.submesh.center);
+    }
+
+    var uriType = meshUri.substring(0, meshUri.indexOf('://'));
+    if (uriType === 'file' || uriType === 'model')
+    {
+      var modelName = meshUri.substring(meshUri.indexOf('://') + 3);
+      if (geom.mesh.scale)
       {
-        submesh = geom.mesh.submesh.name;
-        centerSubmesh = this.parseBool(geom.mesh.submesh.center);
+        var scale = this.parseScale(geom.mesh.scale);
+        parent.scale.x = scale.x;
+        parent.scale.y = scale.y;
+        parent.scale.z = scale.z;
       }
 
-      var uriType = meshUri.substring(0, meshUri.indexOf('://'));
-      if (uriType === 'file' || uriType === 'model')
+      var modelUri = this.MATERIAL_ROOT + '/' + modelName;
+      var ext = modelUri.substr(-4).toLowerCase();
+      var materialName = parent.name + '::' + modelUri;
+      this.entityMaterial[materialName] = material;
+      var meshFileName = meshUri.substring(meshUri.lastIndexOf('/') + 1);
+
+      if (!this.usingFilesUrls)
       {
-        var modelName = meshUri.substring(meshUri.indexOf('://') + 3);
-        if (geom.mesh.scale)
+        var meshFile = this.meshes[meshFileName];
+        if (!meshFile)
         {
-          var scale = this.parseScale(geom.mesh.scale);
-          parent.scale.x = scale.x;
-          parent.scale.y = scale.y;
-          parent.scale.z = scale.z;
+          console.error('Missing mesh file [' + meshFileName + ']');
+          return;
         }
 
-        var modelUri = this.MATERIAL_ROOT + '/' + modelName;
-        var materialName = parent.name + '::' + modelUri;
-        this.entityMaterial[materialName] = material;
-
-        this.scene.loadMesh(modelUri, submesh, centerSubmesh, function(dae){
-          if (that.entityMaterial[materialName])
+        if (ext === '.obj')
+        {
+          var mtlFileName = meshFileName.split('.')[0]+'.mtl';
+          var mtlFile = this.mtls[mtlFileName];
+          if (!mtlFile)
           {
-            var allChildren = [];
-            dae.getDescendants(allChildren);
-            for (var c = 0; c < allChildren.length; ++c)
+            console.error('Missing MTL file [' + mtlFileName + ']');
+            return;
+          }
+
+          that.scene.loadMeshFromString(modelUri, submesh, centerSubmesh,
+            function(obj)
             {
-              if (allChildren[c] instanceof THREE.Mesh)
+              if (!obj)
               {
-                that.scene.setMaterial(allChildren[c],
-                        that.entityMaterial[materialName]);
-                break;
+                console.error('Failed to load mesh.');
+                return;
               }
+
+              parent.add(obj);
+              loadGeom(parent);
+            }, [meshFile, mtlFile]);
+        }
+        else if (ext === '.dae')
+        {
+          that.scene.loadMeshFromString(modelUri, submesh, centerSubmesh,
+            function(dae)
+            {
+              if (!dae)
+              {
+                console.error('Failed to load mesh.');
+                return;
+              }
+
+              if (material)
+              {
+                var allChildren = [];
+                dae.getDescendants(allChildren);
+                for (var c = 0; c < allChildren.length; ++c)
+                {
+                  if (allChildren[c] instanceof THREE.Mesh)
+                  {
+                    that.scene.setMaterial(allChildren[c], material);
+                    break;
+                  }
+                }
+              }
+              parent.add(dae);
+              loadGeom(parent);
+            }, [meshFile]);
+        }
+      }
+      else
+      {
+        if (this.customUrls.length !== 0)
+        {
+          for (var k = 0; k < this.customUrls.length; k++)
+          {
+            if (this.customUrls[k].indexOf(meshFileName) > -1)
+            {
+              modelUri = this.customUrls[k];
+              break;
             }
           }
-          parent.add(dae);
+        }
+        this.scene.loadMeshFromUri(modelUri, submesh, centerSubmesh,
+          function (mesh)
+          {
+            if (!mesh)
+            {
+              console.error('Failed to load mesh.');
+              return;
+            }
+
+            if (material)
+            {
+              // Because the stl mesh doesn't have any children we cannot set
+              // the materials like other mesh types.
+              if (ext !== '.stl')
+              {
+                var allChildren = [];
+                mesh.getDescendants(allChildren);
+                for (var c = 0; c < allChildren.length; ++c)
+                {
+                  if (allChildren[c] instanceof THREE.Mesh)
+                  {
+                    that.scene.setMaterial(allChildren[c], material);
+                    break;
+                  }
+                }
+              }
+              else
+              {
+                that.scene.setMaterial(mesh, material);
+              }
+            }
+            else
+            {
+              if (ext === '.stl')
+              {
+                that.scene.setMaterial(mesh, {'ambient': [1,1,1,1]});
+              }
+            }
+          parent.add(mesh);
           loadGeom(parent);
         });
       }
@@ -605,7 +816,7 @@ GZ3D.SdfParser.prototype.createVisual = function(visual)
  */
 GZ3D.SdfParser.prototype.spawnFromSDF = function(sdf)
 {
-  //parse sdfXML
+  // Parse sdfXML
   var sdfXML;
   if ((typeof sdf) === 'string')
   {
@@ -616,11 +827,16 @@ GZ3D.SdfParser.prototype.spawnFromSDF = function(sdf)
     sdfXML = sdf;
   }
 
-  //convert SDF XML to Json string and parse JSON string to object
-  //TODO: we need better xml 2 json object convertor
-  var myjson = xml2json(sdfXML, '\t');
-  var sdfObj = JSON.parse(myjson).sdf;
+  // Convert SDF XML to Json string and parse JSON string to object
+  // TODO: we need better xml 2 json object convertor
+  var sdfJson = xml2json(sdfXML, '\t');
+  var sdfObj = JSON.parse(sdfJson).sdf;
   // it is easier to manipulate json object
+
+  if (!sdfObj) {
+    console.error('Failed to parse SDF: ', sdfJson);
+    return;
+  }
 
   if (sdfObj.model)
   {
@@ -630,17 +846,57 @@ GZ3D.SdfParser.prototype.spawnFromSDF = function(sdf)
   {
     return this.spawnLightFromSDF(sdfObj);
   }
+  else if (sdfObj.world)
+  {
+    return this.spawnWorldFromSDF(sdfObj);
+  }
 };
 
 /**
- * Loads SDF file according to given model name
- * @param {string} modelName - name of the model
- * @returns {THREE.Object3D} modelObject - 3D object which is created
- * according to SDF model.
+ * Loads SDF file according to given name.
+ * @param {string} sdfName - ether name of model / world or the filename
+ * @returns {THREE.Object3D} sdfObject - 3D object which is created
+ * according to SDF.
  */
-GZ3D.SdfParser.prototype.loadSDF = function(modelName)
+GZ3D.SdfParser.prototype.loadSDF = function(sdfName)
 {
-  var sdf = this.loadModel(modelName);
+  if (!sdfName)
+  {
+    var m = 'Must provide either a model/world name or the URL of an SDF file';
+    console.error(m);
+    return;
+  }
+  var lowerCaseName = sdfName.toLowerCase();
+  var filename = null;
+
+  // In case it is a full URL
+  if (lowerCaseName.indexOf('http') === 0)
+  {
+    filename = sdfName;
+  }
+  // In case it is just the model/world name, look for it on the default URL
+  else
+  {
+    if (lowerCaseName.endsWith('.world') || lowerCaseName.endsWith('.sdf'))
+    {
+      filename = this.MATERIAL_ROOT + '/worlds/' + sdfName;
+    }
+    else
+    {
+      filename = this.MATERIAL_ROOT + '/' + sdfName + '/model.sdf';
+    }
+  }
+
+  if (!filename)
+  {
+    console.log('Error: unable to load ' + sdfName + ' - file not found');
+    return;
+  }
+
+  var sdf = this.fileFromUrl(filename);
+  if (!sdf) {
+    return;
+  }
   return this.spawnFromSDF(sdf);
 };
 
@@ -678,13 +934,137 @@ GZ3D.SdfParser.prototype.spawnModelFromSDF = function(sdfObj)
   for (i = 0; i < sdfObj.model.link.length; ++i)
   {
     linkObj = this.createLink(sdfObj.model.link[i]);
-    modelObj.add(linkObj);
+    if (linkObj)
+    {
+      modelObj.add(linkObj);
+    }
   }
 
-  //  this.scene.add(modelObj);
-  return modelObj;
+  //convert nested model objects to model array
+  if (sdfObj.model.model)
+  {
+    if (!(sdfObj.model.model instanceof Array))
+    {
+      sdfObj.model.model = [sdfObj.model.model];
+    }
+    for (i = 0; i < sdfObj.model.model.length; ++i)
+    {
+      var tmpModelObj = {model:sdfObj.model.model[i]};
+      var nestedModelObj = this.spawnModelFromSDF(tmpModelObj);
+      if (nestedModelObj)
+      {
+        modelObj.add(nestedModelObj);
+      }
+    }
+  }
 
+  return modelObj;
 };
+
+/**
+ * Creates 3D object from parsed world SDF
+ * @param {object} sdfObj - parsed SDF object
+ * @returns {THREE.Object3D} worldObject - 3D object which is created
+ * according to SDF world object.
+ */
+GZ3D.SdfParser.prototype.spawnWorldFromSDF = function(sdfObj)
+{
+  var worldObj = new THREE.Object3D();
+
+  // remove default sun before adding objects
+  // we will let the world file create its own light
+  var sun = this.scene.getByName('sun');
+  if (sun)
+  {
+    this.scene.remove(sun);
+  }
+
+  // parse includes
+  if (sdfObj.world.include)
+  {
+    // convert object to array
+    if (!(sdfObj.world.include instanceof Array))
+    {
+      sdfObj.world.include = [sdfObj.world.include];
+    }
+
+    var modelPrefix = 'model://';
+    var urlPrefix = 'http';
+    for (var i = 0; i < sdfObj.world.include.length; ++i)
+    {
+      var incObj = sdfObj.world.include[i];
+      if (incObj.uri && incObj.uri.startsWith(modelPrefix))
+      {
+        var modelName = incObj.uri.substr(modelPrefix.length);
+        for (var u = 0; u < this.customUrls.length; ++u)
+        {
+          var urlObj = new URL(this.customUrls[u]);
+          if (urlObj.pathname.indexOf(modelName) > 0 &&
+              urlObj.pathname.toLowerCase().endsWith('.sdf'))
+          {
+            var incSDF = this.fileFromUrl(this.customUrls[u]);
+            if (!incSDF)
+            {
+              console.log('Failed to spawn model: ' + modelName);
+            }
+            else
+            {
+              var obj = this.spawnFromSDF(incSDF);
+              if (incObj.name)
+              {
+                obj.name = incObj.name;
+              }
+              if (incObj.pose)
+              {
+                var pose = this.parsePose(incObj.pose);
+                this.scene.setPose(obj, pose.position, pose.orientation);
+              }
+              worldObj.add(obj);
+            }
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  // parse models
+  if (sdfObj.world.model)
+  {
+    // convert object to array
+    if (!(sdfObj.world.model instanceof Array))
+    {
+      sdfObj.world.model = [sdfObj.world.model];
+    }
+
+    for (var j = 0; j < sdfObj.world.model.length; ++j)
+    {
+      var tmpModelObj = {model: sdfObj.world.model[j]};
+      var modelObj = this.spawnModelFromSDF(tmpModelObj);
+      worldObj.add(modelObj);
+    }
+  }
+
+  // parse lights
+  if (sdfObj.world.light)
+  {
+    // convert object to array
+    if (!(sdfObj.world.light instanceof Array))
+    {
+      sdfObj.world.light = [sdfObj.world.light];
+    }
+
+    for (var k = 0; k < sdfObj.world.light.length; ++k)
+    {
+      var tmpLightObj = {light: sdfObj.world.light[k]};
+      var lightObj = this.spawnLightFromSDF(tmpLightObj);
+      worldObj.add(lightObj);
+    }
+  }
+
+  return worldObj;
+};
+
 
 /**
  * Creates a link 3D object of the model. A model consists of links
@@ -698,6 +1078,29 @@ GZ3D.SdfParser.prototype.createLink = function(link)
   var linkPose, visualObj;
   var linkObj = new THREE.Object3D();
   linkObj.name = link['@name'];
+
+  if (link.inertial)
+  {
+    var inertialPose, inertialMass, inertia = {};
+    linkObj.userData.inertial = {};
+    inertialPose = link.inertial.pose;
+    inertialMass = link.inertial.mass;
+    inertia.ixx = link.inertial.ixx;
+    inertia.ixy = link.inertial.ixy;
+    inertia.ixz = link.inertial.ixz;
+    inertia.iyy = link.inertial.iyy;
+    inertia.iyz = link.inertial.iyz;
+    inertia.izz = link.inertial.izz;
+    linkObj.userData.inertial.inertia = inertia;
+    if (inertialMass)
+    {
+      linkObj.userData.inertial.mass = inertialMass;
+    }
+    if (inertialPose)
+    {
+      linkObj.userData.inertial.pose = inertialPose;
+    }
+  }
 
   if (link.pose)
   {
@@ -724,22 +1127,21 @@ GZ3D.SdfParser.prototype.createLink = function(link)
 
   if (link.collision)
   {
-    if (link.collision.visual)
+    if (!(link.collision instanceof Array))
     {
-      if (!(link.collision.visual instanceof Array))
-      {
-        link.collision.visual = [link.collision.visual];
-      }
+      link.collision = [link.collision];
+    }
 
-      for (var j = 0; j < link.collision.visual.length; ++j)
+    for (var j = 0; j < link.collision.length; ++j)
+    {
+      visualObj = this.createVisual(link.collision[j]);
+      if (visualObj && !visualObj.parent)
       {
-        visualObj = this.createVisual(link.collision.visual[j]);
-        if (visualObj && !visualObj.parent)
-        {
-          linkObj.add(visualObj);
-        }
+        visualObj.castShadow = false;
+        visualObj.receiveShadow = false;
+        visualObj.visible = this.scene.showCollisions;
+        linkObj.add(visualObj);
       }
-
     }
   }
 
@@ -907,18 +1309,29 @@ GZ3D.SdfParser.prototype.createCylinderSDF = function(translation, euler)
 };
 
 /**
- * Loads SDF of the model. It first constructs the url of the model
- * according to modelname
- * @param {string} modelName - name of the model
- * @returns {XMLDocument} modelDOM - SDF DOM object of the loaded model
+ * Download a file from url.
+ * @param {string} url - full URL to an SDF file.
  */
-GZ3D.SdfParser.prototype.loadModel = function(modelName)
+GZ3D.SdfParser.prototype.fileFromUrl = function(url)
 {
-  var modelFile = this.MATERIAL_ROOT + '/' + modelName + '/model.sdf';
-
   var xhttp = new XMLHttpRequest();
   xhttp.overrideMimeType('text/xml');
-  xhttp.open('GET', modelFile, false);
-  xhttp.send();
+  xhttp.open('GET', url, false);
+
+  try
+  {
+    xhttp.send();
+  }
+  catch(err)
+  {
+    console.log('Failed to get URL [' + url + ']: ' + err.message);
+    return;
+  }
+
+  if (xhttp.status !== 200)
+  {
+    console.log('Failed to get URL [' + url + ']');
+    return;
+  }
   return xhttp.responseXML;
 };

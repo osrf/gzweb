@@ -15,6 +15,8 @@
  *
 */
 
+#include <gazebo/gazebo_config.h>
+
 #include "pb2json.hh"
 #include "OgreMaterialParser.hh"
 #include "GazeboInterface.hh"
@@ -49,6 +51,7 @@ GazeboInterface::GazeboInterface()
   this->roadTopic = "~/roads";
   this->heightmapService = "~/heightmap_data";
   this->deleteTopic = "~/entity_delete";
+  this->playbackControlTopic = "~/playback_control";
 
   // material topic
   this->materialTopic = "~/material";
@@ -112,17 +115,22 @@ GazeboInterface::GazeboInterface()
   this->lightFactoryPub =
       this->node->Advertise<gazebo::msgs::Light>(this->lightFactoryTopic);
 
-  // For controling world
+  // For controlling world
   this->worldControlPub =
       this->node->Advertise<gazebo::msgs::WorldControl>(
       this->worldControlTopic);
+
+  // For controlling playback
+  this->playbackControlPub =
+      this->node->Advertise<gazebo::msgs::LogPlaybackControl>(
+      this->playbackControlTopic);
+
 
   this->responseSub = this->node->Subscribe("~/response",
       &GazeboInterface::OnResponse, this);
 
   this->materialParser = new OgreMaterialParser();
 
-  this->lastStatsTime = gazebo::common::Time::Zero;
   this->lastPausedState = true;
 
   // message filtering apparatus
@@ -171,6 +179,8 @@ GazeboInterface::~GazeboInterface()
     this->runThread->join();
   if (this->serviceThread)
     this->serviceThread->join();
+
+  delete this->materialParser;
 }
 
 /////////////////////////////////////////////////
@@ -217,18 +227,6 @@ void GazeboInterface::Fini()
 /////////////////////////////////////////////////
 void GazeboInterface::ProcessMessages()
 {
-  static RequestMsgs_L::iterator rIter;
-  static SceneMsgs_L::iterator sIter;
-  static PhysicsMsgs_L::iterator physicsIter;
-  static WorldStatsMsgs_L::iterator wIter;
-  static ModelMsgs_L::iterator modelIter;
-  static VisualMsgs_L::iterator visualIter;
-  static LightMsgs_L::iterator lightIter;
-  static PoseMsgs_L::iterator pIter;
-  // static SkeletonPoseMsgs_L::iterator spIter;
-  static JointMsgs_L::iterator jointIter;
-  static SensorMsgs_L::iterator sensorIter;
-
   {
     std::lock_guard<std::recursive_mutex> lock(this->receiveMutex);
 
@@ -277,21 +275,47 @@ void GazeboInterface::ProcessMessages()
         }
         else if (topic == this->modelModifyTopic)
         {
-          std::string name = get_value(msg, "msg:name");
-          int id = atoi(get_value(msg, "msg:id").c_str());
+          JsonObj jsonObj(msg);
+          JsonObj msgObj = jsonObj.Object("msg");
+          if (!msgObj)
+          {
+            std::cerr << "No msg key in json object" << std::endl;
+            continue;
+          }
 
+          std::string name = msgObj.Object("name").String();
           if (name == "")
             continue;
 
-          ignition::math::Vector3d pos(
-            atof(get_value(msg, "msg:position:x").c_str()),
-            atof(get_value(msg, "msg:position:y").c_str()),
-            atof(get_value(msg, "msg:position:z").c_str()));
-          ignition::math::Quaterniond quat(
-            atof(get_value(msg, "msg:orientation:w").c_str()),
-            atof(get_value(msg, "msg:orientation:x").c_str()),
-            atof(get_value(msg, "msg:orientation:y").c_str()),
-            atof(get_value(msg, "msg:orientation:z").c_str()));
+          unsigned int id =
+              static_cast<unsigned int>(msgObj.Object("id").Number());
+
+          JsonObj posObj = msgObj.Object("position");
+          if (!posObj)
+          {
+            std::cerr << "model pose msg is missing 'position' field"
+                      << std::endl;
+            continue;
+          }
+
+          double posX = posObj.Object("x").Number();
+          double posY = posObj.Object("y").Number();
+          double posZ = posObj.Object("z").Number();
+          JsonObj quatObj = msgObj.Object("orientation");
+          if (!quatObj)
+          {
+            std::cerr << "model pose msg is missing 'orientation' field"
+                      << std::endl;
+            continue;
+          }
+          double quatW = quatObj.Object("w").Number();
+          double quatX = quatObj.Object("x").Number();
+          double quatY = quatObj.Object("y").Number();
+          double quatZ = quatObj.Object("z").Number();
+
+          ignition::math::Vector3d pos(posX, posY, posZ);
+          ignition::math::Quaterniond quat(quatW, quatX, quatY, quatZ);
+
           ignition::math::Pose3d pose(pos, quat);
 
           gazebo::msgs::Model modelMsg;
@@ -299,6 +323,48 @@ void GazeboInterface::ProcessMessages()
           modelMsg.set_name(name);
           gazebo::msgs::Set(modelMsg.mutable_pose(), pose);
 
+          JsonObj linksObj = msgObj.Object("link");
+          if (linksObj)
+          {
+            for (unsigned int i = 0; i < linksObj.ArraySize(); ++i)
+            {
+              JsonObj linkObj = linksObj.ArrayObject(i);
+              std::string linkName = linkObj.Object("name").String();
+              unsigned int linkId =
+                  static_cast<unsigned int>(linkObj.Object("id").Number());
+              JsonObj linkPosObj = linkObj.Object("position");
+              if (!linkPosObj)
+              {
+                std::cerr << "link pose msg is missing 'position' field"
+                          << std::endl;
+                continue;
+              }
+              double linkPosX = linkPosObj.Object("x").Number();
+              double linkPosY = linkPosObj.Object("y").Number();
+              double linkPosZ = linkPosObj.Object("z").Number();
+              JsonObj linkQuatObj = linkObj.Object("orientation");
+              if (!linkQuatObj)
+              {
+                std::cerr << "link pose msg is missing 'orientation' field"
+                          << std::endl;
+                continue;
+              }
+              double linkQuatW = linkQuatObj.Object("w").Number();
+              double linkQuatX = linkQuatObj.Object("x").Number();
+              double linkQuatY = linkQuatObj.Object("y").Number();
+              double linkQuatZ = linkQuatObj.Object("z").Number();
+
+              ignition::math::Vector3d linkPos(linkPosX, linkPosY, linkPosZ);
+              ignition::math::Quaterniond linkQuat(
+                  linkQuatW, linkQuatX, linkQuatY, linkQuatZ);
+              ignition::math::Pose3d linkPose(linkPos, linkQuat);
+
+              gazebo::msgs::Link *linkMsg = modelMsg.add_link();
+              linkMsg->set_id(linkId);
+              linkMsg->set_name(linkName);
+              gazebo::msgs::Set(linkMsg->mutable_pose(), linkPose);
+            }
+          }
           this->modelPub->Publish(modelMsg);
         }
         else if (topic == this->lightFactoryTopic ||
@@ -336,13 +402,20 @@ void GazeboInterface::ProcessMessages()
               atof(get_value(msg, "msg:direction:z").c_str()));
             gazebo::msgs::Set(lightMsg.mutable_direction(), direction);
 
+#if GAZEBO_MAJOR_VERSION >= 9
+            ignition::math::Color diffuse(
+#else
             gazebo::common::Color diffuse(
+#endif
                 atof(get_value(msg, "msg:diffuse:r").c_str()),
                 atof(get_value(msg, "msg:diffuse:g").c_str()),
                 atof(get_value(msg, "msg:diffuse:b").c_str()), 1);
             gazebo::msgs::Set(lightMsg.mutable_diffuse(), diffuse);
-
+#if GAZEBO_MAJOR_VERSION >= 9
+            ignition::math::Color specular(
+#else
             gazebo::common::Color specular(
+#endif
                 atof(get_value(msg, "msg:specular:r").c_str()),
                 atof(get_value(msg, "msg:specular:g").c_str()),
                 atof(get_value(msg, "msg:specular:b").c_str()), 1);
@@ -376,11 +449,20 @@ void GazeboInterface::ProcessMessages()
               gazebo::msgs::Set(lightMsg.mutable_direction(),
                   ignition::math::Vector3d(0,0,-1));
             }
-
             gazebo::msgs::Set(lightMsg.mutable_diffuse(),
+
+#if GAZEBO_MAJOR_VERSION >= 9
+                ignition::math::Color(0.5, 0.5, 0.5, 1));
+#else
                 gazebo::common::Color(0.5, 0.5, 0.5, 1));
+#endif
             gazebo::msgs::Set(lightMsg.mutable_specular(),
+
+#if GAZEBO_MAJOR_VERSION >= 9
+                ignition::math::Color(0.1, 0.1, 0.1, 1));
+#else
                 gazebo::common::Color(0.1, 0.1, 0.1, 1));
+#endif
             lightMsg.set_attenuation_constant(0.5);
             lightMsg.set_attenuation_linear(0.01);
             lightMsg.set_attenuation_quadratic(0.001);
@@ -513,6 +595,11 @@ void GazeboInterface::ProcessMessages()
                 << "</model>"
                 << "</sdf>";
           }
+          else if (type == "sdf")
+          {
+            std::string sdfStr = get_value(msg, "msg:sdf");
+            newModelStr << sdfStr;
+          }
           else
           {
             newModelStr << "<sdf version ='" << SDF_VERSION << "'>"
@@ -528,8 +615,16 @@ void GazeboInterface::ProcessMessages()
           }
 
           // Spawn the model in the physics server
-          factoryMsg.set_sdf(newModelStr.str());
-          this->factoryPub->Publish(factoryMsg);
+          if (!newModelStr.str().empty())
+          {
+            factoryMsg.set_sdf(newModelStr.str());
+            this->factoryPub->Publish(factoryMsg);
+          }
+          else
+          {
+            std::cerr << "Empty model SDF string when publishing to ~/factory"
+                      << std::endl;
+          }
         }
         else if (topic == this->worldControlTopic)
         {
@@ -552,7 +647,6 @@ void GazeboInterface::ProcessMessages()
             else if (reset == "world")
             {
               worldControlMsg.mutable_reset()->set_all(true);
-
             }
           }
           if (!pause.empty() || !reset.empty())
@@ -574,6 +668,51 @@ void GazeboInterface::ProcessMessages()
           std::string name = get_value(msg, "msg:name");
           gazebo::transport::requestNoReply(this->node, "entity_delete", name);
         }
+        else if (topic == this->playbackControlTopic)
+        {
+          gazebo::msgs::LogPlaybackControl playbackControlMsg;
+          std::string pause = get_value(msg, "msg:pause");
+          std::string multiStep = get_value(msg, "msg:multi_step");
+          std::string rewind = get_value(msg, "msg:rewind");
+          std::string forward = get_value(msg, "msg:forward");
+          std::string seekSec = get_value(msg, "msg:seek:sec");
+          std::string seekNSec = get_value(msg, "msg:seek:nsec");
+          if (!pause.empty())
+          {
+            int pauseValue = atoi(pause.c_str());
+            playbackControlMsg.set_pause(pauseValue);
+          }
+          if (!multiStep.empty())
+          {
+            int multiStepValue = atoi(multiStep.c_str());
+            playbackControlMsg.set_multi_step(multiStepValue);
+          }
+          if (!rewind.empty())
+          {
+            int rewindValue = atoi(rewind.c_str());
+            playbackControlMsg.set_rewind(rewindValue);
+          }
+          if (!forward.empty())
+          {
+            int forwardValue = atoi(forward.c_str());
+            playbackControlMsg.set_forward(forwardValue);
+          }
+          if (!seekSec.empty() && !seekNSec.empty())
+          {
+            auto seek = playbackControlMsg.mutable_seek();
+            seek->set_sec(atof(seekSec.c_str()));
+            seek->set_nsec(atof(seekNSec.c_str()));
+          }
+          this->playbackControlPub->Publish(playbackControlMsg);
+        }
+        else if (topic == this->statsTopic)
+        {
+          // simulate latching stats topic
+          if (this->statsMsgs.empty())
+          {
+            this->statsMsgs.push_back(this->statsMsg);
+          }
+        }
       }
       else
       {
@@ -589,7 +728,7 @@ void GazeboInterface::ProcessMessages()
 
     std::string msg;
     // Forward the scene messages.
-    for (sIter = this->sceneMsgs.begin(); sIter != this->sceneMsgs.end();
+    for (auto sIter = this->sceneMsgs.begin(); sIter != this->sceneMsgs.end();
         ++sIter)
     {
       msg = this->PackOutgoingTopicMsg(this->sceneTopic,
@@ -599,7 +738,7 @@ void GazeboInterface::ProcessMessages()
     this->sceneMsgs.clear();
 
     // Forward the physics messages.
-    for (physicsIter = this->physicsMsgs.begin();
+    for (auto physicsIter = this->physicsMsgs.begin();
         physicsIter != this->physicsMsgs.end(); ++physicsIter)
     {
       msg = this->PackOutgoingTopicMsg(this->physicsTopic,
@@ -609,7 +748,7 @@ void GazeboInterface::ProcessMessages()
     this->physicsMsgs.clear();
 
     // Forward the model messages.
-    for (modelIter = this->modelMsgs.begin();
+    for (auto modelIter = this->modelMsgs.begin();
         modelIter != this->modelMsgs.end(); ++modelIter)
     {
       msg = this->PackOutgoingTopicMsg(this->modelTopic,
@@ -619,7 +758,7 @@ void GazeboInterface::ProcessMessages()
     this->modelMsgs.clear();
 
     // Forward the sensor messages.
-    for (sensorIter = this->sensorMsgs.begin();
+    for (auto sensorIter = this->sensorMsgs.begin();
         sensorIter != this->sensorMsgs.end(); ++sensorIter)
     {
       msg = this->PackOutgoingTopicMsg(this->sensorTopic,
@@ -629,7 +768,7 @@ void GazeboInterface::ProcessMessages()
     this->sensorMsgs.clear();
 
     // Forward the light factory messages.
-    for (lightIter = this->lightFactoryMsgs.begin();
+    for (auto lightIter = this->lightFactoryMsgs.begin();
         lightIter != this->lightFactoryMsgs.end(); ++lightIter)
     {
       msg = this->PackOutgoingTopicMsg(this->lightFactoryTopic,
@@ -639,7 +778,7 @@ void GazeboInterface::ProcessMessages()
     this->lightFactoryMsgs.clear();
 
     // Forward the light modify messages.
-    for (lightIter = this->lightModifyMsgs.begin();
+    for (auto lightIter = this->lightModifyMsgs.begin();
         lightIter != this->lightModifyMsgs.end(); ++lightIter)
     {
       msg = this->PackOutgoingTopicMsg(this->lightModifyTopic,
@@ -649,7 +788,7 @@ void GazeboInterface::ProcessMessages()
     this->lightModifyMsgs.clear();
 
     // Forward the visual messages.
-    for (visualIter = this->visualMsgs.begin();
+    for (auto visualIter = this->visualMsgs.begin();
         visualIter != this->visualMsgs.end(); ++visualIter)
     {
       msg = this->PackOutgoingTopicMsg(this->visualTopic,
@@ -659,7 +798,7 @@ void GazeboInterface::ProcessMessages()
     this->visualMsgs.clear();
 
     // Forward the joint messages.
-    for (jointIter = this->jointMsgs.begin();
+    for (auto jointIter = this->jointMsgs.begin();
         jointIter != this->jointMsgs.end(); ++jointIter)
     {
       msg = this->PackOutgoingTopicMsg(this->jointTopic,
@@ -669,8 +808,8 @@ void GazeboInterface::ProcessMessages()
     this->jointMsgs.clear();
 
     // Forward the request messages
-    for (rIter =  this->requestMsgs.begin(); rIter != this->requestMsgs.end();
-        ++rIter)
+    for (auto rIter =  this->requestMsgs.begin();
+        rIter != this->requestMsgs.end(); ++rIter)
     {
       msg = this->PackOutgoingTopicMsg(this->requestTopic,
           pb2json(*(*rIter).get()));
@@ -679,7 +818,7 @@ void GazeboInterface::ProcessMessages()
     this->requestMsgs.clear();
 
     // Forward the stats messages.
-    for (wIter = this->statsMsgs.begin(); wIter != this->statsMsgs.end();
+    for (auto wIter = this->statsMsgs.begin(); wIter != this->statsMsgs.end();
         ++wIter)
     {
       msg = this->PackOutgoingTopicMsg(this->statsTopic,
@@ -689,7 +828,7 @@ void GazeboInterface::ProcessMessages()
     this->statsMsgs.clear();
 
     // Forward all the pose messages.
-    pIter = this->poseMsgs.begin();
+    auto pIter = this->poseMsgs.begin();
     while (pIter != this->poseMsgs.end())
     {
       msg = this->PackOutgoingTopicMsg(this->poseTopic,
@@ -950,20 +1089,29 @@ void GazeboInterface::OnPhysicsMsg(ConstPhysicsPtr &_msg)
 /////////////////////////////////////////////////
 void GazeboInterface::OnStats(ConstWorldStatisticsPtr &_msg)
 {
+  // store stats msg. This is sent to all clients when they first connect to
+  // the bridge to determine if gazebo is in sim or playback mode
+  this->statsMsg = _msg;
+
   if (!this->IsConnected())
     return;
 
   gazebo::common::Time wallTime;
   wallTime = gazebo::msgs::Convert(_msg->real_time());
+
+  gazebo::common::Time lastStatsTime;
+  if (this->lastStatsMsg)
+    lastStatsTime = gazebo::msgs::Convert(this->lastStatsMsg->real_time());
+  // bool playback = this->lastStatsMsg->has_log_playback_stats();
+  double timeDelta = (wallTime - lastStatsTime).Double();
   bool paused = _msg->paused();
 
   // pub at 1Hz, but force pub if world state changes
-  if (((wallTime - this->lastStatsTime).Double() >= 1.0) ||
-      wallTime < this->lastStatsTime ||
+  if (timeDelta >= 1.0 || wallTime < lastStatsTime ||
       this->lastPausedState != paused)
   {
-    this->lastStatsTime = wallTime;
     this->lastPausedState = paused;
+    this->lastStatsMsg = _msg;
 
     std::lock_guard<std::recursive_mutex> lock(this->receiveMutex);
     this->statsMsgs.push_back(_msg);

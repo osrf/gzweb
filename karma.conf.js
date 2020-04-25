@@ -17,6 +17,7 @@ module.exports = function(config) {
     files: [
       "gz3d/client/js/include/jquery-1.9.1.js",
       "gz3d/client/js/include/jquery.mobile-1.4.0.min.js",
+      'node_modules/jasmine-jquery/lib/jasmine-jquery.js',
       "gz3d/client/js/include/angular.min.js",
       "gz3d/client/js/include/three.js",
       "gz3d/client/js/include/three.compat.js",
@@ -26,15 +27,24 @@ module.exports = function(config) {
       "gz3d/client/js/include/eventemitter2.js",
       "gz3d/client/js/include/roslib.js",
       "gz3d/client/js/include/ColladaLoader.js",
-      "gz3d/client/js/include/CopyShader.js",
-      "gz3d/client/js/include/SSAOShader.js",
-      "gz3d/client/js/include/EffectComposer.js",
-      "gz3d/client/js/include/RenderPass.js",
-      "gz3d/client/js/include/MaskPass.js",
-      "gz3d/client/js/include/ShaderPass.js",
+      "gz3d/client/js/include/OBJLoader.js",
+      "gz3d/client/js/include/MTLLoader.js",
+      "gz3d/client/js/include/STLLoader.js",
       "gz3d/client/js/include/xml2json.js",
-      'gz3d/build/gz3d.js',
-      'gz3d/test/*.js'
+      "gz3d/client/js/include/lodash.js",
+      'gz3d/client/style/gz3d.css',
+      "gz3d/test/utils/angular-mocks.min.js",
+      'gz3d/test/fixture/*.js',
+      'gz3d/build/gz3d.src.js',
+      'gz3d/test/fixture/*.html',
+      'gz3d/test/*.js',
+      {pattern: 'gz3d/test/utils/beer/*', included: false, served: true, watched: false, nocache: true},
+      {pattern: 'gz3d/test/utils/beer/materials/scripts/*', included: false, served: true, watched: false, nocache: true},
+      {pattern: 'gz3d/test/utils/walkway_metal_straight/*', included: false, served: true, watched: false, nocache: true},
+      {pattern: 'gz3d/test/utils/walkway_metal_straight/meshes/*', included: false, served: true, watched: false, nocache: true},
+      {pattern: 'gz3d/test/utils/house_2/*', included: false, served: true, watched: false, nocache: true},
+      {pattern: 'gz3d/test/utils/house_2/meshes/*', included: false, served: true, watched: false, nocache: true},
+      {pattern: 'gz3d/test/utils/husky/model.sdf', included: false, served: true, watched: false, nocache: true}
     ],
 
 
@@ -46,14 +56,14 @@ module.exports = function(config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
-      'gz3d/build/gz3d.js': 'coverage'
+      'gz3d/build/gz3d.src.js': 'coverage'
     },
 
 
     // test results reporter to use
     // possible values: 'dots', 'progress'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-    reporters: ['progress', 'coverage'],
+    reporters: ['progress', 'coverage', 'html'],
 
     // optionally, configure the reporter
     coverageReporter: {
@@ -66,6 +76,9 @@ module.exports = function(config) {
           type : 'lcov'
         },
       ]
+    },
+    htmlReporter: {
+      outputFile: 'test_results/test_results.html'
     },
 
     // web server port

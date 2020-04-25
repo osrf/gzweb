@@ -7,29 +7,47 @@
     "url": "https://bitbucket.org/osrf/gzweb"
   },
   "config": {
-    "port": "8080",
+    "port": "",
     "deploy_op": ""
   },
   "scripts": {
-    "test": "./node_modules/karma/bin/karma start --singleRun",
-    "update": "cd gz3d/utils && grunt build && cd ../../build && cmake ..",
-    "start": "if [ $npm_config_port ]; then port=$npm_config_port; else port=8080; fi; ./node_modules/.bin/http-server -p $port http/client & cd gzbridge && ./ws_server.js",
+    "test": "./node_modules/.bin/eslint gz3d/src/*.js gz3d/test/*.js gzbridge/server.js && ./node_modules/karma/bin/karma start --singleRun",
+    "update": "./node_modules/.bin/grunt build && cd build && cmake ..",
+    "update-dev": "./node_modules/.bin/grunt concat && cd build && cmake ..",
+    "start": "if [ $npm_config_port ]; then port=$npm_config_port; fi; cd gzbridge && ./server.js $port",
     "deploy": "if [ $npm_config_deploy_op ]; then ./deploy.sh -$npm_config_deploy_op; else ./deploy.sh; fi;",
-    "docs": "cd gz3d/utils && grunt doc",
+    "docs": "./node_modules/.bin/grunt doc",
     "coverage": "codecov"
   },
   "dependencies": {
-    "websocket": "",
-    "http-server": "",
-    "node-gyp": ""
+    "fs": "0.0.1-security",
+    "http": "0.0.0",
+    "node-gyp": "",
+    "path": "^0.12.7",
+    "websocket": "^1.0.25"
   },
   "devDependencies": {
+    "catharsis": "^0.8.9",
     "codecov": "^2.3.0",
+    "eslint": "^4.8.0",
+    "grunt": "~0.4.1",
+    "grunt-cli": "^1.2.0",
+    "grunt-contrib-clean": "^1.1.0",
+    "grunt-contrib-concat": "^1.0.1",
+    "grunt-contrib-jshint": "^1.1.0",
+    "grunt-contrib-uglify-es": "^3.3.0",
+    "grunt-contrib-watch": "^1.0.0",
+    "grunt-jsdoc": "^2.1.1",
     "istanbul": "^0.4.5",
     "jasmine-core": "^2.8.0",
+    "jasmine-jquery": "^2.1.1",
+    "jsdoc": "^3.5.5",
     "karma": "^1.7.0",
     "karma-chrome-launcher": "^2.2.0",
     "karma-coverage": "^1.1.1",
-    "karma-jasmine": "^1.1.0"
+    "karma-htmlfile-reporter": "^0.3.5",
+    "karma-jasmine": "^1.1.0",
+    "taffydb": "^2.7.3",
+    "underscore": "^1.8.3"
   }
 }

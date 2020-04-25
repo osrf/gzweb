@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <title>[GzWeb] View SDF from file</title>
+    <meta charset="utf-8">
+    <script src="../gz3d/build/gz3d.js"></script>
+    <style>
+      body {
+        padding: 2em;
+        font-family: sans;
+      }
+      #container {
+        padding: 2em;
+        height: 30em;
+        width: 80%;
+      }
+      button {
+        width: 8%;
+      }
+    </style>
+  </head>
+
+  <body>
+
+    <h2>
+      View SDF from file
+    </h2>
+
+    <p>
+      This example shows how to visualize an SDF file on the browser by passing local files.
+    </p>
+    <p>
+      The SDF parsing happens completely on the browser and all resources are local to the user, so there is no need for any server to be serving resources.
+    </p>
+
+    <p>
+      You can test it by clicking the Browse button and choosing a model
+      directory. Make sure the directory contains a <i>model.sdf</i> and all other
+      resources needed by the model, such as meshes and textures.
+    </p>
+
+    <div>
+      <div>
+        <h4>Model files</h4>
+        <input
+          type="file"
+          onchange="onNewFiles()"
+          id="resources-input"
+          webkitdirectory directory multiple
+        >
+      </div>
+    </div>
+
+    <center>
+      <div id="container">
+      </div>
+    </center>
+
+    <script>
+      if (!Detector.webgl)
+        Detector.addGetWebGLMessage();
+
+      var scene;
+      var sdfparser;
+      var resourcesInput;
+
+      init();
+      animate();
+
+      // Initialization
+      function init()
+      {
+        // Initialize objects
+        var shaders = new GZ3D.Shaders();
+        scene = new GZ3D.Scene(shaders);
+        sdfparser = new GZ3D.SdfParser(scene);
+        sdfparser.usingFilesUrls = false;
+
+        var ogre2json = new GZ3D.Ogre2Json();
+
+        // Append to dom
+        var container = document.getElementById('container');
+        container.appendChild(scene.getDomElement());
+
+        // Handle window resize
+        window.addEventListener('resize', onWindowResize, false);
+        onWindowResize();
+
+        // Get DOM elements
+        resourcesInput = document.getElementById('resources-input');
+
+        animate();
+      }
+
+      // Callback when window is resized
+      function onWindowResize()
+      {
+        scene.setSize(container.clientWidth, container.clientHeight);
+      }
+
+      // Recursively called animation loop
+      function animate()
+      {
+        requestAnimationFrame(animate);
+        scene.render();
+      }
+
+      // Callback when Add folders is pressed
+      function onNewFiles()
+      {
+        resourcesInput.style.display = 'none';
+
+        // Look for the folder prefix
+        let prefix = '';
+        for (const file of resourcesInput.files)
+        {
+          // See if there's a prefix
+          if (file.webkitRelativePath.endsWith('.sdf') &&
+              file.webkitRelativePath.indexOf('/') > 1)
+          {
+            prefix = file.webkitRelativePath.substring(0,
+                     file.webkitRelativePath.indexOf('/') + 1);
+          }
+        }
+
+        // Load files
+        const pendingFiles = [];
+        for (const file of resourcesInput.files)
+        {
+          // Remove prefix
+          if (file.webkitRelativePath.indexOf(prefix) === 0)
+          {
+            file.fullPath =
+                file.webkitRelativePath.substring(prefix.length);
+          }
+
+          // Skip unhandled files
+          if (file.fullPath.indexOf('/thumbnails/') >= 0 ||
+              file.name.endsWith('.config'))
+          {
+            continue;
+          }
+
+          pendingFiles.push(fileAsText(file));
+        }
+
+        // After all resources have been processed
+        THREE.Cache.enabled = true;
+        Promise.all(pendingFiles)
+          .then((results) =>
+          {
+            // Go through all loaded files
+            let sdfFile;
+            for (const result of results)
+            {
+              if (result === '0')
+              {
+                console.error('Failed to load a file!');
+              }
+
+              const fileName = result[0];
+              const fileContent = result[1];
+
+              // Keep the last occurence of .sdf file, ignore all others
+              if (fileName.toLowerCase().endsWith('.sdf'))
+              {
+                sdfFile = fileContent;
+              }
+              else if (fileName.toLowerCase().endsWith('.dae') ||
+                       fileName.toLowerCase().endsWith('.obj') ||
+                       fileName.toLowerCase().endsWith('.stl'))
+              {
+                sdfparser.meshes[fileName] = fileContent;
+              }
+              else if (fileName.toLowerCase().endsWith('.mtl'))
+              {
+                sdfparser.mtls[fileName] = fileContent;
+              }
+              else if (fileName.toLowerCase().endsWith('.png') ||
+                       fileName.toLowerCase().endsWith('.jpg') ||
+                       fileName.toLowerCase().endsWith('.jpeg'))
+              {
+                THREE.Cache.add(fileName, fileContent);
+              }
+              else
+              {
+                console.error('Unhandled file type [', fileName, ']');
+              }
+            }
+
+            if (!sdfFile)
+            {
+              console.error('No SDF file!');
+              return;
+            }
+
+            const obj = scene.createFromSdf(sdfFile);
+            if (obj)
+            {
+              scene.add(obj);
+            }
+            else
+            {
+              console.error('Failed to load model', sdfFile);
+            }
+          })
+          .catch((_error) =>
+          {
+            console.error(_error);
+          });
+      }
+
+      // Load a file as text, return it in a promise
+      function fileAsText(_file)
+      {
+        const fileReader = new FileReader();
+
+        return new Promise((resolve, reject) =>
+        {
+          fileReader.onerror = () =>
+          {
+            fileReader.abort();
+            console.error('File reader error');
+            reject('Problem parsing input file.');
+          };
+
+          fileReader.onload = () =>
+          {
+            // Textures are loaded as images
+            if (_file.fullPath.endsWith('.png'))
+            {
+              const image =
+                  document.createElementNS('http://www.w3.org/1999/xhtml',
+                  'img');
+              image.src = fileReader.result;
+
+              resolve([_file.fullPath, image]);
+            }
+            else
+            {
+              // Text files are loaded as is
+              resolve([_file.name, fileReader.result]);
+            }
+          };
+
+          if (_file.fullPath.endsWith('.png'))
+          {
+            fileReader.readAsDataURL(_file);
+          }
+          else
+          {
+            fileReader.readAsText(_file);
+          }
+        });
+      }
+    </script>
+
+  </body>
+</html>

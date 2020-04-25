@@ -298,13 +298,126 @@ namespace gzweb {
     return "";
   }
 
-  std::string get_value(const std::string &msg, const std::string &key)
+  std::string get_value(const std::string &_msg, const std::string &_key)
   {
     json_t *root;
     json_error_t error;
-    root = json_loads(msg.c_str(), 0, &error);
-    std::string result = get(root, key);
+    root = json_loads(_msg.c_str(), 0, &error);
+    std::string result = get(root, _key);
     json_decref(root);
     return result;
   }
+
+  /// \brief Private class of the JsonObj
+  class JsonObjPrivate
+  {
+    /// \brief Pointer to internal json object
+    public: json_t *json = nullptr;
+
+    /// \brief True if we should decrement ref count on internal json obj
+    public: bool decref = true;
+  };
+}
+
+using namespace gzweb;
+
+//////////////////////////////////////////////////
+JsonObj::JsonObj(const std::string &_str)
+  : dataPtr(new JsonObjPrivate)
+{
+  json_error_t error;
+  this->dataPtr->json = json_loads(_str.c_str(), 0, &error);
+}
+
+//////////////////////////////////////////////////
+JsonObj::JsonObj(json_t *_obj)
+  : dataPtr(new JsonObjPrivate)
+{
+  this->dataPtr->json = _obj;
+  this->dataPtr->decref = false;
+}
+
+//////////////////////////////////////////////////
+JsonObj::JsonObj(const JsonObj &_other)
+  : dataPtr(new JsonObjPrivate)
+{
+  *this->dataPtr = *_other.dataPtr;
+}
+
+//////////////////////////////////////////////////
+JsonObj::~JsonObj()
+{
+  if (this->dataPtr->decref)
+    json_decref(this->dataPtr->json);
+}
+
+//////////////////////////////////////////////////
+JsonObj JsonObj::Object(const std::string &_key) const
+{
+  if (json_is_object(this->dataPtr->json))
+  {
+    json_t *obj = json_object_get(this->dataPtr->json, _key.c_str());
+    return JsonObj(obj);
+  }
+  return JsonObj(nullptr);
+}
+
+//////////////////////////////////////////////////
+double JsonObj::Number() const
+{
+  if (json_is_number(this->dataPtr->json))
+  {
+    return json_number_value(this->dataPtr->json);
+  }
+  return 0.0;
+}
+
+//////////////////////////////////////////////////
+bool JsonObj::Bool() const
+{
+  if (json_is_boolean(this->dataPtr->json))
+  {
+    return json_boolean_value(this->dataPtr->json);
+  }
+  return false;
+}
+
+//////////////////////////////////////////////////
+std::string JsonObj::String() const
+{
+  if (json_is_string(this->dataPtr->json))
+  {
+    return json_string_value(this->dataPtr->json);
+  }
+  return std::string();
+}
+
+
+//////////////////////////////////////////////////
+JsonObj JsonObj::ArrayObject(const unsigned int _index) const
+{
+  if (json_is_array(this->dataPtr->json))
+  {
+    json_t *obj = json_array_get(this->dataPtr->json, _index);
+    return JsonObj(obj);
+  }
+
+  return JsonObj(nullptr);
+}
+
+//////////////////////////////////////////////////
+unsigned int JsonObj::ArraySize() const
+{
+  if (json_is_array(this->dataPtr->json))
+  {
+    return json_array_size(this->dataPtr->json);
+  }
+
+  return 0u;
+}
+
+//////////////////////////////////////////////////
+JsonObj::operator bool() const
+{
+  return this->dataPtr->json != nullptr;
 }
