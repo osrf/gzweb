@@ -17,6 +17,9 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
+    - run: sudo apt update
+    - run: sudo apt install -y libjansson-dev libboost-dev imagemagick libtinyxml-dev mercurial cmake build-essential wget nodejs npm nodejs-legacy
+    - run: sudo npm install -g grunt
     - run: npm run deploy
     - run: npm test
     - run: npm run coverage
