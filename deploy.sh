@@ -108,7 +108,7 @@ then
   if [[ -z $LOCAL ]]
   then
     echo -n "Downloading gazebo_models..."
-    hg clone https://bitbucket.org/osrf/gazebo_models -b default
+    git clone https://gitgub.com/osrf/gazebo_models -b master
 
     RETVAL=$?
     if [ $RETVAL -ne 0 ]; then

@@ -2673,7 +2673,7 @@ GZ3D.Scene.prototype.viewCOM = function(model)
   }
 };
 
-// TODO: Issue https://bitbucket.org/osrf/gzweb/issues/138
+// TODO: Issue https://github.com/osrf/gzweb/issues/138
 /**
  * View inertia
  * Toggle: if there are inertia visuals, hide, otherwise, show.
