@@ -18,7 +18,7 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
     - run: sudo apt update
-    - run: sudo apt install -y libjansson-dev libboost-dev imagemagick libtinyxml-dev git cmake build-essential wget
+    - run: sudo apt install -y libjansson-dev libboost-dev imagemagick libtinyxml-dev git cmake build-essential wget libgazebo7-dev
     - run: sudo npm install -g grunt
     - run: npm run deploy
     - run: npm test
