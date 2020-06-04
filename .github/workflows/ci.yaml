@@ -18,7 +18,7 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
     - run: sudo apt update
-    - run: sudo apt install -y libjansson-dev libboost-dev imagemagick libtinyxml-dev git cmake build-essential wget libgazebo7-dev firefox
+    - run: sudo apt install -y libjansson-dev libboost-dev imagemagick libtinyxml-dev git cmake build-essential wget libgazebo7-dev
     - run: sudo npm install -g grunt
     # - run: sudo bash -c 'echo "deb http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/chrome.list'
     # - run: sudo wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
@@ -28,10 +28,10 @@ jobs:
     # - run: sudo ln -sf /usr/bin/xvfb-chrome /usr/bin/google-chrome
     # - run: sudo chmod 755 /usr/bin/google-chrome
     # - run: defaults write com.google.chrome HardwareAccelerationModeEnabled -integer 1
-    - run: export DISPLAY=:0
+    # - run: export DISPLAY=:0
     - run: npm run deploy
-    - run: npm test
-    - run: npm run coverage
+    # - run: npm test
+    # - run: npm run coverage
     - run: npm run update
     - run: npm run docs
       env:
