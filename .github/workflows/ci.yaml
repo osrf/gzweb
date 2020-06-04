@@ -24,7 +24,7 @@ jobs:
     - run: sudo wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
     - run: sudo apt update
     - run: sudo apt install -y xvfb google-chrome-stable
-    - run: sudo wget -q -O /usr/bin/xvfb-chrome https://bitbucket.org/atlassian/docker-node-chrome-firefox/raw/ff180e2f16ea8639d4ca4a3abb0017ee23c2836c/scripts/xvfb-chrome
+    - run: sudo wget -q -O /usr/bin/xvfb-chrome https://gist.githubusercontent.com/chapulina/a80bd83d3494c96dc9eead843579c435/raw/7d304595d401c1265b533626d542ace7e6916002/xvfb-chrome
     - run: sudo ln -sf /usr/bin/xvfb-chrome /usr/bin/google-chrome
     - run: sudo chmod 755 /usr/bin/google-chrome
     - run: npm run deploy
