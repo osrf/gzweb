@@ -28,6 +28,7 @@ jobs:
     # - run: sudo ln -sf /usr/bin/xvfb-chrome /usr/bin/google-chrome
     # - run: sudo chmod 755 /usr/bin/google-chrome
     # - run: defaults write com.google.chrome HardwareAccelerationModeEnabled -integer 1
+    - run: export DISPLAY=:0
     - run: npm run deploy
     - run: npm test
     - run: npm run coverage
