@@ -29,8 +29,8 @@ jobs:
     - run: sudo chmod 755 /usr/bin/google-chrome
     - run: defaults write com.google.chrome HardwareAccelerationModeEnabled -integer 1
     - run: npm run deploy
-    - run: npm test
-    - run: npm run coverage
+    # - run: npm test
+    # - run: npm run coverage
     - run: npm run update
     - run: npm run docs
       env:
