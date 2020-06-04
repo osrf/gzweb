@@ -1,0 +1,39 @@
+name: Node.js CI
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-16.04
+
+    strategy:
+      matrix:
+        node-version: [8.x, 10.x]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - run: sudo apt update
+    - run: sudo apt install -y libjansson-dev libboost-dev imagemagick libtinyxml-dev git cmake build-essential wget libgazebo7-dev
+    - run: sudo npm install -g grunt
+    # - run: sudo bash -c 'echo "deb http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/chrome.list'
+    # - run: sudo wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+    # - run: sudo apt update
+    # - run: sudo apt install -y xvfb google-chrome-stable gnustep-base-runtime
+    # - run: sudo wget -q -O /usr/bin/xvfb-chrome https://gist.githubusercontent.com/chapulina/a80bd83d3494c96dc9eead843579c435/raw/7d304595d401c1265b533626d542ace7e6916002/xvfb-chrome
+    # - run: sudo ln -sf /usr/bin/xvfb-chrome /usr/bin/google-chrome
+    # - run: sudo chmod 755 /usr/bin/google-chrome
+    # - run: defaults write com.google.chrome HardwareAccelerationModeEnabled -integer 1
+    # - run: export DISPLAY=:0
+    - run: npm run deploy
+    # - run: npm test
+    # - run: npm run coverage
+    - run: npm run update
+    - run: npm run docs
+      env:
+        CI: true
+

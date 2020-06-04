@@ -4,7 +4,7 @@ Gzweb is a WebGL client for [Gazebo](http://gazebosim.org). Like gzclient, it's 
 
 http://gazebosim.org/gzweb
 
-[![codecov](https://codecov.io/bb/osrf/gzweb/branch/master/graph/badge.svg)](https://codecov.io/bb/osrf/gzweb)
+[![codecov](https://codecov.io/gh/osrf/gzweb/branch/master/graph/badge.svg)](https://codecov.io/gh/osrf/gzweb)
 
 # Installation
 
