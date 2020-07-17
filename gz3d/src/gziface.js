@@ -960,6 +960,13 @@ GZ3D.GZIface.prototype.createGeom = function(geom, material, parent)
         if (idx > 1)
         {
           modelName = meshUri.substring(meshUri.lastIndexOf('/', idx-1));
+        } else {
+          console.log('Could not establish a local filename for mesh: "' +
+            meshUri +
+            '". Mesh URIs using an absolute path syntax should use ' +
+            'the ROS-standard directory structure of ' +
+            '"<package_path>/meshes/<mesh_path>", e.g. ' +
+            '"/home/user/workspace/src/ur_description/meshes/base.dae".');
         }
       }
       if (modelName.length > 0)
