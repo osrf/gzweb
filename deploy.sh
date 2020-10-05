@@ -86,8 +86,7 @@ fi
 make -j 8
 
 cd ../gzbridge
-$DIR/node_modules/.bin/node-gyp configure
-$DIR/node_modules/.bin/node-gyp build -d
+$DIR/node_modules/.bin/node-gyp rebuild -d
 
 RETVAL=$?
 if [ $RETVAL -ne 0 ]; then
