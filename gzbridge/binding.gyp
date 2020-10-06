@@ -14,6 +14,7 @@
           'cflags': [
             '<!@(pkg-config --cflags gazebo jansson protobuf)'
           ],
+          'cflags_cc': [ '-fno-rtti', '-fno-exceptions', '-std=c++17' ],
           'ldflags': [
             '<!@(pkg-config --libs-only-L --libs-only-other gazebo jansson protobuf)'
           ],
