@@ -51,6 +51,8 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
+    - run: sudo sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list'
+    - run: wget https://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add -
     - run: sudo apt update
     - run: sudo apt install -y libjansson-dev libboost-dev imagemagick libtinyxml-dev git cmake build-essential wget libgazebo11-dev
     - run: sudo npm install -g grunt
