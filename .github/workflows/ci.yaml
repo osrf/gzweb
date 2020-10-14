@@ -37,3 +37,25 @@ jobs:
       env:
         CI: true
 
+  focal-ci:
+
+    runs-on: ubuntu-20.04
+
+    strategy:
+      matrix:
+        node-version: [8.x, 10.x]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - run: sudo apt update
+    - run: sudo apt install -y libjansson-dev libboost-dev imagemagick libtinyxml-dev git cmake build-essential wget libgazebo11-dev
+    - run: sudo npm install -g grunt
+    - run: npm run deploy --verbose
+    - run: npm run update
+    - run: npm run docs
+      env:
+        CI: true
