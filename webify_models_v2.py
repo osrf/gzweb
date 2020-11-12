@@ -64,6 +64,11 @@ for file in files:
       print sed_cmd
       subprocess.check_call(sed_cmd)
 
+      # Decode whitespace
+      sed_cmd = ["sed", "-i", "-e", 's/%20/ /g', file]
+      print sed_cmd
+      subprocess.check_call(sed_cmd)
+
       # find relatvie path to texture dir
       texture_dir = path
       if (texture_dir.find('materials/textures') == -1 and
@@ -81,7 +86,7 @@ for file in files:
         subprocess.check_call(sed_cmd)
 
         sed_cmd = ["sed", "-i","-e",
-          '/[a-zA-Z0-9_\.\/\-]\+materials\/textures/!s/\([a-zA-Z0-9_\-]\+\)\(\.png\W\)/'+ relative_path + 'materials\/textures\/\\1\\2/g', file]
+          '/[a-zA-Z0-9_\.\/\-]\+materials\/textures/!s/\([a-zA-Z0-9_ \-]\+\)\(\.png\W\)/'+ relative_path + 'materials\/textures\/\\1\\2/g', file]
 
         print sed_cmd
         subprocess.check_call(sed_cmd)
