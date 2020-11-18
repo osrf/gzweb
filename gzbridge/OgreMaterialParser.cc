@@ -51,7 +51,7 @@ std::string OgreMaterialParser::GetMaterialAsJson() const
         else
           first = false;
 
-        std::size_t index = name.rfind(" ");
+        std::size_t index = name.find(" ");
         if (index != std::string::npos)
         {
           name = name.substr(index+1);
