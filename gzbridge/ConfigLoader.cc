@@ -252,7 +252,12 @@ void ConfigLoader::_parseNodes(std::ifstream &stream, ConfigNode *parent)
 					}
 					else
 					{
-						key = newNode->getName() + ' ' + newNode->getValues().front();
+						key = newNode->getName();
+						for (auto value : newNode->getValues())
+						{
+							key += ' ' + value;
+						}
+						key.erase(std::remove(key.begin(), key.end(), '"'), key.end());
 					}
 
 					m_scriptList.insert(ScriptItem(key, newNode));

@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 #include <sstream>
 
@@ -50,7 +51,7 @@ std::string OgreMaterialParser::GetMaterialAsJson() const
         else
           first = false;
 
-        std::size_t index = name.rfind(" ");
+        std::size_t index = name.find(" ");
         if (index != std::string::npos)
         {
           name = name.substr(index+1);
@@ -150,7 +151,17 @@ std::string OgreMaterialParser::GetMaterialAsJson() const
           ConfigNode *textureNode = textureUnitNode->findChild("texture");
           if (textureNode)
           {
-            std::string textureStr = textureNode->getValue(0);
+            std::string textureStr;
+            for (auto i = 0u; i < textureNode->getValues().size(); ++i)
+            {
+              textureStr += textureNode->getValue(i);
+              if (i + 1 != textureNode->getValues().size())
+                textureStr += " ";
+            }
+
+            textureStr.erase(std::remove(textureStr.begin(),
+                textureStr.end(), '"'), textureStr.end());
+
             index = textureStr.rfind(".");
             if (index != std::string::npos)
             {

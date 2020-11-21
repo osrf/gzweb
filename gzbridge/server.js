@@ -53,10 +53,11 @@ let staticServe = function(req, res) {
   if (req.url === '/')
     req.url = '/index.html';
 
-  fileLoc = path.join(fileLoc, req.url);
+  fileLoc = unescape(path.join(fileLoc, req.url));
 
   fs.readFile(fileLoc, function(err, data) {
     if (err) {
+        console.error('File not found [', fileLoc, ']');
         res.writeHead(404, 'Not Found');
         res.write('404: File Not Found!');
         return res.end();
