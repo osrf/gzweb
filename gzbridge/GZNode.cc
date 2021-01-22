@@ -51,8 +51,12 @@ void GZNode::Init(Local<Object> exports)
 {
   Isolate* isolate = exports->GetIsolate();
   // Prepare constructor template
+  Local<String> class_name = String::NewFromUtf8(isolate, "GZNode",
+      NewStringType::kInternalized).ToLocalChecked();
+
   Local<FunctionTemplate> tpl = FunctionTemplate::New(isolate, New);
-  tpl->SetClassName(String::NewFromUtf8(isolate, "GZNode"));
+
+  tpl->SetClassName(class_name);
   tpl->InstanceTemplate()->SetInternalFieldCount(1);
   // Prototype
   NODE_SET_PROTOTYPE_METHOD(tpl, "loadMaterialScripts", LoadMaterialScripts);
@@ -80,8 +84,8 @@ void GZNode::Init(Local<Object> exports)
   NODE_SET_PROTOTYPE_METHOD(tpl, "getMaterialScriptsMessage",
       GetMaterialScriptsMessage);
 
-  exports->Set(String::NewFromUtf8(isolate, "GZNode"),
-               tpl->GetFunction());
+  Local<Context> context = isolate->GetCurrentContext();
+  exports->Set(context, class_name, tpl->GetFunction(context).ToLocalChecked()).Check();
 }
 
 /////////////////////////////////////////////////
@@ -116,7 +120,7 @@ void GZNode::LoadMaterialScripts(const FunctionCallbackInfo<Value>& args)
 
   GZNode* obj = ObjectWrap::Unwrap<GZNode>(args.This());
 
-  String::Utf8Value path(args[0]->ToString());
+  String::Utf8Value path(isolate, args[0]);
   obj->gzIface->LoadMaterialScripts(std::string(*path));
 
   return;
@@ -125,8 +129,10 @@ void GZNode::LoadMaterialScripts(const FunctionCallbackInfo<Value>& args)
 /////////////////////////////////////////////////
 void GZNode::SetConnected(const FunctionCallbackInfo<Value>& args)
 {
+  Isolate* isolate = args.GetIsolate();
+
   GZNode *obj = ObjectWrap::Unwrap<GZNode>(args.This());
-  bool value = args[0]->BooleanValue();
+  bool value = args[0]->BooleanValue(isolate);
   obj->gzIface->SetConnected(value);
 
   return;
@@ -160,7 +166,7 @@ void GZNode::GetMaterialScriptsMessage(const FunctionCallbackInfo<Value>& args)
     return;
   }
 
-  String::Utf8Value path(args[0]->ToString());
+  String::Utf8Value path(isolate, args[0]);
 
   OgreMaterialParser materialParser;
   materialParser.Load(std::string(*path));
@@ -258,7 +264,7 @@ void GZNode::Request(const FunctionCallbackInfo<Value>& args)
 
   GZNode* obj = ObjectWrap::Unwrap<GZNode>(args.This());
 
-  String::Utf8Value request(args[0]->ToString());
+  String::Utf8Value request(isolate, args[0]);
   obj->gzIface->PushRequest(std::string(*request));
 
   return;
