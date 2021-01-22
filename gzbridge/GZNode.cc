@@ -47,7 +47,7 @@ GZNode::~GZNode()
 };
 
 /////////////////////////////////////////////////
-void GZNode::Init(Handle<Object> exports)
+void GZNode::Init(Local<Object> exports)
 {
   Isolate* isolate = exports->GetIsolate();
   // Prepare constructor template
@@ -286,7 +286,7 @@ void GZNode::GetPoseMsgFilterMinimumAge(const
 }
 
 /////////////////////////////////////////////////
-void InitAll(Handle<Object> exports)
+void InitAll(Local<Object> exports)
 {
   GZNode::Init(exports);
 }

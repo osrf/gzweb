@@ -33,7 +33,7 @@ namespace gzweb
 
   class GZNode : public node::ObjectWrap
   {
-    public: static void Init(v8::Handle<v8::Object> exports);
+    public: static void Init(v8::Local<v8::Object> exports);
 
     private: GZNode();
 
