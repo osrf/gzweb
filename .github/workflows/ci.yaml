@@ -5,11 +5,11 @@ on: [push, pull_request]
 jobs:
   build:
 
-    runs-on: ubuntu-16.04
+    runs-on: ubuntu-20.04
 
     strategy:
       matrix:
-        node-version: [8.x, 10.x]
+        node-version: [12.x]
 
     steps:
     - uses: actions/checkout@v2
@@ -17,8 +17,10 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
+    - run: sudo sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list'
+    - run: wget https://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add -
     - run: sudo apt update
-    - run: sudo apt install -y libjansson-dev libboost-dev imagemagick libtinyxml-dev git cmake build-essential wget libgazebo7-dev
+    - run: sudo apt install -y libjansson-dev libboost-dev imagemagick libtinyxml-dev git cmake build-essential wget libgazebo11-dev
     - run: sudo npm install -g grunt
     # - run: sudo bash -c 'echo "deb http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/chrome.list'
     # - run: sudo wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
