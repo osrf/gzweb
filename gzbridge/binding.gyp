@@ -9,6 +9,7 @@
         "OgreMaterialParser.cc", "OgreMaterialParser.hh"],
       'cflags_cc!': [ '-fno-rtti', '-fno-exceptions' ],
       'cflags!': [ '-fno-exceptions' ],
+      "cflags_cc": [ '-std=c++17' ],
       "conditions": [
         ['OS=="linux"', {
           'cflags': [
