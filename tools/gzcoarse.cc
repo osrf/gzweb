@@ -134,7 +134,7 @@ void ExportTextureSource(const gazebo::common::SubMesh *_outSubMesh,
   std::vector<size_t> result_index(num_results);
   std::vector<double> out_dist_sqr(num_results);
   static const int offset[] = {1,2,-1,1,-2,-1};
-  for (int i = 0; i < outTriIndexCount; ++i)
+  for (unsigned int i = 0; i < outTriIndexCount; ++i)
   {
     unsigned int outIndex = _outSubMesh->GetIndex(i);
     ignition::math::Vector3d outVertex = _outSubMesh->Vertex(outIndex);
@@ -146,7 +146,7 @@ void ExportTextureSource(const gazebo::common::SubMesh *_outSubMesh,
 
     std::vector<size_t> closestIndices;
     double closestDistance = 1000;
-    for (int j = 0; j < num_results; ++j)
+    for (unsigned int j = 0; j < num_results; ++j)
     {
       inVertex = _inSubMesh->Vertex(result_index[j]);
 
@@ -214,7 +214,7 @@ void ExportTextureSource(const gazebo::common::SubMesh *_outSubMesh,
 
     // Find the closest direction among all triangles containing overlapping
     // vertices
-    for (int k = 1; k < closestIndices.size(); ++k)
+    for (unsigned int k = 1; k < closestIndices.size(); ++k)
     {
       // Current vertex
       size_t currentIndex = closestIndices[k];
@@ -1246,7 +1246,7 @@ int main(int argc, char **argv)
 
   gazebo::common::Mesh *outGz = new gazebo::common::Mesh();
 
-  for (int s = 0; s < inGz->GetSubMeshCount(); ++s)
+  for (unsigned int s = 0; s < inGz->GetSubMeshCount(); ++s)
   {
     const gazebo::common::SubMesh *inSubMesh = inGz->GetSubMesh(s);
 
