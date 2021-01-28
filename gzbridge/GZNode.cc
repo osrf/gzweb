@@ -313,7 +313,7 @@ void GZNode::GetPoseMsgFilterMinimumAge(const
 }
 
 /////////////////////////////////////////////////
-void InitAll(Local<Object> exports)
+void InitAll(Local<Object> exports, Local<Value> module, void* priv)
 {
   GZNode::Init(exports);
 }
