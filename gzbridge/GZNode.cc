@@ -107,14 +107,18 @@ void GZNode::LoadMaterialScripts(const FunctionCallbackInfo<Value>& args)
   if (args.Length() < 1)
   {
     isolate->ThrowException(Exception::TypeError(
-        String::NewFromUtf8(isolate, "Wrong number of arguments")));
+      String::NewFromUtf8(isolate, 
+        "Wrong number of arguments", 
+        NewStringType::kNormal).ToLocalChecked()));
     return;
   }
 
   if (!args[0]->IsString())
   {
     isolate->ThrowException(Exception::TypeError(
-        String::NewFromUtf8(isolate, "Wrong argument type. String expected.")));
+        String::NewFromUtf8(isolate, 
+          "Wrong argument type. String expected.", 
+          NewStringType::kNormal).ToLocalChecked()));
     return;
   }
 
@@ -155,14 +159,18 @@ void GZNode::GetMaterialScriptsMessage(const FunctionCallbackInfo<Value>& args)
   if (args.Length() < 1)
   {
     isolate->ThrowException(Exception::TypeError(
-        String::NewFromUtf8(isolate, "Wrong number of arguments")));
+        String::NewFromUtf8(isolate, 
+          "Wrong number of arguments", 
+          NewStringType::kNormal).ToLocalChecked()));
     return;
   }
 
   if (!args[0]->IsString())
   {
     isolate->ThrowException(Exception::TypeError(
-        String::NewFromUtf8(isolate, "Wrong argument type. String expected.")));
+        String::NewFromUtf8(isolate, 
+          "Wrong argument type. String expected.",
+          NewStringType::kNormal).ToLocalChecked()));
     return;
   }
 
@@ -177,7 +185,10 @@ void GZNode::GetMaterialScriptsMessage(const FunctionCallbackInfo<Value>& args)
   msg += materialJson;
   msg += "}";
 
-  args.GetReturnValue().Set(String::NewFromUtf8(isolate ,msg.c_str()));
+  args.GetReturnValue().Set(
+    String::NewFromUtf8(isolate,
+      msg.c_str(), 
+      NewStringType::kNormal).ToLocalChecked());
 }
 
 /////////////////////////////////////////////////
@@ -229,6 +240,7 @@ void GZNode::GetPoseMsgFilterMinimumQuaternionSquared(const
 void GZNode::GetMessages(const FunctionCallbackInfo<Value>& args)
 {
   Isolate* isolate = args.GetIsolate();
+  Local<Context> context = isolate->GetCurrentContext();
 
   GZNode* obj = ObjectWrap::Unwrap<GZNode>(args.This());
 
@@ -236,7 +248,12 @@ void GZNode::GetMessages(const FunctionCallbackInfo<Value>& args)
   // args.GetReturnValue().Set(Number::New(isolate ,msgs.size()));
   Local<Array> arguments = Array::New(isolate, msgs.size());
   for (unsigned int i = 0; i < msgs.size(); ++i) {
-    arguments->Set(i ,String::NewFromUtf8(isolate, msgs[i].c_str()));
+    MaybeLocal<String> v8_msg = String::NewFromUtf8(isolate, msgs[i].c_str(), NewStringType::kNormal);
+    bool sucess = arguments->Set(context, i, v8_msg.ToLocalChecked()).FromJust();
+    if(!sucess){
+      //TODO handle failure
+      return;
+    }
   }
 
   args.GetReturnValue().Set(arguments);
@@ -251,14 +268,18 @@ void GZNode::Request(const FunctionCallbackInfo<Value>& args)
   if (args.Length() < 1)
   {
     isolate->ThrowException(Exception::TypeError(
-        String::NewFromUtf8(isolate, "Wrong number of arguments")));
+        String::NewFromUtf8(isolate, 
+          "Wrong number of arguments", 
+          NewStringType::kNormal).ToLocalChecked()));
     return;
   }
 
   if (!args[0]->IsString())
   {
     isolate->ThrowException(Exception::TypeError(
-        String::NewFromUtf8(isolate, "Wrong argument type. String expected.")));
+        String::NewFromUtf8(isolate, 
+          "Wrong argument type. String expected.",
+          NewStringType::kNormal).ToLocalChecked()));
     return;
   }
 
