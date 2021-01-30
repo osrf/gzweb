@@ -5,7 +5,7 @@ on: [push, pull_request]
 jobs:
   build:
 
-    runs-on: ubuntu-16.04
+    runs-on: ubuntu-18.04
 
     strategy:
       matrix:
@@ -22,7 +22,7 @@ jobs:
     - run: sudo sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list'
     - run: wget https://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add -
     - run: sudo apt update
-    - run: sudo apt install -y xvfb google-chrome-stable gnustep-base-runtime libjansson-dev libboost-dev imagemagick libtinyxml-dev git cmake build-essential wget libgazebo11-dev
+    - run: sudo apt install -y xvfb google-chrome-stable gnustep-base-runtime libjansson-dev libboost-dev imagemagick libtinyxml-dev git cmake build-essential wget libgazebo9-dev
     - run: sudo wget -q -O /usr/bin/xvfb-chrome https://gist.githubusercontent.com/chapulina/a80bd83d3494c96dc9eead843579c435/raw/7d304595d401c1265b533626d542ace7e6916002/xvfb-chrome
     - run: sudo ln -sf /usr/bin/xvfb-chrome /usr/bin/google-chrome
     - run: sudo chmod 755 /usr/bin/google-chrome
