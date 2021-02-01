@@ -85,7 +85,7 @@ void GZNode::Init(Local<Object> exports)
       GetMaterialScriptsMessage);
 
   Local<Context> context = isolate->GetCurrentContext();
-  exports->Set(context, class_name, tpl->GetFunction(context).ToLocalChecked()).Check();
+  exports->Set(context, class_name, tpl->GetFunction(context).ToLocalChecked()).ToChecked();
 }
 
 /////////////////////////////////////////////////
@@ -136,7 +136,13 @@ void GZNode::SetConnected(const FunctionCallbackInfo<Value>& args)
   Isolate* isolate = args.GetIsolate();
 
   GZNode *obj = ObjectWrap::Unwrap<GZNode>(args.This());
+
+#if NODE_MAJOR_VERSION<=10
+  Local<Context> context = isolate->GetCurrentContext();
+  bool value = args[0]->BooleanValue(context).ToChecked();
+#else
   bool value = args[0]->BooleanValue(isolate);
+#endif
   obj->gzIface->SetConnected(value);
 
   return;
