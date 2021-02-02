@@ -96,6 +96,8 @@ NAN_METHOD(GZNode::New)
     GZNode* obj = new GZNode();
     obj->Wrap(info.This());
     info.GetReturnValue().Set(info.This());
+  }else{
+    return Nan::ThrowTypeError("GZNode::New - called without new keyword");
   }
 }
 
@@ -106,20 +108,12 @@ NAN_METHOD(GZNode::LoadMaterialScripts)
 
   if (info.Length() < 1)
   {
-    isolate->ThrowException(Exception::TypeError(
-      String::NewFromUtf8(isolate, 
-        "Wrong number of arguments", 
-        NewStringType::kNormal).ToLocalChecked()));
-    return;
+    return Nan::ThrowTypeError("GZNode::LoadMaterialScripts - Wrong number of arguments. One arg expected");
   }
 
   if (!info[0]->IsString())
   {
-    isolate->ThrowException(Exception::TypeError(
-        String::NewFromUtf8(isolate, 
-          "Wrong argument type. String expected.", 
-          NewStringType::kNormal).ToLocalChecked()));
-    return;
+    return Nan::ThrowTypeError("GZNode::LoadMaterialScripts - Wrong argument type. String expected.");
   }
 
   GZNode* obj = ObjectWrap::Unwrap<GZNode>(info.This());
@@ -164,20 +158,12 @@ NAN_METHOD(GZNode::GetMaterialScriptsMessage)
 
   if (info.Length() < 1)
   {
-    isolate->ThrowException(Exception::TypeError(
-        String::NewFromUtf8(isolate, 
-          "Wrong number of arguments", 
-          NewStringType::kNormal).ToLocalChecked()));
-    return;
+    return Nan::ThrowTypeError("GZNode::GetMaterialScriptsMessage - Wrong number of arguments. One arg expected.");
   }
 
   if (!info[0]->IsString())
   {
-    isolate->ThrowException(Exception::TypeError(
-        String::NewFromUtf8(isolate, 
-          "Wrong argument type. String expected.",
-          NewStringType::kNormal).ToLocalChecked()));
-    return;
+    return Nan::ThrowTypeError("GZNode::GetMaterialScriptsMessage - Wrong argument type. String expected.");
   }
 
   String::Utf8Value path(isolate, info[0]);
@@ -269,20 +255,12 @@ NAN_METHOD(GZNode::Request)
 
   if (info.Length() < 1)
   {
-    isolate->ThrowException(Exception::TypeError(
-        String::NewFromUtf8(isolate, 
-          "Wrong number of arguments", 
-          NewStringType::kNormal).ToLocalChecked()));
-    return;
+    return Nan::ThrowTypeError("GZNode::Request - Wrong number of arguments. One arg expected.");
   }
 
   if (!info[0]->IsString())
   {
-    isolate->ThrowException(Exception::TypeError(
-        String::NewFromUtf8(isolate, 
-          "Wrong argument type. String expected.",
-          NewStringType::kNormal).ToLocalChecked()));
-    return;
+    return Nan::ThrowTypeError("GZNode::Request - Wrong argument type. String expected.");
   }
 
   GZNode* obj = ObjectWrap::Unwrap<GZNode>(info.This());
