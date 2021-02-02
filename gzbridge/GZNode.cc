@@ -47,14 +47,12 @@ GZNode::~GZNode()
 };
 
 /////////////////////////////////////////////////
-void GZNode::Init(Local<Object> exports)
+NAN_MODULE_INIT(GZNode::Init)
 {
-  Isolate* isolate = exports->GetIsolate();
   // Prepare constructor template
-  Local<String> class_name = String::NewFromUtf8(isolate, "GZNode",
-      NewStringType::kInternalized).ToLocalChecked();
+  Local<String> class_name = Nan::New("GZNode").ToLocalChecked();
 
-  Local<FunctionTemplate> tpl = FunctionTemplate::New(isolate, New);
+  Local<FunctionTemplate> tpl = Nan::New<v8::FunctionTemplate>(GZNode::New);
 
   tpl->SetClassName(class_name);
   tpl->InstanceTemplate()->SetInternalFieldCount(1);
