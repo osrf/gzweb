@@ -84,8 +84,9 @@ void GZNode::Init(Local<Object> exports)
   Nan::SetPrototypeMethod(tpl, "getMaterialScriptsMessage",
       GetMaterialScriptsMessage);
 
-  Local<Context> context = isolate->GetCurrentContext();
-  exports->Set(context, class_name, tpl->GetFunction(context).ToLocalChecked()).ToChecked();
+  target->Set(Nan::GetCurrentContext(), class_name, 
+    tpl->GetFunction(Nan::GetCurrentContext()).ToLocalChecked()
+    ).ToChecked();
 }
 
 /////////////////////////////////////////////////
@@ -127,16 +128,9 @@ NAN_METHOD(GZNode::LoadMaterialScripts)
 /////////////////////////////////////////////////
 NAN_METHOD(GZNode::SetConnected)
 {
-  Isolate* isolate = info.GetIsolate();
 
   GZNode *obj = ObjectWrap::Unwrap<GZNode>(info.This());
-
-#if NODE_MAJOR_VERSION<=10
-  Local<Context> context = isolate->GetCurrentContext();
-  bool value = info[0]->BooleanValue(context).ToChecked();
-#else
-  bool value = info[0]->BooleanValue(isolate);
-#endif
+  bool value = Nan::To<bool>(info[0]).ToChecked();
   obj->gzIface->SetConnected(value);
 
   return;
@@ -177,10 +171,7 @@ NAN_METHOD(GZNode::GetMaterialScriptsMessage)
   msg += materialJson;
   msg += "}";
 
-  info.GetReturnValue().Set(
-    String::NewFromUtf8(isolate,
-      msg.c_str(), 
-      NewStringType::kNormal).ToLocalChecked());
+  info.GetReturnValue().Set(Nan::New(msg.c_str()).ToLocalChecked());
 }
 
 /////////////////////////////////////////////////
@@ -188,7 +179,7 @@ NAN_METHOD(GZNode::SetPoseMsgFilterMinimumDistanceSquared)
 {
   GZNode *obj = ObjectWrap::Unwrap<GZNode>(info.This());
 
-  Local<Number> v = Local<Number>::Cast(info[0]);
+  Local<Number> v = Nan::To<Number>(info[0]).ToLocalChecked();
   double value = v->Value();
   obj->gzIface->SetPoseFilterMinimumDistanceSquared(value);
 
@@ -198,17 +189,16 @@ NAN_METHOD(GZNode::SetPoseMsgFilterMinimumDistanceSquared)
 /////////////////////////////////////////////////
 NAN_METHOD(GZNode::GetPoseMsgFilterMinimumDistanceSquared)
 {
-  Isolate* isolate = info.GetIsolate();
   GZNode *obj = ObjectWrap::Unwrap<GZNode>(info.This());
   double value  = obj->gzIface->GetPoseFilterMinimumDistanceSquared();
-  info.GetReturnValue().Set(Number::New(isolate ,value));
+  info.GetReturnValue().Set(Nan::New<Number>(value));
 }
 
 /////////////////////////////////////////////////////
 NAN_METHOD(GZNode::SetPoseMsgFilterMinimumQuaternionSquared)
 {
   GZNode *obj = ObjectWrap::Unwrap<GZNode>(info.This());
-  Local<Number> v = Local<Number>::Cast(info[0]);
+  Local<Number> v = Nan::To<Number>(info[0]).ToLocalChecked();
   double value = v->Value();
   obj->gzIface->SetPoseFilterMinimumQuaternionSquared(value);
 
@@ -218,30 +208,22 @@ NAN_METHOD(GZNode::SetPoseMsgFilterMinimumQuaternionSquared)
 /////////////////////////////////////////////////
 NAN_METHOD(GZNode::GetPoseMsgFilterMinimumQuaternionSquared)
 {
-  Isolate* isolate = info.GetIsolate();
   GZNode *obj = ObjectWrap::Unwrap<GZNode>(info.This());
   double value  = obj->gzIface->GetPoseFilterMinimumQuaternionSquared();
-  info.GetReturnValue().Set(Number::New(isolate ,value));
+  info.GetReturnValue().Set(Nan::New<Number>(value));
 }
 
 /////////////////////////////////////////////////
 NAN_METHOD(GZNode::GetMessages)
 {
-  Isolate* isolate = info.GetIsolate();
-  Local<Context> context = isolate->GetCurrentContext();
 
   GZNode* obj = ObjectWrap::Unwrap<GZNode>(info.This());
 
   std::vector<std::string> msgs = obj->gzIface->PopOutgoingMessages();
-  // info.GetReturnValue().Set(Number::New(isolate ,msgs.size()));
-  Local<Array> arguments = Array::New(isolate, msgs.size());
+  Local<Array> arguments = Nan::New<Array>(msgs.size());
   for (unsigned int i = 0; i < msgs.size(); ++i) {
-    MaybeLocal<String> v8_msg = String::NewFromUtf8(isolate, msgs[i].c_str(), NewStringType::kNormal);
-    bool sucess = arguments->Set(context, i, v8_msg.ToLocalChecked()).FromJust();
-    if(!sucess){
-      //TODO handle failure
-      return;
-    }
+    Local<String> v8_msg = Nan::New<String>(msgs[i].c_str()).ToLocalChecked();
+    Nan::Set(arguments, i, v8_msg);
   }
 
   info.GetReturnValue().Set(arguments);
@@ -275,7 +257,7 @@ NAN_METHOD(GZNode::Request)
 NAN_METHOD(GZNode::SetPoseMsgFilterMinimumAge)
 {
   GZNode* obj = ObjectWrap::Unwrap<GZNode>(info.This());
-  Local<Number> v = Local<Number>::Cast(info[0]);
+  Local<Number> v = Nan::To<Number>(info[0]).ToLocalChecked();
   double value = v->Value();
   obj->gzIface->SetPoseFilterMinimumMsgAge(value);
 
