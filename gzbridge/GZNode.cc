@@ -59,29 +59,29 @@ void GZNode::Init(Local<Object> exports)
   tpl->SetClassName(class_name);
   tpl->InstanceTemplate()->SetInternalFieldCount(1);
   // Prototype
-  NODE_SET_PROTOTYPE_METHOD(tpl, "loadMaterialScripts", LoadMaterialScripts);
+  Nan::SetPrototypeMethod(tpl, "loadMaterialScripts", LoadMaterialScripts);
 
-  NODE_SET_PROTOTYPE_METHOD(tpl, "setConnected", SetConnected);
+  Nan::SetPrototypeMethod(tpl, "setConnected", SetConnected);
 
-  NODE_SET_PROTOTYPE_METHOD(tpl, "setPoseMsgFilterMinimumDistanceSquared", SetPoseMsgFilterMinimumDistanceSquared);
-  NODE_SET_PROTOTYPE_METHOD(tpl, "getPoseMsgFilterMinimumDistanceSquared", GetPoseMsgFilterMinimumDistanceSquared);
-  NODE_SET_PROTOTYPE_METHOD(tpl, "setPoseMsgFilterMinimumQuaternionSquared", SetPoseMsgFilterMinimumQuaternionSquared);
-  NODE_SET_PROTOTYPE_METHOD(tpl, "getPoseMsgFilterMinimumQuaternionSquared", GetPoseMsgFilterMinimumQuaternionSquared);
+  Nan::SetPrototypeMethod(tpl, "setPoseMsgFilterMinimumDistanceSquared", SetPoseMsgFilterMinimumDistanceSquared);
+  Nan::SetPrototypeMethod(tpl, "getPoseMsgFilterMinimumDistanceSquared", GetPoseMsgFilterMinimumDistanceSquared);
+  Nan::SetPrototypeMethod(tpl, "setPoseMsgFilterMinimumQuaternionSquared", SetPoseMsgFilterMinimumQuaternionSquared);
+  Nan::SetPrototypeMethod(tpl, "getPoseMsgFilterMinimumQuaternionSquared", GetPoseMsgFilterMinimumQuaternionSquared);
 
-  NODE_SET_PROTOTYPE_METHOD(tpl, "getPoseMsgFilterMinimumAge",
+  Nan::SetPrototypeMethod(tpl, "getPoseMsgFilterMinimumAge",
       GetPoseMsgFilterMinimumAge);
 
-  NODE_SET_PROTOTYPE_METHOD(tpl, "setPoseMsgFilterMinimumAge",
+  Nan::SetPrototypeMethod(tpl, "setPoseMsgFilterMinimumAge",
       SetPoseMsgFilterMinimumAge);
 
-  NODE_SET_PROTOTYPE_METHOD(tpl, "getMessages", GetMessages);
+  Nan::SetPrototypeMethod(tpl, "getMessages", GetMessages);
 
-  NODE_SET_PROTOTYPE_METHOD(tpl, "request", Request);
+  Nan::SetPrototypeMethod(tpl, "request", Request);
 
-  NODE_SET_PROTOTYPE_METHOD(tpl, "getIsGzServerConnected",
+  Nan::SetPrototypeMethod(tpl, "getIsGzServerConnected",
       GetIsGzServerConnected);
 
-  NODE_SET_PROTOTYPE_METHOD(tpl, "getMaterialScriptsMessage",
+  Nan::SetPrototypeMethod(tpl, "getMaterialScriptsMessage",
       GetMaterialScriptsMessage);
 
   Local<Context> context = isolate->GetCurrentContext();
