@@ -22,11 +22,6 @@
 
 namespace gzweb
 {
-  using v8::FunctionCallbackInfo;
-  using v8::Value;
-  using v8::FunctionTemplate;
-  using v8::Object;
-  using v8::Persistent;
 
   class GazeboInterface;
 
