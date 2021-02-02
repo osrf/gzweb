@@ -15,7 +15,7 @@
  *
 */
 
-#include <node.h>
+#include <nan.h>
 #include "GZNode.hh"
 
 #include "GazeboInterface.hh"

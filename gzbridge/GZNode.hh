@@ -18,8 +18,7 @@
 #ifndef GZBRIDGE_GZNODE_HH_
 #define GZBRIDGE_GZNODE_HH_
 
-#include <node.h>
-#include <node_object_wrap.h>
+#include <nan.h>
 
 namespace gzweb
 {
@@ -31,7 +30,7 @@ namespace gzweb
 
   class GazeboInterface;
 
-  class GZNode : public node::ObjectWrap
+  class GZNode : public Nan::ObjectWrap
   {
     public: static NAN_MODULE_INIT(Init);
 
