@@ -22,6 +22,7 @@
   "dependencies": {
     "fs": "0.0.1-security",
     "http": "0.0.0",
+    "nan": "^2.14.2",
     "node-gyp": "6.1.0",
     "path": "^0.12.7",
     "websocket": "^1.0.25"
