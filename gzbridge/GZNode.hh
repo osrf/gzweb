@@ -33,47 +33,37 @@ namespace gzweb
 
   class GZNode : public node::ObjectWrap
   {
-    public: static void Init(v8::Local<v8::Object> exports);
+    public: static NAN_MODULE_INIT(Init);
 
     private: GZNode();
 
     private: ~GZNode();
 
-    private: static void New(const FunctionCallbackInfo<Value>& args);
+    private: static NAN_METHOD(New);
 
-    private: static void LoadMaterialScripts(
-        const FunctionCallbackInfo<Value>& args);
+    private: static NAN_METHOD(LoadMaterialScripts);
 
-    private: static void SetConnected(
-        const FunctionCallbackInfo<Value>& args);
+    private: static NAN_METHOD(SetConnected);
 
-    private: static void GetIsGzServerConnected(
-        const FunctionCallbackInfo<Value>& args);
+    private: static NAN_METHOD(GetIsGzServerConnected);
 
-    private: static void GetMaterialScriptsMessage(
-        const FunctionCallbackInfo<Value>& args);
+    private: static NAN_METHOD(GetMaterialScriptsMessage);
 
-    private: static void SetPoseMsgFilterMinimumDistanceSquared(
-        const FunctionCallbackInfo<Value>& args);
+    private: static NAN_METHOD(SetPoseMsgFilterMinimumDistanceSquared);
 
-    private: static void GetPoseMsgFilterMinimumDistanceSquared(
-        const FunctionCallbackInfo<Value>& args);
+    private: static NAN_METHOD(GetPoseMsgFilterMinimumDistanceSquared);
 
-    private: static void SetPoseMsgFilterMinimumQuaternionSquared(
-        const FunctionCallbackInfo<Value>& args);
+    private: static NAN_METHOD(SetPoseMsgFilterMinimumQuaternionSquared);
 
-    private: static void GetPoseMsgFilterMinimumQuaternionSquared(
-        const FunctionCallbackInfo<Value>& args);
+    private: static NAN_METHOD(GetPoseMsgFilterMinimumQuaternionSquared);
 
-    private: static void GetMessages(const FunctionCallbackInfo<Value>& args);
+    private: static NAN_METHOD(GetMessages);
 
-    private: static void Request(const FunctionCallbackInfo<Value>& args);
+    private: static NAN_METHOD(Request);
 
-    private: static void SetPoseMsgFilterMinimumAge(
-        const FunctionCallbackInfo<Value>& args);
+    private: static NAN_METHOD(SetPoseMsgFilterMinimumAge);
 
-    private: static void GetPoseMsgFilterMinimumAge(
-        const FunctionCallbackInfo<Value>& args);
+    private: static NAN_METHOD(GetPoseMsgFilterMinimumAge);
 
     private: GazeboInterface* gzIface = nullptr;
 
