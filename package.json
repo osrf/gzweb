@@ -51,6 +51,6 @@
     "karma-htmlfile-reporter": "^0.3.8",
     "karma-jasmine": "^4.0.1",
     "taffydb": "^2.7.3",
-    "underscore": "^1.8.3"
+    "underscore": "^1.12.1"
   }
 }
