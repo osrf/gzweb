@@ -710,7 +710,7 @@ void GazeboInterface::ProcessMessages()
           // simulate latching stats topic
           if (this->statsMsgs.empty() && this->statsMsg.get() != nullptr)
           {
-              this->statsMsgs.push_back(this->statsMsg);
+            this->statsMsgs.push_back(this->statsMsg);
           }
         }
       }
