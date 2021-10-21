@@ -708,9 +708,9 @@ void GazeboInterface::ProcessMessages()
         else if (topic == this->statsTopic)
         {
           // simulate latching stats topic
-          if (this->statsMsgs.empty())
+          if (this->statsMsgs.empty() && this->statsMsg.get() != nullptr)
           {
-            this->statsMsgs.push_back(this->statsMsg);
+              this->statsMsgs.push_back(this->statsMsg);
           }
         }
       }
