@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # A script to update gazebo models to be web-friendly.
 # It converts all textures to png format and make sure they are
