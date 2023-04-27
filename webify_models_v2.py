@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # A script to update gazebo models to be web-friendly.
 # It converts all textures to png format and make sure they are
@@ -56,14 +56,14 @@ for file in files:
 
       if texture_dir != dest_dir:
         cmd = ['mv', dest_path, texture_dir]
-        print cmd
+        print(cmd)
         subprocess.check_call(cmd)
 
     # update texture path in dae files
     if format.lower() in ['dae']:
       sed_cmd = ["sed", "-i", "-e",
         's/\(\.tga\|\.tiff\|\.tif\|\.jpg\|\.jpeg\|\.gif\)/\.png/g', file]
-      print sed_cmd
+      print(sed_cmd)
       subprocess.check_call(sed_cmd)
 
       # find relatvie path to texture dir
@@ -79,21 +79,21 @@ for file in files:
         # replace dae file png references to texture path
         sed_cmd = ["sed", "-i","-e",
           's/\(>\)\(.*\/\)\(.*\.png\)/\\1'+ relative_path + 'materials\/textures\/\\3/g', file]
-        print sed_cmd
+        print(sed_cmd)
         subprocess.check_call(sed_cmd)
 
         sed_cmd = ["sed", "-i","-e",
           '/[a-zA-Z0-9_\.\/\-]\+materials\/textures/!s/\([a-zA-Z0-9_\-]\+\)\(\.png\W\)/'+ relative_path + 'materials\/textures\/\\1\\2/g', file]
 
-        print sed_cmd
+        print(sed_cmd)
         subprocess.check_call(sed_cmd)
 
     if format.lower() in ['material', 'txt', 'sdf']:
       sed_cmd = ["sed", "-i", "-e",
         's/\(\.tga\|\.tiff\|\.tif\|\.jpg\|\.jpeg\|\.gif\)/\.png/g', file]
-      print sed_cmd
+      print(sed_cmd)
       subprocess.check_call(sed_cmd)
 
-  except Exception, e:
-      print "error %s" % e
+  except Exception as e:
+      print("error %s" % e)
       raise
