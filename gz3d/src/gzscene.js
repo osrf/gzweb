@@ -332,9 +332,8 @@ GZ3D.Scene.prototype.init = function()
 };
 
 GZ3D.Scene.prototype.initScene = function()
-{
+{ 
   this.emitter.emit('show_grid', 'show');
-
   var existingSun = this.getByName('sun');
   if (!existingSun) {
     // create a sun light
