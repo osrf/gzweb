@@ -335,12 +335,14 @@ GZ3D.Scene.prototype.initScene = function()
 {
   this.emitter.emit('show_grid', 'show');
 
-  // create a sun light
-  var obj = this.createLight(3, new THREE.Color(0.8, 0.8, 0.8), 0.9,
-       {position: {x:0, y:0, z:10}, orientation: {x:0, y:0, z:0, w:1}},
-       null, true, 'sun', {x: 0.5, y: 0.1, z: -0.9});
-
-  this.add(obj);
+  var existingSun = this.getByName('sun');
+  if (!existingSun) {
+    // create a sun light
+    var obj = this.createLight(3, new THREE.Color(0.8, 0.8, 0.8), 0.9,
+         {position: {x:0, y:0, z:10}, orientation: {x:0, y:0, z:0, w:1}},
+         null, true, 'sun', {x: 0.5, y: 0.1, z: -0.9});
+    this.add(obj);
+  }
 };
 
 GZ3D.Scene.prototype.setSDFParser = function(sdfParser)
